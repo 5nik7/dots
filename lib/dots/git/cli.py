@@ -393,7 +393,7 @@ class Workflow:
         except (ValueError, OSError, StopIteration, IndexError):
             self.ui.detail('Files', 'Change list unavailable; inspect the repository history.')
             return
-        for row in files: self.output.file(path, row)
+        self.output.file_list(path, files)
 
     @tracked('Synchronizing repositories')
     def sync(self, path, pinned=None, parent=None, relative=None):
@@ -615,6 +615,8 @@ class Workflow:
                             for row in status_files(path):
                                 if self.output: self.output.renames[str(path),row['path']] = row['old_path']
                                 if self.args.all or row['xy'][0] not in (' ', '?'): self.event(path, 'selected', row['xy'] + ' ' + row['path'], row['path'], row['xy'])
+                            if self.output:
+                                with permanent_output(): self.output.flush_selected(path)
                         except (ValueError, OSError) as error:
                             self.blocked.add(path)
                             if parent: self.blocked.add(parent)

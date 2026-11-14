@@ -253,6 +253,21 @@ class Cases:
             common = Path(self.git(repo, 'rev-parse', '--git-common-dir'))
             self.assertFalse((common if common.is_absolute() else repo / common).joinpath('git-it.lock').exists())
 
+    def test_scoped_and_named_publish_use_counted_review_groups(self):
+        top, mid, leaf, top_bare, _, _ = self.publish_tree()
+        for name in ('change-a', 'change-b'):
+            (leaf/name).write_text('selected\n')
+        self.git(leaf, 'add', '.')
+        before = self.index(top), self.git(top, 'rev-parse', 'HEAD'), self.git(top_bare, 'rev-parse', 'main')
+        for route in (['submodules', 'publish', 'middle'], ['submodule', 'middle', 'publish', '--config', str(self.config)]):
+            for mode in ('default', 'short', 'verbose'):
+                output = self.call(top, *route, '--dry-run', '--view', mode,
+                                   env=dict(self.env, COLUMNS='160')).stdout
+                self.assertIn('[A ] (2)' if mode == 'short' else 'staged added (2)', output)
+                self.assertEqual(output.count('change-a'), 1)
+                self.assertEqual(output.count('change-b'), 1)
+        self.assertEqual(before, (self.index(top), self.git(top, 'rev-parse', 'HEAD'), self.git(top_bare, 'rev-parse', 'main')))
+
     @unittest.skipUnless(shutil.which('bash'), 'fixture SSH transport requires Bash')
     def test_all_submodules_continues_safe_sibling(self):
         top, mid, leaf, top_bare, _, _ = self.publish_tree()

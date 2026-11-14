@@ -19,9 +19,9 @@ view_resolve() {
     elif [[ -t 1 || ${DOTS_MENU_CAPTURE:-} == 1 ]]; then GIT_VIEW=${_DOTS_GIT_VIEW:-default}; fi
 }
 view_file_label() {
-    local xy=$1 marker state where index
+    local xy=$1 view=${2:-$GIT_VIEW} marker state where index
     REPLY=''
-    if [[ $GIT_VIEW == short ]]; then REPLY=$xy; return; fi
+    if [[ $view == short ]]; then REPLY=$xy; return; fi
     case $xy in
         '??') REPLY=untracked; return ;; '!!') REPLY=ignored; return ;;
         DD) REPLY='conflict: both deleted'; return ;; AA) REPLY='conflict: both added'; return ;;
@@ -37,7 +37,7 @@ view_file_label() {
         REPLY+=${REPLY:+' + '}$where' '$state
     done
     REPLY=${REPLY:-selected}
-    [[ $GIT_VIEW != verbose ]] || REPLY="$xy $REPLY"
+    [[ $view != verbose ]] || REPLY="$xy $REPLY"
 }
 view_file_icon() {
     local role fallback
@@ -47,7 +47,7 @@ view_file_icon() {
         '??') role=untracked; fallback='' ;; '!!') role=ignored; fallback='' ;;
         *D*) role=deleted; fallback='󰆴' ;; *R*) role=renamed; fallback='' ;;
         *C*) role=copied; fallback='' ;; *A*) role=added; fallback='󰐕' ;;
-        *T*) role=type_changed; fallback='󰑓' ;; *M*) role=modified; fallback='󰏫' ;;
+        *T*) role=type_changed; fallback='󰑓' ;; *M*) role=modified; fallback='' ;;
         *) role=selected; fallback='' ;;
     esac
     dots::icon "git.status.$role" "$fallback"
@@ -77,23 +77,36 @@ view_file() {
         if [[ $old_gap ]]; then _DOTS_FORMATTING[label_gap]=$old_gap; else unset '_DOTS_FORMATTING[label_gap]'; fi
     else dots::resource_row "$label" "$actual" "$display" '' '' "$code" paths "$old_actual" "$old"; fi
 }
-# Group only status snapshots; keep first-seen status and within-group file order.
-# Arrays belong to status_main, so grouping adds no repository queries.
+# Group existing snapshot/review/change arrays, with no repository queries.
+# Keep first-seen state order and within-group file order.
 # shellcheck disable=SC2154
 view_status_files() {
-    local dir=$1 index xy group code label columns=${COLUMNS:-80}
+    local dir=$1 changed=${2:-0} index xy group code label columns=${COLUMNS:-80}
     [[ $columns =~ ^[0-9]+$ ]] || columns=80
     columns=$((10#$columns)); ((columns >= 20)) || columns=20
-    local -a groups=()
-    local -A members=()
+    local -a groups=() spans=('States  ' "$DOTS_UI_BLUE")
+    local -A members=() counts=()
     for ((index=0;index<${#paths[@]};index++)); do
         xy=${codes[index]}
         if [[ ! ${members[$xy]+set} ]]; then groups+=("$xy"); fi
         members[$xy]+="$index "
+        counts[$xy]=$((${counts[$xy]:-0}+1))
     done
     for group in "${groups[@]}"; do
-        view_file_label "$group"; label=$REPLY
+        # Verbose includes XY on every heading, including conflicts/untracked.
+        view_file_label "$group" default; label=$REPLY
+        if ((changed)); then
+            case ${group:0:1} in M) label=modified ;; A) label=added ;; D) label=deleted ;; R) label=renamed ;; C) label=copied ;; T) label='type changed' ;; esac
+        fi
         file_status_style "$group"; code=$REPLY
+        if [[ $changed == 1 && ( ${group:0:1} == M || ${group:0:1} == T ) ]]; then dots::git_style modified; code=$REPLY; fi
+        if [[ $GIT_VIEW == short ]]; then
+            ((${#spans[@]} == 2)) || spans+=(' / ' '')
+            spans+=("[$group] (${counts[$group]})" "$code")
+            continue
+        fi
+        [[ $GIT_VIEW != verbose ]] || label="[$group] $label"
+        label+=" (${counts[$group]})"
         if [[ $DOTS_UI_INFO != '[i]' ]]; then
             view_file_icon "$group"
             [[ ! $REPLY ]] || label="$REPLY $label"
@@ -101,24 +114,32 @@ view_status_files() {
         dots::line "$label" "$code" 4 "$columns"
         # Membership consists only of integer array indexes, never path text.
         for index in ${members[$group]}; do
-            view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}" 0 list
+            view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}" "$changed" list
         done
     done
+    if [[ $GIT_VIEW == short ]] && ((${#groups[@]})); then
+        local VIEW_SPANS_INDENT=4 VIEW_SPANS_CONTINUATION=12
+        view_spans "${spans[@]}"
+        for ((index=0;index<${#paths[@]};index++)); do
+            view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}" "$changed"
+        done
+    fi
 }
 # Small repository headers retain semantic colors across wrapped spans. File rows
 # continue to use the shared resource renderer; no formatting subprocess per row.
 view_spans() {
-    local columns=${COLUMNS:-80} used=2 text code char size i active=''
+    local columns=${COLUMNS:-80} indent=${VIEW_SPANS_INDENT:-2} text code char size i active=''
+    local used=$indent continuation=${VIEW_SPANS_CONTINUATION:-$indent}
     [[ $columns =~ ^[0-9]+$ ]] || columns=80
     columns=$((10#$columns)); ((columns >= 20)) || columns=20
-    printf '  '
+    printf '%*s' "$indent" ''
     while (($#)); do
         text=$1 code=$2; shift 2
         dots::text "$text"; text=$REPLY
         for ((i=0;i<${#text};i++)); do
             char=${text:i:1}; size=1; [[ $char == [\ -~] ]] || size=2
             if ((used+size > columns)); then
-                printf '%s\n  ' "$DOTS_UI_RESET"; used=2; active=''
+                printf '%s\n%*s' "$DOTS_UI_RESET" "$continuation" ''; used=$continuation; active=''
             fi
             if [[ $code != "$active" ]]; then printf '%s%s' "$DOTS_UI_RESET" "$code"; active=$code; fi
             printf '%s' "$char"; ((used+=size))
@@ -164,6 +185,8 @@ VIEW_LAST_REPO=''
 view_event() {
     local dir=$1 state=$2 detail=$3 file=${4:-} xy=${5:-} key label role code
     key=$dir/$file
+    # Publication records every selected event, then renders the complete batch.
+    if [[ $state == selected && ${VIEW_DEFER_SELECTED:-0} == 1 ]]; then return 0; fi
     if [[ $file && ${VIEW_FILES[$key]:-} && $state != blocked && $state != failed && $state != pending ]]; then
         [[ $GIT_VIEW != verbose ]] || dots::row "$state" "$detail"
         return 0
@@ -193,13 +216,14 @@ view_changes() {
     text_cmd git -C "$dir" rev-parse HEAD || { dots::row Files 'Change list unavailable; inspect the repository history.'; return 0; }; after=$REPLY
     [[ $before != "$after" ]] || return 0
     records_cmd git -C "$dir" diff --no-ext-diff --no-textconv --name-status -z --find-renames "$before" "$after" -- || { dots::row Files 'Change list unavailable; inspect the repository history.'; return 0; }
-    local -a changes=("${RECORDS[@]}")
+    local -a changes=("${RECORDS[@]}") paths=() codes=() oldpaths=()
     dots::progress_stop
     for ((i=0;i<${#changes[@]};i++)); do
         status=${changes[i]}; ((i+=1)); old=${changes[i]}; new=$old
         if [[ $status == R* || $status == C* ]]; then ((i+=1)); new=${changes[i]}; else old=''; fi
-        view_file "$dir" "${status:0:1} " "$new" "$old" 1
+        paths+=("$new"); codes+=("${status:0:1} "); oldpaths+=("$old")
     done
+    view_status_files "$dir" 1
 }
 
 # Verbose phase evidence remains available even with transient progress off.

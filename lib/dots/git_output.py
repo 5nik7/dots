@@ -22,7 +22,7 @@ STATES = {'M': 'modified', 'A': 'added', 'D': 'deleted', 'R': 'renamed',
           'C': 'copied', 'T': 'type changed', 'U': 'unmerged'}
 CONFLICTS = {'DD': 'both deleted', 'AU': 'added by us', 'UD': 'deleted by them',
              'UA': 'added by them', 'DU': 'deleted by us', 'AA': 'both added', 'UU': 'both modified'}
-STATUS_ICONS = dict(modified='󰏫', added='󰐕', deleted='󰆴', renamed='', copied='',
+STATUS_ICONS = dict(modified='', added='󰐕', deleted='󰆴', renamed='', copied='',
                     type_changed='󰑓', untracked='', ignored='', conflict='', selected='')
 
 
@@ -65,6 +65,7 @@ class GitView:
         self.files = set()
         self.previews = set()
         self.renames = {}
+        self.selections = {}
 
     def role(self, name):
         return self.ui.resources.git_style(name)
@@ -118,28 +119,54 @@ class GitView:
     def status(self, row, label=None):
         self.header(row, label)
         if self.mode == 'verbose': self.metadata(row)
-        files = row.get('files', [])
-        if self.mode == 'default':
-            groups = {}
-            for file in files: groups.setdefault(file['xy'], []).append(file)
-            for xy, entries in groups.items():
-                role = file_icon_role(xy)
-                icon = self.ui.icon('git.status.' + role, STATUS_ICONS[role]) if self.ui.icons else ''
-                label = (icon + ' ' if icon else '') + file_label(xy)
-                # A shared glyph (for example the edit pencil) must not pick up
-                # another UI surface's icon-color override by literal matching.
-                self.ui._spans([(label, self.role(file_role(xy)))], prefix='    ', icon_styles=False)
-                for file in entries: self.file(row['path'], file, listed=True)
-        else:
-            for file in files: self.file(row['path'], file)
+        self.file_list(row['path'], row.get('files', []))
+
+    @staticmethod
+    def groups(files):
+        groups = {}
+        for file in files:
+            groups.setdefault((file.get('xy') or '  ', bool(file.get('changed'))), []).append(file)
+        return groups
+
+    def state_label(self, xy, changed=False):
+        if self.mode == 'short': return '[' + xy + ']'
+        label = STATES.get(xy.strip(), xy.strip()) if changed else file_label(xy)
+        return ('[' + xy + '] ' if self.mode == 'verbose' else '') + label
+
+    def state_role(self, xy, changed=False):
+        return self.role('modified' if changed and xy[:1] in ('M', 'T') else file_role(xy))
+
+    def summary(self, files, *, ui=None, label='States', empty=None):
+        target = ui or self.ui
+        spans = []
+        for (xy, changed), entries in self.groups(files).items():
+            if spans: spans.append((' / ', None))
+            spans.append((f'{self.state_label(xy, changed)} ({len(entries)})', self.state_role(xy, changed)))
+        if spans:
+            if label == 'States':
+                target._spans([('States  ', '94'), *spans], prefix='    ',
+                              continuation_prefix='            ', icon_styles=False)
+            else: target.detail_spans(label, spans)
+        elif empty is not None: target.detail(label, empty)
+
+    def file_list(self, repo, files, *, ui=None):
+        target = ui or self.ui
+        if self.mode == 'short':
+            self.summary(files, ui=target)
+            for file in files: self.file(repo, file, ui=target)
+            return
+        for (xy, changed), entries in self.groups(files).items():
+            role = file_icon_role(xy)
+            icon = target.icon('git.status.' + role, STATUS_ICONS[role]) if target.icons else ''
+            label = (icon + ' ' if icon else '') + self.state_label(xy, changed) + f' ({len(entries)})'
+            # A shared glyph must not inherit another surface's icon override.
+            target._spans([(label, self.state_role(xy, changed))], prefix='    ', icon_styles=False)
+            for file in entries: self.file(repo, file, ui=target, listed=True)
 
     def info(self, row, label=None):
         self.header(row, label)
-        files = row.get('files', [])
-        staged = sum(f['xy'][0] not in (' ', '?') for f in files)
-        unstaged = sum(f['xy'][1] != ' ' and f['xy'] != '??' for f in files)
-        changes = f"{staged} staged / {unstaged} unstaged / {sum(f['xy']=='??' for f in files)} untracked"
-        self.ui.detail('Changes', changes)
+        self.summary(row.get('files', []), label='Changes',
+                     empty='none' if row.get('status') == 'clean' else 'unavailable')
         if self.mode == 'short': return
         remote = row.get('remote') or {}
         self.ui.detail('Remote', remote.get('name') or 'unavailable')
@@ -150,19 +177,41 @@ class GitView:
             self.ui.detail('Submodules', f"{counts['total']} discovered / {counts['available']} available / {counts['missing']} missing / {counts['blocked']} blocked")
         if self.mode == 'verbose': self.metadata(row)
 
+    def identity(self, path, target):
+        identity = str(path) if self.full_paths else Path(path).name
+        if not self.full_paths and self.root and Path(path) != self.root and Path(path).is_relative_to(self.root):
+            identity = Path(path).relative_to(self.root).as_posix()
+        return target.repository_label(path, identity)
+
+    def flush_selected(self, path):
+        """Render one complete review batch; original operation events stay intact."""
+        selected = self.selections.pop(str(path), {})
+        if not selected: return
+        if self.last_repo != str(path):
+            role = next(iter(selected.values()))['repo_role']
+            self.ui._spans([(self.identity(path, self.ui), self.role(role))], prefix='  ')
+        self.file_list(path, list(selected.values()))
+        for name, row in selected.items():
+            self.files.add((str(path), name))
+            if row.get('note'): self.ui.detail('Details', row['note'])
+        self.last_repo = str(path)
+
     def event(self, path, state, detail, file='', xy='', *, ui=None, repo_role='repo'):
         target = self.ui if ui is None else ui
         key = (str(path), file)
+        if file and state == 'selected':
+            row = self.selections.setdefault(str(path), {}).setdefault(file, dict(path=file))
+            row.update(xy=xy or row.get('xy', ''), old_path=self.renames.get(key, ''), repo_role=repo_role)
+            if not xy: row['note'] = detail
+            return
+        if state != 'planned': self.flush_selected(path)
         if file and key in self.files and state not in ('blocked','failed','pending'):
             if self.mode == 'verbose': target.detail(state.capitalize(), detail)
             return
         if file: self.files.add(key)
         if state == 'unchanged' and str(path) in self.previews and self.mode != 'verbose': return
         if state in ('planned','unchanged'): self.previews.add(str(path))
-        identity = str(path) if self.full_paths else Path(path).name
-        if not self.full_paths and self.root and Path(path) != self.root and Path(path).is_relative_to(self.root):
-            identity = Path(path).relative_to(self.root).as_posix()
-        identity = target.repository_label(path, identity)
+        identity = self.identity(path, target)
         role = 'blocked' if state in ('blocked','failed') else 'clean' if state in ('published','updated','unchanged') else 'modified'
         if file:
             if self.last_repo != str(path):

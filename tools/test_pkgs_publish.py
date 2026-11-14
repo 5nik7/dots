@@ -111,6 +111,11 @@ print(json.dumps({'dependencies':{'hello':{'version':'2'},'new':{'version':'3'}}
         # The manifest has both an already selected edit and a package export event.
         document=json.loads(path.read_text());document['groups'][0]['packages'][0]['reason']='keep this edit'
         path.write_text(json.dumps(document));self.git(repo,'add','profiles/termux/packages.json')
+        for mode in ('default', 'short', 'verbose'):
+            preview=self.publish(repo,env,'--dry-run','--view',mode).stdout
+            self.assertEqual(preview.count('profiles/termux/packages.json'),1,preview)
+            self.assertIn('[M ] (1)' if mode == 'short' else 'staged modified (1)',preview)
+            self.assertIn('Refresh and include',preview)
         output=self.publish(repo,env,'--yes','--view','default').stdout
         self.assertEqual(output.count('profiles/termux/packages.json'),1,output)
         self.assertIn('published',output)

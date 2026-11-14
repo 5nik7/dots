@@ -60,10 +60,10 @@ class Views(unittest.TestCase):
         self.git(repo, 'add', 'b.txt', 'd.txt')
         (repo/'d.txt').write_text('partially staged\n')
         (repo/'-literal ü [x].txt').write_text('untracked\n')
-        expected = ('    unstaged modified\n      a.txt\n      c.txt\n'
-                    '    staged modified\n      b.txt\n'
-                    '    staged modified + unstaged modified\n      d.txt\n'
-                    '    untracked\n      -literal ü [x].txt\n')
+        expected = ('    unstaged modified (2)\n      a.txt\n      c.txt\n'
+                    '    staged modified (1)\n      b.txt\n'
+                    '    staged modified + unstaged modified (1)\n      d.txt\n'
+                    '    untracked (1)\n      -literal ü [x].txt\n')
         index = (repo/'.git/index').read_bytes()
         for native in (False, True):
             command = self.command(native, repo, 'status')
@@ -72,10 +72,15 @@ class Views(unittest.TestCase):
                 env = dict(self.env, DOTS_PROGRESS='none', DOTS_MENU_CAPTURE='1' if capture else '0')
                 output = self.run_cmd([*command, '--view', 'default'], env=env).stdout
                 self.assertIn(expected, output)
-                self.assertEqual(output.splitlines().count('    unstaged modified'), 1)
+                self.assertEqual(output.splitlines().count('    unstaged modified (2)'), 1)
                 self.assertEqual(self.run_cmd([*command, '--view', 'default', '--json'], env=env).stdout, data)
-            for mode in ('short', 'verbose'):
-                self.assertNotIn(expected, self.run_cmd([*command, '--view', mode]).stdout)
+            short = self.run_cmd([*command, '--short'], env=dict(self.env, COLUMNS='160')).stdout
+            self.assertIn('States  [ M] (2) / [M ] (1) / [MM] (1) / [??] (1)', short)
+            verbose = self.run_cmd([*command, '--verbose'], env=dict(self.env, COLUMNS='160')).stdout
+            self.assertIn('    [ M] unstaged modified (2)\n      a.txt\n      c.txt', verbose)
+            self.assertIn('    [MM] staged modified + unstaged modified (1)', verbose)
+            self.assertIn('    [??] untracked (1)', verbose)
+            self.assertIn('HEAD', verbose)
         # Automatic terminal default still groups with icons and wraps safely.
         ansi = re.compile(rb'\x1b\[[0-?]*[ -/]*[@-~]')
         for native in (False, True):
@@ -84,7 +89,7 @@ class Views(unittest.TestCase):
                     dict(self.env, DOTS_PROGRESS='none', DOTS_COLOR='always', DOTS_ICONS='always', TERM='xterm-256color'), width)
                 self.assertEqual(code, 0, data)
                 lines = ansi.sub(b'', data).decode().splitlines()
-                self.assertEqual(lines.count('    󰏫 unstaged modified'), 1)
+                self.assertEqual(lines.count('     unstaged modified (2)'), 1)
                 for name in ('a.txt', 'c.txt'):
                     line = next(line for line in lines if line.endswith(name))
                     self.assertTrue(line.startswith('      ') and not line.startswith('       '), line)
@@ -98,7 +103,8 @@ class Views(unittest.TestCase):
         (child/'file').write_text('child changed\n')
         for native in (False, True):
             output = self.run_cmd(self.command(native, repo, 'status', '--view', 'default')).stdout
-            self.assertEqual(output.splitlines().count('    unstaged modified'), 2, output)
+            self.assertIn('    unstaged modified (2)', output)
+            self.assertIn('    unstaged modified (1)', output)
             self.assertEqual(output.splitlines().count('      file'), 2, output)
 
     def test_sync_reports_only_actual_changed_paths(self):
@@ -136,6 +142,71 @@ class Views(unittest.TestCase):
                 self.assertIn('push', result.stderr)
                 self.assertIn('resolve blockers and rerun', (result.stdout+result.stderr).lower())
 
+    def test_publish_counts_only_selected_paths_without_changing_events_or_index(self):
+        _, bare, repo = self.remote_repo('selection-counts')
+        self.owned_remote(repo, bare)
+        for name in ('a.txt', 'b.txt', 'c.txt'):
+            (repo/name).write_text('initial\n')
+        self.git(repo, 'add', '.'); self.git(repo, 'commit', '-m', 'fixture')
+        self.git(repo, 'push', str(bare), 'main')
+        for name in ('a.txt', 'b.txt', 'c.txt'):
+            (repo/name).write_text('selected\n')
+        self.git(repo, 'add', 'a.txt', 'c.txt')
+        self.git(repo, 'mv', '--', 'file', '-renamed ü')
+        (repo/'-renamed ü').write_text('initial\nunstaged\n')
+        (repo/'new.txt').write_text('untracked\n')
+        index = (repo/'.git/index').read_bytes()
+        head = self.git(repo, 'rev-parse', 'HEAD')
+        remote = self.git(bare, 'rev-parse', 'main')
+        for native in (False, True):
+            command = self.command(native, repo, 'publish', '--config', str(self.config), '--dry-run', '-m', 'Counted preview')
+            for all_files in (False, True):
+                args = [*command, *(['--all'] if all_files else [])]
+                baseline = self.run_cmd([*args, '--json']).stdout
+                selected = [row for row in json.loads(baseline)['events'] if row['status'] == 'selected']
+                self.assertEqual(len(selected), 5 if all_files else 3)
+                for mode in ('default', 'short', 'verbose'):
+                    env = dict(self.env, COLUMNS='240', DOTS_PROGRESS='none')
+                    output = self.run_cmd([*args, '--view', mode], env=env).stdout
+                    self.assertIn('[M ] (2)' if mode == 'short' else 'staged modified (2)', output)
+                    self.assertIn('[RM] (1)' if mode == 'short' else 'staged renamed + unstaged modified (1)', output)
+                    self.assertEqual('b.txt' in output, all_files)
+                    self.assertEqual('new.txt' in output, all_files)
+                    self.assertEqual(output.count('file → -renamed ü'), 1)
+                    if all_files:
+                        self.assertIn('[ M] (1)' if mode == 'short' else 'unstaged modified (1)', output)
+                        self.assertIn('[??] (1)' if mode == 'short' else 'untracked (1)', output)
+                    decorated = dict(env, DOTS_COLOR='always', DOTS_ICONS='always')
+                    self.assertEqual(self.run_cmd([*args, '--view', mode, '--json'], env=decorated).stdout, baseline)
+        self.assertEqual((repo/'.git/index').read_bytes(), index)
+        self.assertEqual(self.git(repo, 'rev-parse', 'HEAD'), head)
+        self.assertEqual(self.git(bare, 'rev-parse', 'main'), remote)
+
+    def test_sync_groups_actual_change_types_in_every_view(self):
+        source, bare, first = self.remote_repo('change-counts')
+        for name in ('a.txt', 'b.txt'):
+            (source/name).write_text('before\n')
+        self.git(source, 'add', '.'); self.git(source, 'commit', '-m', 'files')
+        self.git(source, 'push', str(bare), 'main')
+        before = self.git(source, 'rev-parse', 'HEAD')
+        for name in ('a.txt', 'b.txt'):
+            (source/name).write_text('after\n')
+        self.git(source, 'mv', 'file', 'renamed')
+        self.git(source, 'commit', '-am', 'change and rename')
+        self.git(source, 'push', str(bare), 'main')
+        for native in (False, True):
+            for mode in ('default', 'short', 'verbose'):
+                repo = self.base / ('sync-' + str(native) + '-' + mode)
+                self.run_cmd(['git', 'clone', str(bare), str(repo)])
+                self.git(repo, 'reset', '--hard', before)  # Disposable clone only.
+                command = self.command(native, repo, 'sync', '--view', mode)
+                output = self.run_cmd(command, env=dict(self.env, COLUMNS='160')).stdout
+                self.assertIn('[M ] (2)' if mode == 'short' else 'modified (2)', output)
+                self.assertIn('[R ] (1)' if mode == 'short' else 'renamed (1)', output)
+                self.assertNotIn('staged', output)
+                self.assertEqual(output.count('file → renamed'), 1)
+                self.assertNotIn('States', self.run_cmd(command).stdout)
+
     def test_sync_file_report_failure_keeps_completed_update(self):
         shim=self.base/'report-shim';shim.mkdir()
         real_git=shutil.which('git')
@@ -151,12 +222,16 @@ class Views(unittest.TestCase):
 
     def test_inspection_named_routes_and_details_conflict(self):
         repo = self.repo('root'); child = self.repo('source')
-        self.sub(repo, child, 'modules/child')
+        checkout = self.sub(repo, child, 'modules/child')
+        (repo/'file').write_text('changed\n')
+        (checkout/'file').write_text('changed\n')
         for route in (['info'], ['submodules'], ['submodules','info'], ['submodules','status'], ['submodule','child','status'], ['submodule','child','info']):
             command = [shutil.which('bash'), str(PROJECT/'bin/dots'), 'git', *route, '-C', str(repo)]
             baseline = self.run_cmd([*command, '--json']).stdout
             for mode in ('default','short','verbose'):
-                self.run_cmd([*command, '--view', mode])
+                output = self.run_cmd([*command, '--view', mode]).stdout
+                count = 2 if route == ['info'] else 1  # Root also reports the dirty child gitlink.
+                self.assertIn(('[ M]' if mode == 'short' else 'unstaged modified') + f' ({count})', output)
                 self.assertEqual(self.run_cmd([*command, '--view', mode, '--json']).stdout, baseline)
         conflict = [shutil.which('bash'), str(PROJECT/'bin/dots'), 'git','submodules','-C',str(repo),'--details','--short']
         self.assertNotEqual(self.run_cmd(conflict, ok=False).returncode, 0)

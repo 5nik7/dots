@@ -9,11 +9,11 @@ CLI Git view flags override the saved view. `DOTS_PROGRESS=auto` follows Config;
 
 ### Git status icons
 
-Default Git status uses two spaces per level: repository, status heading, then files. Edit heading icons with `dots config browse --query icons.git.status`. Each key below is prefixed by `icons.git.status.`:
+Default and verbose Git file reports use two spaces per level: repository, counted status heading, then files. Status, selected publication paths and completed sync changes share these icons. Edit heading icons with `dots config browse --query icons.git.status`. Each key below is prefixed by `icons.git.status.`:
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `modified` | `󰏫` | Pencil: modified file, staged or unstaged |
+| `modified` | `` | Modified file, staged or unstaged |
 | `added` | `󰐕` | Plus: added file |
 | `deleted` | `󰆴` | Trash: deleted file |
 | `renamed` | `` | Arrow: renamed file |

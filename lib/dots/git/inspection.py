@@ -276,8 +276,9 @@ class Inspection:
 
 class Tree:
     """Human-only tree gutters; discovery and redirected output stay independent."""
-    def __init__(self, view, rows):
+    def __init__(self, view, rows, output=None):
         self.view, self.ui = view, view.ui
+        self.output = output
         self.by_path = {row['path']: row for row in rows}
         self.last = {row['parent']: row['path'] for row in rows}
         self.vertical = '│' if self.ui.icons else '|'
@@ -328,6 +329,8 @@ class Tree:
         detail_ui.emit = lambda value='': ui.emit(ui.paint(continuation, '2') + value)
         if row['reason']:
             detail_ui.detail('Reason', row['reason'], '93')
+        if self.output:
+            self.output.summary(row['files'], ui=detail_ui, label='Changes')
         if details:
             view.remote_details(row, detail_ui)
             detail_ui.detail('Recorded', row['recorded_commit'])
@@ -480,7 +483,7 @@ def main(argv=None, info_edge=None):
                 else: view.info(companion['repository'],args.full_paths)
             else: ui.detail('Hint',companion['reason'])
     else:
-        tree = Tree(view, inspected) if args.command == 'submodules' and (ui.human or output) and mode != 'short' and inspected else None
+        tree = Tree(view, inspected, output) if args.command == 'submodules' and (ui.human or output) and mode != 'short' and inspected else None
         if tree:
             tree.header(base, args.full_paths)
         else:
@@ -496,7 +499,9 @@ def main(argv=None, info_edge=None):
             if output:
                 if args.command == 'status': output.status(row,row['relative_path'])
                 elif args.command == 'submodules-info': output.info(row,row['relative_path'])
-                else: output.header(row,row['relative_path'])
+                else:
+                    output.header(row,row['relative_path'])
+                    output.summary(row['files'])
                 continue
             ui.emit()
             label = view.repository_label(row, row['path'] if args.full_paths else row['relative_path'])

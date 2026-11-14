@@ -66,6 +66,26 @@ class WikiGitTests(WikiFixture):
         self.run_git('status','--json',only=True,code=1)
         self.assertFalse(self.target.exists())
 
+    def test_wiki_views_count_status_and_selected_publication_paths(self):
+        (self.root/'docs/guide.md').write_text('# Guide\n## Hello world\nCounted preview\n')
+        self.git(self.root,'add','docs/guide.md');self.stage_build()
+        before=(self.git(self.root,'status','--porcelain'),self.git(self.target,'status','--porcelain'))
+        for bash in (False,True):
+            data=self.run_git('status','--json',only=True,bash=bash)
+            counts={}
+            for row in data['repositories'][0]['files']:
+                counts[row['xy']]=counts.get(row['xy'],0)+1
+            self.assertTrue(counts)
+            for mode in ('default','short','verbose'):
+                status=self.run_git('status','--view',mode,only=True,bash=bash)
+                preview=self.run_git('publish','--dry-run','--view',mode,bash=bash)
+                for xy,count in counts.items():
+                    from git_output import file_label
+                    expected=(f'[{xy}]' if mode=='short' else file_label(xy))+f' ({count})'
+                    self.assertIn(expected,status)
+                    self.assertIn(expected,preview)
+        self.assertEqual(before,(self.git(self.root,'status','--porcelain'),self.git(self.target,'status','--porcelain')))
+
     def test_combined_publish_source_first_and_no_gitlink(self):
         (self.root/'docs/guide.md').write_text('# Guide\n## Hello world\nUpdated\n')
         self.git(self.root,'add','docs/guide.md');self.stage_build()

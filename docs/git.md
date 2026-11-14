@@ -16,23 +16,23 @@ Terminal reports use `apps.git.view`, initially `default`. Select a view for one
 
 | View | Status and operation reports |
 | --- | --- |
-| `default` | Compact repository/branch/state/cached tracking header, followed by one heading per distinct status and a file list nested beneath it. Index and worktree states share a heading; renames show `old → new`. Clean repositories need only a header. |
-| `short` | Compact headers and Git-style two-column XY file states. |
-| `verbose` | Per-file status labels, repository metadata and operation phase details. No patches or file contents. |
+| `default` | Compact repository/branch/state/cached tracking header, followed by one counted heading per distinct status and a file list nested beneath it. Index and worktree states share a heading; renames show `old → new`. Clean repositories need only a header. |
+| `short` | Compact headers, a state-count summary such as `States  [ M] (2) / [??] (1)`, and Git-style two-column XY file states. |
+| `verbose` | Counted status groups with bracketed XY codes, repository metadata and operation phase details. No patches or file contents. |
 
-Default status groups matching full index/worktree states within each repository, keeping first-seen group order and file order inside each group. For example:
+Default and verbose status group matching full index/worktree states within each repository, keeping first-seen group order and file order inside each group. For example:
 
 ```text
 Git status
    dots  main  modified  0 ahead / 0 behind (cached)
-    󰏫 unstaged modified
+     unstaged modified (2)
        .dots-wiki.json
        Command-reference.md
 ```
 
-Each level adds two spaces: repository rows start at two, status headings at four, and files and wrapped continuation lines at six. A heading icon identifies the change type and shares its status color. Configure it with `icons.git.status.*`; [status icon settings](configuration.md#git-status-icons) lists defaults and examples. Disabled icons or an empty glyph leave the label at the same indentation without an extra separator. Combined states such as `staged modified + unstaged modified` remain a single heading. When types differ, the icon follows conflict, deleted, renamed, copied, added, type changed, then modified precedence; the full label always remains visible. Short and verbose views retain per-file labels. This layout also applies to submodule/Wiki status and the mock Git gallery.
+Each level adds two spaces: repository rows start at two, status headings at four, and files and wrapped continuation lines at six. A heading icon identifies the change type and shares its status color. Configure it with `icons.git.status.*`; [status icon settings](configuration.md#git-status-icons) lists defaults and examples. Disabled icons or an empty glyph leave the label at the same indentation without an extra separator. Combined states such as `staged modified + unstaged modified` remain a single heading. When types differ, the icon follows conflict, deleted, renamed, copied, added, type changed, then modified precedence; the full label always remains visible. Counts are files in that complete state within the current repository; a combined staged/unstaged state or rename pair counts once. A changed submodule entry counts once in its parent, with child files counted separately in the child repository. Verbose headings include XY, for example ` [ M] unstaged modified (2)`, with files nested beneath. Short retains individual XY rows beneath its compact count summary. Clean repositories omit empty groups, and unavailable inspection does not imply zero changes. This layout also applies to submodule/Wiki status and the mock Git gallery.
 
-Info and submodule trees keep their inspection structure. Publish reviews selected paths once, then reports phases and outcomes; prospective child-pointer staging stays explicit. Sync lists paths changed between the actual before/after commits after an update. Its dry-run does not invent an incoming file list before fetching. Every view retains blockers and recovery instructions.
+Info and submodule trees keep their inspection structure and show the same per-state counts in compact change summaries, without file lists. Publish reviews selected paths once under counted headings (or a short summary and XY rows), then reports phases and outcomes; counts cover only selected paths, package-manifest notes remain visible, and prospective child-pointer staging stays explicit. Sync groups paths changed between the actual before/after commits after an update, using change-kind headings such as `modified (3)` rather than staging labels. Its dry-run does not invent an incoming file list before fetching. Every view retains blockers and recovery instructions.
 
 File rows color directory components using the configured directory file style
 (`type.dir`), while the basename and icon retain their file style. For example,

@@ -472,7 +472,7 @@ ShellCheck, relative Markdown links and `git diff --check` also passed.
 
 ## Git and Managed File Operations
 
-`python3 -B tools/test_git_output.py` checks default status grouping across nonadjacent matching states, separate repositories and combined staging states; 2/4/6-space repository/status/file indentation and heading icons; rename/path colors and wrapping; unchanged short/verbose/data views; and read-only index preservation through both controllers. Owned PTYs cover 40/80/120 columns.
+`python3 -B tools/test_git_output.py` checks counted default/verbose groups and short XY summaries across nonadjacent matching states, separate repositories and combined staging states; 2/4/6-space repository/status/file indentation and heading icons; selected-only/all publication counts and actual sync change groups; compact info/tree summaries; rename/path colors and wrapping; unchanged JSON/events; and read-only index preservation through both controllers. Owned PTYs cover 40/80/120 columns.
 
 `python3 -B tools/test_git_status_icons.py` verifies all heading types and conflict states through Bash and Python, custom/inherited/hidden glyphs, independent color/icon policies, Config save/reset/validation/browser/completion and truthful samples, next-invocation batch saves without theme publication, and compiled Bash/Zsh projection invalidation with Python unavailable on the warm path. All configuration, state and repository paths belong to disposable fixtures.
 

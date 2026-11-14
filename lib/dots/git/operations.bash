@@ -250,8 +250,8 @@ publish_preview() {
         return 0
     fi
     records_cmd git -C "$dir" status --porcelain=v1 -z --untracked-files=all || return 1
-    local i xy path old
-    local -a selected_rows=("${RECORDS[@]}")
+    local i xy path old VIEW_DEFER_SELECTED=1
+    local -a selected_rows=("${RECORDS[@]}") paths=() codes=() oldpaths=()
     for ((i=0;i<${#selected_rows[@]};i++)); do
         row=${selected_rows[i]}; xy=${row:0:2}; path=${row:3}; old=''
         if [[ $xy == *R* || $xy == *C* ]]; then ((i+=1)); old=${selected_rows[i]}; fi
@@ -260,8 +260,15 @@ publish_preview() {
         VIEW_RENAMES[$dir/$path]=$old
         if ((ALL)) || [[ ${xy:0:1} != ' ' && ${xy:0:1} != '?' ]]; then
             event "$dir" selected "$xy $path" "$path" "$xy"
+            paths+=("$path"); codes+=("$xy"); oldpaths+=("$old")
         fi
     done
+    if [[ $GIT_VIEW ]]; then
+        view_status_files "$dir"
+        # Associative array declared by views.bash.
+        # shellcheck disable=SC2004
+        for path in "${paths[@]}"; do VIEW_FILES[$dir/$path]=1; done
+    fi
     return 0
 }
 

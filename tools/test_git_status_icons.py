@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Status-heading icons, Config and both renderers in exclusively owned roots."""
 import io
+import itertools
 import json
 import os
 from pathlib import Path
@@ -43,7 +44,7 @@ class StatusIcons(unittest.TestCase):
         for value in ('bad\ntext', '\x1b[31m', 'x' * 65):
             self.run_config('set', 'icons.git.status.modified', value, code=1)
         self.run_config('unset', 'icons.git.status.modified')
-        self.assertEqual(self.run_config('get', 'icons.git.status.modified').stdout, '󰏫\n')
+        self.assertEqual(self.run_config('get', 'icons.git.status.modified').stdout, '\n')
         explained = json.loads(self.run_config('explain', 'icons.git.status.modified', '--json').stdout)
         self.assertEqual([c['app'] for c in explained['consumers']], ['cli'])
         self.assertEqual(explained['consumers'][0]['refresh'], 'next invocation')
@@ -51,7 +52,7 @@ class StatusIcons(unittest.TestCase):
             inventory = Inventory(self.root, self.platform)
             self.assertTrue(any(row.key == 'icons.git.status.modified' for row in inventory.rows))
             styles = Styles(self.root)
-            sample = icon_sample(styles, 'git.status.modified', '󰏫', published=PublishedSamples(styles))
+            sample = icon_sample(styles, 'git.status.modified', '', published=PublishedSamples(styles))
             self.assertIn('Git modified fallback', sample.annotation)
             self.assertEqual(sample.code, '0;' + Presentation().resources.git_style('modified'))
         keys = subprocess.check_output([sys.executable, '-B', str(self.root/'lib/dots/profile_config.py'), '__keys'], env=self.env, text=True)
@@ -91,40 +92,39 @@ class StatusIcons(unittest.TestCase):
                           'codes=(' + ' '.join(shlex.quote(f['xy']) for f in files) + ')',
                           'paths=(' + ' '.join(shlex.quote(f['path']) for f in files) + ')',
                           'oldpaths=(' + ' '.join("''" for _ in files) + ')', 'view_status_files "$HOME"'])
-        for icons in ('always', 'never'):
-            for color in ('always', 'never'):
-                env = dict(self.env, DOTS_PROFILE='linux/icons', DOTS_ICONS=icons, DOTS_COLOR=color,
-                           DOTS_MENU_CAPTURE='1', TERM='xterm-256color', COLUMNS='120')
-                current.cache_clear()
-                with patch.dict(os.environ, env, clear=True):
-                    # Project the explicitly inspected child into the same
-                    # literal rows used by compiled startup, without pretending
-                    # that this host runs that Linux distro profile.
-                    styles = Styles(self.root, context(self.root, 'linux/icons'))
-                    rows = ['\t'.join(row) for row in styles.rows()]
-                    projected = '_DOTS_PROFILE_SETTINGS_CHECKOUT="$DOTS"\n_DOTS_PROFILE_SETTING_ROWS=(' + ' '.join(map(shlex.quote, rows)) + ')\n'
-                    output = io.StringIO()
-                    view = GitView(Presentation(output, terminal=True), 'default')
-                    with patch.object(view, 'header'):
-                        view.status(dict(path=str(self.home), files=files))
-                    python_output = output.getvalue()
-                result = subprocess.run([shutil.which('bash'), '--noprofile', '--norc', '-c', projected + shell], env=env,
-                                        text=True, capture_output=True, timeout=20)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                expected = ['    ' + (glyph + ' ' if glyph and icons == 'always' else '') + label
-                            for _, glyph, label in cases]
-                for frontend, text in (('Python', python_output), ('Bash', result.stdout)):
-                    lines = text.splitlines()
-                    headings = [ANSI.sub('', line) for line in lines if ANSI.sub('', line).startswith('    ')
-                                and not ANSI.sub('', line).startswith('     ')]
-                    self.assertEqual(headings, expected, frontend)
-                    self.assertEqual('\x1b[' in text, color == 'always')
-                    for file in files:
-                        line = next(line for line in ANSI.sub('', text).splitlines() if line.endswith(file['path']))
-                        self.assertTrue(line.startswith('      ') and not line.startswith('       '), line)
-                    if color == 'always':
-                        label = ('EDIT ' if icons == 'always' else '') + 'unstaged modified'
-                        self.assertRegex(text, r'\x1b\[[0-9;]+m' + re.escape(label) + r'\x1b\[0m')
+        for icons, color, mode in itertools.product(('always', 'never'), ('always', 'never'), ('default', 'verbose')):
+            env = dict(self.env, DOTS_PROFILE='linux/icons', DOTS_ICONS=icons, DOTS_COLOR=color,
+                       DOTS_MENU_CAPTURE='1', TERM='xterm-256color', COLUMNS='120')
+            current.cache_clear()
+            with patch.dict(os.environ, env, clear=True):
+                # Project the explicitly inspected child into the same
+                # literal rows used by compiled startup, without pretending
+                # that this host runs that Linux distro profile.
+                styles = Styles(self.root, context(self.root, 'linux/icons'))
+                rows = ['\t'.join(row) for row in styles.rows()]
+                projected = '_DOTS_PROFILE_SETTINGS_CHECKOUT="$DOTS"\n_DOTS_PROFILE_SETTING_ROWS=(' + ' '.join(map(shlex.quote, rows)) + ')\n'
+                output = io.StringIO()
+                view = GitView(Presentation(output, terminal=True), mode)
+                with patch.object(view, 'header'), patch.object(view, 'metadata'):
+                    view.status(dict(path=str(self.home), files=files))
+                python_output = output.getvalue()
+            result = subprocess.run([shutil.which('bash'), '--noprofile', '--norc', '-c', projected + shell.replace('GIT_VIEW=default', 'GIT_VIEW=' + mode)], env=env,
+                                    text=True, capture_output=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            expected = ['    ' + (glyph + ' ' if glyph and icons == 'always' else '') + ('[' + xy + '] ' if mode == 'verbose' else '') + label + ' (1)'
+                        for xy, glyph, label in cases]
+            for frontend, text in (('Python', python_output), ('Bash', result.stdout)):
+                lines = text.splitlines()
+                headings = [ANSI.sub('', line) for line in lines if ANSI.sub('', line).startswith('    ')
+                            and not ANSI.sub('', line).startswith('     ')]
+                self.assertEqual(headings, expected, frontend)
+                self.assertEqual('\x1b[' in text, color == 'always')
+                for file in files:
+                    line = next(line for line in ANSI.sub('', text).splitlines() if line.endswith(file['path']))
+                    self.assertTrue(line.startswith('      ') and not line.startswith('       '), line)
+                if color == 'always':
+                    label = ('EDIT ' if icons == 'always' else '') + ('[ M] ' if mode == 'verbose' else '') + 'unstaged modified (1)'
+                    self.assertRegex(text, r'\x1b\[[0-9;]+m' + re.escape(label) + r'\x1b\[0m')
 
     def test_batch_preview_and_save_apply_without_publishing(self):
         import config_refresh
@@ -152,8 +152,8 @@ class StatusIcons(unittest.TestCase):
             code = 'source "$DOTS/lib/dots/shell/init.' + shell + '"; printf "%s" "${_DOTS_STYLE_ICONS[git.status.modified]}"'
             cold = fixture.run_shell(shell, code)
             self.assertEqual(cold.returncode, 0, cold.stderr)
-            self.assertEqual(cold.stdout, '󰏫')
-            icons.write_text(original.replace('modified = "󰏫"', 'modified = "EDIT"'))
+            self.assertEqual(cold.stdout, '')
+            icons.write_text(original.replace('modified = ""', 'modified = "EDIT"'))
             changed = fixture.run_shell(shell, code)
             self.assertEqual(changed.returncode, 0, changed.stderr)
             self.assertEqual(changed.stdout, 'EDIT')
