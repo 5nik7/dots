@@ -243,9 +243,16 @@ class Cases:
         self.assertEqual(self.git(top, 'rev-parse', 'HEAD'), before_head)
         self.assertEqual(self.git(top_bare, 'rev-parse', 'main'), before_remote)
         unchanged = {repo: self.git(repo, 'rev-parse', 'HEAD') for repo in (mid, leaf)}
+        # Pending uses the Git "modified" semantic role in both frontends.
+        # Pin an owned amber style rather than assuming the legacy ANSI 93
+        # fallback survives the current shared warning-color preferences.
+        theme = Path(self.env['XDG_STATE_HOME']) / 'dots/current/theme'
+        theme.mkdir(parents=True, exist_ok=True)
+        warning = '38;2;173;117;23'
+        (theme / 'git-styles.tsv').write_text('dots-git-styles\t1\nmodified\t' + warning + '\n')
         output = self.call(top, 'submodules', 'publish', 'middle', '--yes',
                            env=dict(self.env, DOTS_COLOR='always', DOTS_ICONS='never')).stdout
-        self.assertIn('\x1b[93m[!] pending', output)
+        self.assertIn('\x1b[' + warning + 'm[!] pending\x1b[0m', output)
         self.assertEqual(self.index(top), before_index)
         for repo, bare in ((mid, mid_bare), (leaf, leaf_bare)):
             self.assertEqual(self.git(repo, 'rev-parse', 'HEAD'), unchanged[repo])

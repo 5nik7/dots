@@ -559,6 +559,8 @@ acceptance remain separate gates; fixture SSH publication requires Bash locally.
 Run `python3 -B tools/test_git_operations.py` and
 `python3 -B tools/test_file_operations.py`. Both use disposable owned roots.
 
+First run `python3 -B tools/test_git_fixture.py` for Git fixture containment. The fixture inherits only native runtime/locale inputs, owns HOME/XDG/AppData/temp roots and disables ambient Git configuration, hooks and signing. It permits local file transport by default and enables SSH only with its owned local transport; HTTP(S) is denied. Controls exercise actual startup/configuration poisoning and fake transport helpers without contacting a remote service. Native POSIX-only cases skip on Windows; record portable and native execution separately. The selected-submodule publication test pins an owned amber `modified` role and verifies colored pending output plus reset, independently of shared preference changes, while retaining parent-index/HEAD/remote preservation, unchanged repeat and lock assertions.
+
 `python3 -B tools/test_files_check.py` covers catalog-only absent-source cleanup:
 selection/cancellation, dry-run/JSON, filters, preserved targets and broken source
 links, strict absence/error handling, drift, multi-catalog rollback, abrupt-exit
@@ -819,6 +821,8 @@ runtimes are skipped; stubs do not certify native Windows. The Starship palette
 suite below also covers a default-path link with a nondefault XDG config root.
 
 Run `python3 -B tools/test_shell_environment.py -v` for isolated settings, reload, diagnostic and native adapter contracts. Use small sequential cases on resource-constrained Termux hosts. Tests source library integration without personal rc files; unavailable native runtimes must be reported separately.
+
+The shell-environment fixture preserves the outer runner's inspected `PREFIX`, `TERMUX__PREFIX`, `TERMUX_VERSION` and `LD_PRELOAD`, and explicitly disables Termux autostart. The shared debug fixture also retains the inspected loader preload, so the profile-backend reload case uses the same native execution support. Supply owned prefix/interpreter paths; dropping these variables can silently turn native Termux checks into generic Linux checks or break Android script execution. `tools/test_profile_backend.py` and `tools/test_preference_files.py` cover generated namespaces, registry/profile transactions, migration/import, precedence, rollback and drift in owned roots. Report Bash/Zsh/Fish availability explicitly: some backend loops omit missing runtimes without emitting unittest skips. Shell-environment subtest skips are reported separately from test-method counts.
 
 Environment presentation cases use owned native PTYs at 40/80/120 columns and
 cover automatic/plain/forced colors, value sources, long Unicode paths, inert

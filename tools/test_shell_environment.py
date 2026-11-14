@@ -21,11 +21,15 @@ class ShellEnvironment(unittest.TestCase):
         self.home = self.root / 'home space ü'
         self.home.mkdir()
         self.env = {'HOME': str(self.home), 'DOTS': str(REPO), 'PATH': os.environ['PATH'],
-                    'TERM': 'dumb', 'ZDOTDIR': str(self.home), 'TMPDIR': str(self.root)}
+                    'TERM': 'dumb', 'ZDOTDIR': str(self.home), 'TMPDIR': str(self.root),
+                    'DOTS_TERMUX_AUTOSTART': '0'}
         for key in ('CONFIG', 'STATE', 'CACHE', 'DATA'):
             self.env[f'XDG_{key}_HOME'] = str(self.home / key.lower())
-        if os.environ.get('LD_PRELOAD'):
-            self.env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
+        # Keep the inspected outer runtime's loader and platform identity; the
+        # acceptance runner supplies owned prefix paths and restricted tools.
+        for key in ('LD_PRELOAD', 'PREFIX', 'TERMUX__PREFIX', 'TERMUX_VERSION'):
+            if os.environ.get(key):
+                self.env[key] = os.environ[key]
         self.config = self.home / 'config/dots/config.env'
         # These cases exercise legacy config.env and must never write a live profile.
         self.env['DOTS_CONFIG_FILE'] = str(self.config)

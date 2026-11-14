@@ -44,7 +44,9 @@ def fixture(root):
         for name in names:
             executable=shutil.which(name)
             if executable and os.name!='nt': (tools/name).symlink_to(executable)
-        env={k:v for k,v in os.environ.items() if k in ('PREFIX','TERMUX__PREFIX','TERMUX_VERSION','SystemRoot','SYSTEMROOT','WINDIR','COMSPEC','OS')}
+        # The outer runner supplies inspected loader settings; retain Termux's
+        # exec compatibility while keeping application state in owned roots.
+        env={k:v for k,v in os.environ.items() if k in ('PREFIX','TERMUX__PREFIX','TERMUX_VERSION','LD_PRELOAD','SystemRoot','SYSTEMROOT','WINDIR','COMSPEC','OS')}
         env.update(HOME=str(home),USERPROFILE=str(home),DOTS=str(checkout),PATH=str(tools),TMPDIR=str(base),TEMP=str(base),TMP=str(base),
                    XDG_CONFIG_HOME=str(home/'config'),XDG_CACHE_HOME=str(home/'cache'),XDG_STATE_HOME=str(home/'state'),XDG_DATA_HOME=str(home/'data'),
                    APPDATA=str(home/'config'),LOCALAPPDATA=str(home/'data'),DOTS_INIT_THEME='0',DOTS_INIT_COMPLETION='0',DOTS_TERMUX_AUTOSTART='0',DOTS_ZSH_SUGGESTIONS='none',TERM='xterm-256color')

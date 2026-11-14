@@ -136,6 +136,134 @@ Re-enable these two workflows after isolated repairs and successful explicit man
   clone or publication.
 - [x] Supply an uncommitted return patch with SHA-256 provenance, shared behavior
   changes and native Termux gates; validate application in an owned baseline tree.
+- [x] Harden and preflight the next profile/preferences/environment and bounded
+  Git return batch; native Termux execution remains pending below.
+- [x] Rehearse packet 3 with all 29 skill links in an owned native Windows
+  transaction, including interruption/recovery; live restoration is unapproved.
+
+### Profile and Git return preflight — 2026-11-14
+
+Source identity: Windows `main` at `358b939f1f2d0cae331f649717e166491f6b06df`
+plus this patch. Tests use an owned Ubuntu WSL source snapshot or native Windows
+fixture roots. The live `/home/njen/dots` checkout is unchanged. Earlier Termux
+records, including the accepted GitTheme follow-up at `788a7fdf`, remain separate;
+none of these PC checks establish the next phone gate.
+
+The Git fixture previously inherited arbitrary startup/Python/SSH-agent/Dots
+variables and permitted real HTTP(S) transport. It now keeps only inspected
+runtime/locale inputs, owns home/config/data/state/cache/runtime/AppData/temp
+roots, and permits file transport until its local fake SSH helper is installed.
+The new containment suite uses owned poisoning and fake transport positive
+controls, plus a portable native Python/Git configuration check. No test contacts
+a network service or uses personal Git settings. Callers still supply bounded
+executable discovery; Bash publication requires `sha256sum`.
+
+Shell-environment tests now retain the outer runner's inspected Termux prefix,
+identity and loader variables and disable autostart. The shared debug fixture
+retains `LD_PRELOAD` for Android script execution. Selected-submodule output uses
+an explicit owned `modified` color instead of assuming the old ANSI 93 default;
+index/HEAD/remote preservation, unchanged repeat, reset and lock assertions stay.
+These are fixture repairs, not changes to Git publication, preferences, ordinary
+startup, defaults or output contracts. No configuration/menu, completion or
+installer integration change is needed. Source rollback restores these fixture
+and documentation edits; there are no package or live-application effects.
+
+| Check | Execution | Final result | Wall seconds |
+| --- | --- | --- | ---: |
+| `test_git_fixture.py` | Ubuntu WSL, Python 3.12.3 | 4/4 passed | 0.191 |
+| Same containment suite | Native Windows, Python 3.15.2 | 1 passed, 3 POSIX transport skips | 2.191 |
+| `test_profile_backend.py` | Ubuntu WSL, owned source | 13 passed, 1 Linux-context skip out of 14 methods | 8.325 |
+| `test_preference_files.py` | Ubuntu WSL, owned source | 8/8 passed | 6.002 |
+| `test_shell_environment.py` | Ubuntu WSL, Bash/Zsh | 11 methods completed; 20 Fish/Nu subtest skips, no failures/errors | 14.235 |
+| Two `gup` contract/completion cases in `test_shared_shells.py` | Ubuntu WSL, Bash | 2/2 passed | 0.686 |
+| Four selected `test_git_operations.py` publication cases | Ubuntu WSL, Bash frontend | 4/4 passed | 2.160 |
+| Same four cases, `DOTS_TEST_GIT_FRONTEND=native` | Ubuntu WSL, Python controller | 4/4 passed | 1.260 |
+| Selected-submodule index/remote case in `test_git_submodules.py` | Ubuntu WSL, Bash and Python controller | 2/2 passed | 3.386 |
+
+The four Git cases cover staged-only/existing commits, explicit broad staging
+with ownership refusal, confirmation/pure preview, and push-URL/configuration
+conflicts. The submodule cases use only disposable nested repositories and local
+remotes. Controller evidence on WSL is not native Windows shell acceptance.
+Fish/Nu were absent from WSL; some backend loops omit unavailable shells without
+unittest skips. The backend skip's exact reason is `Linux-context fixture requires
+a POSIX host`; actual execution was WSL. Report subtest skips separately from
+test-method counts. Durations are process wall time, not startup benchmarks.
+
+Retained failed harness attempts: plain Windows `git archive` applied CRLF
+conversion to LF Git blobs, producing `/.` followed by carriage return in a
+generated root. The initial backend run had one failure/one skip, and the initial
+shell-environment run had three failures/20 subtest skips. Re-exporting with
+command-scoped `core.autocrlf=false` and `core.eol=lf`, comparing the TSV blob and
+excluding three external absolute links resolved these failures without a
+product path change. The first four Bash Git cases also failed because the
+outer allowlist lacked `sha256sum`; the first submodule pair included that
+harness issue and the stale color assertion. All original outputs remain apart
+from the successful final runs; no source assertion was removed.
+
+WSL evidence: `/tmp/dots-return-preflight-sg7n_s6i`, with separate `repo space ü`
+and corrected `repo-lf space ü` snapshots, source overlay hashes, owned runtime
+tools and per-command raw streams/environment/result records. Native Windows
+containment evidence: `%TEMP%/dots-git-fixture-native-f3vti61k`. No personal
+startup, packages, themes, services, clipboard or live checkout synchronization
+ran. Source-link/manual/source-only wiki validation applies; export synchronization
+remains pending without a wiki checkout.
+
+The next Termux prompt must name the published repair SHA and authorize only a
+clean fast-forward preserving the existing transport, then these eight bounded
+commands sequentially and independently. Require fixture/helper inspection,
+an owned public source snapshot, native Bash/Zsh and available Fish/Nu, owned
+prefix `bin/env`/interpreters, inspected loader variables, explicit tools including
+`sha256sum`, raw byte logs and before/after Git/process checks. Keep previous
+acceptance records intact and preserve the authorized literal-stdin `cpy`
+handoff delivery. Transactions/Bak, broader packages/cleanup, visible terminals,
+desktop consumers and live application acceptance remain subsequent gates.
+
+### Packet 3 refreshed review — 2026-11-14
+
+**Proposed; not activated.** Native Windows read-only inventory at `358b939f`
+finds all 72 tracked symlink entries materialized as exact plain-text Git blobs.
+Only the 29 `.agents/skills/<name>` entries are selected. Their canonical
+`.codex/skills/<name>/SKILL.md` files exist; none of the discovery paths currently
+traverses as a directory. The other 43 entries remain outside this packet.
+Current session skill metadata already lists canonical skills, which does not
+prove discovery in a fresh CLI session.
+
+The exact path/blob/target/guard inventory is retained under
+`C:\Users\njen\AppData\Local\Temp\dots-windows-skill-audit-doydvovp` in
+`skills-restoration-plan.json` (SHA-256
+`247af6582fb59cf5ed0690e561410e096dc23327ee278cf835d71238dcc1fb33`). The companion
+`tracked-symlink-inventory.json` digest is
+`c8a9fc2261aaae2033f2f85d7126e7ec6ddaef816e7c9f7cab0a91b7d1412a92`.
+
+Nonadministrator native link creation succeeds with a relative Windows target
+such as `..\..\.codex\skills\dots-theme-maintenance` and `directory=True`.
+Passing the Git blob's forward-slash spelling produced a nontraversable native
+link in the owned probe; use the tested native spelling. An owned index check
+retains Git cleanliness with the current `core.symlinks=false`. Do not change
+Developer Mode, elevation, Git configuration/index/refs or canonical skill files.
+Future checkouts may materialize placeholders again while that Git setting
+remains false; changing that policy is separate work.
+
+After separate approval, recheck every placeholder byte/hash, index blob,
+contained canonical target and ordinary parent, then use the existing managed
+transaction Store at `C:\Users\njen\AppData\Local\dots` for these 29 guarded
+operations. Retain exact original bytes and the returned transaction ID. A
+second unchanged plan must yield 29 no-ops without new journals. Review
+`dots files undo ID --dry-run --json` before a drift-refusing undo; never force
+through changed links or traverse/delete canonical target directories. No live
+transaction ID exists yet. Fresh CLI skill discovery is an independent final
+gate; the [official skills documentation](https://learn.chatgpt.com/docs/build-skills)
+describes repository `.agents/skills` and `/skills` inspection.
+
+The owned native Windows Store rehearsal passed **5/5**, zero skips, in 3.951
+seconds with Python 3.15.2 and a nonadministrator token. It covered all 29
+apply/traversal/no-op/undo paths with exact byte restoration; injected failure
+after seven publications with reverse rollback; abrupt child exit after seven
+durable publications with cross-process reverse recovery; stale-preview refusal;
+and post-apply wrong-link drift refusal without mutation. Reports and raw log
+remain in that evidence root under `store-native-validation-dt_wptwd/report.json`
+and `store-validation.log`. All live placeholders and `.git/config` hashes remain
+unchanged. This validates the proposed mechanics, not live Codex discovery.
 
 ## Delivery and verification contract
 
@@ -292,7 +420,9 @@ below. Packets 3–6 remain unexecuted.
    Git configuration, revalidate each exact path/target, and restore only the
    reviewed set. No Developer Mode, elevation, Git setting, or link was changed.
    A fresh CLI session must verify skill discovery afterward. Existing receiving
-   session skill visibility does not establish this gate.
+   session skill visibility does not establish this gate. The [refreshed packet](#packet-3-refreshed-review--2026-11-14)
+   selects only the 29 skill links and records the native transaction rehearsal;
+   it remains unapproved for live restoration.
 4. **Terminal appearance.** Keep Windows Terminal Preview and its current
    profile/font/scheme. Approved publication may create the dedicated
    `%LOCALAPPDATA%/Microsoft/Windows Terminal/Fragments/Dots` directory and link

@@ -28,24 +28,36 @@ class GitOperations(unittest.TestCase):
         self.base = Path(self.tmp.name)
         self.home = self.base / "home"
         self.home.mkdir()
-        self.env = os.environ.copy()
-        for key in list(self.env):
-            if key.startswith("GIT_"):
-                self.env.pop(key)
+        # Preserve only native runtime inputs. In particular, never inherit
+        # shell startup code, Python search paths, agents, or Dots overrides.
+        runtime = {'PATH', 'PREFIX', 'TERMUX__PREFIX', 'TERMUX_VERSION', 'LD_PRELOAD',
+                   'SYSTEMROOT', 'SYSTEMDRIVE', 'WINDIR', 'COMSPEC', 'PATHEXT',
+                   'PROCESSOR_ARCHITECTURE', 'LANG', 'LANGUAGE', 'LC_ALL', 'LC_CTYPE',
+                   'LC_COLLATE', 'LC_MESSAGES', 'LC_MONETARY', 'LC_NUMERIC', 'LC_TIME'}
+        self.env = {key: value for key, value in os.environ.items() if key.upper() in runtime}
+        temporary = self.base / 'tmp'; temporary.mkdir()
+        runtime_root = self.home / 'runtime'; runtime_root.mkdir(mode=0o700)
         self.env.update(
             HOME=str(self.home), XDG_CONFIG_HOME=str(self.home / ".config"),
             XDG_STATE_HOME=str(self.home / ".local/state"),
             XDG_DATA_HOME=str(self.home / ".local/share"),
             XDG_CACHE_HOME=str(self.home / ".cache"),
+            XDG_RUNTIME_DIR=str(runtime_root), USERPROFILE=str(self.home),
+            APPDATA=str(self.home / 'AppData/Roaming'), LOCALAPPDATA=str(self.home / 'AppData/Local'),
+            TMPDIR=str(temporary), TMP=str(temporary), TEMP=str(temporary),
+            PYTHONDONTWRITEBYTECODE='1',
             GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
             GIT_AUTHOR_NAME="Git It Test", GIT_COMMITTER_NAME="Git It Test",
             GIT_AUTHOR_EMAIL="test@example.invalid", GIT_COMMITTER_EMAIL="test@example.invalid",
-            GIT_TERMINAL_PROMPT="0", GIT_CONFIG_COUNT="3",
+            GIT_TERMINAL_PROMPT="0", GIT_CONFIG_COUNT="3", GIT_ALLOW_PROTOCOL='file',
             DOTS_COLOR="never", DOTS_ICONS="never",
             GIT_CONFIG_KEY_0="protocol.file.allow", GIT_CONFIG_VALUE_0="always",
             GIT_CONFIG_KEY_1="commit.gpgSign", GIT_CONFIG_VALUE_1="false",
             GIT_CONFIG_KEY_2="core.hooksPath", GIT_CONFIG_VALUE_2=os.devnull,
         )
+        if os.name == 'nt':
+            drive, path = os.path.splitdrive(str(self.home))
+            self.env.update(HOMEDRIVE=drive, HOMEPATH=path)
         self.config = self.base / "config"
         self.config.write_text('[dots-git]\nowner = github.com/5nik7\n')
 
@@ -112,8 +124,10 @@ class GitOperations(unittest.TestCase):
                        "[[ $1 != -G ]] || exit 1\n"
                        "exec bash -c \"${!#}\"\n")
         ssh.chmod(0o700)
-        self.env["GIT_SSH_COMMAND"] = str(ssh)
+        self.env["GIT_SSH_COMMAND"] = shlex.quote(str(ssh))
         self.env["GIT_SSH_VARIANT"] = "ssh"
+        # SSH is permitted only after its local test-owned transport exists.
+        self.env['GIT_ALLOW_PROTOCOL'] = 'file:ssh'
         url = "ssh://git@example.invalid" + str(bare)
         namespace = str(bare.parent).lstrip("/")
         self.config.write_text(f'[dots-git]\nowner = example.invalid/{namespace}\n')
