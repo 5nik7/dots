@@ -251,7 +251,9 @@ class CompletionTests(unittest.TestCase):
         folder = self.home / 'completion functions'
         folder.mkdir()
         shutil.copyfile(ROOT / 'completions/blastoff.zsh', folder / '_blastoff')
-        code = (f'fpath=({shlex.quote(str(folder))} $fpath); autoload -Uz compinit; compinit -D; '
+        # Keep compaudit enabled but exclude insecure host completion paths;
+        # unattended fixtures must not prompt or opt into trusting them.
+        code = (f'fpath=({shlex.quote(str(folder))} $fpath); autoload -Uz compinit; compinit -i -D || exit 9; '
                 '[[ $_comps[blastoff] == _blastoff ]] || exit 1; '
                 'compadd() { :; }; words=(blastoff theme apply ""); CURRENT=4; _blastoff')
         result = subprocess.run([SHELLS['zsh'], '-f', '-c', code], env=self.env,

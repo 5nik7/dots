@@ -49,6 +49,59 @@ The Ubuntu PowerShell/controller job in the installation run succeeded; this is 
 
 Re-enable these two workflows after isolated repairs and successful explicit manual runs of the full Linux/Windows matrices. Restore only the original trigger/filter blocks from `31e07b3a54d5ba00528bf0d0f2aeb2480295c31b`, preserving later job fixes; retain manual dispatch if useful. The [testing reference](../docs/testing.md#hosted-ci-during-platform-development) contains exact manual-run commands. This scheduling change needs no Termux update/test/activation and has no CLI, configuration/menu, completion or installer interface effects. Local documentation, source-only wiki and workflow-structure checks apply; no failing workflow is deliberately rerun merely to verify the pause.
 
+## Completion CI repair — 2026-11-14
+
+The owner requested fixing Completion checks after [run 43647279257](https://github.com/5nik7/dots/actions/runs/43647279257)
+failed at `1c2154177330fdda270c290a2393080f48cb098b`. Its FSH suite passed seven
+cases and failed the editor case while awaiting initialization. The retained
+terminal output shows `compinit -D` stopped at the insecure-directory trust
+prompt, before Tab insertion; the four later provider/inventory steps were
+skipped. This is a fixture setup failure, not evidence of incorrect insertion
+or a reason to increase its deadline.
+
+The FSH private terminal and Blastoff autoload fixture now use `compinit -i -D`
+and require successful initialization. Compinit still audits permissions but
+excludes insecure function paths without prompting. No `-u`/`-C`, host chmod,
+skip conversion or timeout increase is used. A new FSH case creates a single
+owned world-writable completion directory, proves the audit detects it, and
+requires its path/provider to be absent after initialization. Both that case
+and the original editor case retain exact `dots git ` insertion, FSH span and
+nonexecution assertions. Runtime startup and completion implementations are
+unchanged; configuration/menu, installer and public interface changes are not
+needed. The two paused workflows remain manual-only; Completion checks retains
+its automatic triggers and all existing steps.
+
+Pre-push source context: Windows `616956a3` plus this fixture/documentation patch;
+execution uses Ubuntu WSL Python 3.12.3 and native Bash/Zsh in the owned public
+snapshot `/tmp/dots-completion-ci-epvcfx6a`. The existing clean FSH source matches
+the workflow pin `4672ad5dd9ad68a7effc1476d65afb7c584ce2b3`; only its committed
+files were exported into the fixture. No source acquisition or package change
+was required. Owned home/config/data/state/cache/temp roots and an explicit
+tool directory exclude personal startup, Git settings and installed consumers.
+
+| Workflow command/check | WSL result | Wall seconds |
+| --- | --- | ---: |
+| Completion catalog | 1 passed; 296 routes, 299 prefixes, 1030 contexts | 55.366 |
+| Delegated/native records | 1 passed | 3.687 |
+| Zinit lazy helpers | 1 passed | 0.247 |
+| Full FSH input/editor suite | 9 passed, no skips | 10.283 |
+| Project completion audit | 7 passed | 0.051 |
+| pkgs semantic types | 3 passed | 0.084 |
+| Blastoff completion suite | 14 methods completed, no failures/errors; 83 Fish method/subtest skips | 1.491 |
+| Anodize selected semantic types | 1 passed | 7.039 |
+
+The owned baseline restored only the old `compinit -D` invocation and ran the
+new insecure-path regression: it reproduced the same prompt and timeout in
+18.151 seconds. That failed log remains separate from final results. Fish was
+unavailable in WSL; skip counts are not independent test-method counts. Commands
+ran sequentially, raw bytes/results/environments were retained, and the final
+owned-process scan was empty. Local WSL evidence is distinct from the required
+fresh hosted run after publication. No native Windows or Termux suite ran in
+this batch. Prior phone acceptance is unchanged; the new fixture regression is
+not yet native Termux evidence and needs no live phone activation. Source
+rollback is limited to the two fixture edits and matching documentation. Wiki
+export synchronization remains pending while its checkout is absent.
+
 ## Baseline and evidence boundaries
 
 - Windows: PowerShell 5.1.26100.9818, stable 7.6.10 and preferred Preview

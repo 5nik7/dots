@@ -1404,6 +1404,14 @@ startup, custom overrides, aliases, native syntax fallback, no command execution
 and actual Tab insertion. Control-flow comparisons preserve `case` arms and
 subsequent native syntax. It copies an available public FSH checkout into owned
 roots; `DOTS_TEST_FSH` can select that checkout. Missing FSH is an explicit skip.
+The private FSH editor and Blastoff autoload fixtures use `compinit -i -D`:
+security auditing remains enabled, insecure host function directories are
+excluded, and no completion dump is written. They must neither answer an
+interactive trust prompt nor use `-u`/`-C` to bypass the audit. The FSH regression
+adds a test-owned world-writable completion directory, proves `compaudit` detects
+it, verifies its path/provider is excluded, and still requires exact Tab
+insertion, expected highlight regions and no command execution. The ordinary
+editor case remains separate; deadlines and runtime shell policy are unchanged.
 
 Acceptance covers 40/80/120-column Git/Dots menus, independent semantic and
 description colors, exact editor insertion, group cycling, multi-selection,

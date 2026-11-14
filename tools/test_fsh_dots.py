@@ -176,10 +176,29 @@ print -rl -- $reply
         self.assertIn('5 13 fg=magenta',self.run_zsh(code))
 
     def test_real_tab_insertion_and_editor_regions(self):
+        self.editor_roundtrip()
+
+    def test_editor_excludes_insecure_completion_directories(self):
+        insecure=self.home/'insecure completion functions'
+        insecure.mkdir(mode=0o700)
+        (insecure/'_dots_fixture_poison').write_text(
+            '#compdef dots-poison\nprint executed > "$HOME/executed"\n')
+        insecure.chmod(0o777)
+        prefix='_fixture_insecure='+shlex.quote(str(insecure))+'; fpath=("$_fixture_insecure" $fpath); '
+        # Prove this directory triggers the same compaudit refusal as hosted CI.
+        audit=self.run_zsh(prefix+'autoload -Uz compaudit; compaudit 2>/dev/null; '
+                           '(( $? == 1 )) || exit 9',setup='')
+        self.assertIn(str(insecure),audit.splitlines())
+        self.editor_roundtrip(prefix,
+            '(( ! ${fpath[(Ie)$_fixture_insecure]} && ! ${+_comps[dots-poison]} )) || exit 10; ')
+
+    def editor_roundtrip(self,prefix='',checks=''):
         from bash_dots_pty import Terminal
         terminal=Terminal(ZSH,self.env,self.home)
         try:
-            setup='autoload -Uz compinit; compinit -D; '+self.setup
+            # Exclude insecure host function directories instead of prompting
+            # inside a private automated terminal or trusting them with -u.
+            setup=prefix+'autoload -Uz compinit; compinit -i -D || exit 9; '+checks+self.setup
             # The executed marker must differ from terminal input echo: waiting
             # on the echoed setup line can queue Tab before FSH has loaded.
             setup+=r'''_test_dots() { compadd git; }; compdef _test_dots dots; cap() { print -rn -- "$BUFFER" > "$HOME/buffer"; print -rl -- $region_highlight > "$HOME/regions"; }; zle -N cap; bindkey '^X' cap; PROMPT='READY> '; print INIT""IALIZED'''
