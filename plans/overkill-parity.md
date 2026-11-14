@@ -324,6 +324,42 @@ was performed in this activation stage.
 
 ## Remaining implementation and acceptance
 
+### Termux acceptance text repair
+
+The owner ran the initial phone acceptance batch after publication of `95fb42e1`.
+Fixture isolation passed two tests; utility completion passed three with one
+native-Windows skip. Bash ran 33 tests and stopped with one decoding error:
+`test_text_keeps_utf8_literal_and_controls_inert_in_c_locale` emitted raw `0xff`.
+The following shell-init, shared-shell and completion-catalog suites did not run
+because the batch used `&&`.
+
+The shared Bash human sanitizer validated malformed bytes only in its
+byte-oriented branch. Its Unicode-aware branch reproduced the exact raw-byte
+failure under WSL `C.UTF-8`. The repair distinguishes a decoded character from a
+malformed byte through builtin Unicode round-trip validation; an ASCII sentinel
+prevents an incomplete sequence from retaining decoder state and corrupting later
+valid characters. Illegal scalars are inert escapes. The ASCII fast path stays
+unchanged and no subprocess, cache, dependency or locale mutation is introduced.
+
+This is a shared Bash fix useful to Termux/Linux/WSL. Native PowerShell uses its
+existing renderer and has no changed route or output contract. Configuration,
+menu and completion integration: **no change needed**, because this corrects
+human sanitization without adding controls or grammar. Installer delivery is the
+existing `lib/dots/ui.bash` source. Defaults, managed resources and preference
+precedence are unchanged. Data-output paths continue to bypass the sanitizer.
+Source rollback is limited to this follow-up patch; no live activation is needed.
+Retain the phone rerun as a pending native acceptance gate.
+
+Verification in the owned Ubuntu WSL snapshot: the original failure reproduces
+with the pre-fix sanitizer under `C.UTF-8`; both focused regressions pass after
+the repair. The full Bash suite runs 34 cases with 32 passes and two
+missing-shell skips. The final expanded regression matrix also passes, including
+interleaved valid text, private-use characters and invalid scalar boundaries.
+The resource suite runs 18 cases with 11 passes and seven Python style/layout
+failures; all seven reproduce when only `ui.bash` is restored to `95fb42e1` in
+the owned snapshot. That is a narrow source comparison, not a full revision
+baseline. Keep these separate failures open; they do not establish phone results.
+
 ### Native adapter follow-up source stage
 
 This follow-up uses the same Windows working checkout at `800988e` plus the

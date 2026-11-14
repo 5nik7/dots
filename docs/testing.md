@@ -2,6 +2,14 @@
 
 ## Overkill native adapter follow-up
 
+The Termux return regression in `tools/test_bash_dots.py` exercises human text in
+both `C` and `C.UTF-8` locales, retaining strict UTF-8 subprocess decoding. It
+distinguishes malformed bytes from valid Unicode with the same numeric value,
+interleaves truncated sequences with valid text, and covers controls, invalid
+scalars, private-use icons, the Unicode upper bound and unchanged caller locale.
+The full Bash suite also retains narrow help/layout and machine-output checks.
+WSL reproduction of the Unicode-aware branch is not a native Termux pass.
+
 Run `python3 -B tools/test_native_wallpaper.py` for literal lock-screen transport,
 read-only preflight, failed journal/record preservation and the owned WinRT
 asynchronous file projection. Setters are substituted: this never proves visible

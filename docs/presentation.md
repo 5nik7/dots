@@ -15,6 +15,14 @@ Every new or changed first-party human-facing command must provide polished, coh
 
 Choose and document a command's output modes before implementation. Do not assume every non-JSON response is human prose. Color-value queries explicitly requesting ANSI are data interfaces whose requested bytes remain intentional. Do not add banners, summaries, path abbreviations or status markers to data interfaces. Keep structured schemas versioned and separate from human formatting.
 
+Bash human text preserves valid UTF-8, including private-use icons, and displays
+terminal controls and malformed bytes as inert escapes. This applies when a
+runtime treats `LC_ALL=C` as Unicode-aware as well as in byte-oriented locales.
+Illegal decoded Unicode scalars are displayed as literal `\UXXXXXXXX`; runtimes
+that expose their bytes separately display `\xNN` escapes instead. Sanitizing
+one malformed value must not affect subsequent valid text or the caller's locale.
+Machine-output interfaces continue to bypass human sanitization.
+
 ## Color and Icons
 
 ### Help syntax and tagline

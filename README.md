@@ -83,6 +83,9 @@ dots wiki search 'nvim themes' --topics
 
 Help distinguishes executables, commands, subcommands, options and arguments with configurable theme colors. Open `dots config browse --query colors.apps.cli.help` to edit them, or set `apps.cli.tagline` to change the root phrase (`Manage your dotfiles and more...` by default; empty hides it). Help-only changes apply on the next invocation. See [help preferences](docs/configuration.md#help-and-usage-preferences).
 
+Human text preserves valid Unicode and renders malformed bytes and terminal
+controls as inert escapes across byte-oriented and Unicode-aware Bash locales.
+
 Use `dots cleanup` to review supported disposable caches and diagnostic logs
 in groups, then see the size and number of files removed. `dots cleanup scan`
 previews candidates; `dots cleanup history` shows runs and the combined verified

@@ -192,7 +192,26 @@ dots::text() {
     return
   fi
   for ((i=0; i<${#text}; i++)); do
-    char=${text:i:1}; printf -v number '%d' "'$char"
+    char=${text:i:1}
+    # Terminate an incomplete sequence with ASCII so printf cannot retain a
+    # partial multibyte decoder state and misread later, valid characters.
+    printf -v number '%d' "'$char "
+    if (( number >= 128 )); then
+      # Multibyte Bash still exposes malformed input as individual bytes.
+      # Distinguish raw 0xff from the valid UTF-8 encoding of U+00FF without
+      # depending on LC_ALL=C being byte-oriented (it is not on Termux).
+      printf -v valid '\\U%08x' "$number"
+      if (( number > 1114111 || (number >= 55296 && number <= 57343) )); then
+        REPLY+=$valid
+        continue
+      fi
+      printf -v valid '%b' "$valid"
+      if [[ $char != "$valid" ]]; then
+        printf -v char '\\x%02x' "$number"
+        REPLY+=$char
+        continue
+      fi
+    fi
     if (( number < 32 || (number >= 127 && number < 160) )); then printf -v char '\\u%04x' "$number"; fi
     REPLY+=$char
   done

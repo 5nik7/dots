@@ -340,13 +340,49 @@ dots::error 'Error'
         self.assertIn('\x1b[33mOPTIONS\x1b[0m', fallback.stdout)
 
     def test_text_keeps_utf8_literal_and_controls_inert_in_c_locale(self):
-        self.env['LC_ALL'] = 'C'
-        result = self.shell(BASH, r'''source "$DOTS/lib/dots/ui.bash"
+        for locale in ('C', 'C.UTF-8'):
+            with self.subTest(locale=locale):
+                self.env['LC_ALL'] = locale
+                result = self.shell(BASH, r'''source "$DOTS/lib/dots/ui.bash"
 dots::text 'café 雪 😀 $(touch nope)'$'\e[31m\302\233\377'
 printf '%s' "$REPLY"
 ''')
-        self.assertEqual(result.stdout, 'café 雪 😀 $(touch nope)\\u001b[31m\\u009b\\xff')
+                self.assertEqual(result.stdout, 'café 雪 😀 $(touch nope)\\u001b[31m\\u009b\\xff')
         self.assertFalse((self.home / 'nope').exists())
+
+    def test_text_distinguishes_malformed_bytes_from_unicode_characters(self):
+        cases = [
+            (b'\xff', r'\xff'), (b'\x80', r'\x80'),
+            (b'\xc3', r'\xc3'), (b'\xe2\x82', r'\xe2\x82'),
+            (b'\xc0\xaf', r'\xc0\xaf'),
+            # Some libc decoders expose invalid scalars as a single character;
+            # both spellings must stay inert ASCII, never malformed UTF-8.
+            (b'\xed\xa0\x80', (r'\xed\xa0\x80', r'\U0000d800')),
+            (b'\xf4\x90\x80\x80', (r'\xf4\x90\x80\x80', r'\U00110000')),
+            (b'\xf8\x88\x80\x80\x80', (r'\xf8\x88\x80\x80\x80', r'\U00200000')),
+            ('ÿ é 雪 😀 \ue000'.encode(), 'ÿ é 雪 😀 \ue000'),
+            ('\U0010ffff'.encode(), '\U0010ffff'),
+            ('\u0080\u009b\u009f'.encode(), r'\u0080\u009b\u009f'),
+            (b'A\x1b[31m\x7fB', r'A\u001b[31m\u007fB'),
+        ]
+        cases = [entry for case in cases for entry in
+                 (case, ('ÿ 雪 😀'.encode(), 'ÿ 雪 😀'))]
+        code = 'source "$DOTS/lib/dots/ui.bash"\n'
+        for raw, _ in cases:
+            escaped = ''.join('\\x%02x' % byte for byte in raw)
+            code += "dots::text $'" + escaped + "'; printf '%s\\n' \"$REPLY\"\n"
+        code += 'printf "locale=%s\\n" "$LC_ALL"\n'
+        for locale in ('C', 'C.UTF-8'):
+            with self.subTest(locale=locale):
+                self.env['LC_ALL'] = locale
+                result = self.shell(BASH, code)
+                self.assertEqual(result.stderr, '')
+                lines = result.stdout.splitlines()
+                self.assertEqual(len(lines), len(cases) + 1)
+                for actual, (raw, expected) in zip(lines, cases):
+                    with self.subTest(input=raw.hex()):
+                        self.assertIn(actual, expected if isinstance(expected, tuple) else (expected,))
+                self.assertEqual(lines[-1], 'locale=' + locale)
 
     def test_help_syntax_projection_preserves_ordinary_command_rows(self):
         self.hints()
