@@ -80,7 +80,7 @@ _dots_complete_bash() {
     esac
   done < <(command dots __complete bash "$((${#words[@]}-1))" -- "${words[@]}" 2>/dev/null)
 }
-complete -F _dots_complete_bash dots theme todo fonts bak dots-bak
+complete -F _dots_complete_bash dots theme todo fonts bak dots-bak gup linked lnkd cpwd pathout dirout isdir isfile fzcmd fzenv fzfd fzfig fzg fzopt fzpyfig fzrg fzrg3 cht httpGet www
 if ! typeset -f _dots_theme_completion_load >/dev/null; then
   source "${BASH_SOURCE[0]%/*}/theme.bash"
 fi

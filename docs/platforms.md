@@ -3,11 +3,16 @@
 ## Cleanup support
 
 `dots cleanup` uses shared platform detection/controller grammar on Bash and
-native PowerShell. Only Termux implements scan/deletion rules; Linux, WSL and
-Windows return unsupported (exit 3). Help, catalog, completion and local receipt
-inspection remain available. Windows uses its existing native Dots state root,
-separate from WSL. Termux fixtures do not establish native PowerShell or
-other-platform runtime acceptance. See [Cleanup](cleanup.md).
+native PowerShell. Termux and Linux/WSL have bounded native rules; Windows supports
+default npm/pip cache contents and named Neovim logs with exclusive native handles,
+private durable receipts and process-use refusal. Windows build caches, custom
+cache roots and checkpoints remain missing implementation. Actual Restart Manager
+integration and live cache acceptance remain pending; owned native handle tests
+do not establish that gate.
+Help, catalog, completion and local receipt inspection remain available. Windows
+uses its native Dots state root, separate from WSL. Native fixture results and
+remaining live process/desktop gates are recorded in
+[the Overkill plan](../plans/overkill-parity.md). See [Cleanup](cleanup.md).
 
 
 ## Clipboard history platforms
@@ -148,7 +153,10 @@ in the universal and platform trees.
 Themes honor XDG config/state/cache roots. Fixed application connectors include
 Termux colors; TERMUX_VERSION plus the Termux PREFIX boundary enables its reload and
 explicit `termux-wallpaper` adapter. Linux wallpaper uses swww on Wayland or feh on
-X11. WSL and native Windows wallpaper are unsupported. Termux:API, fzf, bat, tmux,
+X11. Native Windows has an explicit desktop wallpaper adapter using
+`SystemParametersInfoW`; WSL wallpaper remains unsupported. Windows desktop
+rendering and persisted wallpaper recovery require separate live acceptance.
+Termux:API, fzf, bat, tmux,
 Kitty remote control and wallpaper tools are checked only when needed. Native
 Termux fixture checks are recorded in [testing](testing.md); Linux adapter calls are
 simulated, and native desktop rendering remains unverified.
@@ -332,7 +340,7 @@ outside Termux without Android calls. On Termux it sends a labelled toast and
 waits for configured vibration requests. Normal alert workers hand repeated
 pulses to a finite POSIX helper; count zero preserves toast-only delivery.
 
-The optional [Codex attention bridge](themes.md#codex-attention-notifications) uses the same Python implementation with Bash/Zsh/Fish-launched tmux on Termux, Linux and WSL. It requires Python 3.11+, tmux and same-user procfs observation; setup additionally capability-checks tomlkit. Android toast/vibration is enabled only in Termux and each executable is checked independently. Native Windows has neither a tmux destination nor a Termux API adapter: the setup helper explicitly refuses there, while pure event/configuration tests remain portable to PowerShell's Python invocation. Native Termux fixture results do not establish Linux/WSL visuals, terminal-emulator focus reporting, real Android delivery or Codex hook trust/reload behavior.
+The optional [Codex attention bridge](themes.md#codex-attention-notifications) uses the same Python implementation with Bash/Zsh/Fish-launched tmux on Termux, Linux and WSL. It requires Python 3.11+, tmux and same-user procfs observation; setup additionally capability-checks tomlkit. Android toast/vibration is enabled only in Termux and each executable is checked independently. Native Windows has no tmux/Termux consumer. Its private bridge now implements same-user PID/creation-time observation, protected native queue storage, metadata-only pending-event inspection and exact event acknowledgement. Pane/thread visibility and focus remain unknown; no native worker or duplicate notifier is installed. The setup helper still refuses until a separately reviewed hook/trust activation exists. Owned Windows filesystem/SQLite tests are distinct from live delivery acceptance. Native Termux fixture results do not establish Linux/WSL visuals, terminal-emulator focus reporting, real Android delivery or Codex hook trust/reload behavior.
 
 ## Todo goals
 

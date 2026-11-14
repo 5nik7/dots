@@ -2563,7 +2563,7 @@ Setting or full option; Tab lists full keys; .. then Tab browses branches
 .SS "dots debug"
 Inspect and diagnose Dots without automatic repairs
 .PP
-.B "dots debug check|startup|path|command|cache|test|record|alert [OPTIONS]"
+.B "dots debug check|startup|path|command|cache|test|record|alert|demo [OPTIONS]"
 .PP
 .nf
 dots debug startup \-\-shell zsh \-\-isolated
@@ -2579,6 +2579,10 @@ dots debug startup \-\-shell zsh \-\-live \-\-detail deep \-\-changes path,alias
 .PP
 .nf
 dots debug test
+.fi
+.PP
+.nf
+dots debug demo all \-\-static
 .fi
 .SS "dots debug alert"
 Send a test Codex toast and configured Termux vibration
@@ -2621,6 +2625,41 @@ Print versioned JSON
 .TP
 .B "Argument * (string)"
 Dots route after \-\-; never executed
+.SS "dots debug demo"
+Preview mock output using current Dots appearance
+.PP
+.B "dots debug demo [progress|spinner|pkgs|git|files|messages|help|all] [\-\-static] [\-\-duration SECONDS] [\-\-loop] [\-\-json]"
+.TP
+.B "\-\-static"
+Show immediate snapshots without animation
+.TP
+.B "\-\-duration VALUE"
+Animation seconds (integer 1–60; default 4)
+.TP
+.B "\-\-loop"
+Repeat progress or spinner until Ctrl\-C in a terminal
+.TP
+.B "\-\-json"
+Print versioned inert mock data
+.TP
+.B "Argument 1 (choice:progress,spinner,pkgs,git,files,messages,help,all)"
+Mock output kind; omit to list demos
+.PP
+.nf
+dots debug demo
+.fi
+.PP
+.nf
+dots debug demo progress \-\-duration 4
+.fi
+.PP
+.nf
+dots debug demo all \-\-static
+.fi
+.PP
+.nf
+dots debug demo spinner \-\-loop
+.fi
 .SS "dots debug path"
 Explain PATH order and executable shadowing
 .PP
@@ -4430,6 +4469,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .SS "dots git publish"
 Preview and publish children before parents
 .PP
@@ -4446,6 +4494,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .TP
 .B "\-\-dry\-run"
 Local preview without changes or network
@@ -4483,6 +4540,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .SS "dots git submodule"
 Navigate a registered submodule by name
 .PP
@@ -4512,6 +4578,15 @@ Emit versioned JSON
 .B "\-\-full\-paths"
 Show absolute human paths
 .TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
 .B "\-\-details"
 Show remote, owner and commit details
 .TP
@@ -4531,6 +4606,15 @@ Emit versioned JSON
 .B "\-\-full\-paths"
 Show absolute human paths
 .TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
 .B "\-\-depth VALUE"
 Maximum submodule levels (positive integer)
 .SS "dots git submodules publish"
@@ -4546,6 +4630,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .TP
 .B "\-\-all\-submodules"
 Select every direct child subtree, excluding the outer repository
@@ -4584,6 +4677,15 @@ Emit versioned JSON
 .B "\-\-full\-paths"
 Show absolute human paths
 .TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
 .B "\-\-dirty"
 Show local changes, pointer differences and blockers
 .TP
@@ -4606,6 +4708,15 @@ Emit versioned JSON
 .B "\-\-full\-paths"
 Show absolute human paths
 .TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
 .B "\-\-dry\-run"
 Local preview without changes or network
 .TP
@@ -4627,6 +4738,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .SS "dots git wiki info"
 Inspect only the wiki repository
 .PP
@@ -4640,6 +4760,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .SS "dots git wiki publish"
 Publish only the wiki repository
 .PP
@@ -4653,6 +4782,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .TP
 .B "\-\-dry\-run"
 Local preview without changes or network
@@ -4684,6 +4822,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .SS "dots git wiki sync"
 Synchronize only the wiki repository
 .PP
@@ -4697,6 +4844,15 @@ Emit versioned JSON
 .TP
 .B "\-\-full\-paths"
 Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
 .TP
 .B "\-\-dry\-run"
 Local preview without changes or network
@@ -4874,6 +5030,26 @@ dots menu pkgs
 .PP
 .nf
 dots menu pkgs \-\-print
+.fi
+.SS "dots menu projects"
+Choose a project and open its native shell
+.PP
+.B "dots menu projects [\-\-print|\-\-json|\-\-browse] [\-\-query TEXT]"
+.TP
+.B "\-\-print"
+List projects without opening a shell
+.TP
+.B "\-\-json"
+Print versioned project menu data
+.TP
+.B "\-\-browse"
+Choose a project interactively
+.TP
+.B "\-\-query VALUE"
+Initial search text or listing filter
+.PP
+.nf
+dots menu projects \-\-json
 .fi
 .SS "dots menu tmux keys"
 Browse readable live tmux keybindings with FZF
@@ -6719,7 +6895,7 @@ Set a wallpaper image
 .B "dots theme bg set FILE [\-\-lock\-screen]"
 .TP
 .B "\-\-lock\-screen"
-Set the Android lock\-screen wallpaper
+Set the Termux or native Windows lock\-screen image
 .TP
 .B "Argument 1 (file)"
 Background image

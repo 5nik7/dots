@@ -48,6 +48,8 @@ class Backend:
         return super().__new__(cls)
 
     def __init__(self, name, global_scope=False):
+        if os.name == 'nt' and name in SYSTEM:
+            raise Error(name + ' is not a native Windows package manager')
         self.name = name
         self.global_scope = global_scope
         self.termux = termux()

@@ -21,6 +21,46 @@ import menu_session_ui as ui
 from menu_tmux import TmuxContext
 
 
+class ProjectHandoff(MenuFixture):
+    def test_data_listing_is_inert_and_paths_remain_literal(self):
+        import menu_project_cli as subject
+        root = self.home/'-project ü ; literal'; root.mkdir()
+        project = projects.Project(root.resolve(), root.name)
+        before = set(self.home.rglob('*'))
+        with patch.object(subject, 'discover', return_value=(project,)), \
+             patch.object(subject, 'shell_command', side_effect=AssertionError('listing probed a shell')), \
+             redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(subject.main(['--json']), 0)
+        self.assertEqual(json.loads(output.getvalue())['items'][0]['description'], str(project.root))
+        self.assertEqual(set(self.home.rglob('*')), before)
+
+    def test_literal_handoff_status_and_cancellation(self):
+        import menu_project_cli as subject
+        root = self.home/'-project ü ; literal'; root.mkdir()
+        project = projects.Project(root.resolve(), root.name)
+        with patch.object(subject, 'shell_command', return_value=['native-shell', '-i']), \
+             patch.object(subject.subprocess, 'run', return_value=Mock(returncode=47)) as run:
+            self.assertEqual(subject.handoff(project), 47)
+            run.assert_called_once_with(['native-shell', '-i'], cwd=project.root)
+        with patch.object(subject, 'discover', return_value=(project,)), \
+             patch.object(subject, 'choose', side_effect=SelectionEnded(130)), \
+             patch.object(subject, 'handoff', side_effect=AssertionError('cancel launched shell')):
+            self.assertEqual(subject.main(['--browse']), 130)
+        root.rmdir()
+        with self.assertRaisesRegex(ValueError, 'unavailable'):
+            subject.handoff(project)
+
+    def test_native_engine_selection_never_uses_wsl(self):
+        import menu_project_cli as subject
+        exe = self.home/'PowerShell space/pwsh.exe'; exe.parent.mkdir(); exe.write_bytes(b'fixture')
+        with patch.dict(os.environ, DOTS_POWERSHELL=str(exe)), \
+             patch.object(subject.shutil, 'which', side_effect=AssertionError('unnecessary discovery')):
+            self.assertEqual(subject.shell_command(windows=True), [str(exe), '-NoLogo'])
+        with patch.dict(os.environ, DOTS_POWERSHELL='wsl.exe'):
+            with self.assertRaisesRegex(ValueError, 'native PowerShell'):
+                subject.shell_command(windows=True)
+
+
 class Projects(MenuFixture):
     def repo(self, path):
         path.mkdir(parents=True); (path / '.git').mkdir()

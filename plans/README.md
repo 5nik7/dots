@@ -15,6 +15,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Overkill Windows and WSL parity](overkill-parity.md) | Approved staged native repair, isolated verification and separate live activation gates. |
 | [Git output and progress](git-output-and-progress.md) | Default/short/verbose Git reports, full-width progress appearance, package-manager colors and mock debug gallery; implementation and acceptance evidence. |
 | [Cleanup](cleanup.md) | Termux cleanup groups, approvals, confirmed totals, receipts and platform extension workflow. |
 | [Tmux widget reliability](tmux-widget-reliability.md) | Retained solar/battery/Git readings, quiet Termux location refresh and bounded status workers. |

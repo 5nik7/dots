@@ -1,9 +1,16 @@
 # Cleanup
 
-`dots cleanup` finds known disposable files, reviews them in groups and reports
-confirmed removals. It detects the execution platform. Cleanup rules currently
-support Termux; other platforms provide help, groups and receipt inspection, but
-scan/run return an explicit unsupported result (exit 3).
+`dots cleanup` finds known disposable files, reviews them in groups and reports confirmed removals. It detects the execution platform. Termux retains its existing rules. Linux and WSL support bounded user cache/log rules through the same guarded POSIX engine. Windows implements a bounded native adapter for default npm/pip caches and named Neovim logs. Its handle, ACL, removal and accounting paths have owned native fixture evidence; actual Restart Manager integration and live acceptance remain pending. See the dated [verification evidence](../plans/cleanup.md#windows-provider-follow-up-2026-11-14).
+
+Linux/WSL candidates include npm `_cacache`, pip, Go module/build caches, uv,
+Cargo registry and named Neovim logs under an owned home. System package caches,
+CPAN and checkpoint rules are not imported from Termux. Location overrides must
+remain within recognized layouts, outside projects and protected application
+data. Missing helpers, active references or incomplete process inspection retain
+the target. WSL process visibility can make deletion unavailable even when a
+scan succeeds.
+
+Windows uses `%LOCALAPPDATA%/npm-cache/_cacache`, `%LOCALAPPDATA%/pip/Cache` and the named Neovim diagnostic files under `%LOCALAPPDATA%/nvim-data`; LocalAppData must remain beneath the native home. Custom npm/pip cache locations, Windows build caches and checkpoints remain unsupported. The JSON group catalog exposes additive `scan_supported` and `run_supported` flags; `supported` means the provider implements deletion for that group, not that the current machine satisfies every safety gate. Age or size does not establish disposable ownership. Native cache definitions follow [npm](https://docs.npmjs.com/cli/cache/) and [pip](https://pip.pypa.io/en/stable/topics/caching/) ownership boundaries.
 
 ```sh
 dots cleanup                         # Scan, then Delete / Skip / Stop per group
@@ -69,6 +76,14 @@ the group. Running tools, working directories and the receipt store are protecte
 Direct deletion removes only inventoried entries through directory descriptors;
 newly arrived files are retained. External writers can still cause a partial run.
 
+### Native Windows safeguards
+
+Windows deletion requires a local NTFS volume, current-user ownership, and ACLs beneath the home that grant write access only to the current user, SYSTEM or local Administrators. It refuses reparse points at every level, foreign volumes/owners, unsupported ACL entries, read-only/system/offline objects and multiply-linked files. Existing ACLs are inspected, never repaired automatically. A group is limited to 50,000 inventoried entries; larger groups remain untouched.
+
+After approval and the first durable receipt, Restart Manager checks the reviewed files, including references from the cleanup process itself. Dots then pins every approved entry with exclusive native handles and pins its ancestors against writes or replacement. It checks process references again while the pins remain held. A busy file or working directory, changed inventory, incomplete process query, timeout or required reboot retains the group. Restart Manager runs in a bounded child process and never stops or restarts an application or service. Scans, help, group catalogs and history never create Restart Manager sessions.
+
+Removal uses ordinary `FileDispositionInfo` on the exact pinned handle, followed by close and an absence check. It does not use POSIX delete semantics, clear read-only attributes, change permissions or fall back to recursive deletion. Native mapped-file refusal remains active even if a process observer incorrectly reports idle. Only confirmed removals enter the totals; newly arrived or uncertain entries remain uncredited. Cache roots are retained. Native handle metadata supplies allocation figures, including sparse/compressed allocation rather than logical length.
+
 XDG cache/state paths default to `~/.cache` and `~/.local/state`. Go defaults to
 `~/go/pkg/mod` and `$XDG_CACHE_HOME/go-build`, Cargo to `~/.cargo/registry`, and uv
 to `$XDG_CACHE_HOME/uv`. `GOMODCACHE`, `GOCACHE`, `CARGO_HOME` and `UV_CACHE_DIR`
@@ -81,9 +96,7 @@ Reports show allocated bytes removed, regular files, folders and links, elapsed
 time, free space and the combined verified size across recorded runs. Filesystem
 free-space change is a separate observation: other processes and open files can
 make it differ from removed allocation. JSON also includes logical bytes.
-Sparse files use allocated blocks; hardlinks are counted conservatively, with
-allocation credited only when every name for the inode is removed within the
-verified target. Cross-target hardlinks can undercount reclaimed allocation.
+Sparse files use allocated storage. POSIX hardlinks are counted conservatively, with allocation credited only when every name for the inode is removed within the verified target; cross-target hardlinks can undercount reclaimed allocation. Windows refuses files already known to have multiple links and does not credit a racing surviving alias as reclaimed allocation.
 
 Private, metadata-only schema-1 receipts live under the platform Dots state root
 in `cleanup/` (`$XDG_STATE_HOME/dots/cleanup` on Termux). They record identifiers,
@@ -92,6 +105,10 @@ Read-only routes and a wholly skipped run create no receipt store. Cumulative
 totals are derived from retained receipts; old manual cleanup is not imported.
 `history --limit 0` returns all receipts. Deleting receipts removes their
 contribution to the combined total.
+
+Windows creates the receipt directory, lock and new journal files with a protected ACL granting access only to the current user and SYSTEM. Existing receipts with broader ACLs, links or multiple hardlinks are refused; Dots does not change their permissions. Ancestors stay pinned and the lock is exclusive during a run. History can report a busy receipt while a writer holds it.
+
+New Windows runs append complete schema-1 report snapshots to `RUN_ID.jsonl` in the same `cleanup/` directory. Every successful append is flushed before the next deletion boundary; no payload data is stored. The journal is limited to 16 MiB, with no automatic rotation, pruning or replay. An append/flush failure stops further appends for that run. The reader uses the last complete snapshot; an incomplete final line marks that record incomplete while retaining its prior confirmed totals. A removal followed by interruption before its accounting append is excluded from retained totals. Older `RUN_ID.json` receipts remain readable; duplicate identities across the two representations are refused. Keep this reader when rolling source back after a Windows run, or explicitly preserve/export those records before a separately reviewed migration. Reverting source cannot restore deleted data.
 
 Interrupts preserve confirmed subtotals. An interrupted/failed native helper's
 unverified removals are excluded. An abruptly terminated run appears incomplete;

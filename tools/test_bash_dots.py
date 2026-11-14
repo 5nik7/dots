@@ -55,6 +55,8 @@ class DotsFixture(unittest.TestCase):
         return p
 
     def shell(self, executable, code):
+        if not executable:
+            self.skipTest('requested shell unavailable; native acceptance pending')
         flags = ['--noprofile', '--norc'] if executable == BASH else ['-df'] if executable == ZSH else ['--no-config']
         p = subprocess.run([executable, *flags, '-c', code], cwd=self.home,
                            env=self.env, text=True, capture_output=True, timeout=15)
@@ -299,8 +301,10 @@ dots::error 'Error'
             rgb = ';'.join(str(int(value[i:i+2], 16)) for i in (0, 2, 4))
             return '\x1b[0;38;2;' + rgb + 'm' + text + '\x1b[0m'
 
-        root = self.run_dots('--color=always', 'help').stdout
-        self.assertIn(span('tagline', document['apps']['cli']['tagline']), root)
+        for locale in ('C', 'C.UTF-8'):
+            with self.subTest(locale=locale):
+                root = self.run_dots('--color=always', 'help', env=dict(self.env, LC_ALL=locale)).stdout
+                self.assertIn(span('tagline', document['apps']['cli']['tagline']), root)
         for role, text in [('executable', 'dots'), ('option', 'OPTIONS'),
                            ('command', 'COMMAND'), ('argument', 'ARGS')]:
             self.assertIn(span(role, text), root)
@@ -334,6 +338,15 @@ dots::error 'Error'
         self.assertIn('Manage your dotfiles and more...', fallback.stdout)
         self.assertIn('\x1b[36mdots\x1b[0m', fallback.stdout)
         self.assertIn('\x1b[33mOPTIONS\x1b[0m', fallback.stdout)
+
+    def test_text_keeps_utf8_literal_and_controls_inert_in_c_locale(self):
+        self.env['LC_ALL'] = 'C'
+        result = self.shell(BASH, r'''source "$DOTS/lib/dots/ui.bash"
+dots::text 'café 雪 😀 $(touch nope)'$'\e[31m\302\233\377'
+printf '%s' "$REPLY"
+''')
+        self.assertEqual(result.stdout, 'café 雪 😀 $(touch nope)\\u001b[31m\\u009b\\xff')
+        self.assertFalse((self.home / 'nope').exists())
 
     def test_help_syntax_projection_preserves_ordinary_command_rows(self):
         self.hints()
@@ -564,6 +577,8 @@ words=(dots samples --flavor m); CURRENT=4; _dots
         (self.home / 'folder with spaces').mkdir()
         for executable in (BASH, ZSH, FISH):
             with self.subTest(shell=executable):
+                if not executable:
+                    self.skipTest('requested shell unavailable; native Tab acceptance pending')
                 exercise(self, executable)
                 (self.repo / 'bin/dots-fresh').unlink()
 

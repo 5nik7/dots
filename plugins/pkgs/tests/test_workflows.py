@@ -567,7 +567,8 @@ else:sys.exit(99)
             commands=workflows.plan(b,'upgrade',[],cfg,bulk=True).commands
         self.assertIn('-Syu',commands[0]);self.assertIn('held,custom',commands[0]);self.assertEqual(commands[1],['custom-update'])
         b=Backend('dnf');b.pins={'hello.x86_64':'1.2-3'}
-        self.assertIn('hello-1.2-3.x86_64',policies.commands(b,'install',['hello.x86_64'],self.cfg,True)[0])
+        with patch('os.geteuid',return_value=0):
+            self.assertIn('hello-1.2-3.x86_64',policies.commands(b,'install',['hello.x86_64'],self.cfg,True)[0])
 
     def test_raw_formatter_preserves_bytes_and_interruption_stops_child(self):
         raw=b'\x1b[31munknown\r\xff\n'

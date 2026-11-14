@@ -63,6 +63,17 @@ def leaf_config_directory(*, windows=None):
     return path
 
 
+def terminal_fragment_directory(*, windows=None):
+    """Shared Stable/Preview fragment location; never select settings.json."""
+    windows = os.name == 'nt' if windows is None else windows
+    if not windows:
+        return None
+    root = Path(os.environ.get('LOCALAPPDATA') or Path.home() / 'AppData/Local')
+    if not root.is_absolute():
+        raise ValueError('LOCALAPPDATA must be absolute')
+    return root / 'Microsoft/Windows Terminal/Fragments/Dots'
+
+
 def config_directory(app):
     if app == 'leaf':
         return leaf_config_directory(windows=True)

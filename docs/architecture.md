@@ -8,12 +8,27 @@
 
 `cleanup_commands.py` owns static grammar/completion; generated
 `bin/dots-cleanup*` wrappers and native `cli.py` use `cleanup_cli.py`.
-`cleanup/termux.py` owns bounded rules/native helpers, `core.py` owns inventories
+`cleanup/termux.py` and `cleanup/linux.py` own bounded POSIX rules/native helpers;
+`cleanup/windows.py` owns native handle/ACL/process-use checks and exact deletion,
+and `windows_receipts.py` owns private append-only Windows receipt storage.
+`core.py` owns shared inventories
 and guarded deletion, `engine.py` owns approval and verified subtotals, and
 `receipts.py` owns private metadata/locking. Presentation reuses shared
 renderers/progress/selectors; the menu launcher owns navigation. This irreversible
 cleanup journal is separate from managed-file replacement and undo.
 See [Cleanup](cleanup.md).
+
+## Standalone native utilities
+
+`utility_commands.py` owns inert standalone utility grammar and contextual
+completion. `utility_completion.py` exposes its literal completion records;
+the shell completion adapters and `native_completion.py` consume that metadata
+without importing or running utility implementations. Native `scripts/*.ps1`
+adapters use `utility.ps1` and the existing literal Python bridge. `utility_cli.py`
+dispatches selected paths, options, picker or web controllers lazily. They reuse
+the shared presentation, numeric selector, clipboard providers and transaction
+Store; they do not add a second dispatcher or preference store. Existing POSIX
+standalone implementations retain their supported argument surfaces.
 
 
 ## Clipboard ownership

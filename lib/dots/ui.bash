@@ -160,11 +160,35 @@ dots::spans_line() {
 }
 # Inert text and conservative terminal widths, using only shell builtins.
 dots::text() {
-  local text=$1 char i number probe='ü'
+  local text=$1 char i number probe='ü' byte count j code minimum valid
   REPLY=''
   if [[ $text != *[!\ -~]* ]]; then REPLY=$text; return; fi
   if (( ${#probe} != 1 )) && [[ $text == *[!\ -~]* ]]; then
-    printf -v REPLY '%q' "$text"
+    # A byte-oriented locale must not turn human Unicode into shell syntax.
+    # Retain valid UTF-8 while escaping controls and malformed standalone bytes.
+    for ((i=0; i<${#text}; i++)); do
+      char=${text:i:1}; printf -v number '%d' "'$char"
+      if (( number < 32 || number == 127 )); then
+        printf -v char '\\u%04x' "$number"
+      elif (( number >= 128 )); then
+        count=0 code=0 minimum=0 valid=1
+        if (( number >= 194 && number <= 223 )); then count=2; code=$((number & 31)); minimum=128
+        elif (( number >= 224 && number <= 239 )); then count=3; code=$((number & 15)); minimum=2048
+        elif (( number >= 240 && number <= 244 )); then count=4; code=$((number & 7)); minimum=65536
+        else valid=0; fi
+        for ((j=1; valid && j<count; j++)); do
+          if (( i+j >= ${#text} )); then valid=0; break; fi
+          printf -v byte '%d' "'${text:i+j:1}"
+          if (( byte < 128 || byte > 191 )); then valid=0; break; fi
+          code=$((code*64 + (byte & 63)))
+        done
+        if (( valid && code >= minimum && code <= 1114111 && (code < 55296 || code > 57343) )); then
+          char=${text:i:count}; ((i+=count-1))
+          if (( code >= 128 && code < 160 )); then printf -v char '\\u%04x' "$code"; fi
+        else printf -v char '\\x%02x' "$number"; fi
+      fi
+      REPLY+=$char
+    done
     return
   fi
   for ((i=0; i<${#text}; i++)); do

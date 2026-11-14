@@ -444,7 +444,7 @@ def main(argv=None):
             # PowerShell 5.1 native -File argv cannot reliably preserve every
             # empty/quoted argument. Transfer inert JSON, then splat natively.
             script = "[Console]::OutputEncoding = New-Object Text.UTF8Encoding($false); "
-            script += "$forward = @(ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:DOTS_EXTENSION_ARGUMENTS)))); "
+            script += "$forward = ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:DOTS_EXTENSION_ARGUMENTS))); if ($null -eq $forward) { $forward = @() } else { $forward = [string[]]$forward }; "
             script += "$global:LASTEXITCODE = 0; & $env:DOTS_EXTENSION_PATH @forward; if (-not $?) { if ($LASTEXITCODE) { exit $LASTEXITCODE }; exit 1 }; exit $LASTEXITCODE"
             encoded = base64.b64encode(script.encode('utf-16-le')).decode('ascii')
             env = dict(os.environ, DOTS_EXTENSION_PATH=str(path),
@@ -506,6 +506,7 @@ def main(argv=None):
         return controller('menu_cli.py', [*parts[1:], *rest])
     if stem == 'menu-tmux-keys': return controller('keys_cli.py', ['tmux', *rest])
     if stem == 'menu-tmux-sessions': return controller('menu_sessions.py', rest)
+    if stem == 'menu-projects': return controller('menu_project_cli.py', rest)
     raise ValueError('command requires a POSIX/tmux session: ' + stem.replace('-', ' '))
 
 

@@ -23,14 +23,24 @@ if (-not (Test-Path Function:\dots) -or $global:_DotsKeysWrapper) {
                 }
             }
             $previous = $env:DOTS_KEYS_CAPTURE
+            $oldManagerInstall, $oldLauncherInstall = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL
+            $oldLauncherAlways = $env:PYLAUNCHER_ALWAYS_INSTALL
             try {
                 $env:DOTS_KEYS_CAPTURE='json'
                 $OutputEncoding = [Text.UTF8Encoding]::new($false)
-                $python=Get-Command python3,python -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+                $python=Get-Command python3,python -CommandType Application -All -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' -and
+                        ([IO.Path]::GetExtension($_.Source) -eq '.exe' -or $env:OS -ne 'Windows_NT') } |
+                    Select-Object -First 1
                 if (-not $python) { throw 'Python is required for dots keys' }
+                $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'; $env:PYLAUNCHER_ALLOW_INSTALL = $null; $env:PYLAUNCHER_ALWAYS_INSTALL = $null
                 @{version=1;app='powershell';rows=$rows} | ConvertTo-Json -Depth 5 -Compress |
                     & $python.Source -B (Join-Path $env:DOTS 'lib/dots/cli.py') @forward
-            } finally { $env:DOTS_KEYS_CAPTURE=$previous }
+            } finally {
+                $env:DOTS_KEYS_CAPTURE=$previous
+                $env:PYTHON_MANAGER_AUTOMATIC_INSTALL=$oldManagerInstall; $env:PYLAUNCHER_ALLOW_INSTALL=$oldLauncherInstall
+                $env:PYLAUNCHER_ALWAYS_INSTALL=$oldLauncherAlways
+            }
         } else {
             & (Join-Path $env:DOTS 'bin/dots.ps1') @forward
         }

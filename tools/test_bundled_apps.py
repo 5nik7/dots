@@ -61,7 +61,7 @@ class BundledApps(unittest.TestCase):
     def test_all_routes_forward_literal_arguments_and_status(self):
         rows = json.loads((ROOT/'lib/dots/metadata/bundled-apps.json').read_text())
         for app, entry in (('blastoff', 'lib/blastoff.py'), ('pkgs', 'main.py')):
-            (self.repo/'plugins'/app/entry).write_text("import json,sys\nprint(json.dumps(sys.argv[1:], ensure_ascii=True))\nprint('fixture stderr',file=sys.stderr)\nsys.exit(47)\n")
+            (self.repo/'plugins'/app/entry).write_text("import json,sys\nprint(json.dumps(sys.argv[1:], ensure_ascii=True))\nsys.stderr.buffer.write(b'fixture stderr\\n')\nsys.exit(47)\n")
         literal = ['--help', '', 'two words', 'ü', 'quote\"', "single'quote", '--', '-leading', '$(touch escaped)']
         for stem in rows:
             app, *route = stem.split('-')

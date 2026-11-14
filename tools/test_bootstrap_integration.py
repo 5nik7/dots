@@ -43,7 +43,8 @@ class BootstrapIntegration(unittest.TestCase):
             restore = BackupPlan(); restore.restore(record['backup_id']); restore.apply('restore')
             self.assertEqual(self.target.read_text(), 'before')
             self.assertNotIn(str(self.target), self.receipt()['entries'])
-            self.assertIn(str(self.home/'.local/bin/dots'), self.receipt()['entries'])
+            launcher = 'dots.ps1' if os.name == 'nt' else 'dots'
+            self.assertIn(str(self.home/'.local/bin'/launcher), self.receipt()['entries'])
 
     def test_opt_out_keeps_prior_baseline_and_reports_new_discard(self):
         self.target.parent.mkdir(parents=True); self.target.write_text('original')

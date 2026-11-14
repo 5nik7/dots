@@ -59,7 +59,7 @@ function __dots_complete_fish
         end
     end
 end
-for name in dots theme todo fonts bak dots-bak
+for name in dots theme todo fonts bak dots-bak linked lnkd cpwd pathout dirout isdir isfile fzcmd fzenv fzfd fzfig fzg fzopt fzpyfig fzrg fzrg3 cht httpGet www
     complete -c $name -f -a '(__dots_complete_fish)'
 end
 set -l theme_state "$HOME/.local/state"

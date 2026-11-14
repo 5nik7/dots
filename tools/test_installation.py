@@ -57,7 +57,8 @@ class InstallationTests(unittest.TestCase):
         (self.repo/name).write_text(json.dumps(data))
 
     def cli(self, *args, ok=True):
-        result = subprocess.run([sys.executable,'-B',str(ROOT/'lib/dots/files/install.py'),*args],env=self.env,capture_output=True,text=True)
+        result = subprocess.run([sys.executable,'-B',str(ROOT/'lib/dots/files/install.py'),*args],env=self.env,
+                                input='',capture_output=True,text=True,timeout=90)
         if ok:
             self.assertEqual(result.returncode,0,result.stderr+'\n'+result.stdout)
         else:
@@ -66,6 +67,29 @@ class InstallationTests(unittest.TestCase):
 
     def receipt(self):
         return json.loads((self.home/'.state/dots/installation.json').read_text())
+
+    @unittest.skipUnless(os.name == 'nt', 'native Windows restart argv and status')
+    def test_source_restart_preserves_literal_arguments_and_child_status(self):
+        entry = self.repo/'lib/dots/files/install.py'
+        entry.parent.mkdir(parents=True)
+        entry.write_text('import json,sys\nprint(json.dumps(sys.argv[1:]))\nprint("child diagnostic",file=sys.stderr)\nsys.exit(47)\n')
+        arguments = ['install','--update','--with-source','nvim','--with-source=windows',
+                     '--yes','--json','--resource','literal "雪"', '--resource','', '--resource=-dash']
+        code = '''
+import sys
+from unittest.mock import patch
+sys.path.insert(0, sys.argv[1])
+import install
+with patch.object(install, 'source_plan', return_value=[{}]), patch.object(install, 'update_sources'):
+    sys.exit(install.main(sys.argv[2:]))
+'''
+        result = subprocess.run([sys.executable,'-B','-c',code,str(ROOT/'lib/dots/files'),*arguments],
+                                env=self.env,stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=30)
+        self.assertEqual(result.returncode, 47, result.stderr)
+        self.assertEqual(json.loads(result.stdout), ['install','--yes','--json','--resource',
+            'literal "雪"','--resource','','--resource=-dash'])
+        self.assertIn('child diagnostic', result.stderr)
+        self.assertEqual(list(self.home.iterdir()), [])
 
     def test_dry_run_and_idempotent_install_restore(self):
         before = list(self.home.rglob('*'))
@@ -194,12 +218,13 @@ class InstallationTests(unittest.TestCase):
         self.target.parent.mkdir(parents=True)
         missing = self.home/'missing'
         self.target.symlink_to(missing)
+        original_link = os.readlink(self.target)
         self.cli('install','--yes')
         self.assertEqual(self.target.resolve(), self.source)
         entry = self.receipt()['entries'][str(self.target)]
         self.assertIn('backup_id', entry)
         self.cli('uninstall','--yes')
-        self.assertEqual(os.readlink(self.target),str(missing))
+        self.assertEqual(os.readlink(self.target), original_link)
 
     def test_catalog_drift_after_preview(self):
         with mock.patch.dict(os.environ,self.env,clear=True):
@@ -249,9 +274,10 @@ class InstallationTests(unittest.TestCase):
         return result.stdout.strip()
 
     def git_fixture(self):
-        shutil.copytree(ROOT/'lib/dots/files',self.repo/'lib/dots/files')
-        for name in ('progress.py','interaction.py','resources.py','resources.tsv','platform_info.py','profiles.py','profile_config.py','profile_views.py','style_config.py','config_values.py','style_catalog.py','row_layout.py'):
-            shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
+        # The updated child controller must have its full dependency closure.
+        # Omit publishers so this fixture cannot activate application themes.
+        shutil.copytree(ROOT/'lib/dots', self.repo/'lib/dots',
+                        ignore=shutil.ignore_patterns('themes','__pycache__','*.pyc'))
         self.git(self.repo,'init','--initial-branch=main')
         self.git(self.repo,'config','user.email','fixture@example.invalid')
         self.git(self.repo,'config','user.name','Fixture')

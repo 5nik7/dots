@@ -9,6 +9,7 @@ from platform_info import detect
 
 
 TIMEOUT = 8
+HELP_OPTIONS = ('-h', '--help')
 
 
 def _provider(operation):
@@ -113,7 +114,7 @@ def _execute(command, arguments, read_input):
     for argument in arguments:
         if not literal and argument == '--':
             literal = True
-        elif not literal and argument in ('-h', '--help'):
+        elif not literal and argument in HELP_OPTIONS:
             from help_presentation import colorize_help
             return colorize_help(_help(command), prog=command).encode('utf-8')
         elif not literal and argument.startswith('-'):

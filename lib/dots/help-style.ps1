@@ -5,7 +5,7 @@ function Get-DotsHelpPreferences {
         executable = '36'; command = '34'; subcommand = '35'; option = '33'; argument = '32'
         heading = '1;96'; description = '39'; punctuation = '90'; tagline = '39'
     } }
-    $python = Get-Command py, python3, python -CommandType Application -ErrorAction SilentlyContinue |
+    $python = Get-Command py, python3, python -CommandType Application -All -ErrorAction SilentlyContinue |
         Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' -and
             ([IO.Path]::GetExtension($_.Source) -eq '.exe' -or $env:OS -ne 'Windows_NT') } |
         Select-Object -First 1
@@ -14,10 +14,13 @@ function Get-DotsHelpPreferences {
     if ($python.Name -eq 'py.exe' -or $python.Name -eq 'py') { $prefix = @('-3') }
     $oldDots, $oldEncoding, $oldUtf8 = $env:DOTS, $env:PYTHONIOENCODING, $env:PYTHONUTF8
     $oldConsoleEncoding = [Console]::OutputEncoding
+    $oldManagerInstall, $oldLauncherInstall = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL
+    $oldLauncherAlways = $env:PYLAUNCHER_ALWAYS_INSTALL
     try {
         $env:DOTS = $Root; $env:PYTHONIOENCODING = 'utf-8'; $env:PYTHONUTF8 = '1'
+        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'; $env:PYLAUNCHER_ALLOW_INSTALL = $null; $env:PYLAUNCHER_ALWAYS_INSTALL = $null
         [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
-        $rows = @(& $python.Source @prefix -B (Join-Path $Root 'lib/dots/profile_config.py') '__settings')
+        $rows = @(& $python.Source @prefix -B (Join-Path $Root 'lib/dots/profile_config.py') '__settings' 2>$null)
         if ($LASTEXITCODE -ne 0) { throw 'cannot read help preferences' }
         foreach ($line in $rows) {
             $parts = ([string] $line).Split([char]9)
@@ -30,9 +33,15 @@ function Get-DotsHelpPreferences {
                 }
             }
         }
+    } catch {
+        # Preferences are optional; basic help must work without a usable
+        # Python runtime, including a manager with no installed interpreter.
+        return $result
     } finally {
         $env:DOTS = $oldDots; $env:PYTHONIOENCODING = $oldEncoding; $env:PYTHONUTF8 = $oldUtf8
         [Console]::OutputEncoding = $oldConsoleEncoding
+        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $oldManagerInstall; $env:PYLAUNCHER_ALLOW_INSTALL = $oldLauncherInstall
+        $env:PYLAUNCHER_ALWAYS_INSTALL = $oldLauncherAlways
     }
     return $result
 }
@@ -70,7 +79,7 @@ function Get-DotsHelpSpans {
         }
         elseif ($literal) { $role = 'argument' }
         elseif ($pending -and -not $word.StartsWith('-')) {
-            if ($Kind -ne 'description' -or $word -match '^[A-Z][A-Z0-9_.-]*$') { $role = 'argument' }
+            if ($Kind -ne 'description' -or $word -cmatch '^[A-Z][A-Z0-9_.-]*$') { $role = 'argument' }
             $pending = $false
         }
         elseif ($word -eq 'dots' -or $word -like 'dots-*') {
@@ -84,7 +93,7 @@ function Get-DotsHelpSpans {
         elseif ($word -in @('OPTIONS', 'FLAGS') -or ($word -eq 'options' -and $Kind -ne 'description')) { $role = 'option' }
         elseif ($word -in @('COMMAND', 'COMMAND...', 'COMMANDS')) { $role = 'command' }
         elseif ($word -in @('SUBCOMMAND', 'SUBCOMMAND...')) { $role = 'subcommand' }
-        elseif ($Kind -ne 'description' -and $word -match '^[A-Z][A-Z0-9_.-]*$') { $role = 'argument' }
+        elseif ($Kind -ne 'description' -and $word -cmatch '^[A-Z][A-Z0-9_.-]*$') { $role = 'argument' }
         elseif ($Kind -eq 'command' -and $depth -eq 0) {
             $role = 'command'; $depth = 1; $reference = $true; $commandPath = $word
         }

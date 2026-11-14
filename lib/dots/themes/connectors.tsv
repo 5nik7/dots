@@ -9,3 +9,5 @@ eza	theme.yml	eza.yml
 television	themes/dots.toml	television.toml
 leaf	themes/dots.toml	leaf.toml
 leaf	themes/dots.tmTheme	bat.tmTheme
+wezterm	colors/dots.toml	wezterm.toml
+windows-terminal	dots.json	windows-terminal.json

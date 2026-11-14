@@ -540,9 +540,28 @@ rlp() {
 
 mkcd() { source "$DOTS/scripts/mkcd" "$@"; }
 gup() {
-  local msg='Sync repository tree'
-  (($# == 0)) || msg="$*"
-  command git-it publish --all --yes -m "$msg"
+  local msg='' has_message=0 root=${DOTS:-$HOME/dots}
+  local -a forward=()
+  while (($#)); do
+    case $1 in
+      --all) forward+=(--all) ;;
+      --yes) forward+=(--yes) ;;
+      --dry-run) forward+=(--dry-run) ;;
+      -m|--message)
+        (($# >= 2)) || { printf 'gup: --message requires a value\n' >&2; return 2; }
+        shift; msg=$1; has_message=1 ;;
+      --help|-h)
+        printf 'Usage: gup [--all] [--yes] [--dry-run] [-m MESSAGE | MESSAGE]\n'
+        return 0 ;;
+      -*) printf 'gup: unknown option: %s\n' "$1" >&2; return 2 ;;
+      *)
+        ((has_message == 0)) || { printf 'gup: supply one quoted message\n' >&2; return 2; }
+        msg=$1; has_message=1 ;;
+    esac
+    shift
+  done
+  ((has_message == 0)) || forward+=(--message "$msg")
+  command "$root/bin/dots" git publish -C "$PWD" --no-wiki "${forward[@]}"
 }
 zd() {
   if (($# == 0)); then

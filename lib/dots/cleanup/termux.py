@@ -24,6 +24,24 @@ CHECKPOINTS = tuple(list(GROUPS)[3:])
 LOGS = ('log', 'mason.log', 'lsp.log', 'conform.log', 'nvim.log', 'luasnip.log', 'noice.log')
 
 
+def group_metadata(platform):
+    """Static capability descriptions; never inspect paths or invoke providers."""
+    if platform == 'termux':
+        return GROUPS
+    descriptions = {
+        'downloads': 'npm and pip download caches; future installs may download packages again',
+        'builds': 'Go, Cargo and uv caches; future builds may download dependencies',
+        'logs': 'Named Neovim diagnostic logs; diagnostic history is lost',
+    }
+    if platform == 'windows':
+        descriptions['builds'] = 'Native build-cache inspection and deletion are not implemented'
+    elif platform not in ('linux', 'wsl'):
+        descriptions = {}
+    return {key: ('Neovim diagnostics' if key == 'logs' else value[0], value[1],
+                  descriptions.get(key, 'Not implemented on ' + platform + '; no paths are scanned'))
+            for key, value in GROUPS.items()}
+
+
 def command(argv, env, cwd, timeout=120, limit=1024 * 1024):
     """Bound time/output and terminate only our own child process group."""
     child = subprocess.Popen(argv, env=env, cwd=cwd, stdin=subprocess.DEVNULL,
@@ -62,6 +80,10 @@ def command(argv, env, cwd, timeout=120, limit=1024 * 1024):
 
 
 class Termux:
+    platform = 'termux'
+    supported_groups = tuple(GROUPS)
+    can_delete = True
+
     def __init__(self, env=None):
         self.env = dict(os.environ if env is None else env)
         self.prefix = Path(self.env.get('TERMUX__PREFIX') or self.env.get('PREFIX', ''))

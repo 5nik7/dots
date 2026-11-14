@@ -138,6 +138,10 @@ def render(panes, records):
 
 
 def alert_root():
+    if os.name == 'nt':
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'lib/dots'))
+        from codex_attention import root
+        return root()
     root = Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'dots/codex-alerts'
     if not root.is_absolute():
         raise ValueError('state root must be absolute')

@@ -15,7 +15,7 @@ import test_completion_colors as fixtures
 from command_metadata import BUILTINS, catalog, read
 
 
-@unittest.skipUnless(shutil.which('bash'), 'Bash adapter unavailable')
+@unittest.skipUnless(os.name != 'nt' and shutil.which('bash'), 'requires a native POSIX Bash fixture; Windows bash.exe may be WSL interop')
 class CompletionCatalog(unittest.TestCase):
     setUp = fixtures.CompletionColors.setUp
 

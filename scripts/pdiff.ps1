@@ -1,4 +1,4 @@
-#$dir1 = "C:\Users\njen\dots\shells\powershell\Modules"
+﻿#$dir1 = "C:\Users\njen\dots\shells\powershell\Modules"
 #$dir2 = "C:\Users\njen\Documents\WindowsPowerShell\Modules"
 
 param(

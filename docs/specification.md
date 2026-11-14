@@ -11,6 +11,12 @@ Default and verbose Git file-report heading glyphs use CLI-only `icons.git.statu
 
 ## Cleanup receipts
 
+Cleanup group records add `scan_supported` and `run_supported` booleans;
+`supported` retains deletion-support meaning. Windows download-cache/log providers have
+true `supported`/`run_supported`; build/checkpoint providers remain unsupported. Unsupported deletion returns status 3 before
+receipt acquisition. Linux/WSL reports identify their actual execution platform;
+the existing receipt and accounting fields remain schema 1.
+
 Cleanup JSON and metadata-only receipts use `schema: 1`. Scan records contain
 `platform`, `status`, `selected_groups`, `candidates` and `issues`. Candidates
 identify `rule`, `group`, `path`, deletion `mode` and counts. Run records add a
@@ -21,7 +27,14 @@ Counts are nonnegative integers: `files`, `directories`, `symlinks`,
 `logical_bytes`, `allocated_bytes`. `cumulative` is derived from retained receipt
 totals, never from a free-space delta. Reads present unfinished `running` records
 as `incomplete` without rewriting them. The store uses private files, atomic
-replacement and one mutation lock. See [cleanup accounting](cleanup.md).
+replacement and one mutation lock on POSIX. Windows uses one exclusive lock and
+append-only `UUID.jsonl` files containing complete schema-1 report snapshots,
+flushed before mutations and bounded to 16 MiB. Its reader retains legacy
+`UUID.json`, refuses duplicate identities across formats, and uses the last
+complete snapshot after an incomplete final line. Interrupted records are never
+replayed. The private directory remains the existing native state-root `cleanup`
+directory; no second store or configuration precedence is introduced. See
+[cleanup accounting](cleanup.md).
 
 
 ## Clipboard history data
@@ -241,6 +254,15 @@ resolve per theme, and explicit false attributes override inherited true values.
 
 ## Implemented checkout installation boundary
 
+Native Windows transaction operations may carry an optional `payload_suffix`
+field: empty, `.exe`, `.com`, `.bat`, or `.cmd`. Payload readers validate this
+closed set before deriving `<index>-before<suffix>` or `<index>-after<suffix>`.
+Absent fields retain the original unsuffixed journal layout. This additive
+schema-1 field preserves Windows filename-derived executable mode bits without
+changing existing object digests or rewriting historical receipts. New retained
+Bak payload names likewise append the executable suffix after `.bak`; the
+catalog's explicit payload path remains authoritative.
+
 The bounded [file catalog](files.md) drives [checkout installation](installation.md). Each selected profile supplies a single `target`; only legacy schema-1 catalog inputs use `targets` overrides. Native Windows tokens and the installation receipt are documented in those references. `.gitignore` is not a desired-state manifest.
 
 The implemented catalog schema is unchanged by the consolidated Git layout.
@@ -360,6 +382,21 @@ Bundled command/completion/manual entries use the existing schema-1 installation
 `plugins/manifest.json` schema 1 maps plugin IDs to relative runtime, manual and Bash/Zsh/Fish completion paths, Python requirements, platform declarations and source provenance. Absolute paths, parent traversal and incomplete asset sets are invalid. The installer guards the manifest and selected files. Paths are relative to `plugins/ID`; this declaration does not execute hooks or change command grammar. Migration uses the existing schema-1 installation plan and receipt, with `retained` inventory rows for deliberately preserved legacy material.
 
 ## Codex attention state
+
+The native Windows bridge uses the same `events.sqlite3` schema and native Dots
+state-root `codex-alerts` directory, with current-user/SYSTEM protected directory
+ACLs, pinned ancestors and refusal of unsafe existing state. Its private helper
+supports `context`, metadata-only `pending`, and exact `ack-event --thread UUID
+--event HASH`; acknowledgement revalidates event identity and expiry and removes
+message content. Native process identity is PID plus creation time. Pane, thread
+association and visible focus remain unknown; inherited Windows Terminal IDs
+are not proof. There is no second queue, notifier or native worker. Hook/notify
+recording requires the existing owned installation marker; Windows does not
+chain prior notify commands or store excerpts. These helper interfaces do not
+add public Dots routes or preferences.
+The new private `pending`/`ack-event` interface is Windows-only. POSIX refuses
+before opening SQLite, preserving noncreation even for WAL databases; existing
+tmux/pane acknowledgement and event recording remain unchanged.
 
 `apps.codex.toast.{fg,bg,position,short,bg_opacity}` is a five-field projection of the
 checkout's native `config/tmux/codex-alerts.toml` `[termux]` table. There is no

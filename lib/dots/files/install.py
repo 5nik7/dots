@@ -17,7 +17,8 @@ if sys.version_info < (3, 9):
 
 from catalog import Catalog, Presentation, platform, read_json
 from events import OperationOutput
-from file_platform import lock, open_nofollow, state_root, prepare_text
+from file_platform import (lock, open_nofollow, state_root, prepare_text, native_link_text,
+                           link_target_matches, native_staging_suffix, validate_windows_path)
 from transactions import Store, digest, exists, parents_safe, private_directory, copy_object
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -177,7 +178,7 @@ class Installation:
         if not owned and key in getattr(self, 'legacy_verified', set()):
             managed = True
         current = self.guards[key]
-        same = (link is not None and path.is_symlink() and os.readlink(path) == str(link))
+        same = link is not None and link_target_matches(path, link)
         if source is not None:
             source = Path(source)
             if source.is_symlink() or not source.is_file():
@@ -526,10 +527,16 @@ class Installation:
                     self.add('dots:'+name+':command', home/'.local/bin'/filename, link=source)
         for app, path, artifact in connectors:
             desired = self.state / 'current/theme' / artifact
-            old = os.readlink(path) if path.is_symlink() else ''
+            old = native_link_text(os.readlink(path)) if path.is_symlink() else ''
             # A fixed connector may repair a relocated generated-state link,
             # but an arbitrary link is never treated as installer ownership.
-            managed = old.endswith('/dots/current/theme/' + artifact)
+            suffix = Path('dots/current/theme') / artifact
+            managed = bool(old) and Path(old).parts[-len(suffix.parts):] == suffix.parts
+            if managed and self.platform == 'windows':
+                try:
+                    validate_windows_path(old)
+                except ValueError:
+                    managed = False
             self.add('theme:' + app + (':' + artifact if app == 'leaf' else ''), path, link=desired, directory=artifact == 'yazi', managed=managed)
         if self.theme:
             generation = self.state / 'themes/generations' / self.theme['generation']
@@ -588,7 +595,7 @@ class Installation:
                 self.merge_plan([], backups.guards, label='backup catalog')
                 op['source'] = str(payload)
             else:
-                payload = self.store.root / entry['backup'] / (str(entry['index']) + '-before')
+                payload = self.store.payload(entry['backup'], entry['index'], 'before')
                 self.guard(payload)
                 if self.guards[str(payload)] != entry['before']:
                     raise ValueError('original backup failed verification: ' + path)
@@ -659,7 +666,7 @@ class Installation:
                 for index, op in enumerate(self.operations):
                     if op['path'] not in self.entries:
                         continue
-                    prepared = Path(tmp) / str(index)
+                    prepared = Path(tmp) / (str(index) + native_staging_suffix(op['path']))
                     if 'link' in op:
                         try:
                             prepared.symlink_to(op['link'], target_is_directory=op.get('directory', False))
@@ -869,7 +876,12 @@ def main(argv=None):
                 skip = True
             elif word != '--update' and not word.startswith('--with-source='):
                 forwarded.append(word)
-        os.execv(sys.executable, [sys.executable, '-B', str(root / 'lib/dots/files/install.py'), *forwarded])
+        command = [sys.executable, '-B', str(root / 'lib/dots/files/install.py'), *forwarded]
+        if os.name == 'nt':
+            # Windows execv does not preserve argv quoting. Wait for the fresh
+            # controller so callers receive its streams and exact exit status.
+            return subprocess.call(command)
+        os.execv(sys.executable, command)
     installation = Installation(root)
     installation.no_backup = args.no_backup
     if args.action != 'migrate-apps':

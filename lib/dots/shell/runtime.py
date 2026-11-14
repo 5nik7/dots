@@ -1,6 +1,16 @@
 """Data-only settings and palette readers for the native Xonsh adapter."""
 from pathlib import Path
+import os
 import re
+
+
+def paths(root, env=None):
+    """Use the filesystem adapter's native roots for all data-only shells."""
+    from files.file_platform import config_root, state_root
+    env = os.environ if env is None else env
+    return dict(config=str(config_root(env) / 'dots/config.env'),
+                state=str(state_root(env)),
+                theme_command=str(Path(root) / 'bin' / ('theme.ps1' if os.name == 'nt' else 'theme')))
 
 
 def valid(kind, value):
@@ -11,8 +21,7 @@ def valid(kind, value):
 
 
 def settings(root, env):
-    config = Path(env.get("DOTS_CONFIG_FILE") or
-                  Path(env.get("XDG_CONFIG_HOME") or Path(env['HOME']) / '.config') / 'dots/config.env')
+    config = Path(env.get('DOTS_CONFIG_FILE') or paths(root, env)['config'])
     schema = {}
     for line in (Path(root) / 'lib/dots/shell/settings.tsv').read_text().splitlines():
         key, kind, default, _ = line.split('\t')

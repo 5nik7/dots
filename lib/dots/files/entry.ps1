@@ -1,7 +1,7 @@
 # Native adapter; all planning, backups and mutations live in the Python engine.
 function Invoke-DotsFiles {
     param([string] $Root, [string] $Controller, [string[]] $CliArguments, [hashtable] $Presentation = @{}, [string] $PythonCommand = '')
-    $python = if ($PythonCommand) { Get-Command -Name $PythonCommand -CommandType Application -ErrorAction Stop } else { Get-Command py, python3, python -CommandType Application -ErrorAction SilentlyContinue |
+    $python = if ($PythonCommand) { Get-Command -Name $PythonCommand -CommandType Application -TotalCount 1 -ErrorAction Stop } else { Get-Command py, python3, python -CommandType Application -All -ErrorAction SilentlyContinue |
         Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' -and
             ([IO.Path]::GetExtension($_.Source) -eq '.exe' -or $env:OS -ne 'Windows_NT') } |
         Select-Object -First 1 }
@@ -15,6 +15,8 @@ function Invoke-DotsFiles {
     $oldEncoding = $env:PYTHONIOENCODING
     $oldUtf8 = $env:PYTHONUTF8
     $oldShell = $env:DOTS_POWERSHELL
+    $oldManagerInstall, $oldLauncherInstall = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL
+    $oldLauncherAlways = $env:PYLAUNCHER_ALWAYS_INSTALL
     $oldConsoleEncoding = [Console]::OutputEncoding
     $oldOutputEncoding = $OutputEncoding
     try {
@@ -29,6 +31,7 @@ function Invoke-DotsFiles {
         if (-not $env:TERM -and $Host.UI.SupportsVirtualTerminal) { $env:TERM = 'xterm-256color' }
         $env:PYTHONIOENCODING = 'utf-8'
         $env:PYTHONUTF8 = '1'
+        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'; $env:PYLAUNCHER_ALLOW_INSTALL = $null; $env:PYLAUNCHER_ALWAYS_INSTALL = $null
         [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
         $OutputEncoding = New-Object Text.UTF8Encoding($false)
         $env:DOTS_POWERSHELL = (Get-Process -Id $PID).Path
@@ -49,6 +52,8 @@ function Invoke-DotsFiles {
         $env:PYTHONIOENCODING = $oldEncoding
         $env:PYTHONUTF8 = $oldUtf8
         $env:DOTS_POWERSHELL = $oldShell
+        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $oldManagerInstall; $env:PYLAUNCHER_ALLOW_INSTALL = $oldLauncherInstall
+        $env:PYLAUNCHER_ALWAYS_INSTALL = $oldLauncherAlways
         [Console]::OutputEncoding = $oldConsoleEncoding
         $OutputEncoding = $oldOutputEncoding
     }

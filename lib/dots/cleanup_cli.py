@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Portable cleanup frontend; destructive rules are currently Termux-only."""
+"""Platform-scoped cleanup frontend with explicit native capability boundaries."""
 import argparse
 import json
 import os
@@ -9,7 +9,9 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cleanup_commands import COMMANDS, OPTIONS
-from cleanup.termux import GROUPS, ORDINARY, CHECKPOINTS, Termux
+from cleanup.termux import GROUPS, ORDINARY, CHECKPOINTS, Termux, group_metadata
+from cleanup.linux import Linux
+from cleanup.windows import Windows
 from cleanup.core import public
 from cleanup.receipts import Receipts, totals
 from cleanup.presentation import render, confirm
@@ -59,8 +61,12 @@ def main(argv=None):
             data = dict(data, cumulative=store.cumulative())
         render(data, args); return 0
     if action == 'groups':
+        provider = {'termux': Termux, 'linux': Linux, 'wsl': Linux, 'windows': Windows}.get(info['platform'])
         render(dict(schema=1, platform=info['platform'], catalog=[dict(id=k, label=v[0], risk=v[1],
-                    description=v[2], supported=info['platform']=='termux', default=k in ORDINARY) for k,v in GROUPS.items()]), args)
+                    description=v[2], supported=bool(provider and provider.can_delete and k in provider.supported_groups),
+                    scan_supported=bool(provider and k in provider.supported_groups),
+                    run_supported=bool(provider and provider.can_delete and k in provider.supported_groups),
+                    default=k in ORDINARY) for k,v in group_metadata(info['platform']).items()]), args)
         return 0
     groups = list(dict.fromkeys(args.group or ORDINARY))
     if args.include_checkpoints: groups = list(dict.fromkeys([*groups, *CHECKPOINTS]))
@@ -73,12 +79,13 @@ def main(argv=None):
     if not action and yes and not tty: p.error('unattended deletion requires explicit run --yes')
     preview = action == 'scan' or args.dry_run or (not action and (args.json or not tty))
     if not preview and not yes and (not tty or args.json): p.error('noninteractive run requires --yes; use scan for inspection')
-    if info['platform'] != 'termux':
+    if info['platform'] not in ('termux','linux','wsl','windows'):
         render(dict(schema=1, platform=info['platform'], status='unsupported', issues=[dict(reason='Cleanup rules are not implemented for this platform.')]), args)
         return 3
     from config_values import value
     age = args.older_than if args.older_than is not None else value('apps.cleanup.checkpoint_min_age_days', 30)
-    adapter = Termux()
+    adapter = (Termux() if info['platform'] == 'termux' else Windows() if info['platform'] == 'windows'
+               else Linux(platform=info['platform']))
     configure(tty and not args.json and not args.dry_run and not args.quiet)
     previous = signal.getsignal(signal.SIGTERM)
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
@@ -87,13 +94,14 @@ def main(argv=None):
             with stages.step('Scan cleanup candidates') as progress:
                 targets, issues = adapter.candidates(groups, age, progress.update)
             if preview:
-                data = dict(schema=1, platform='termux', status='planned', selected_groups=groups,
+                data = dict(schema=1, platform=info['platform'], status='planned', selected_groups=groups,
                             candidates=[public(t) for t in targets], issues=issues, available_after=available(adapter.boundary))
                 with permanent_output(): render(data, args)
                 return 1 if issues else 0
             with stages.step('Clean approved groups'):
                 data = run(adapter, targets, groups, issues, store,
-                           (lambda *_: 'delete') if yes else confirm, report)
+                           (lambda *_: 'delete') if yes else
+                           (lambda group, members: confirm(group, members, platform=adapter.platform)), report)
                 if data['status'] == 'stopped': stages.cancel()
             with permanent_output(): render(data, args)
             return 130 if data['status']=='stopped' else 1 if data['status']=='partial' else 0

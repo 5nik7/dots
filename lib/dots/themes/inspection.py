@@ -13,10 +13,10 @@ LIB = Path(__file__).resolve().parent
 sys.path.insert(0, str(LIB.parent))
 sys.path.insert(0, str(LIB.parent / 'files'))
 from catalog import Presentation, platform
-from file_platform import config_root, state_root, open_nofollow, check_object
+from file_platform import config_root, state_root, open_nofollow, check_object, native_link_text
 from transactions import parents_safe
 from interaction import Selector, SelectionEnded, terminal
-from app_paths import eza_config_directory, television_config_directory, leaf_config_directory, config_directory
+from app_paths import eza_config_directory, television_config_directory, leaf_config_directory, config_directory, terminal_fragment_directory
 from picker import CREDENTIAL, LIMIT
 if __package__:
     from .file_preview import directory_view, text_view, resource_span
@@ -121,7 +121,7 @@ class Inspection:
                 return
             if not self.active.is_symlink():
                 raise ValueError('active theme is not a managed link')
-            target = lexical(self.active.parent / os.readlink(self.active))
+            target = lexical(self.active.parent / native_link_text(os.readlink(self.active)))
             if target.parent != self.state / 'themes/generations' or not re.fullmatch(r'g\.[a-zA-Z0-9]+', target.name):
                 raise ValueError('active theme points outside managed generations')
             parents_safe(target / 'id')
@@ -193,10 +193,13 @@ class Inspection:
         connector_config = Path(os.environ.get('XDG_CONFIG_HOME') or self.home / '.config')
         for app, suffix, artifact in registry():
             base = connector_config / app
-            supported = not windows or app in ('yazi', 'git', 'vivid', 'eza', 'television', 'leaf')
+            supported = (windows if app == 'windows-terminal' else
+                         not windows or app in ('yazi', 'git', 'vivid', 'eza', 'television', 'leaf', 'wezterm'))
             error = None
             try:
-                if app == 'eza': base = eza_config_directory(windows=windows)
+                if app == 'windows-terminal': base = terminal_fragment_directory(windows=windows)
+                elif windows and app == 'wezterm': base = config_directory('wezterm')
+                elif app == 'eza': base = eza_config_directory(windows=windows)
                 elif app == 'television': base = television_config_directory(windows=windows)
                 elif app == 'leaf': base = leaf_config_directory(windows=windows)
                 elif windows and app == 'yazi': base = config_directory('yazi')
@@ -233,7 +236,7 @@ class Inspection:
                 if stat.S_ISLNK(mode):
                     raw = os.readlink(target)
                     row['link_target'] = raw
-                    dest = lexical(target.parent.resolve(strict=False) / raw)
+                    dest = lexical(target.parent.resolve(strict=False) / native_link_text(raw))
                     expected = self.active / artifact
                     row['status'] = ('linked' if dest == expected else
                                      'pinned' if target.resolve(strict=False) == self.generation / artifact else 'points-elsewhere')
@@ -275,7 +278,7 @@ class Inspection:
                         # Finalized journals discard prepared objects. Observe the
                         # recorded destination link; never read its file contents.
                         if not target.is_symlink(): continue
-                        source = lexical(target.parent.resolve(strict=False) / os.readlink(target))
+                        source = lexical(target.parent.resolve(strict=False) / native_link_text(os.readlink(target)))
                         if not source.is_absolute() or not source.is_relative_to(self.active): continue
                         artifact = source.relative_to(self.active).as_posix()
                         if artifact not in self.rows and artifact != 'yazi': continue

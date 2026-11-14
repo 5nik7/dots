@@ -18,6 +18,9 @@ PRIORITY = {'idle': 0, 'waiting': 1, 'working': 2}
 
 
 def root():
+    if os.name == 'nt':
+        from files.file_platform import state_root
+        return state_root() / 'codex-alerts'
     path = Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'dots/codex-alerts'
     if not path.is_absolute():
         raise ValueError('state root must be absolute')

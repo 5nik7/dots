@@ -5,7 +5,7 @@ Git report and operation routes accept `--view default|short|verbose`, `-s`/`--s
 
 ## Cleanup
 
-`dots cleanup` scans known disposable Termux files and asks Delete/Skip/Stop per
+`dots cleanup` scans the execution platform's supported disposable files and asks Delete/Skip/Stop per
 group. `scan`, `groups`, `history [--limit N]` and `report [RUN_ID]` inspect without
 mutating; `run` performs reviewed deletion. Bare redirected/JSON invocation is
 read-only. Unattended ordinary deletion requires `run --yes`; checkpoint groups
@@ -67,7 +67,7 @@ retain their normal review. JSON, raw icon formats and exact paths remain data.
 
 ## Implemented shell initialization
 
-The sourceable [shell utility functions](shell-utils.md) have their own documented argument, stream and status contracts; they do not add dispatcher routes or completion metadata.
+The sourceable [shell utility functions](shell-utils.md) have their own documented argument, stream and status contracts and add no dispatcher routes. Existing standalone utilities also have native PowerShell adapters with shared inert contextual completion metadata; see [native standalone utilities](shell-utils.md#native-windows-standalone-adapters).
 
 `dots init [bash|zsh|fish|powershell|nu|xonsh]` emits native initialization code. With no argument, the generated code selects Bash or Zsh in the calling shell. `init` is reserved and bypasses extension discovery. Help and shell-name completion use built-in metadata. Native `bin/dots.ps1` supports shell-code initialization plus bounded setup, file inspection and installation recovery. Evaluating a hook loads only Dots integration from `lib/dots/shell/`; personal shell configuration stays separate. Settings use profile.json, with explicit environment overrides and legacy config.env compatibility. Repository rc files resolve symlinks and source their adjacent loaders directly. See [shell initialization](shell-init.md) for the full interface, bootstrap, error statuses and native invocation examples.
 
@@ -297,6 +297,18 @@ Help, reports and other output actions execute once, then open a scrollable read
 The repository tmux configuration binds Prefix m to `dots menu --browse` and Prefix s to the session picker. Each `run-shell -b` binding passes explicit server, pane, client and cwd context, quotes shell-bound format values and maps only status 130 to success. Other statuses and diagnostics remain visible. These replace stock mark-pane and session-tree bindings; Prefix ? is unchanged. Configuration activation requires loading the configuration in the running server; source edits alone do not activate it.
 
 Listings and successful session navigation return 0; invalid invocations and unrecoverable context/selector errors return 2. Launcher cancellation returns 130. Workflow failures display their status before returning to the menu; they do not become a successful workflow or close the launcher. Native Windows uses ordinary terminal FZF and keeps the unavailable tmux entry visible; it never invokes WSL. The JSON envelope is the shared [schema-1 menu record](specification.md#shared-menu-records), with no command arrays or private transport fields.
+
+### Project shell menu
+
+`dots menu projects [--print|--json|--browse] [--query TEXT]` lists the same
+configured projects as the session browser. Listing and JSON never start a shell.
+Explicit interactive selection hands the current terminal to a native shell in
+the selected directory; exiting that shell returns to the caller. Paths are
+passed as working directories, not evaluated command text. Cancellation returns
+130. Windows uses the invoking native PowerShell engine when available, without
+Bash or WSL. POSIX uses the configured supported interactive shell. Missing
+shells fail with status 2. This route adds no tmux session-management claims on
+Windows and changes no project configuration or terminal profiles.
 
 ### Tmux session menu
 

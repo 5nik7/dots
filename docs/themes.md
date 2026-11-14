@@ -8,6 +8,34 @@ See [decision 0016](decisions/0016-core-command-families-and-file-identities.md)
 
 Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Overall completion follows reserved preparation, publication and finalization steps, with current activity on a second row. Batch updates give selected checkouts equal shares and nest their steps inside those shares. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
 
+## Native terminal schemes
+
+Theme generations include `windows-terminal.json` and `wezterm.toml`, rendered
+from the same semantic palette as the other applications. Publication adds the
+named **Dots** scheme; selecting it remains an explicit application action.
+Neither connector rewrites profiles, fonts, keybindings, or `settings.json`.
+
+On Windows, an existing
+`%LOCALAPPDATA%/Microsoft/Windows Terminal/Fragments/Dots` directory enables the
+`dots.json` connector. This documented per-user fragment location is shared by
+Stable and Preview and does not require choosing between their settings files.
+Create that directory only as part of an approved activation, preview the theme
+publication, then select Dots in the desired terminal profile. See Microsoft's
+[fragment format and location](https://learn.microsoft.com/en-us/windows/terminal/json-fragment-extensions).
+
+WezTerm connects `colors/dots.toml` only when that directory already exists under
+its configured Dots application directory. Windows uses the existing
+`DOTS_APP_WEZTERM_CONFIG` override or XDG/HOME configuration mapping. Add that
+directory to WezTerm's `color_scheme_dirs` when needed and select
+`color_scheme = "Dots"` in its native configuration. Dots does not assume a
+portable executable's directory or modify Lua automatically. See WezTerm's
+[scheme loading documentation](https://wezterm.org/config/appearance.html).
+
+Both connectors use the existing publication journal, drift checks and undo.
+Removing a connector does not undo a user's scheme selection. Native desktop
+rendering/reload remains a separate acceptance gate; template parsing is not
+visible consumer evidence.
+
 ## Tmux
 
 The linked tmux configuration has two top rows on Termux (detected from `TERMUX_VERSION`): the clock followed by Termux tab numbers on the upper left, battery on the upper right, and the current tmux session followed by its windows below. Outside Termux only the tmux row appears. The main configuration owns layout and conditional formatting after the generated include; `default/themed/tmux.conf.tpl` supplies semantic colors. Theme refreshes preserve the layout.
@@ -51,6 +79,13 @@ The Python 3 `codex-status.py` helper shares one asynchronous inventory job acro
 The job uses the existing five-second status interval and a one-second inventory/process deadline. Missing tmux/Python/procfs, denied access, invalid data or a deadline failure clears Codex markers and coloring to ordinary inactive styling. It reads no process arguments, credentials or conversation history, sends no network requests and persists no state. With the attention bridge installed it also reads a bounded, expiring worker snapshot; only still-detected Codex windows can acquire attention tokens. Termux/Linux/WSL procfs is supported; other systems fall back to ordinary colors and native Windows has no tmux consumer.
 
 ### Codex attention notifications
+
+Native Windows now has a protected queue/process-identity adapter and private
+metadata-only event inspection/exact acknowledgement. It records only through an
+owned installation marker, stores no message excerpt, and leaves delivery with
+the existing application notifier. No Windows worker, trusted hook installation
+or pane/focus association is supplied by this source change; the setup helper
+still refuses native activation. See [platform limits](platforms.md#codex-attention-notifications).
 
 Toast appearance and duration are editable through `apps.codex.toast` in the
 Config CLI and popup. See [the toast controls](configuration.md#codex-warning-toast)
@@ -592,8 +627,14 @@ Cancellation or an invalid selection makes no wallpaper/state changes. Raw
 `bg list` and `bg current` output retains full paths.
 PNG, JPEG, WebP and BMP are supported. Android uses `termux-wallpaper` (Termux:API),
 Wayland uses `swww img`, and X11 uses `feh`; adapters are capability-checked and have
-a 15-second timeout. `--lock-screen` is Android-only and does not replace the stored
-home-wallpaper selection. WSL and video wallpapers are unsupported. Native PowerShell provides a Windows desktop wallpaper adapter; see [native PowerShell](powershell.md).
+a 15-second timeout. `--lock-screen` supports Termux and native Windows and does not replace the stored
+home-wallpaper selection. Windows uses the OS-owned 64-bit PowerShell WinRT adapter,
+checks support before creating a journal, and passes the image path as literal JSON.
+The journal-owning controller owns the setter process and its deadline directly.
+WSL and video wallpapers are unsupported. Native PowerShell also provides a Windows
+desktop wallpaper adapter; see [native PowerShell](powershell.md). Native API
+availability and owned-file asynchronous projection are verified separately from
+the pending visible lock-screen acceptance; no test sets a real lock-screen image.
 A failed adapter preserves the previous successful record, but an external API may
 have changed the device before failing; prior wallpapers are not backed up. Actions
 are explicit and journaled, never automatic consequences of ordinary palette set.
@@ -892,7 +933,7 @@ Verbose output shows preparation/render/cache phases, source -> destination link
 
 ## Native PowerShell publication
 
-The native frontend provides literal palette queries, theme/family commands, generated `.ps1` commands, native initialization, selection/refresh, source operations and background selection. It shares file-color rendering, semantic presentation, progress, FZF snapshot previews and the guarded file transaction engine. Setup renders without desktop effects; explicit publication may run enabled native hooks and supported app notifications. Windows wallpaper uses its desktop API; Android lock-screen, GTK/Qt and tmux actions retain explicit platform limits. User `.ps1` hooks are native Windows-only; downloaded themes remain inert. See [native PowerShell](powershell.md) for implementation status, state paths and native acceptance requirements.
+The native frontend provides literal palette queries, theme/family commands, generated `.ps1` commands, native initialization, selection/refresh, source operations and background selection. It shares file-color rendering, semantic presentation, progress, FZF snapshot previews and the guarded file transaction engine. Setup renders without desktop effects; explicit publication may run enabled native hooks and supported app notifications. Windows wallpaper uses its desktop API and an explicit WinRT lock-screen adapter; GTK/Qt and tmux actions retain explicit platform limits. User `.ps1` hooks are native Windows-only; downloaded themes remain inert. See [native PowerShell](powershell.md) for implementation status, state paths and native acceptance requirements.
 
 Anodize-created user themes share the normal user theme root and discovery rules.
 Explicit built-in saves and promotion are described in [Anodize](anodize.md#interactive-authoring-and-previews).

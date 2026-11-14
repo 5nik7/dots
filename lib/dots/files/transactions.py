@@ -15,7 +15,8 @@ import stat
 import uuid
 
 from catalog import atomic_json, read_json
-from file_platform import sync_dir, lock, open_nofollow, check_object, copy_file, prepare_text
+from file_platform import (sync_dir, lock, open_nofollow, check_object, copy_file,
+                           prepare_text, native_staging_suffix, WINDOWS_EXECUTABLE_SUFFIXES)
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -156,6 +157,19 @@ class Store:
             raise ValueError('invalid transaction or backup ID')
         return read_json(self.root / identity / 'journal.json')
 
+    def payload(self, identity, index, phase, entry=None):
+        """Resolve a journal payload, including original unsuffixed journals."""
+        if phase not in ('before', 'after') or not isinstance(index, int) or index < 0:
+            raise ValueError('invalid transaction payload selector')
+        if not identity or any(c not in '0123456789abcdef' for c in identity) or len(identity) != 32:
+            raise ValueError('invalid transaction or backup ID')
+        if entry is None:
+            entry = self.load(identity)['operations'][index]
+        suffix = entry.get('payload_suffix', '')
+        if suffix not in ('', *WINDOWS_EXECUTABLE_SUFFIXES):
+            raise ValueError('invalid transaction payload suffix')
+        return self.root / identity / (str(index) + '-' + phase + suffix)
+
     @contextlib.contextmanager
     def locked(self, catalogs=()):
         parents_safe(self.root / 'placeholder')
@@ -235,20 +249,22 @@ class Store:
                             if str(path) not in guards or guards[str(path)] != before:
                                 raise ValueError('operation is missing a verified preview guard')
                             entry = {'path': str(path), 'before': before, 'after': None, 'phase': 'prepared',
-                                     'old': str(path.with_name(path.name + '.dots-' + identity)),
-                                     'temp': str(path.with_name(path.name + '.dots-new-' + identity))}
+                                     'old': str(path.with_name(path.name + '.dots-' + identity + native_staging_suffix(path))),
+                                     'temp': str(path.with_name(path.name + '.dots-new-' + identity + native_staging_suffix(path)))}
+                            if native_staging_suffix(path):
+                                entry['payload_suffix'] = native_staging_suffix(path)
                             if 'font_registry' in op:
                                 entry['font_registry'] = op['font_registry']
                             if exists(entry['old']) or exists(entry['temp']):
                                 raise ValueError('transaction sibling already exists')
                             if before is not None:
-                                copy_object(path, directory / f'{i}-before')
+                                copy_object(path, self.payload(identity, i, 'before', entry))
                                 if path.is_symlink():
                                     entry['before_link'] = os.readlink(path)
                                     entry['before_directory'] = path.is_dir() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x10)
                                 elif 'data' in op:
                                     entry['before_data'] = read_json(path, (1,2,3))
-                            after = directory / f'{i}-after'
+                            after = self.payload(identity, i, 'after', entry)
                             if 'source' in op:
                                 copy_object(op['source'], after)
                             elif 'link' in op:
@@ -268,7 +284,7 @@ class Store:
                             doc['operations'].append(entry)
                             self.save(doc)
                             if before is not None:
-                                self.notify('Recovery copy', path, directory / f'{i}-before',
+                                self.notify('Recovery copy', path, self.payload(identity, i, 'before', entry),
                                             reason='temporary until transaction finalization')
                             preparation.update('Preparing files', i + 1, len(operations))
                     with stages.step('Verify prepared files'):
@@ -301,7 +317,7 @@ class Store:
                             if digest(path) != entry['before']:
                                 raise ValueError(f'changed before replacement: {path}')
                             if entry['after'] is not None:
-                                copy_object(directory / f'{i}-after', entry['temp'])
+                                copy_object(self.payload(identity, i, 'after', entry), entry['temp'])
                             entry['phase'] = 'replacing'
                             self.save(doc)
                             if exists(path):
@@ -345,7 +361,7 @@ class Store:
                 if retain:
                     for i, entry in enumerate(doc['operations']):
                         if entry['before'] is not None:
-                            self.notify('Backup kept', directory / f'{i}-before', reason='backup ID ' + identity)
+                            self.notify('Backup kept', self.payload(identity, i, 'before', entry), reason='backup ID ' + identity)
                 return doc
 
     def cleanup(self, doc):
@@ -363,11 +379,11 @@ class Store:
         directory = self.root / doc['id']
         if doc['status'] in ('complete', 'rolled-back'):
             for i, entry in enumerate(doc['operations']):
-                discard(directory / f'{i}-after')
+                discard(self.payload(doc['id'], i, 'after', entry))
                 if not doc['retain_backup'] or doc['status'] == 'rolled-back':
-                    discard(directory / f'{i}-before')
+                    discard(self.payload(doc['id'], i, 'before', entry))
                     if entry['before'] is not None:
-                        self.notify('Cleaned', directory / f'{i}-before', reason='temporary recovery copy removed')
+                        self.notify('Cleaned', self.payload(doc['id'], i, 'before', entry), reason='temporary recovery copy removed')
         if doc['status'] == 'rolled-back':
             backup = self.backups / (doc['id'] + '.json')
             if exists(backup):
@@ -401,7 +417,7 @@ class Store:
                     if current not in (None, entry['after']):
                         raise ValueError(f'drift blocks recovery: {path}')
                     if entry['before'] is not None:
-                        payload = directory / f'{i}-before'
+                        payload = self.payload(doc['id'], i, 'before', entry)
                         if digest(payload) != entry['before']:
                             raise ValueError('recovery payload failed verification')
                         # Restore through a sibling, never by overwriting live contents.
@@ -460,7 +476,7 @@ class Store:
                 font_registry.verify(inverse)
                 op['font_registry'] = inverse
             if entry['before'] is not None:
-                source = self.root / identity / f'{i}-before'
+                source = self.payload(identity, i, 'before', entry)
                 if 'before_link' in entry:
                     op['link'] = entry['before_link']
                     op['directory'] = entry.get('before_directory', Path(entry['before_link']).is_dir())

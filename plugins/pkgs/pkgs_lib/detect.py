@@ -14,7 +14,12 @@ def termux():
                 '/com.termux/' in os.environ.get('HOME', ''))
 
 def available(name):
-    if os.name == 'nt': return name == 'winget' and bool(which('winget.exe'))
+    if os.name == 'nt':
+        if name == 'winget': return bool(which('winget.exe'))
+        if name not in ('npm', 'uv-tool', 'pip', 'gem', 'go'): return False
+        if name != 'pip':
+            from .native_process import available as native_available
+            return native_available('uv' if name == 'uv-tool' else name)
     if name == 'winget': return False
     if name == 'apt':
         return bool(which('apt-cache') and which('dpkg-query') and (which('apt') or which('apt-get')))

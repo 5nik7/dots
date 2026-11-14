@@ -1,5 +1,27 @@
 # Testing Strategy
 
+## Overkill native adapter follow-up
+
+Run `python3 -B tools/test_native_wallpaper.py` for literal lock-screen transport,
+read-only preflight, failed journal/record preservation and the owned WinRT
+asynchronous file projection. Setters are substituted: this never proves visible
+wallpaper acceptance. Run `python3 -B tools/test_codex_attention_native.py` for
+process creation identities, private ACL/reparse/sidecar guards, SQLite lifecycle,
+marker-gated recording, no delivery and exact expiring acknowledgements.
+`python3 -B tools/test_cleanup.py` includes native Windows handle/disposition,
+ACL, mapping/cwd, durable JSONL and conservative interruption tests alongside
+POSIX fixtures. Restart Manager calls are substituted and require a separately
+reviewed actual-API gate; no fixture targets live caches, registry or services.
+
+Run `python3 -B tools/test_native_utilities.py` and
+`python3 -B tools/test_utility_completion.py` for standalone utility contracts and
+inert contextual completion. Require Windows engines separately using the
+executing PowerShell's `$env:DOTS_TEST_POWERSHELL='powershell'` and then `'pwsh'`.
+Resolved `.ps1` commands and caller functions must be tested using the real
+extensionless completion loader. Missing engines are pending, not passes. Linux
+and WSL runs use their own shell syntax and owned roots. Clipboard, network,
+editor/browser launches and visible interactive acceptance remain separate.
+
 `python3 -B tools/test_git_output.py` covers explicit human views, combined file states, configured directory/basename colors, renames, sync before/after paths, publication deduplication, named inspection routes, unchanged JSON, argument conflicts and 40/80/120-column owned PTYs against both Git controllers. Run it alongside the Git safety suites. `tools/test_progress.py` covers configured/explicit progress modes, known/unknown counts, nesting, terminal gates and interruptions; `tools/test_config_values.py` covers preference validation/reset and activation. These Termux fixtures do not establish native Windows terminal behavior.
 
 `python3 -B -m unittest discover -s plugins/pkgs/tests -p test_progress_counts.py` verifies equal manager shares, nested command budgets, activity-only native byte/package measurements, partial failures, cancellation, display modes, prompt suspension and data gates using fake managers. Font provider and workflow suites cover optional download totals and deduplicated batch counts in owned fixtures. These checks never upgrade host packages or download real fonts.
@@ -57,6 +79,19 @@ Bash/native controller, completion and launcher tests sequentially. Native Windo
 and visible app-font acceptance require separate evidence in [the fonts plan](../plans/fonts.md#evidence).
 
 Run checks appropriate to the changed files from the existing checkout, using test-owned home, config, state and cache roots. Documentation changes require `python3 -B tools/verify_docs.py` and `git diff --check`.
+
+The [Overkill parity record](../plans/overkill-parity.md) separates current native
+Windows/WSL fixture results from live activation and Termux acceptance. Native
+Windows tests must not treat `System32/bash.exe` as a POSIX test runtime: it is a
+WSL interop entry. Run POSIX-only suites in an owned Linux checkout/snapshot.
+Windows-created snapshots need Git-index LF contents and contained relative
+links; do not rewrite the live checkout or initialize optional submodules.
+
+`python3 -B tools/test_menu_projects.py ProjectHandoff` verifies project listing
+purity, literal working directories, native engine selection, cancellation and
+child status using stand-ins. `tools/test_theme_files.py` checks the additive
+terminal schemes against bundled palette data and native connector destinations.
+These checks do not open terminals or establish desktop rendering.
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 

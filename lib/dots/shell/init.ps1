@@ -30,9 +30,20 @@ $dotsEnvironmentCache = Join-Path $dotsEnvironmentCacheRoot 'dots/startup/enviro
 $dotsEnvironmentReady = $false
 if (Test-Path -LiteralPath $dotsEnvironmentCache -PathType Leaf) { $dotsEnvironmentReady = . $dotsEnvironmentCache }
 if (-not $dotsEnvironmentReady) {
-    $dotsEnvironmentPython = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1
+    $dotsEnvironmentPython = Get-Command python3, python -CommandType Application -All -ErrorAction SilentlyContinue |
+        Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' -and
+            ([IO.Path]::GetExtension($_.Source) -eq '.exe' -or $env:OS -ne 'Windows_NT') } |
+        Select-Object -First 1
     if ($dotsEnvironmentPython) {
-        & $dotsEnvironmentPython.Source -B (Join-Path $env:DOTS 'lib/dots/native_startup.py') powershell $dotsEnvironmentCache
+        $dotsOldManagerInstall, $dotsOldLauncherInstall = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL
+        $dotsOldLauncherAlways = $env:PYLAUNCHER_ALWAYS_INSTALL
+        try {
+            $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'; $env:PYLAUNCHER_ALLOW_INSTALL = $null; $env:PYLAUNCHER_ALWAYS_INSTALL = $null
+            & $dotsEnvironmentPython.Source -B (Join-Path $env:DOTS 'lib/dots/native_startup.py') powershell $dotsEnvironmentCache
+        } finally {
+            $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $dotsOldManagerInstall; $env:PYLAUNCHER_ALLOW_INSTALL = $dotsOldLauncherInstall
+            $env:PYLAUNCHER_ALWAYS_INSTALL = $dotsOldLauncherAlways
+        }
         if ($LASTEXITCODE -eq 0) { $dotsEnvironmentReady = . $dotsEnvironmentCache }
     }
     if (-not $dotsEnvironmentReady -and $global:DotsGeneratedPaths) { Write-Warning 'dots: profile environment preparation failed; previous profile environment retained'; return }

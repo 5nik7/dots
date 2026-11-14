@@ -73,6 +73,46 @@ mkcd -next || exit 8
 [[ $PWD == */-next ]] || exit 9
 '''.replace('alias ff | command grep _dots_file_picker || exit 2', "[[ $(alias ff) == *'_dots_file_picker'* ]] || exit 2"))
 
+    def test_gup_uses_bounded_core_publish_and_preserves_status(self):
+        target = self.repo / 'bin/dots'
+        target.write_text('#!' + shutil.which('bash') + '\n'
+                          'printf "%s\\0" "$@" > "$HOME/publish-argv"\nexit 23\n')
+        target.chmod(0o700)
+        base = ['git', 'publish', '-C', str(self.home), '--no-wiki']
+        for shell in ('bash', 'zsh'):
+            for invocation, extra in (
+                ('gup', []),
+                ("gup --all --yes --dry-run -m '-literal [ü] $(throw 1)'",
+                 ['--all', '--yes', '--dry-run', '--message', '-literal [ü] $(throw 1)']),
+                ("gup ''", ['--message', '']),
+            ):
+                with self.subTest(shell=shell, invocation=invocation):
+                    self.shell(shell, self.shared() + invocation + '\n[[ $? == 23 ]]')
+                    actual = (self.home / 'publish-argv').read_bytes().decode().split('\0')[:-1]
+                    self.assertEqual(actual, base + extra)
+            (self.home / 'publish-argv').unlink()
+            self.shell(shell, self.shared() + '''
+gup --unknown 2>/dev/null; [[ $? == 2 ]] || exit 1
+gup --message 2>/dev/null; [[ $? == 2 ]] || exit 2
+gup one two 2>/dev/null; [[ $? == 2 ]] || exit 3
+[[ ! -e "$HOME/publish-argv" ]]
+''')
+
+    def test_gup_completion_reuses_bounded_publish_options(self):
+        for name in ('dots-git', 'dots-git-publish'):
+            shutil.copy2(REPO / 'bin' / name, self.repo / 'bin' / name)
+        allowed = {'--all', '--yes', '--dry-run', '--message', '-m', '--help', '-h'}
+        for shell in ('bash', 'zsh'):
+            p = self.fixture.dots('__complete', shell, '1', '--', 'gup', '--')
+            self.assertEqual(p.returncode, 0, p.stderr)
+            records = [line.split('\t') for line in p.stdout.splitlines()]
+            values = {record[1] for record in records}
+            self.assertTrue({'--all', '--yes', '--dry-run', '--message'} <= values)
+            self.assertTrue(values <= allowed, values)
+            p = self.fixture.dots('__complete', shell, '2', '--', 'gup', '--message', '')
+            self.assertEqual(p.returncode, 0, p.stderr)
+            self.assertEqual(p.stdout, '')
+
     def test_optional_aliases_fallback_and_activation(self):
         for name in ('bash', 'zsh'):
             self.shell(name, self.shared() + '''

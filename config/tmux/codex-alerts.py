@@ -85,8 +85,12 @@ def codex_home():
 
 def installation():
     path = codex_home() / 'dots-notifications.json'
-    with path.open('rb') as stream:
-        raw = stream.read(16385)
+    if os.name == 'nt':
+        from codex_attention_native import Windows
+        raw = Windows().read_private(path, 16384)
+    else:
+        with path.open('rb') as stream:
+            raw = stream.read(16385)
     if len(raw) > 16384:
         raise ValueError('oversized installation record')
     doc = json.loads(raw)
@@ -104,17 +108,38 @@ def private(path, directory=False):
 
 
 @contextlib.contextmanager
-def database():
+def database(read_only=False):
+    if read_only and os.name != 'nt':
+        raise ValueError('explicit event inspection and acknowledgement require native Windows')
     root = status.alert_root()
-    root.mkdir(mode=0o700, parents=True, exist_ok=True)
-    private(root, True)
-    path = root / 'events.sqlite3'
-    fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-    os.close(fd)
-    private(path)
-    db = sqlite3.connect(path, timeout=1)
-    db.row_factory = sqlite3.Row
-    try:
+    with contextlib.ExitStack() as guard:
+        if os.name == 'nt':
+            from codex_attention_native import Windows
+            path = guard.enter_context(Windows().runtime(root, create=not read_only))
+            if path is None:
+                yield None
+                return
+        else:
+            path = root / 'events.sqlite3'
+            if read_only and not path.exists():
+                yield None
+                return
+            if not read_only:
+                root.mkdir(mode=0o700, parents=True, exist_ok=True)
+            private(root, True)
+            if not read_only:
+                fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+                os.close(fd)
+            private(path)
+        # Windows read snapshots deny writers at the native handle boundary;
+        # immutable mode guarantees SQLite does not create recovery sidecars.
+        target = path.as_uri() + '?mode=ro&immutable=1' if read_only else path
+        db = sqlite3.connect(target, timeout=1, uri=read_only)
+        db.row_factory = sqlite3.Row
+        guard.callback(db.close)
+        if read_only:
+            yield db
+            return
         db.execute('PRAGMA secure_delete=ON')
         db.execute('PRAGMA temp_store=MEMORY')
         db.executescript('''
@@ -130,13 +155,12 @@ def database():
             CREATE TABLE IF NOT EXISTS topology (socket TEXT PRIMARY KEY, payload TEXT);
         ''')
         db.execute('BEGIN IMMEDIATE')
-        yield db
-        db.commit()
-    except BaseException:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+        try:
+            yield db
+            db.commit()
+        except BaseException:
+            db.rollback()
+            raise
 
 
 def excerpt(kind, text, limit):
@@ -204,6 +228,8 @@ def acknowledge(db, clause, values):
 
 
 def focused_at_receipt(thread):
+    if os.name == 'nt':
+        return False  # No trusted native pane/thread viewing adapter is installed.
     # Hooks may run in a shared daemon without TMUX_PANE. Consult only registered
     # sockets, with a combined bound, so a focus change before the next tick does
     # not turn an already-viewed event into a new notification.
@@ -232,6 +258,10 @@ def record(payload, prefs):
               and focused_at_receipt(event['thread']))
     with database() as db:
         thread, turn, kind = event['thread'], event['turn'], event['kind']
+        if os.name == 'nt':
+            # Native mode has no background delivery worker. Retire expired
+            # candidates on the next event without making inspection mutate.
+            acknowledge(db, "phase!='ack' AND created<?", (time.time() - EXPIRE,))
         if kind == 'start':
             current = db.execute('SELECT turn FROM turns WHERE thread=?', (thread,)).fetchone()
             if current is None or current['turn'] != turn:
@@ -260,7 +290,7 @@ def record(payload, prefs):
             db.execute('INSERT OR IGNORE INTO events (id,thread,turn,request,kind,created,phase,message) '
                        'VALUES (:id,:thread,:turn,:request,:kind,:created,:phase,:message)',
                        dict(event, created=now, phase='ack' if viewed else 'candidate',
-                            message='' if viewed else event['message']))
+                            message='' if viewed or os.name == 'nt' else event['message']))
 
 
 def bounded(command, timeout=1):
@@ -597,6 +627,36 @@ def acknowledge_pane(socket, pane, client=None, thread=None):
     tick(socket, preferences(), deliver=False)
 
 
+def pending(now=None):
+    """Noncreating metadata snapshot, never event excerpts or tool arguments."""
+    now = time.time() if now is None else now
+    with database(read_only=True) as db:
+        if db is None:
+            return []
+        return [dict(row) for row in db.execute(
+            "SELECT id,thread,kind,created,phase FROM events WHERE phase!='ack' AND created>=? AND created<=? "
+            "ORDER BY created,id LIMIT ?", (now - EXPIRE, now, MAX_EVENTS))]
+
+
+def acknowledge_event(thread, event, now=None):
+    """Explicitly acknowledge exactly one observed event, never a whole thread."""
+    if not IDENTITY.fullmatch(thread or '') or not re.fullmatch(r'[0-9a-f]{64}', event or ''):
+        raise ValueError('invalid exact event identity')
+    now = time.time() if now is None else now
+    # Check that state exists without creating an empty queue on a typo.
+    with database(read_only=True) as db:
+        if db is None:
+            raise ValueError('attention event is unavailable')
+    with database() as db:
+        row = db.execute('SELECT thread,created,phase FROM events WHERE id=?', (event,)).fetchone()
+        if not row or row['thread'] != thread or not 0 <= now - row['created'] <= EXPIRE:
+            raise ValueError('attention event changed or expired')
+        if row['phase'] == 'ack':
+            return False
+        acknowledge(db, 'id=? AND thread=?', (event, thread))
+        return True
+
+
 def watch(socket):
     import fcntl  # Unix adapter; Windows imports and pure tests remain usable.
     key = status.socket_key(socket)
@@ -626,17 +686,32 @@ def watch(socket):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['hook', 'notify', 'start', 'watch', 'ack', 'ack-pane', 'vibrate'])
+    parser.add_argument('mode', choices=['hook', 'notify', 'start', 'watch', 'ack', 'ack-pane', 'vibrate', 'context', 'pending', 'ack-event'])
     parser.add_argument('payload', nargs='?')
     parser.add_argument('--socket')
     parser.add_argument('--pane')
     parser.add_argument('--client')
     parser.add_argument('--thread')
+    parser.add_argument('--event')
     args = parser.parse_args()
-    if os.name == 'nt':
-        return  # Explicit platform exception: no native tmux/Android consumer.
-    os.umask(0o077)
+    if os.name != 'nt':
+        os.umask(0o077)
     try:
+        if args.mode == 'context':
+            if os.name == 'nt':
+                from codex_attention_native import context
+                document = context()
+            else:
+                from platform_info import detect
+                document = dict(schema=1, platform=detect()['platform'], adapter='tmux',
+                                focused=None, reason='Use existing tmux topology and focus policy.')
+            print(json.dumps(document))
+            return
+        if args.mode == 'pending':
+            print(json.dumps(dict(schema=1, events=pending(), delivery='none' if os.name == 'nt' else 'existing-platform-policy')))
+            return
+        if os.name == 'nt' and args.mode not in ('hook', 'notify', 'ack-event'):
+            return  # No fabricated tmux/Android consumer on Windows.
         if args.mode=='vibrate':
             if not os.environ.get('TERMUX_VERSION') or not args.payload or len(args.payload)>1024: return
             from codex_vibration import run
@@ -644,6 +719,10 @@ def main():
             return
         installed = installation()
         prefs = preferences()
+        if args.mode == 'ack-event':
+            changed = acknowledge_event(args.thread, args.event)
+            print(json.dumps(dict(schema=1, changed=changed)))
+            return
         if args.mode in ('hook', 'notify'):
             raw = args.payload.encode() if args.mode == 'notify' and args.payload else sys.stdin.buffer.read(MAX_INPUT + 1)
             if len(raw) > MAX_INPUT:
@@ -653,7 +732,7 @@ def main():
                 record(payload, prefs)
             except (OSError, ValueError, KeyError, TypeError, sqlite3.Error, subprocess.SubprocessError):
                 pass  # An unavailable queue must not suppress an existing notifier.
-            if args.mode == 'notify' and installed.get('previous_notify'):
+            if os.name != 'nt' and args.mode == 'notify' and installed.get('previous_notify'):
                 try:
                     bounded([*installed['previous_notify'], raw.decode()], timeout=3)
                 except (OSError, ValueError, subprocess.SubprocessError):
@@ -669,8 +748,11 @@ def main():
         elif args.socket and args.mode == 'ack-pane':
             acknowledge_pane(args.socket, args.pane, args.client, args.thread)
     except (OSError, ValueError, KeyError, TypeError, IndexError, AttributeError, sqlite3.Error, subprocess.SubprocessError):
+        if args.mode in ('context', 'pending', 'ack-event'):
+            print('Codex attention state unavailable or identity changed.', file=sys.stderr)
+            return 1
         pass  # Hooks are observational and never print potentially private input.
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

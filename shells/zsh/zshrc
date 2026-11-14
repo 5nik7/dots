@@ -1,5 +1,6 @@
 # Resolve the source file, including file and parent-directory symlinks.
-_dots_zsh_file=${${(%):-%x}:A}
+# Source identity is literal even in a C locale; %x is a display string.
+_dots_zsh_file=${${funcsourcetrace[1]%:*}:A}
 if [[ ! -r $_dots_zsh_file || ! -r ${_dots_zsh_file:h}/../environment.sh || ! -r ${_dots_zsh_file:h}/../../bin/dots ]]; then
   unset _dots_zsh_file
   print -ru2 -- 'dots: Zsh startup requires a resolvable Dots checkout'

@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -30,7 +31,7 @@ class WikiFixture(unittest.TestCase):
         (self.root/'docs/guide.md').write_text('# Guide\n\n## Hello world\n\n[Home](home.md)\n![Image](../image.png)\n[Code](../bin/dots-sample)\n\n```sh\n[untouched](example.md)\n```\n')
         (self.root/'image.png').write_bytes(b'image')
         (self.root/'bin/dots-sample').write_text('#!/bin/sh\n# dots:summary=Sample command\n# dots:usage=[OPTIONS]\n# dots:option=--json||flag|Data\ntouch '+str(self.base/'EXECUTED')+'\n')
-        self.git(self.target,'init','-b','master');(self.target/'Home.md').write_text('Welcome to the dots wiki!\n')
+        self.git(self.target,'init','-b','master');(self.target/'Home.md').write_bytes(b'Welcome to the dots wiki!\n')
         self.git(self.target,'add','.');self.git(self.target,'-c','commit.gpgSign=false','commit','-m','starter')
 
     def git(self,path,*args):
@@ -38,6 +39,19 @@ class WikiFixture(unittest.TestCase):
         self.assertEqual(p.returncode,0,p.stderr);return p.stdout.strip()
 
     def save_spec(self): (self.root/'.dots/wiki.json').write_text(json.dumps(self.spec))
+
+    def remove_owned_wiki(self):
+        # Git object files are read-only on Windows. Limit the retry to this
+        # fixture checkout, never an arbitrary path or a live repository.
+        target = self.target.resolve()
+        self.assertTrue(target.is_relative_to(self.base.resolve()))
+        def writable_retry(function, path, error):
+            self.assertTrue(Path(path).resolve().is_relative_to(target))
+            if not isinstance(error, PermissionError):
+                raise error
+            os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+            function(path)
+        shutil.rmtree(target, onexc=writable_retry)
 
     def cli(self,*args,code=0,env=None):
         p=subprocess.run([sys.executable,'-B',str(ROOT/'lib/dots/wiki.py'),*args],env=env or self.env,cwd=self.base,text=True,capture_output=True,timeout=30)
@@ -47,6 +61,19 @@ class WikiFixture(unittest.TestCase):
 
 
 class WikiTests(WikiFixture):
+    def test_global_metadata_accepts_lf_and_crlf_without_changing_inputs(self):
+        from wiki_commands import global_options
+        source = self.root/'lib/dots/catalog.bash'
+        source.parent.mkdir(parents=True)
+        table = b"DOTS_GLOBAL_OPTIONS=(\n  '--help|-h|flag|Show help'\n)\n"
+        for data in (table, table.replace(b'\n', b'\r\n')):
+            with self.subTest(crlf=b'\r\n' in data):
+                source.write_bytes(data)
+                reader = wiki.Reader(self.root)
+                self.assertEqual(global_options(reader), [['--help', '-h', 'flag', 'Show help']])
+                self.assertEqual(source.read_bytes(), data)
+                self.assertEqual(reader.inputs['lib/dots/catalog.bash'], wiki.sha(data))
+
     def test_generation_links_navigation_and_nonexecution(self):
         spec,files,_=wiki.generate(self.root)
         guide=files['Guide.md'].decode()
@@ -118,7 +145,7 @@ class WikiTests(WikiFixture):
         self.assertFalse((self.base/'EXECUTED').exists())
 
     def test_source_only_without_checkout(self):
-        shutil.rmtree(self.target);self.cli('check','--source-only','--json')
+        self.remove_owned_wiki();self.cli('check','--source-only','--json')
         self.cli('check','--json',code=1);self.cli('init','--dry-run','--json')
         self.assertFalse(self.target.exists())
 
@@ -163,12 +190,12 @@ store.apply('wiki-build',ops,guards,retain=True)
 
     def test_clone_from_local_remote_and_occupied_refusal(self):
         bare=self.base/'wiki.git';self.git(self.base,'clone','--bare',str(self.target),str(bare))
-        shutil.rmtree(self.target);self.spec['clone_url']=str(bare);self.save_spec()
+        self.remove_owned_wiki();self.spec['clone_url']=str(bare);self.save_spec()
         result=json.loads(self.cli('init','--yes','--json').stdout)
         self.assertEqual(result['status'],'cloned');self.assertTrue(Path(result['journal']).is_file())
         self.assertEqual(self.git(self.target,'branch','--show-current'),'master')
         self.assertEqual(json.loads(self.cli('init','--yes','--json').stdout)['status'],'available')
-        shutil.rmtree(self.target);self.target.mkdir();(self.target/'keep').write_text('mine')
+        self.remove_owned_wiki();self.target.mkdir();(self.target/'keep').write_text('mine')
         self.cli('init','--yes','--json',code=1);self.assertEqual((self.target/'keep').read_text(),'mine')
 
     def test_editor_and_browser_are_explicit_literal_actions(self):

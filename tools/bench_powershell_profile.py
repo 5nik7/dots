@@ -3,6 +3,8 @@
 One initial sample and ten warm fresh-process samples; redirected input means
 the baseline excludes PSReadLine. --starship includes its module setup and an
 optional copied integration; job discovery is stubbed. No keyboard/desktop rendering.
+The owned generated environment is prepared before timing; these samples do not
+measure cold environment generation or its Python process.
 """
 import argparse
 import os
@@ -26,6 +28,7 @@ def main():
     fixture = PowerShellInitTests()
     fixture.setUp()
     try:
+        fixture.prepare_environment()
         entry = literal(fixture.repo / 'shells/powershell/profile.ps1')
         rows = {}
         modes = ['no_profile', 'lean']

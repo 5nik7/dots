@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Choose a project and open its native shell
+# dots:usage=[--print|--json|--browse] [--query TEXT]
+# dots:option=--print||flag|List projects without opening a shell
+# dots:option=--json||flag|Print versioned project menu data
+# dots:option=--browse||flag|Choose a project interactively
+# dots:option=--query||string|Initial search text or listing filter
+# dots:example=dots menu projects --json
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/menu_project_cli.py" "$@"

@@ -1,5 +1,14 @@
 # Checkout installation
 
+Native Windows bootstrap captures diagnostics without unsupported stream
+redirection and probes links through a literal Python stdin program. Source
+update restarts wait for the native child and preserve its argument boundaries
+and exit status. Installer link comparisons normalize only recognized Windows
+drive/UNC substitution prefixes from `readlink`; guards and historical digests
+retain their original representation. Executable backup/preparation filenames
+retain their native suffix so Windows mode-bit synthesis does not cause a false
+content-change refusal. See [current native verification](../plans/overkill-parity.md).
+
 Setup includes the standalone `todo` command (`todo.ps1` on native Windows) and the catalog-managed `dots:todo-skill`, `dots:todo-planning-skill` and `dots:todo-maintenance-skill` resources. They use the existing backup, receipt, idempotence and uninstall rules. Project and global goal documents are user data, remain outside the installation receipt, and survive uninstall. See [todo](todo.md) for scopes and the separate goal transaction history.
 
 **Implemented: bounded catalog-backed setup and restore.** Run these entry points from an existing public checkout. Python must already be installed. Optional preparation can install explicitly selected packages and mapped prerequisites through an existing manager; it does not bootstrap package managers or download a Dots release.

@@ -17,7 +17,7 @@ COMMANDS = {'install': 'Install exact names or open a picker', 'uninstall': 'Rem
             'in': 'Alias for install', 'un': 'Alias for uninstall', 'up': 'Alias for upgrade',
             'xup': 'Alias for export --update', 'upls': 'Alias for upgrade --list'}
 
-DESCRIPTION = '''Fuzzy package management for Termux, Linux, WSL and native Windows WinGet.
+DESCRIPTION = '''Fuzzy package management for Termux, Linux, WSL and native Windows.
 
 Commands:
   install [NAME ...]       Install exact names; no names opens picker

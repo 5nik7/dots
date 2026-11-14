@@ -36,6 +36,7 @@ dt_apps_plan() {
   leaf_config=$(python3 -B "$DT_LIB/../files/app_paths.py" leaf) || return
   local suffix artifact
   while IFS=$'\t' read -r name suffix artifact; do
+    [[ $name != windows-terminal ]] || continue
     path=$config/$name/$suffix
     [[ $name != eza ]] || path=$eza_config/$suffix
     if [[ $name == television || $name == leaf ]]; then

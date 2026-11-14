@@ -117,14 +117,17 @@ def generate(root,shell, metadata=None):
 def prepare(root,shell,target):
     inputs=[]
     body=generate(root,shell,inputs)
+    # Windows PowerShell 5.1 decodes BOM-less scripts using the ANSI code page.
+    # Keep literal Unicode checkout paths valid when it dot-sources this cache.
+    data=body.encode('utf-8-sig' if shell=='powershell' else 'utf-8')
     target.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
     fd,name=tempfile.mkstemp(prefix='.environment-',dir=target.parent)
     try:
-        with os.fdopen(fd,'w',newline='\n') as stream:stream.write(body);stream.flush();os.fsync(stream.fileno())
+        with os.fdopen(fd,'wb') as stream:stream.write(data);stream.flush();os.fsync(stream.fileno())
         os.replace(name,target)
         fd, name = tempfile.mkstemp(prefix='.metadata-', dir=target.parent)
         with os.fdopen(fd,'w') as stream:
-            json.dump(dict(version=1,root=str(root),shell=shell,inputs=inputs,digest=hashlib.sha256(body.encode()).hexdigest()),stream)
+            json.dump(dict(version=1,root=str(root),shell=shell,inputs=inputs,digest=hashlib.sha256(data).hexdigest()),stream)
             stream.flush();os.fsync(stream.fileno())
         os.replace(name,target.with_suffix(target.suffix+'.json'))
     finally:

@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 from unittest.mock import patch
 
@@ -49,7 +50,7 @@ class ThemeFiles(unittest.TestCase):
         names.discard('yazi')
         for name in names:
             p = self.generation/name; p.parent.mkdir(parents=True,exist_ok=True)
-            p.write_text('fixture\n' if name == 'id' else 'generated '+name+'\n')
+            p.write_bytes(('fixture\n' if name == 'id' else 'generated '+name+'\n').encode())
         (self.templates/'bat.tmTheme.tpl').write_text('default {{ foreground }}\n')
 
     def doc(self, app=None):
@@ -98,25 +99,25 @@ class ThemeFiles(unittest.TestCase):
         self.assertEqual(subject.text_content(self.row('bat.tmTheme')),b'generated bat.tmTheme\n')
 
     def test_connections_and_directory_links(self):
-        source=self.repo/'tmux config ü';source.mkdir()
-        (self.config/'tmux').symlink_to(source,target_is_directory=True)
-        target=source/'dots-theme.conf'
-        target.symlink_to(self.active/'tmux.conf')
-        c=self.row('tmux.conf')['connections'][0]
+        source=self.repo/'git config ü';source.mkdir()
+        (self.config/'git').symlink_to(source,target_is_directory=True)
+        target=source/'dots-theme.gitconfig'
+        target.symlink_to(self.active/'gitconfig')
+        c=self.row('gitconfig')['connections'][0]
         self.assertEqual(c['status'],'linked');self.assertEqual(c['resolved_target'],str(target))
-        target.unlink();target.symlink_to(os.path.relpath(self.active/'tmux.conf',source))
+        target.unlink();target.symlink_to(os.path.relpath(self.active/'gitconfig',source))
         # Relative links are interpreted from their actual parent on disk.
-        self.assertEqual(self.row('tmux.conf')['connections'][0]['status'],'linked')
-        target.unlink();target.symlink_to(self.generation/'tmux.conf')
-        self.assertEqual(self.row('tmux.conf')['connections'][0]['status'],'pinned')
+        self.assertEqual(self.row('gitconfig')['connections'][0]['status'],'linked')
+        target.unlink();target.symlink_to(self.generation/'gitconfig')
+        self.assertEqual(self.row('gitconfig')['connections'][0]['status'],'pinned')
         self.assertFalse(self.doc()['healthy'])
         target.unlink();target.symlink_to(self.root/'gone')
-        self.assertEqual(self.row('tmux.conf')['connections'][0]['status'],'broken')
+        self.assertEqual(self.row('gitconfig')['connections'][0]['status'],'broken')
         target.unlink();target.write_text('unrelated')
-        self.assertEqual(self.row('tmux.conf')['connections'][0]['status'],'regular-file')
-        target.unlink();self.assertEqual(self.row('tmux.conf')['connections'][0]['status'],'missing')
+        self.assertEqual(self.row('gitconfig')['connections'][0]['status'],'regular-file')
+        target.unlink();self.assertEqual(self.row('gitconfig')['connections'][0]['status'],'missing')
         other=self.root/'other';other.write_text('other');target.symlink_to(other)
-        self.assertEqual(self.row('tmux.conf')['connections'][0]['status'],'points-elsewhere')
+        self.assertEqual(self.row('gitconfig')['connections'][0]['status'],'points-elsewhere')
 
     def test_supplementary_finalized_journal(self):
         bat=self.config/'bat/themes/Dots.tmTheme';bat.parent.mkdir(parents=True)
@@ -151,7 +152,7 @@ class ThemeFiles(unittest.TestCase):
 
     def test_safe_content_and_literal_identifiers(self):
         for name in ('with spaces ü.txt','-leading'):
-            (self.generation/name).write_text('literal\n')
+            (self.generation/name).write_bytes(b'literal\n')
             self.assertEqual(self.command('show','--',name).stdout,b'literal\n')
         for name in ('../id','/etc/passwd','yazi/../id','connectors/secret','yazi//flavor.toml','yazi\\flavor.toml'):
             self.command('show',name,code=1)
@@ -174,25 +175,26 @@ class ThemeFiles(unittest.TestCase):
                     for p in self.root.rglob('*')}
         before=snapshot()
         with patch.dict(os.environ,DOTS_COLOR='always',DOTS_ICONS='always',DOTS_THEME_SELECTION='wrong'):
-            self.assertEqual(self.command('path').stdout,(str(self.active)+'\n').encode())
-            self.assertEqual(self.command('path','bat.tmTheme','--resolved').stdout,(str(self.generation/'bat.tmTheme')+'\n').encode())
+            self.assertEqual(self.command('path').stdout,(str(self.active)+os.linesep).encode())
+            self.assertEqual(self.command('path','bat.tmTheme','--resolved').stdout,(str(self.generation/'bat.tmTheme')+os.linesep).encode())
             self.assertEqual(self.command('show','bat.tmTheme','--raw').stdout,b'generated bat.tmTheme\n')
             for args in (('list','--json'),('check','--json'),('info','bat.tmTheme','--json'),('list',)):
                 self.assertNotIn(b'\x1b',self.command(*args).stdout)
         self.assertEqual(before,snapshot())
 
     def test_frontends_metadata_and_completion(self):
-        for frontend in ('bash','native','standalone'):
+        for frontend in (('native',) if os.name == 'nt' else ('bash','native','standalone')):
             doc=json.loads(self.command('info','bat.tmTheme','--json',frontend=frontend).stdout)
             self.assertEqual(doc['artifacts'][0]['id'],'bat.tmTheme')
-            self.assertEqual(self.command('path',frontend=frontend).stdout,(str(self.active)+'\n').encode())
+            self.assertEqual(self.command('path',frontend=frontend).stdout,(str(self.active)+os.linesep).encode())
         env=dict(os.environ,DOTS=str(ROOT))
         for prefix,args in (([shutil.which('bash'),str(ROOT/'bin/dots')],['__complete','bash','4','--','dots','theme','files','info','bat']),
                             ([sys.executable,'-B',str(ROOT/'lib/dots/cli.py')],['__complete','theme','files','info','bat'])):
+            if os.name == 'nt' and prefix[0] != sys.executable: continue
             result=subprocess.run(prefix+args,env=env,capture_output=True,timeout=20)
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertIn(b'bat.tmTheme',result.stdout)
-        self.command('--help',frontend='bash')
+        self.command('--help',frontend='native' if os.name == 'nt' else 'bash')
         self.command('browse',code=2)
         self.command('check','--app','unknown-app',code=1)
 
@@ -270,6 +272,43 @@ class ThemeFiles(unittest.TestCase):
         self.assertEqual(next(c for c in connections if c['app']=='tmux')['status'], 'unavailable')
         self.assertFalse(any(c['app']=='termux' for c in connections))
 
+    def test_additive_terminal_connectors_and_inert_schemes(self):
+        from palette_native import Themes
+        from app_paths import terminal_fragment_directory
+        fragment = terminal_fragment_directory(windows=True)
+        self.assertEqual(fragment, self.home/'Local/Microsoft/Windows Terminal/Fragments/Dots')
+        self.assertIsNone(terminal_fragment_directory(windows=False))
+        colors = self.config/'wezterm/colors'
+        colors.mkdir(parents=True)
+        fragment.mkdir(parents=True)
+        before = set(self.home.rglob('*'))
+        inspector = subject.Inspection()
+        inspector.fixed_connections(windows=True)
+        for app, target in (('windows-terminal', fragment/'dots.json'), ('wezterm', colors/'dots.toml')):
+            row = next(c for c in inspector.connections if c['app'] == app)
+            self.assertEqual(row['target'], str(target))
+            self.assertTrue(row['eligible'])
+        self.assertEqual(set(self.home.rglob('*')), before)
+        # Consume actual palette data; no runtime hooks or consumer processes.
+        with patch.dict(os.environ, DOTS=str(ROOT), DOTHEMES=str(ROOT/'themes')):
+            themes = Themes()
+            for identity in themes.ids():
+                if identity == 'pywal16-current': continue  # external live input
+                palette = themes.load(identity)
+                for name, parse in (('windows-terminal.json', json.loads), ('wezterm.toml', tomllib.loads)):
+                    template = (ROOT/'default/themed'/(name+'.tpl')).read_text(encoding='utf-8')
+                    rendered = re.sub(r'\{\{\s*(\w+)\s*\}\}', lambda m: palette['colors'][m[1]], template)
+                    self.assertNotIn('{{', rendered)
+                    data = parse(rendered)
+                    if name.endswith('.json'):
+                        self.assertEqual(set(data), {'schemes'})
+                        self.assertEqual(data['schemes'][0]['name'], 'Dots')
+                        self.assertEqual(data['schemes'][0]['background'], palette['colors']['background'])
+                    else:
+                        self.assertEqual(data['metadata']['name'], 'Dots')
+                        self.assertEqual(len(data['colors']['ansi']), 8)
+                        self.assertEqual(len(data['colors']['brights']), 8)
+
     @unittest.skipIf(os.name == 'nt', 'POSIX terminal acceptance')
     def test_terminal_widths_and_sanitized_previews(self):
         import fcntl
@@ -281,7 +320,11 @@ class ThemeFiles(unittest.TestCase):
         (cache/('long Unicode ü ' * 5 + '.bin')).write_bytes(b'\0')
         for width in (40, 80, 120):
             for mode,background in (('always', '#101010'), ('always', '#eeeeee'), ('never', '#101010')):
-                from palette_native import styles
+                from palette_native import styles, Themes
+                palette = Themes().load('fixture')
+                palette['colors']['background'] = background
+                palette['colors']['foreground'] = '#dddddd' if background == '#101010' else '#222222'
+                (self.generation/'palette.json').write_text(json.dumps(palette), encoding='utf-8')
                 styles().write_snapshot(dict(schema=1, colors={'background':background},
                     styles={'type':{'file':{'fg':'#dddddd' if background=='#101010' else '#222222'}},'mime':{},'extension':{}},
                     ls_colors='', ls_rules=styles().parse_ls(''), provenance={}), self.generation)
@@ -313,7 +356,7 @@ class ThemeFiles(unittest.TestCase):
 
     def test_all_completion_protocols(self):
         env=dict(os.environ,DOTS=str(ROOT))
-        for shell in ('bash','zsh','fish'):
+        for shell in (() if os.name == 'nt' else ('bash','zsh','fish')):
             for words,expected in ((['theme','files','info','bat'],b'bat.tmTheme'),
                                    (['theme','files','list','--app','ya'],b'yazi'),
                                    (['theme','files','check','--con'],b'--consumers')):

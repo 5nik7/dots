@@ -9,6 +9,15 @@ MODULE_VERSION = '1.29.380'
 NO_APPLICATIONS = 0x8a150014
 
 
+def is_admin():
+    """Inspect the current token; never request elevation."""
+    import os
+    if os.name != 'nt':
+        return True
+    import ctypes
+    return bool(ctypes.windll.shell32.IsUserAnAdmin())
+
+
 def powershell():
     executable = which('pwsh.exe') or which('powershell.exe')
     if not executable: raise Error('WinGet needs native PowerShell 5.1 or 7')
@@ -107,12 +116,8 @@ class WinGetBackend:
         if action not in ('install', 'uninstall', 'upgrade') or len(names) != 1:
             raise Error('WinGet transactions require one exact ID')
         name = exact_id(names[0])
-        if self.install_scope == 'machine':
-            import os
-            if os.name == 'nt':
-                import ctypes
-                if not ctypes.windll.shell32.IsUserAnAdmin():
-                    raise Error('WinGet machine scope requires an already elevated shell; pkgs does not elevate')
+        if self.install_scope == 'machine' and not is_admin():
+            raise Error('WinGet machine scope requires an already elevated shell; pkgs does not elevate')
         if action in ('uninstall', 'upgrade'):
             candidates = [p for p in self.installed() if p.name.casefold() == name.casefold()]
             if len(candidates) != 1 or candidates[0].details['disabled_reason']:

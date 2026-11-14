@@ -53,7 +53,7 @@ class Fonts(unittest.TestCase):
         for name in ('lib','bin'):
             shutil.copytree(ROOT/name,self.fixture_root/name,ignore=shutil.ignore_patterns('__pycache__'))
         self.environment={key:value for key,value in os.environ.items() if key in
-            ('PATH','PREFIX','TERMUX_VERSION','TERMUX__PREFIX','LD_PRELOAD','SYSTEMROOT','SystemRoot','PYTHONPATH')}
+            ('PATH','PATHEXT','OS','COMSPEC','PREFIX','TERMUX_VERSION','TERMUX__PREFIX','LD_PRELOAD','SYSTEMROOT','SystemRoot','PYTHONPATH','DOTS_TEST_POWERSHELL')}
         self.environment.update(HOME=str(self.home),DOTS=str(self.fixture_root),TERM='dumb',DOTS_COLOR='never',DOTS_ICONS='never',
             USERPROFILE=str(self.home),APPDATA=str(self.home/'Roaming'),LOCALAPPDATA=str(self.home/'Local'),
             TMPDIR=str(self.home/'tmp'),TMP=str(self.home/'tmp'),TEMP=str(self.home/'tmp'))
@@ -74,8 +74,10 @@ class Fonts(unittest.TestCase):
 
     def library(self,platform=None):return Library(platform=platform)
 
-    def execute(self,*arguments,native=False,bash=False,code=0):
-        argv=([str(ROOT/'bin/dots'),'fonts'] if bash else
+    def execute(self,*arguments,native=False,bash=False,powershell=False,code=0):
+        engine = os.environ.get('DOTS_TEST_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell')
+        argv=([engine,'-NoLogo','-NoProfile','-NonInteractive','-File',str(ROOT/'bin/dots.ps1'),'fonts'] if powershell else
+              [str(ROOT/'bin/dots'),'fonts'] if bash else
               [sys.executable,'-B',str(ROOT/'lib/dots/cli.py'),'fonts'] if native else
               [sys.executable,'-B',str(ROOT/'lib/dots/fonts_cli.py')])
         result=subprocess.run([*argv,*arguments],capture_output=True,text=True,env=os.environ.copy(),timeout=20)
@@ -92,7 +94,11 @@ class Fonts(unittest.TestCase):
         for argv in (('list','--json'),('search','--json'),('current','--json'),('update','--dry-run','--json')):
             first=self.execute(*argv).stdout
             self.assertEqual(first,self.execute(*argv,native=True).stdout)
-            self.assertEqual(first,self.execute(*argv,bash=True).stdout)
+            if os.name == 'nt':
+                with patch.dict(os.environ, PATH=str(Path(sys.executable).parent)+os.pathsep+os.environ['PATH']):
+                    self.assertEqual(first,self.execute(*argv,powershell=True).stdout)
+            else:
+                self.assertEqual(first,self.execute(*argv,bash=True).stdout)
             self.assertNotIn('\x1b',first);json.loads(first)
         self.execute('--help');self.execute('install','--help')
         self.assertFalse((self.home/'state').exists());self.assertFalse((self.home/'data').exists());self.assertFalse((self.home/'cache').exists())

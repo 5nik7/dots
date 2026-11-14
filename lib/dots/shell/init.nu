@@ -24,10 +24,30 @@ for name in ['DOTS_ENV_HOOKS' 'DOTS_ENV_ORIGINS'] {
     }
 }
 # Shared profile and application environment, transferred as inert JSON.
-if (which python3 | is-not-empty) {
-    let resolved = (^python3 -B ($env.DOTS | path join 'lib/dots/native_environment.py') --document | complete)
+let dots_python = (which --all python3 python | where type == 'external' | where {|candidate|
+    if $nu.os-info.name == 'windows' {
+        let path = ($candidate.path | str replace --all '\' '/' | str lowercase)
+        ($path !~ '/windowsapps/') and ($path | str ends-with '.exe')
+    } else { true }
+})
+if ($dots_python | is-empty) { error make {msg: 'dots: Python is required for native initialization'} }
+$env._DOTS_PYTHON = $dots_python.0.path
+# A discovered manager executable must never acquire Python during startup or
+# completion. These overrides apply only to the selected child invocation.
+def --wrapped _dots-python [...args: string] {
+    with-env {PYTHON_MANAGER_AUTOMATIC_INSTALL: 'false'} {
+        # Legacy launchers enable acquisition when these names are present,
+        # even when their value is "0". Hide them only in this child scope.
+        hide-env --ignore-errors PYLAUNCHER_ALLOW_INSTALL PYLAUNCHER_ALWAYS_INSTALL
+        ^($env._DOTS_PYTHON) ...$args | complete
+    }
+}
+do --env {
+    let resolved = (_dots-python -B ($env.DOTS | path join 'lib/dots/native_completion.py') --environment)
     if $resolved.exit_code == 0 {
         let document = ($resolved.stdout | from json)
+        $env._DOTS_NATIVE_PATHS = $document.shell_paths
+        $env._DOTS_COMPLETION_NAMES = $document.completion_commands
         let data = $document.exports
         for name in $document.unset { hide-env --ignore-errors $name }
         for name in ($env._dots_profile_map_names? | default []) { hide-env --ignore-errors $name }
@@ -40,7 +60,7 @@ if (which python3 | is-not-empty) {
         $env._dots_profile_map_names = $names
         load-env ($data | reject PATH)
         $env.PATH = ($data.PATH | split row (char esep))
-    }
+    } else { error make {msg: 'dots: native environment preparation failed'} }
 }
 
 # Native Nu environment records are retained by Nu, not exported as shell code.
@@ -54,7 +74,7 @@ def _dots-valid [kind: string, value: string] {
     }
 }
 def --env _dots-load [] {
-    mut config = ($env.DOTS_CONFIG_FILE? | default (($env.XDG_CONFIG_HOME? | default (($env.HOME? | default $env.USERPROFILE?) | path join '.config')) | path join 'dots/config.env'))
+    mut config = ($env.DOTS_CONFIG_FILE? | default $env._DOTS_NATIVE_PATHS.config)
     mut values = {}
     mut origins = {}
     mut kinds = {}
@@ -81,7 +101,9 @@ def --env _dots-load [] {
         }
     }
     if ($env.DOTS_CONFIG_FILE? | default '' | is-empty) {
-        let profile_config = (^python3 -B ($env.DOTS | path join 'lib/dots/profile_config.py') __settings-json | from json)
+        let profile_result = (_dots-python -B ($env.DOTS | path join 'lib/dots/profile_config.py') __settings-json)
+        if $profile_result.exit_code != 0 { error make {msg: 'dots: native settings preparation failed'} }
+        let profile_config = ($profile_result.stdout | from json)
         let profile_settings = $profile_config.settings
         $config = $profile_config.path
         for key in ($profile_settings | columns) {
@@ -109,9 +131,9 @@ def --env _dots-load [] {
         if $fields.0 != '-' { $exports = ($exports | upsert $fields.0 $value) }
         if $fields.1 != '-' { $paths = ($paths | upsert $fields.1 $value) }
     }
-    $env.dot = ($paths | upsert config $config | upsert state (($env.XDG_STATE_HOME? | default (($env.HOME? | default $env.USERPROFILE?) | path join '.local/state')) | path join dots))
+    $env.dot = ($paths | upsert config $config | upsert state $env._DOTS_NATIVE_PATHS.state)
     load-env $exports
-    $env.THEMESCMD = ($env.dot.bin | path join theme)
+    $env.THEMESCMD = $env._DOTS_NATIVE_PATHS.theme_command
     $env.THEMESBIN = ($env.dot.state | path join 'themes/commands/current/bin')
 
 }
@@ -185,13 +207,13 @@ if $nu.is-interactive {
         $env.config.completions.external.completer = {|spans|
             let names_file = ($env.dot.state | path join 'themes/commands/current/names')
             let families = if ($names_file | path exists) { open --raw $names_file | lines } else { [] }
-            if $env.dots_options.DOTS_INIT_COMPLETION == '1' and $spans.0 in ([dots theme bak dots-bak] | append $families) {
-                let result = (^($env.DOTS | path join bin dots) __complete nu (($spans | length) - 1) -- ...$spans | complete)
+            let basename = ($spans.0 | path basename)
+            let identity = if $nu.os-info.name == 'windows' { $basename | str lowercase } else { $basename }
+            let command = ($identity | str replace --regex '\.ps1$' '')
+            if $env.dots_options.DOTS_INIT_COMPLETION == '1' and $command in ($env._DOTS_COMPLETION_NAMES | append $families) {
+                let result = (_dots-python -B ($env.DOTS | path join 'lib/dots/native_completion.py') --complete nu ...$spans)
                 if $result.exit_code != 0 { return [] }
-                $result.stdout | lines | each {|line|
-                    let fields = ($line | split row "\t")
-                    if $fields.0 == candidate { {value: $fields.1, description: ($fields | get -o 2 | default '')} }
-                } | compact
+                $result.stdout | from json | default []
             } else if ($env._DOTS_PREVIOUS_COMPLETER | describe) == closure {
                 do $env._DOTS_PREVIOUS_COMPLETER $spans
             } else { null }

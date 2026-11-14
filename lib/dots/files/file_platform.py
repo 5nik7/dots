@@ -32,6 +32,25 @@ def native_link_text(value, windows=None):
     return value
 
 
+def link_target_matches(path, target):
+    """Compare link text without rewriting guards or following its destination.
+
+    Windows readlink exposes drive/UNC substitution prefixes even when the link
+    was created with an ordinary path. Only normalize that observed spelling;
+    arbitrary device namespaces and the desired target remain untouched.
+    """
+    return Path(path).is_symlink() and native_link_text(os.readlink(path)) == str(target)
+
+
+WINDOWS_EXECUTABLE_SUFFIXES = ('.exe', '.com', '.bat', '.cmd')
+
+
+def native_staging_suffix(path):
+    """Retain Windows filename-derived mode bits without changing digests."""
+    suffix = Path(path).suffix.lower()
+    return suffix if os.name == 'nt' and suffix in WINDOWS_EXECUTABLE_SUFFIXES else ''
+
+
 def termux_prefix(platform):
     """Resolve only the explicitly supplied Termux installation prefix."""
     if platform != 'termux':
@@ -46,10 +65,11 @@ def termux_prefix(platform):
     return root
 
 
-def config_root():
-    home = Path(os.environ.get('HOME') or Path.home())
-    base = Path(os.environ.get('XDG_CONFIG_HOME') or
-                (os.environ.get('APPDATA', home / 'AppData/Roaming') if os.name == 'nt' else home / '.config'))
+def config_root(env=None):
+    env = os.environ if env is None else env
+    home = Path(env.get('HOME') or env.get('USERPROFILE') or Path.home())
+    base = Path(env.get('XDG_CONFIG_HOME') or
+                (env.get('APPDATA', home / 'AppData/Roaming') if os.name == 'nt' else home / '.config'))
     if not base.is_absolute():
         raise ValueError('config root must be absolute')
     return base
@@ -132,12 +152,13 @@ def permissions(fd, path=None):
         os.fchmod(fd, stat.S_IMODE(path.stat().st_mode) if path and path.exists() else 0o644)
 
 
-def state_root():
-    home = Path(os.environ.get('HOME') or Path.home())
-    if os.environ.get('XDG_STATE_HOME'):
-        base = Path(os.environ['XDG_STATE_HOME'])
+def state_root(env=None):
+    env = os.environ if env is None else env
+    home = Path(env.get('HOME') or env.get('USERPROFILE') or Path.home())
+    if env.get('XDG_STATE_HOME'):
+        base = Path(env['XDG_STATE_HOME'])
     elif os.name == 'nt':
-        base = Path(os.environ.get('LOCALAPPDATA', home / 'AppData/Local'))
+        base = Path(env.get('LOCALAPPDATA', home / 'AppData/Local'))
     else:
         base = home / '.local/state'
     if not base.is_absolute():

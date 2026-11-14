@@ -171,7 +171,7 @@ def uninstall(installation):
             op = dict(path=path)
             if baseline['before'] is None: op['delete'] = True
             else:
-                source = installation.store.root/baseline['backup']/(str(baseline['index'])+'-before')
+                source = installation.store.payload(baseline['backup'], baseline['index'], 'before')
                 installation.guard(source)
                 if installation.guards[str(source)] != baseline['before']: raise ValueError('font baseline backup changed')
                 op['source'] = str(source)

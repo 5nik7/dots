@@ -117,6 +117,12 @@ class Commands(unittest.TestCase):
             destination = self.repo / name
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, destination)
+        # Help shares the current public presentation/preferences dependency
+        # graph. Keep provider PATH isolated below, but do not freeze imports.
+        from public_fixture import copy_public_tree
+        shutil.rmtree(self.repo / 'lib/dots')
+        copy_public_tree(ROOT / 'lib/dots', self.repo / 'lib/dots',
+                         repo=ROOT, fixture=self.repo, exclude=('__pycache__',))
         self.bin = self.base / 'tools'
         self.bin.mkdir()
         self.home = self.base / 'home'
@@ -301,13 +307,15 @@ if ((& $pasteScript) -cne $sample) { exit 11 }
 $sample | cpy
 if ($LASTEXITCODE -ne 0) { exit 12 }
 $result = pst
-if ($result -cne $sample) { exit 13 }
+if ($result -isnot [string] -or $result -cne $sample) { exit 13 }
 @('first', 'second') | cpy
 if ((pst) -cne ('first' + [Environment]::NewLine + 'second')) { exit 14 }
-cpy -- '-h' '"'
+# PowerShell consumes an unquoted -- itself; quote the literal CLI delimiter.
+cpy '--' '-h' '"'
 if ((pst) -cne '-h "') { exit 15 }
 cpy ''
-if ((pst) -cne '') { exit 16 }
+$empty = pst
+if ($empty -isnot [string] -or $empty -cne '') { exit 16 }
 $help = cpy --help
 if ($LASTEXITCODE -ne 0 -or $help -notmatch 'Usage: cpy') { exit 17 }
 $help = pst --help

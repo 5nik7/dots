@@ -9,7 +9,7 @@ exec(compile((_DotsPath($DOTS) / 'lib/dots/shell/runtime.py').read_text(), _dots
 # Use Xonsh's Python runtime; no subprocess or shell-code evaluation.
 import sys as _dots_sys
 _dots_sys.path.insert(0, str(_DotsPath($DOTS) / 'lib/dots'))
-from native_environment import document as _dots_document
+from native_completion import environment as _dots_document, command_names as _dots_completion_names
 from less_style import apply as _dots_less_style
 _dots_profile_document = _dots_document(_DotsPath($DOTS), __xonsh__.env.detype())
 _dots_profile_environment = _dots_profile_document['exports']
@@ -34,8 +34,8 @@ for _dots_line in (_DotsPath($DOTS) / 'lib/dots/shell/paths.tsv').read_text().sp
     if _dots_key != '-':
         dot[_dots_key] = _dots_value
 dot['config'] = _dots_config
-dot['state'] = str(_DotsPath(__xonsh__.env.get('XDG_STATE_HOME') or _DotsPath($HOME) / '.local/state') / 'dots')
-$THEMESCMD = str(_DotsPath(dot['bin']) / 'theme')
+dot['state'] = _dots_profile_document['shell_paths']['state']
+$THEMESCMD = _dots_profile_document['shell_paths']['theme_command']
 $THEMESBIN = str(_DotsPath(dot['state']) / 'themes/commands/current/bin')
 $PATH = [p for p in $PATH if p not in (str(_DotsPath($DOTS) / 'themes/bin'), $THEMESBIN)]
 for _dots_directory in ($DOTBIN, $DOTSCRIPTS):
@@ -117,13 +117,19 @@ if $XONSH_INTERACTIVE:
             return None
         names = _DotsPath(dot['state']) / 'themes/commands/current/names'
         families = names.read_text().splitlines() if names.is_file() else []
-        if context.command not in ['dots', 'theme', 'bak', 'dots-bak', *families]:
+        command = _DotsPath(context.command).name
+        if __import__('os').name == 'nt':
+            command = command.casefold()
+        command = command.removesuffix('.ps1')
+        if command not in [*_dots_completion_names(), *families]:
             return None
         words = [arg.value for arg in context.args[:context.arg_index]] + [context.prefix]
-        result = _dots_subprocess.run([str(_DotsPath($DOTS) / 'bin/dots'), '__complete', 'xonsh',
-                                      str(context.arg_index), '--', *words],
+        result = _dots_subprocess.run([_dots_sys.executable, '-B', str(_DotsPath($DOTS) / 'lib/dots/native_completion.py'),
+                                      '--complete', 'xonsh', *words],
                                      capture_output=True, text=True, env=__xonsh__.env.detype(), timeout=5)
-        return {line.split('\t')[1] for line in result.stdout.splitlines() if line.startswith('candidate\t')}
+        if result.returncode != 0:
+            return set()
+        return {row['value'] for row in (__import__('json').loads(result.stdout) or [])}
     __xonsh__.completers.pop('dots', None)
     _dots_add_completer('dots', _dots_complete, 'start')
 

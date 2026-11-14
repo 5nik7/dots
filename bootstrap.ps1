@@ -46,20 +46,25 @@ function Update-DotsBootstrapPath {
 }
 function Find-DotsBootstrapPython {
     # A discovery probe must not trigger Python Manager/launcher installation.
-    $oldAutomatic, $oldLauncher = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL
+    $oldAutomatic, $oldLauncher, $oldAlways = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL, $env:PYLAUNCHER_ALWAYS_INSTALL
     try {
-        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'; $env:PYLAUNCHER_ALLOW_INSTALL = '0'
+        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'
+        # Legacy launchers enable acquisition when either variable exists,
+        # including when its value is "0". Remove both only for this probe.
+        Remove-Item -LiteralPath Env:PYLAUNCHER_ALLOW_INSTALL, Env:PYLAUNCHER_ALWAYS_INSTALL -ErrorAction SilentlyContinue
         foreach ($candidate in @(Get-Command py, python3, python -CommandType Application -ErrorAction SilentlyContinue)) {
             if ($candidate.Source -like '*\WindowsApps\*' -and $candidate.Name -ne 'py.exe') { continue }
             $prefix = @(); if ($candidate.Name -in @('py','py.exe')) { $prefix = @('-3') }
             try { $found = & $candidate.Source @prefix -B -c 'import sys;sys.exit(1) if sys.version_info < (3,11) else print(sys.executable)' 2>$null } catch { continue }
             if ($LASTEXITCODE -eq 0 -and $found -and (Test-Path -LiteralPath ([string]@($found)[-1]) -PathType Leaf)) { return [string]@($found)[-1] }
         }
-    } finally { $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $oldAutomatic; $env:PYLAUNCHER_ALLOW_INSTALL = $oldLauncher }
+    } finally { $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $oldAutomatic; $env:PYLAUNCHER_ALLOW_INSTALL = $oldLauncher; $env:PYLAUNCHER_ALWAYS_INSTALL = $oldAlways }
     return $null
 }
 function Invoke-DotsBootstrapNative([string] $Command, [string[]] $Arguments) {
-    & $Command @Arguments 1>&2
+    # PowerShell cannot redirect stream 1 into stream 2 (1>&2 is a parse error).
+    # Keep prerequisite progress off the installer's structured stdout stream.
+    & $Command @Arguments | ForEach-Object { [Console]::Error.WriteLine([string] $_) }
     if ($LASTEXITCODE -ne 0) { throw ('Prerequisite command failed (' + $LASTEXITCODE + '); completed package changes remain. Resume after resolving the error.') }
 }
 function Install-DotsOfficialGit {
@@ -100,7 +105,8 @@ function Install-DotsOfficialPython {
 }
 function Test-DotsBootstrapLinks([string] $Python, [string] $Parent) {
     # This probe runs only after approval, in an owned temporary directory.
-    & $Python -B -c 'import os,pathlib,tempfile,sys; p=pathlib.Path(sys.argv[1]); p=next((x for x in (p,*p.parents) if x.is_dir())); t=tempfile.TemporaryDirectory(prefix="dots-link-probe-",dir=p); root=pathlib.Path(t.name); (root/"file").write_text("probe"); os.symlink(root/"file",root/"link"); t.cleanup()' $Parent 2>$null
+    # stdin keeps Python string literals intact under PowerShell 5.1 quoting.
+    'import os,pathlib,tempfile,sys; p=pathlib.Path(sys.argv[1]); p=next((x for x in (p,*p.parents) if x.is_dir())); t=tempfile.TemporaryDirectory(prefix="dots-link-probe-",dir=p); root=pathlib.Path(t.name); (root/"file").write_text("probe"); os.symlink(root/"file",root/"link"); t.cleanup()' | & $Python -B - $Parent 2>$null
     return $LASTEXITCODE -eq 0
 }
 function Enable-DotsBootstrapDeveloperMode {
@@ -163,7 +169,11 @@ try {
         $record = @{ schema = 1; status = 'preparing'; destination = $bootstrap.Destination; source = $bootstrap.Source; ref = $bootstrap.Ref }
         $record | ConvertTo-Json | Set-Content -LiteralPath $journal -Encoding UTF8
         $oldGit = @{}
-        foreach ($key in @('GIT_DIR','GIT_WORK_TREE','GIT_COMMON_DIR','GIT_INDEX_FILE','GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_TERMINAL_PROMPT','GCM_INTERACTIVE')) { $oldGit[$key] = [Environment]::GetEnvironmentVariable($key); [Environment]::SetEnvironmentVariable($key,$null,'Process') }
+        foreach ($key in @('GIT_DIR','GIT_WORK_TREE','GIT_COMMON_DIR','GIT_INDEX_FILE','GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_TERMINAL_PROMPT','GCM_INTERACTIVE')) {
+            $oldGit[$key] = [Environment]::GetEnvironmentVariable($key)
+            # Remove the variable; an empty Git path is not an unset variable.
+            Remove-Item -LiteralPath ('Env:\' + $key) -ErrorAction SilentlyContinue
+        }
         try {
             $env:GIT_TERMINAL_PROMPT = '0'; $env:GCM_INTERACTIVE = 'Never'
             Invoke-DotsBootstrapNative $git.Source @('init','--',$checkout)
@@ -179,7 +189,12 @@ try {
         } catch {
             $record.status = 'failed'; $record | ConvertTo-Json | Set-Content -LiteralPath $journal -Encoding UTF8
             throw ('Checkout preparation failed. Retained journal: ' + $journal)
-        } finally { foreach ($key in $oldGit.Keys) { [Environment]::SetEnvironmentVariable($key,$oldGit[$key],'Process') } }
+        } finally {
+            foreach ($key in $oldGit.Keys) {
+                if ($null -eq $oldGit[$key]) { Remove-Item -LiteralPath ('Env:\' + $key) -ErrorAction SilentlyContinue }
+                else { [Environment]::SetEnvironmentVariable($key,$oldGit[$key],'Process') }
+            }
+        }
     }
     if (-not $bootstrap.DryRun -and -not (Test-DotsBootstrapLinks $python $bootstrap.Destination)) {
         if (-not $bootstrap.DeveloperMode -and -not (Confirm-DotsBootstrap 'Enable Windows Developer Mode for symlinks? Administrator approval is required.' -Explicit)) { throw 'Symlink capability was declined; managed setup was not applied.' }

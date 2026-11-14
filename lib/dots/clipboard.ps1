@@ -9,7 +9,7 @@ function Invoke-DotsClipboard {
   )
   $process = $null
   try {
-    $python = Get-Command py, python3, python -CommandType Application -ErrorAction SilentlyContinue |
+    $python = Get-Command py, python3, python -CommandType Application -All -ErrorAction SilentlyContinue |
       Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' -and
         ([IO.Path]::GetExtension($_.Source) -eq '.exe' -or $env:OS -ne 'Windows_NT') } |
       Select-Object -First 1
@@ -41,6 +41,9 @@ function Invoke-DotsClipboard {
     $start.StandardErrorEncoding = $utf8
     $start.EnvironmentVariables['PYTHONIOENCODING'] = 'utf-8'
     $start.EnvironmentVariables['PYTHONUTF8'] = '1'
+    $start.EnvironmentVariables['PYTHON_MANAGER_AUTOMATIC_INSTALL'] = 'false'
+    $start.EnvironmentVariables.Remove('PYLAUNCHER_ALLOW_INSTALL')
+    $start.EnvironmentVariables.Remove('PYLAUNCHER_ALWAYS_INSTALL')
     $process = New-Object Diagnostics.Process
     $process.StartInfo = $start
     [void] $process.Start()
@@ -56,7 +59,7 @@ function Invoke-DotsClipboard {
     if ($diagnostic) { [Console]::Error.Write($diagnostic) }
     if ($output.Length -gt 0 -or ($Command -eq 'pst' -and $process.ExitCode -eq 0)) {
       # One string preserves embedded/trailing newlines in the object pipeline.
-      Write-Output -NoEnumerate $output
+      Write-Output -InputObject $output
     }
   } catch {
     [Console]::Error.WriteLine($Command + ': clipboard adapter failed; check Python and the command paths')

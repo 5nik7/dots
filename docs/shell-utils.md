@@ -1,5 +1,58 @@
 # Shared shell utilities
 
+## Native Windows standalone adapters
+
+The existing standalone names `linked`, `lnkd`, `cpwd`, `pathout`, `dirout`,
+`isdir`, `isfile`, `fzcmd`, `fzenv`, `fzfd`, `fzfig`, `fzg`, `fzopt`, `fzpyfig`,
+`fzrg`, `fzrg3`, `cht`, `httpGet` and `www` have native `scripts/*.ps1` adapters.
+They use Python and native providers without Bash or WSL. The existing scripts
+directory supplies discovery; no new `dots` routes are added. Contextual
+completion uses inert metadata and retains each platform's actual options.
+These source adapters do not install optional executables or activate clipboard,
+network, browser, editor or notification workflows during startup/help/completion.
+Native provider execution requires `.exe`/`.com`; command-shell wrappers such as
+`code.cmd` need their native executable selected through the existing
+`EDITOR`/`VISUAL` setting. Arguments are not reinterpreted through `cmd.exe`.
+
+`linked` inspects the deepest link/junction in a path and retains scalar,
+format-string, JSON and explicit Bash/Zsh array output. Generated shell text is
+data, never evaluated. `lnkd` lists linked components in the current path.
+`cpwd` copies the current directory without appending a newline through the
+existing clipboard provider. Native path formatting and predicates preserve
+literal/empty arguments and status codes; `--` ends native path options.
+The older POSIX standalone `pathout` supports `-r`, while the sourceable shell
+helper and native adapter also support `--raw` and `--`.
+
+Native pickers use numeric identities, inert preview snapshots and literal
+provider/editor arguments. Esc cancels before an action. `fzfd` switches file
+and directory snapshots with Ctrl-T. `fzg` treats the first query word as the
+ripgrep pattern and the remainder as a fuzzy filter. Ctrl-R refreshes ripgrep
+results in `fzg`, `fzrg` and `fzrg3`; `fzrg` also offers Alt-Enter to filter the
+current results. Refresh is explicit in this native adapter. FIGlet previews
+use a native renderer; `fzfig -p` accepts one literal executable argv after
+selection, not shell pipeline syntax. `fzenv` redacts sensitive values.
+
+Native `fzopt` updates only the caller's `FZF_DEFAULT_OPTS`; `dump` prints it.
+Explicit `write-rc` writes inert option text to `~/.fzfrc` using a retained Store
+transaction, reports its recovery identity and leaves unchanged second writes
+alone. It does not edit or activate a shell profile. Existing FZF options remain
+the configuration owner; no new preference store is introduced.
+
+Native `cht` supports queries, one stdin line with `--read`, its query shell and explicit mode/id/hush
+settings. Literal `CHTSH_URL`, `CHTSH_QUERY_OPTIONS` and `CHTSH_CURL_OPTIONS`
+assignments can be read; shell expressions require a native environment override
+and are never sourced. Explicit local settings writes use retained transactions.
+The `id` command is an explicit identity display/create boundary. Standalone
+installation, self-update, stealth selection monitoring and persistent native
+line editing/history remain unsupported
+native operations; use the existing reviewed installation/update owners for
+source delivery. `httpGet` selects an available native HTTP client. `www` opens
+HTTPS using an explicit URL/search, or Git origin, `WWW`, then Google.
+
+Owned tests cover native invocation and substituted providers. Real clipboard,
+browser/editor launches and 40/80/120-column visible picker acceptance remain
+separate gates; source availability is not desktop acceptance.
+
 **Implemented.** Source `bin/lib/common.sh` from Bash or Zsh to define the shared helpers. Loading uses shell builtins and does not run optional tools or load presentation code. These are shell functions, separate from the `dots` command routes. Case conversion requires Bash 4 or newer; global associative array builders require Bash 4.2 or newer. `bin/util` has been removed without a forwarding file. Bash startup retains the exported `UTIL` variable, pointing to common.
 
 ## System clipboard commands

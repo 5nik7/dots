@@ -90,6 +90,8 @@ def pip_rows(backend, *, roots=False, owned=False):
             if item.get('installer') != 'pip': reason = 'not proven pip-owned'
             location = item.get('metadata_location')
             if not location: reason = 'ownership location unavailable'
+            elif os.name == 'nt' and not system and not reason:
+                reason = 'system ownership could not be checked'
             elif system and not reason:
                 # INSTALLER can be pip-authored even inside a distro package.
                 # Query its actual distribution metadata, not an absent marker.

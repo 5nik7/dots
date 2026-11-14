@@ -2,7 +2,7 @@
 # dots:summary=Set a wallpaper image
 # dots:usage=FILE [--lock-screen]
 # dots:argument=1|file|Background image
-# dots:option=--lock-screen||flag|Set the Android lock-screen wallpaper
+# dots:option=--lock-screen||flag|Set the Termux or native Windows lock-screen image
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- bg set "$@"
 source "$DT_LIB/commands.bash"

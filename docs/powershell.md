@@ -1,19 +1,37 @@
 # Native PowerShell
 
+Current native fixture evidence is recorded in the
+[Overkill implementation plan](../plans/overkill-parity.md). Startup caches are
+UTF-8 with a BOM for PowerShell 5.1 Unicode paths; their metadata hashes the exact
+written bytes. Warm startup consumes this cache without Python discovery. Native
+script extensions retain zero, empty and literal argument arrays across 5.1/7.
+Help distinguishes uppercase metavariables using case-sensitive matching.
+These checks do not establish desktop rendering, real profile activation, or
+the native Nu/Xonsh runtime gates.
+
+Python probes select native applications, exclude WindowsApps execution aliases,
+and disable automatic acquisition only for the invocation. The legacy launcher
+install flags must be absent, since any value enables them; the Python install
+manager uses its explicit false setting. Caller values are restored afterward.
+Basic help keeps its static fallback when the optional preference probe fails.
+See [Python launcher installation behavior](https://docs.python.org/3/using/windows.html#install-on-demand).
+
 Full-width progress bars, Config glyph/style fields, package-manager colors and `dots debug demo` share the Python implementation on native Windows. Demo fixtures require no Bash, real package manager or Git operation. The existing native debug dispatcher handles the new route; no app destination changes are needed. Native Windows PowerShell 5.1/7 resize, animation interruption and launcher handoff remain pending; Termux controller tests are not native Windows evidence.
 
 Git human views share `apps.git.view` and `--view default|short|verbose` (`-s`/`--short`, `-v`/`--verbose`) through the native Python controllers, including submodule and Wiki routes. Shared progress reads `apps.cli.progress=none|spinner|bar|both`, defaulting to `both`; `DOTS_PROGRESS=auto` follows Config. Existing Bash and native wrappers need no new app destination or shell dependency. Termux fixtures cover both controllers; actual PowerShell 5.1/7 terminal, prompt and interruption acceptance remains pending. See [Git views](git.md#output-views) and the [implementation evidence](../plans/git-output-and-progress.md).
 
 
-Native help shares the configurable `colors.apps.cli.help.*` roles and `apps.cli.tagline` with Bash, including root synopsis/global options and grouped command discovery. With Python available, the native adapter reads the existing literal settings projection once; without Python, built-in default colors and `Manage your dotfiles and more...` keep bootstrap help usable. No Bash or WSL dependency is introduced. Windows application destinations are unchanged. Actual Windows PowerShell 5.1/7 and terminal acceptance remain pending; shared-controller fixtures establish only local behavior. See [help preferences](configuration.md#help-and-usage-preferences).
+Native help shares the configurable `colors.apps.cli.help.*` roles and `apps.cli.tagline` with Bash, including root synopsis/global options and grouped command discovery. With Python available, the native adapter reads the existing literal settings projection once; without Python, built-in default colors and `Manage your dotfiles and more...` keep bootstrap help usable. No Bash or WSL dependency is introduced. Windows application destinations are unchanged. Native PowerShell help fixture evidence is recorded in the Overkill plan; visible terminal acceptance remains pending. See [help preferences](configuration.md#help-and-usage-preferences).
 
 ## Clipboard history
 
 `dots clipboard` uses the same Python history, watcher, Config and command grammar as Bash. Enable the optional PSReadLine Ctrl-X, Ctrl-V widget explicitly with `Invoke-Expression ((dots clipboard init powershell) -join [Environment]::NewLine)`; it calls PSReadLine `Insert` without executing the selected text. FZF uses the shared native selector; copy/print remain available without editor integration. PowerShell owns object-pipeline/file-redirection encoding, as with cpy/pst. No Bash dependency, WSL path translation or Windows app destination change is introduced. See [clipboard history](clipboard.md); actual Windows PowerShell 5.1/7 editor/desktop acceptance remains pending.
 
-**Implementation available; native Windows runtime and desktop acceptance pending.**
+**Native fixture evidence is available; live registration and desktop acceptance remain pending.**
 
 `dots fonts` and `fonts.ps1` share routes, JSON, completion and lifecycle operations.
+The standalone adapter is explicitly registered in the native controller bridge;
+isolated root/install help and literal-argument checks cover this dispatch boundary.
 Setup creates the standalone adapter without Bash. Per-user font files and HKCU
 values are journaled; Windows Terminal defaults/GUIDs, WezTerm and separate VS Code
 fields use managed mappings or explicit files. Termux activation and tmux insertion
@@ -43,9 +61,35 @@ The personal profile now uses [shared Starship startup](shell-init.md#powershell
 
 ## Clipboard shortcuts
 
-`cpy` and `pst` have native `.ps1` adapters and forwarding profile functions. Their shared Python controller handles arguments, help, errors and provider selection; UTF-8 stdin transport preserves literal text without native argument quoting. `cpy` accepts text arguments or pipeline strings; `pst` returns one string. PowerShell controls object-pipeline display/redirection. See the [clipboard contract](shell-utils.md#system-clipboard-commands). Open a new PowerShell session or reload the profile to replace already-loaded legacy helper functions; direct `.ps1` invocation uses the new adapters immediately. Native Windows 5.1/7 adapter and desktop clipboard acceptance remain pending; Windows app destinations are unchanged.
+To copy literal option-looking text through the PowerShell function, quote the
+separator too: `cpy '--' '-h'`. PowerShell otherwise consumes a bare `--` before
+the shared controller sees it. Native file-provider fixtures check scalar string
+results for both empty and multiline paste output; desktop clipboard use remains
+a separate acceptance step.
+
+`cpy` and `pst` have native `.ps1` adapters and forwarding profile functions. Their shared Python controller handles arguments, help, errors and provider selection; UTF-8 stdin transport preserves literal text without native argument quoting. `cpy` accepts text arguments or pipeline strings; `pst` returns one string. PowerShell controls object-pipeline display/redirection. See the [clipboard contract](shell-utils.md#system-clipboard-commands). Open a new PowerShell session or reload the profile to replace already-loaded legacy helper functions; direct `.ps1` invocation uses the new adapters immediately. Native Windows 5.1/7 adapter fixtures are recorded in the Overkill plan; desktop clipboard acceptance remains pending. Windows app destinations are unchanged.
 
 ## Commands and interaction
+
+The native helpers preserve literal paths and child exit status. `mkcd` creates
+and enters a filesystem directory; `y` changes directory only after successful
+Yazi exit and always removes its temporary cwd file. `ff` invokes native FZF,
+including pipeline input and cancellation; missing FZF returns 127 with a
+`Find-File` fallback suggestion. It scopes UTF-8 pipeline encoding to that call.
+`gitcheck` reports changes through status (0 changed, 1 clean) and prints paths
+with `-v`; `gitsubmodule` prints changed submodule paths with the same status rule.
+Git errors retain their error status.
+
+`gup` delegates to scoped `dots git publish -C CURRENT_DIRECTORY --no-wiki`.
+PowerShell accepts `-All`, `-Yes`, `-DryRun` and `-Message`; Bash/Zsh use
+`--all`, `--yes`, `--dry-run` and `-m`/`--message`. A positional quoted message
+is also accepted. Broad staging and skipped confirmation require their explicit
+options; shared-shell users must account for this change before rollout.
+`Clear-Cache` delegates to `dots cleanup run`, whose Windows provider supports
+bounded default npm/pip cache contents and named Neovim logs with native handle,
+ACL and process-use guards. Build/checkpoint/custom-root providers and real
+Restart Manager acceptance remain pending. It does not perform broad legacy cache removal. Recycle-bin
+and permanent-delete helpers retain their distinct existing behavior.
 
 Root help (`dots`, `dots help`, `dots -h`, `dots --help`) shows only top-level commands/groups and a hint for detailed help and the full `dots commands` list. Deeper-only extensions contribute a group row; contextual help and completion retain deeper routes. Root artwork reads `apps.cli.logo_gradient` through the shared core renderer when Python is available; basic help retains the classic logo fallback without Python. The owned-root regression covers all four forms, grouping and narrow footer wrapping with Python absent from PATH; actual Windows PowerShell 5.1/7 and terminal acceptance remain pending. Application destinations and installation behavior are unchanged.
 
@@ -112,7 +156,7 @@ Existing Windows state remains `%LOCALAPPDATA%/dots`, or `$XDG_STATE_HOME/dots` 
 
 Links remain the default. The shared installer does not elevate, enable Developer Mode, silently copy or traverse unknown reparse points. The standalone bootstrap offers Developer Mode separately with explicit authorization and UAC; ordinary -Yes does not approve that setting. Missing link privileges fail during approved preparation before live replacement. File replacement, connectors and active theme pointers use retained journals; recovery and undo use `dots files history`, `recover` and `undo`. Modified generated commands and post-apply drift require review. Native Windows flushes files/journals, without claiming POSIX directory-fsync or power-loss guarantees.
 
-Setup prepares inactive theme payloads and publishes them in its installation transaction. It does not run reload hooks or change wallpaper. Explicit theme publication uses native command manifests and the same transaction store. It refuses unfinished legacy Bash publication journals rather than guessing how to recover a different installation. Native wallpaper uses the Windows desktop API; lock-screen changes remain Android-only. GTK/Qt hooks and tmux operations remain explicitly unavailable on native Windows. Local native `.ps1` theme hooks and the bundled Starship adapter use the plugin controls; downloaded themes remain inert data.
+Setup prepares inactive theme payloads and publishes them in its installation transaction. It does not run reload hooks or change wallpaper. Explicit theme publication uses native command manifests and the same transaction store. It refuses unfinished legacy Bash publication journals rather than guessing how to recover a different installation. Native wallpaper uses the Windows desktop API; explicit `--lock-screen` uses the supported 64-bit WinRT image API after a read-only capability check. Owned async projection tests pass; visible lock-screen acceptance remains pending. GTK/Qt hooks and tmux operations remain explicitly unavailable on native Windows. Local native `.ps1` theme hooks and the bundled Starship adapter use the plugin controls; downloaded themes remain inert data.
 
 ## Acceptance and remaining limits
 

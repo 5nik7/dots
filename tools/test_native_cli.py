@@ -313,10 +313,11 @@ class NativeCLI(unittest.TestCase):
         encoded = base64.b64encode(json.dumps(values).encode()).decode()
         previous = sys.argv
         try:
-            with patch.object(module.runpy,'run_path') as run:
-                module.main(['cli',encoded])
-                self.assertEqual(sys.argv[1:],values)
-                self.assertEqual(run.call_count,1)
+            for controller in ('cli', 'fonts'):
+                with patch.object(module.runpy,'run_path') as run:
+                    module.main([controller,encoded])
+                    self.assertEqual(sys.argv[1:],values)
+                    self.assertEqual(run.call_count,1)
             for invalid in ('{}', '[1]', '["\\u0000"]'):
                 with self.assertRaises(ValueError): module.main(['cli',base64.b64encode(invalid.encode()).decode()])
         finally: sys.argv = previous
@@ -328,6 +329,20 @@ class NativeCLI(unittest.TestCase):
             validate_windows_path(path)
         for path in ('C:relative','C:\\Users\\NUL','C:\\file:stream','C:\\dir.\\file','\\\\wsl.localhost\\Ubuntu\\home\\file'):
             with self.assertRaises(ValueError, msg=path): validate_windows_path(path)
+
+    def test_executable_extension_preserves_literal_argv_and_status(self):
+        import cli
+        probe = self.repo / 'local/bin/dots-probe.exe'
+        probe.parent.mkdir(parents=True, exist_ok=True)
+        probe.write_bytes(b'owned nonexecuted native executable fixture')
+        probe.chmod(0o700)
+        cases = [[], [''], ['one'], ['-leading-dash'],
+                 ['', 'a "quoted" value', "single'quote", 'ü', '$(throw 1)', 'a&b|c;d', 'C:\\a b\\']]
+        with patch.dict(os.environ, self.env, clear=True):
+            for values in cases:
+                with self.subTest(values=values), patch.object(cli.subprocess, 'call', return_value=7) as execute:
+                    self.assertEqual(cli.main(['probe', *values]), 7)
+                    execute.assert_called_once_with([str(probe), *values])
 
     def test_native_theme_data_matches_bash(self):
         if not shutil.which('bash') or os.name == 'nt': self.skipTest('Bash comparison requires POSIX')
@@ -584,11 +599,17 @@ class NativeCLI(unittest.TestCase):
         # PowerShell's runtime can write its startup profile even with -NoProfile.
         # Permit only its known files and ancestors, never arbitrary cache writes.
         roots = [self.home / name for name in ('cache/powershell',
-                 'Local/Microsoft/Windows/PowerShell', 'Local/Microsoft/PowerShell')]
+                 'Local/Microsoft/Windows/PowerShell', 'Local/Microsoft/PowerShell',
+                 'AppData/Local/Microsoft/Windows/PowerShell',
+                 'AppData/Local/Microsoft/PowerShell')]
+        # Native engines also create these empty known-folder roots from
+        # USERPROFILE, independently of APPDATA/LOCALAPPDATA overrides.
+        empty_roots = {self.home / 'AppData/Roaming'}
         for path in self.home.rglob('*'):
             self.assertFalse(path.is_symlink(), str(path))
             if path.is_dir():
-                self.assertTrue(any(path == root or path in root.parents for root in roots), str(path))
+                self.assertTrue(path in empty_roots or
+                                any(path == root or path in root.parents for root in roots), str(path))
             else:
                 self.assertIn(path.parent, roots, str(path))
                 self.assertRegex(path.name, r'^StartupProfileData-(?:NonInteractive|Interactive)$')
@@ -611,6 +632,23 @@ class NativeCLI(unittest.TestCase):
         unexpected.mkdir()
         with self.assertRaises(AssertionError):
             self.assert_read_only_home()
+
+    def test_native_standalone_fonts_help(self):
+        requested = os.environ.get('DOTS_TEST_POWERSHELL')
+        names = [requested] if requested else (['powershell', 'pwsh'] if os.name == 'nt' else ['pwsh'])
+        engines = [engine for name in names if (engine := shutil.which(name))]
+        if not engines:
+            self.skipTest('requested native PowerShell unavailable')
+        for engine in engines:
+            for arguments in (['--help'], ['install', '--help']):
+                with self.subTest(engine=engine, arguments=arguments):
+                    result = subprocess.run([engine, '-NoLogo', '-NoProfile', '-File',
+                        str(self.repo / 'bin/fonts.ps1'), *arguments], env=self.env,
+                        capture_output=True, text=True, encoding='utf-8', timeout=30)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertFalse(result.stderr)
+                    self.assertIn('fonts', result.stdout)
+        self.assertFalse((self.home / 'state/dots').exists())
 
     def test_native_powershell_engines(self):
         requested = os.environ.get('DOTS_TEST_POWERSHELL')
@@ -637,14 +675,16 @@ class NativeCLI(unittest.TestCase):
                 probe = self.repo / 'local/bin/dots-probe.ps1'
                 probe.parent.mkdir(parents=True, exist_ok=True)
                 probe.write_text('# dots:summary=Literal argument fixture\n[Console]::WriteLine((ConvertTo-Json -InputObject @($args) -Compress))\nexit 7\n', encoding='utf-8')
-                values = ['', 'a "quoted" value', "single'quote", 'ü', '$(throw 1)', 'a&b|c;d', 'C:\\a b\\']
-                code = "$values = @(ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:DOTS_NATIVE_TEST_VALUES)))); & $env:DOTS_NATIVE_TEST_ADAPTER probe @values; exit $LASTEXITCODE"
-                env = dict(self.env, DOTS_NATIVE_TEST_VALUES=base64.b64encode(json.dumps(values).encode()).decode(),
-                           DOTS_NATIVE_TEST_ADAPTER=str(self.repo / 'bin/dots.ps1'))
-                result = subprocess.run([engine, '-NoLogo', '-NoProfile', '-EncodedCommand', base64.b64encode(code.encode('utf-16-le')).decode()],
-                                        env=env, capture_output=True, encoding='utf-8', timeout=30)
-                self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
-                self.assertEqual(json.loads(result.stdout), values)
+                cases = [[], [''], ['one'], ['-leading-dash'],
+                         ['', 'a "quoted" value', "single'quote", 'ü', '$(throw 1)', 'a&b|c;d', 'C:\\a b\\', '--', '-dash']]
+                code = "$values = ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:DOTS_NATIVE_TEST_VALUES))); if ($null -eq $values) { $values = @() } else { $values = [string[]]$values }; & $env:DOTS_NATIVE_TEST_ADAPTER probe @values; exit $LASTEXITCODE"
+                for values in cases:
+                    env = dict(self.env, DOTS_NATIVE_TEST_VALUES=base64.b64encode(json.dumps(values).encode()).decode(),
+                               DOTS_NATIVE_TEST_ADAPTER=str(self.repo / 'bin/dots.ps1'))
+                    result = subprocess.run([engine, '-NoLogo', '-NoProfile', '-EncodedCommand', base64.b64encode(code.encode('utf-16-le')).decode()],
+                                            env=env, capture_output=True, encoding='utf-8', timeout=30)
+                    self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
+                    self.assertEqual(json.loads(result.stdout), values)
 
 
 if __name__ == '__main__': unittest.main()

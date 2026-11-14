@@ -21,7 +21,8 @@ class SetupLeaf(unittest.TestCase):
         (self.repo/'tools/test_leaf_theme.py').write_text('fixture consumer')
         self.sysroot = self.base/'rust toolchain'
         (self.sysroot/'bin').mkdir(parents=True)
-        for tool in ('cargo','rustc'): (self.sysroot/'bin'/tool).write_text('fixture')
+        self.suffix = '.exe' if os.name == 'nt' else ''
+        for tool in ('cargo','rustc'): (self.sysroot/'bin'/(tool+self.suffix)).write_text('fixture')
         self.calls = []
 
     def execute(self, argv, *, cwd=None, env=None, capture=False):
@@ -38,12 +39,12 @@ class SetupLeaf(unittest.TestCase):
         if 'status' in words: return ''
         if 'apply' in words and '--check' not in words:
             (Path(words[2])/'main.rs').write_text('patched')
-        if 'cargo' == Path(words[0]).name:
+        if 'cargo'+self.suffix == Path(words[0]).name:
             self.assertEqual(env['CARGO_HOME'],str(Path(env['CARGO_TARGET_DIR']).parent/'cargo'))
             self.assertNotEqual(env['HOME'],str(self.home))
             self.assertIn('--locked',words)
             if 'build' in words:
-                binary=Path(env['CARGO_TARGET_DIR'])/'release/leaf'
+                binary=Path(env['CARGO_TARGET_DIR'])/'release'/('leaf'+self.suffix)
                 binary.parent.mkdir(parents=True);binary.write_bytes(b'verified fixture binary')
                 binary.chmod(0o755)
         return ''
@@ -51,7 +52,7 @@ class SetupLeaf(unittest.TestCase):
     def test_pinned_build_reuse_publication_and_original_restore(self):
         self.fixture()
         with patch.dict(os.environ,self.env),patch('setup_leaf.execute',side_effect=self.execute):
-            original=self.home/'.local/bin/leaf';original.parent.mkdir(parents=True);original.write_bytes(b'original leaf')
+            original=self.home/'.local/bin'/('leaf'+self.suffix);original.parent.mkdir(parents=True);original.write_bytes(b'original leaf')
             installation=Installation(self.repo)
             build=Build(installation)
             result=build.prepare()
@@ -102,7 +103,7 @@ class SetupLeaf(unittest.TestCase):
                 case=SetupLeaf();case.setUp()
                 try:
                     case.fixture()
-                    original=case.home/'.local/bin/leaf';original.parent.mkdir(parents=True)
+                    original=case.home/'.local/bin'/('leaf'+case.suffix);original.parent.mkdir(parents=True)
                     original.write_bytes(b'original leaf')
                     def fail(argv,**kwargs):
                         words=list(map(str,argv))
@@ -121,20 +122,20 @@ class SetupLeaf(unittest.TestCase):
 
     def test_foreign_command_link_is_refused_before_acquisition(self):
         self.fixture()
-        original=self.home/'.local/bin/leaf';original.parent.mkdir(parents=True)
+        original=self.home/'.local/bin'/('leaf'+self.suffix);original.parent.mkdir(parents=True)
         foreign=self.base/'foreign leaf';foreign.write_bytes(b'foreign command')
         original.symlink_to(foreign)
         with patch.dict(os.environ,self.env),patch('setup_leaf.execute',side_effect=self.execute):
             installation=Installation(self.repo)
             with self.assertRaisesRegex(ValueError,'unrelated link'):Build(installation)
             self.assertEqual(self.calls,[])
-            self.assertEqual(original.readlink(),foreign)
+            self.assertEqual(original.resolve(),foreign)
             self.assertEqual(foreign.read_bytes(),b'foreign command')
             self.assertFalse(installation.receipt_path.exists())
 
     def test_changed_source_after_failed_build_is_preserved(self):
         self.fixture()
-        original=self.home/'.local/bin/leaf';original.parent.mkdir(parents=True)
+        original=self.home/'.local/bin'/('leaf'+self.suffix);original.parent.mkdir(parents=True)
         original.write_bytes(b'original leaf')
         def fail(argv,**kwargs):
             if 'clippy' in argv:raise ValueError('fixture compiler failure')

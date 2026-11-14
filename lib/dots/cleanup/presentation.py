@@ -8,7 +8,7 @@ from interaction import Selector, SelectionEnded
 from progress import permanent_output
 from .core import public
 from .receipts import totals
-from .termux import GROUPS
+from .termux import GROUPS, group_metadata
 
 
 def size(value):
@@ -18,8 +18,8 @@ def size(value):
         value /= 1024
 
 
-def group_view(ui, group, rows, details=False):
-    label, risk, consequence = GROUPS[group]
+def group_view(ui, group, rows, details=False, platform='termux'):
+    label, risk, consequence = group_metadata(platform)[group]
     summary = totals(rows)
     ui.heading(label)
     ui.detail('Group', group)
@@ -54,12 +54,14 @@ def render(data, args, stream=None):
         for group in data['selected_groups']:
             rows = [r for r in data['candidates'] if r['group'] == group]
             if rows:
-                ui.emit(); group_view(ui, group, rows, args.verbose)
+                ui.emit(); group_view(ui, group, rows, args.verbose, data.get('platform', 'termux'))
         ui.emit('\n  No changes made.')
     if 'catalog' in data:
         for row in data['catalog']:
             ui.emit(); ui.detail('Group', row['id']); ui.detail('Risk', row['risk'])
-            ui.detail('Scope', row['description']); ui.detail('Support', 'available' if row['supported'] else 'not implemented')
+            ui.detail('Scope', row['description'])
+            ui.detail('Support', 'available' if row['supported'] else
+                      'read-only scan; deletion unavailable' if row.get('scan_supported') else 'not implemented')
     for row in data.get('runs', []):
         ui.emit(); ui.detail('Run', row['id']); ui.detail('Started', row['started'])
         ui.detail('Result', row['status']); ui.detail('Removed', size(row['totals']['allocated_bytes']))
@@ -88,10 +90,10 @@ def render(data, args, stream=None):
     if data.get('uncertainty'): ui.detail('Uncertain', data['uncertainty'], '93')
 
 
-def confirm(group, targets):
+def confirm(group, targets, *, platform='termux'):
     with permanent_output():
         ui = Presentation(sys.stderr)
-        ui.emit(); group_view(ui, group, [public(t) for t in targets], True)
+        ui.emit(); group_view(ui, group, [public(t) for t in targets], True, platform)
         ui.detail('Deletion', 'Permanent; no retained copy or undo', '93')
         if shutil.which('gum') and shutil.which('bash') and os.environ.get('TERM', 'dumb') != 'dumb':
             try:

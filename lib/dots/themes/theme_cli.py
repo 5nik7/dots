@@ -18,7 +18,7 @@ import bat_cache
 from palette_native import Themes, LIB, FORMATS, ID, metric, regular, styles
 from catalog import Presentation, atomic_json
 from events import OperationOutput
-from file_platform import lock, open_nofollow, sync_dir
+from file_platform import lock, open_nofollow, sync_dir, link_target_matches
 from transactions import Store, digest, exists, parents_safe, private_directory
 from interaction import RichSelector, Selector, SelectionEnded
 from progress import Progress, configure, permanent_output, sequence
@@ -81,7 +81,14 @@ def connectors(themes):
     themes.connector_guards = {}
     for line in (LIB / 'connectors.tsv').read_text().splitlines():
         app, suffix, artifact = line.split('\t')
-        if app == 'eza':
+        if app == 'windows-terminal':
+            from app_paths import terminal_fragment_directory
+            base = terminal_fragment_directory()
+            if base is None: continue
+        elif app == 'wezterm' and os.name == 'nt':
+            from app_paths import config_directory
+            base = config_directory('wezterm')
+        elif app == 'eza':
             from app_paths import eza_config_directory
             base = eza_config_directory()
         elif app == 'leaf':
@@ -270,7 +277,7 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
             operations = [dict(path=str(destination), source=str(out))]
             for target, artifact in links:
                 if not (out / artifact).exists(): raise ValueError('missing connector artifact: ' + artifact)
-                if target.is_symlink() and os.readlink(target) == str(active / artifact) and artifact != 'pi.json': continue
+                if link_target_matches(target, active / artifact) and artifact != 'pi.json': continue
                 operations.append(dict(path=str(target), link=str(active / artifact), directory=(out / artifact).is_dir()))
             operations += [dict(path=str(themes.state / 'themes/commands/current'), link=str(destination / 'commands'), directory=True),
                            dict(path=str(token), text=name + '\n'), dict(path=str(active), link=str(destination), directory=True)]
@@ -343,10 +350,13 @@ def backgrounds(themes, action, args, preflight=False, identity=None):
         path = files[index]
     if not path.is_file() or path.suffix.lower() not in ('.png','.jpg','.jpeg','.webp','.bmp'): raise ValueError('background must be an existing image')
     if os.name == 'nt':
-        if locked: raise ValueError('lock-screen wallpaper is Android-only')
         command = [sys.executable, '-B', str(LIB / 'wallpaper.py'), str(path)]
+        if locked:
+            from wallpaper import lock_screen_supported
+            if not lock_screen_supported(): raise ValueError('native Windows lock-screen API unavailable')
     elif os.environ.get('TERMUX_VERSION'):
         command = ['termux-wallpaper', '-f', str(path)] + (['-l'] if locked else [])
+    elif locked: raise ValueError('lock-screen wallpaper requires Termux or native Windows')
     elif os.environ.get('WSL_DISTRO_NAME') or os.environ.get('WSL_INTEROP'): raise ValueError('WSL wallpaper changes are unavailable')
     elif os.environ.get('WAYLAND_DISPLAY'): command = ['swww', 'img', str(path)]
     elif os.environ.get('DISPLAY'): command = ['feh', '--no-fehbg', '--bg-fill', str(path)]
@@ -364,8 +374,15 @@ def backgrounds(themes, action, args, preflight=False, identity=None):
                 doc = dict(schema=1, status='prepared', path=str(path), lock_screen=locked)
                 atomic_json(journal, doc)
             try:
-                with phases.step('Apply wallpaper'): result = subprocess.run(command, capture_output=True, timeout=15)
-                if result.returncode: raise ValueError('wallpaper failed; app theme remains published')
+                with phases.step('Apply wallpaper'):
+                    if os.name == 'nt' and locked:
+                        # Own the native child here: an outer Python timeout must
+                        # not orphan a still-running PowerShell image setter.
+                        from wallpaper import lock_screen_request
+                        applied = lock_screen_request(path).get('applied') is True
+                    else:
+                        applied = subprocess.run(command, capture_output=True, timeout=15).returncode == 0
+                if not applied: raise ValueError('wallpaper failed; external effects may require inspection')
                 with phases.step('Record wallpaper result'):
                     if not locked:
                         Store(themes.state).apply('theme-background', [dict(path=str(p), text=str(path) + '\n') for p in (record,current)], guards, retain=True)

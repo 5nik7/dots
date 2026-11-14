@@ -19,8 +19,14 @@ class Receipts:
     def __init__(self, directory=None):
         self.directory = Path(directory) if directory is not None else state_root() / 'cleanup'
         self.handle = None
+        self.native = None
+        if os.name == 'nt':
+            from .windows_receipts import Storage
+            self.native = Storage(self.directory)
 
     def check(self):
+        if self.native is not None:
+            return self.native.check()
         for path in [*reversed(self.directory.parents), self.directory]:
             if path.is_symlink():
                 raise ValueError('linked cleanup receipt path: ' + str(path))
@@ -30,6 +36,14 @@ class Receipts:
                 raise ValueError('cleanup receipts require an owner-only directory')
 
     def acquire(self):
+        if self.native is not None:
+            self.native.acquire()
+            try:
+                self.rows()
+            except BaseException:
+                self.native.close()
+                raise
+            return
         self.check()
         self.directory.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.check()
@@ -47,11 +61,16 @@ class Receipts:
             raise
 
     def close(self):
+        if self.native is not None:
+            self.native.close()
+            return
         if self.handle is not None:
             self.handle.close()
             self.handle = None
 
     def write(self, report):
+        if self.native is not None:
+            return self.native.write(report)
         self.check()
         identity = str(uuid.UUID(report['id']))
         dest = self.directory / (identity + '.json')
@@ -73,11 +92,14 @@ class Receipts:
         if not self.directory.exists():
             return []
         rows = []
-        for path in self.directory.glob('*.json'):
+        for path in (self.native.paths() if self.native is not None else self.directory.glob('*.json')):
             if str(uuid.UUID(path.stem)) != path.stem or path.is_symlink() or not path.is_file() or path.stat().st_size > 16 * 1024 * 1024:
                 raise ValueError('invalid cleanup receipt: ' + str(path))
-            with os.fdopen(open_nofollow(path, os.O_RDONLY)) as stream:
-                row = json.load(stream)
+            if self.native is not None:
+                row = self.native.read(path)
+            else:
+                with os.fdopen(open_nofollow(path, os.O_RDONLY)) as stream:
+                    row = json.load(stream)
             if not isinstance(row, dict) or row.get('schema') != 1 or row.get('id') != path.stem or not isinstance(row.get('totals'), dict):
                 raise ValueError('unsupported cleanup receipt: ' + str(path))
             if any(type(row['totals'].get(k)) is not int or row['totals'][k] < 0 for k in COUNTS):

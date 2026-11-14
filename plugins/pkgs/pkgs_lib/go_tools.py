@@ -38,7 +38,11 @@ def installed():
         reason = ('local development build or replaced module' if source or version in ('', '(devel)') or
                   package == 'command-line-arguments' else '')
         canonical = re.sub(r'/v[2-9][0-9]*$', '', package).rsplit('/', 1)[-1]
-        if path.name != canonical or path.name.startswith('-'):
+        actual = path.name
+        if os.name == 'nt' and actual.lower().endswith('.exe'):
+            actual = actual[:-4]
+        matches = actual.casefold() == canonical.casefold() if os.name == 'nt' else actual == canonical
+        if not matches or actual.startswith('-'):
             reason = 'renamed Go binary; reinstall its canonical command explicitly'
         try: validate_names([package], 'go')
         except Error: reason = 'unrecoverable Go install identity'

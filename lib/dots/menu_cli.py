@@ -44,6 +44,7 @@ def leaves(family, names):
 
 
 ACTIONS = (
+    Action('projects', 'projects', ('menu', 'projects'), kind='terminal', icon='󰉋'),
     Action('wttr', 'weather', ('wttr', 'browse'), kind='popup', icon=''),
     Action('todo', 'todo', ('todo', 'browse'), kind='popup', icon='󰄬'),
     Action('bak', 'backups', ('bak', 'browse'), kind='terminal', icon='󰁯'),

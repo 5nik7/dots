@@ -8,6 +8,13 @@
 
 Manage dotfiles, shells, themes and your development environment through one command family. Dots keeps configuration in the checkout, previews managed changes, and records recovery information.
 
+`dots menu projects` opens a native shell in a selected configured project;
+`--print` and `--json` only inspect. Windows uses PowerShell without a WSL bridge.
+Theme publication can add [Dots schemes for Windows Terminal and WezTerm](docs/themes.md#native-terminal-schemes)
+without replacing the selected scheme or application configuration. Native
+activation and remaining parity gates are tracked in the
+[Windows/WSL implementation record](plans/overkill-parity.md).
+
 **[Read the Dots wiki](https://github.com/5nik7/dots/wiki)** · [Installation](docs/installation.md) · [Commands](docs/commands.md) · [Configuration](docs/configuration.md)
 
 Tmux clock, battery and Git widgets retain recent valid readings through temporary refresh failures. The Termux clock supports quiet six-hour location updates and seven-day sun-time retention; battery/Git show `~` while using an older reading. See [widget settings and activation](docs/tmux.md#retained-widget-readings).
@@ -76,11 +83,17 @@ dots wiki search 'nvim themes' --topics
 
 Help distinguishes executables, commands, subcommands, options and arguments with configurable theme colors. Open `dots config browse --query colors.apps.cli.help` to edit them, or set `apps.cli.tagline` to change the root phrase (`Manage your dotfiles and more...` by default; empty hides it). Help-only changes apply on the next invocation. See [help preferences](docs/configuration.md#help-and-usage-preferences).
 
-Use `dots cleanup` on Termux to review disposable caches and diagnostic logs
+Use `dots cleanup` to review supported disposable caches and diagnostic logs
 in groups, then see the size and number of files removed. `dots cleanup scan`
 previews candidates; `dots cleanup history` shows runs and the combined verified
 size. Old Pi/Ayu checkpoints require explicit selection and approval. See
 [cleanup groups, safeguards and reports](docs/cleanup.md).
+
+Native Windows also has [standalone utility adapters](docs/shell-utils.md#native-windows-standalone-adapters)
+for link/path inspection, FZF workflows and HTTP/cheat-sheet/browser commands,
+with inert contextual completion. Explicit theme background changes support a
+Windows lock-screen adapter; desktop activation and visible acceptance remain
+separate from source verification. See the [Overkill acceptance record](plans/overkill-parity.md).
 
 - [Dots core](docs/core.md): workflows, directory layout and recovery.
 - [Managed files](docs/files.md), [Git](docs/git.md) and [profiles](docs/profiles.md).

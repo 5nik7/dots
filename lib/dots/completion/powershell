@@ -1,5 +1,7 @@
 # Native completion; data comes from trusted Dots readers, never an extension.
-$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1', 'todo', 'todo.ps1', 'fonts', 'fonts.ps1', 'bak', 'bak.ps1', 'dots-bak', 'dots-bak.ps1')
+$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1', 'todo', 'todo.ps1', 'fonts', 'fonts.ps1', 'bak', 'bak.ps1', 'dots-bak', 'dots-bak.ps1', 'wttr', 'wttr.ps1', 'cpy', 'cpy.ps1', 'pst', 'pst.ps1')
+$global:_DotsUtilityCompletionNames = @('linked', 'lnkd', 'cpwd', 'pathout', 'dirout', 'isdir', 'isfile', 'fzcmd', 'fzenv', 'fzfd', 'fzfig', 'fzg', 'fzopt', 'fzpyfig', 'fzrg', 'fzrg3', 'cht', 'httpGet', 'www')
+$dotsCompletionNames += @($global:_DotsUtilityCompletionNames | ForEach-Object { $_; $_ + '.ps1' })
 $dotsCompletionState = if ($global:dot -and $global:dot.state) { $global:dot.state } elseif ($env:DOTS_STATE_DIR) { $env:DOTS_STATE_DIR } elseif ($env:XDG_STATE_HOME) { Join-Path $env:XDG_STATE_HOME 'dots' } elseif ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'dots' } else { Join-Path $HOME '.local/state/dots' }
 $dotsNamesPath = Join-Path $dotsCompletionState 'themes/commands/current/names'
 $global:_DotsThemeCommandMap = @{}
@@ -34,21 +36,41 @@ $dotsCompleter = {
             $words += $element.Extent.Text
         }
     }
-    if ($commandAst.Extent.Text.Substring(0, [Math]::Min($commandAst.Extent.Text.Length,
+    # AST extents omit trailing whitespace, so a cursor beyond EndOffset starts
+    # a new (empty) argument. Retain it across the encoded native bridge.
+    if ($cursorPosition -gt $commandAst.Extent.EndOffset -or
+        $commandAst.Extent.Text.Substring(0, [Math]::Min($commandAst.Extent.Text.Length,
         $cursorPosition - $commandAst.Extent.StartOffset)) -match '\s$') { $words += '' }
-    $commandName = [IO.Path]::GetFileNameWithoutExtension($commandAst.CommandElements[0].Extent.Text)
+    $commandElement = $commandAst.CommandElements[0]
+    $commandLiteral = if ($commandElement -is [System.Management.Automation.Language.StringConstantExpressionAst]) { $commandElement.Value } else { $commandElement.Extent.Text }
+    $commandName = [IO.Path]::GetFileNameWithoutExtension($commandLiteral)
+    $sharedStandaloneCompletion = $commandName -in @('cpy', 'pst') -or $commandName -in $global:_DotsUtilityCompletionNames
     if ($commandName -eq 'theme') { $words = @('theme') + $words }
     elseif ($commandName -eq 'todo') { $words = @('__todo_standalone') + $words }
     elseif ($commandName -in @('bak', 'dots-bak')) { $words = @('bak') + $words }
     elseif ($commandName -eq 'fonts') { $words = @('fonts') + $words }
     elseif ($commandName -eq 'anodize') { $words = @('anodize') + $words }
-    elseif ($commandName -in @('blastoff', 'pkgs')) { $words = @($commandName) + $words }
-    elseif ($commandName -ne 'dots') {
+    elseif ($commandName -in @('blastoff', 'pkgs', 'wttr')) { $words = @($commandName) + $words }
+    elseif ($commandName -ne 'dots' -and -not $sharedStandaloneCompletion) {
         if (-not $global:_DotsThemeCommandMap.ContainsKey($commandName)) { return }
         $words = @('theme', $global:_DotsThemeCommandMap[$commandName]) + $words
     }
     $savedExit = $global:LASTEXITCODE
     try {
+        if ($sharedStandaloneCompletion) {
+            # Load the literal native bridge only when completion is requested.
+            # Static standalone grammar never invokes clipboard/network/pickers.
+            . (Join-Path $env:DOTS 'lib/dots/files/entry.ps1')
+            $json = Invoke-DotsFiles $env:DOTS 'native-completion' (@('--complete', 'powershell', $commandName) + $words)
+            $candidates = $json | ConvertFrom-Json
+            foreach ($row in $candidates) {
+                if (-not $row.value) { continue }
+                $insert = if ($row.value -match '[\s\x27"`$;&|()]') { "'" + $row.value.Replace("'", "''") + "'" } else { $row.value }
+                $description = if ($row.description) { $row.description } else { $row.value }
+                [System.Management.Automation.CompletionResult]::new($insert, $row.value, 'ParameterValue', $description)
+            }
+            return
+        }
         $rows = & (Join-Path $env:DOTS 'bin/dots.ps1') __complete @words 2>$null
         foreach ($row in $rows) {
             $fields = $row -split "`t", 3

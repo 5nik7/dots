@@ -10,8 +10,9 @@ The shared pkgs grammar includes `in`, `un`, `up`, `xup` and `upls` aliases.
 `upgrade ls` / `upgrade --list` query available updates without installation.
 `cleanup [FILE]` reviews disabled source installs using current ownership,
 selection and confirmation. Both are in the package menu; see
-[package workflows](packages.md). Native Windows keeps its explicit package
-backend refusal for these operations while exposing their static help/completion.
+[package workflows](packages.md). Native Windows uses the WinGet community
+backend for package operations. Source-install cleanup retains its provider and
+ownership requirements; static help/completion does not prove a provider is available.
 
 Both forms use the same application core and preserve arguments, output, exit status and subcommands:
 
@@ -33,7 +34,7 @@ Before installation, use `./bin/blastoff`, `./bin/pkgs` or `./bin/dots` from the
 
 Blastoff manages Starship themes, modules, backups and active configuration. It requires Python 3.11+; Starship and interactive picker tools are capability-checked when needed. Its [application command contract](../plugins/blastoff/docs/CLI-CONTRACT.md#commands-and-aliases) describes the existing subcommands. `STARSHIP_CONFIG` selects the active configuration, otherwise `~/.config/starship.toml`; `BLASTOFF_HOME` selects storage, otherwise `~/.config/blastoff`. Setup links the active path to the selected saved theme (default dots), preparing its palette first. Theme apply switches this link with shared backup/journal protection; editing and module writes update its guarded saved target. Storage-root protections remain. All new Blastoff content backups use the shared Bak catalog and `apps.bak` storage preferences; app backup listing/restore/deletion and completion include shared UUIDs alongside legacy pairs. Normal FZF preview/prompt/reserved-binding overrides are verbose-only diagnostics; malformed or unreadable settings still warn.
 
-pkgs provides package browsing, install/remove, unattended user-wide upgrades, Go tools, configurable recipes/skips, stream formatting, manifest export/inspection/restore and diagnostics. It requires Python 3.9+ and Termux/Linux/WSL for package operations. Install (named targets or accepted picker selections), upgrade and refresh authorize unattended execution with supported native confirmation flags. Remove/restore retain approval. See [package workflows](packages.md) for scopes, output, configuration and manifests. Its [application guide](../plugins/pkgs/README.md) explains these workflows. `pkgs uninstall NAME` removes selected packages; Dots checkout uninstall removes the installed application entry points and restores managed configuration. These are separate operations.
+pkgs provides package browsing, install/remove, unattended user-wide upgrades, Go tools, configurable recipes/skips, stream formatting, manifest export/inspection/restore and diagnostics. It requires Python 3.9+ and a supported native manager; Windows supports WinGet with structured PowerShell discovery. Install (named targets or accepted picker selections), upgrade and refresh authorize unattended execution with supported native confirmation flags. Remove/restore retain approval. See [package workflows](packages.md) for scopes, output, configuration and manifests. Its [application guide](../plugins/pkgs/README.md) explains these workflows. `pkgs uninstall NAME` removes selected packages; Dots checkout uninstall removes the installed application entry points and restores managed configuration. These are separate operations.
 
 Native Windows has Blastoff dispatch through the shared Python core, without Bash. Dots reuses Blastoff's native argument transport, preserving its `-help`/`-list`/`-theme` compatibility aliases and picker shell context. pkgs uses the native WinGet community backend, structured PowerShell discovery and explicit user/machine scopes. Native package pickers use shared Gum or a numbered fallback without Bash. Dots never translates paths or launches WSL automatically. Native PowerShell 5.1/7 and WSL runtime acceptance for this integration remain pending.
 

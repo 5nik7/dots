@@ -49,26 +49,9 @@ function Import-ScoopModule {
 }
 
 function Clear-Cache {
-  # add clear cache logic here
-  Write-Host 'Clearing cache...' -ForegroundColor Cyan
-
-  # Clear Windows Prefetch
-  Write-Host 'Clearing Windows Prefetch...' -ForegroundColor Yellow
-  Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
-
-  # Clear Windows Temp
-  Write-Host 'Clearing Windows Temp...' -ForegroundColor Yellow
-  Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
-
-  # Clear User Temp
-  Write-Host 'Clearing User Temp...' -ForegroundColor Yellow
-  Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
-
-  # Clear Internet Explorer Cache
-  Write-Host 'Clearing Internet Explorer Cache...' -ForegroundColor Yellow
-  Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
-
-  Write-Host 'Cache clearing completed.' -ForegroundColor Green
+  # The platform provider owns scope, review and unsupported-operation refusal.
+  & (Join-Path $env:DOTS 'bin/dots.ps1') cleanup run @args
+  $global:LASTEXITCODE = $LASTEXITCODE
 }
 
 function Edit-Profile { Edit-Item (Join-Path $env:PWSH 'profile.ps1') }
@@ -165,7 +148,15 @@ function tail {
 function df { get-volume }
 
 function mkcd {
-  param($dir) mkdir $dir -Force; Set-Location $dir
+  param([string]$Directory)
+  if (-not $Directory) { throw 'Usage: mkcd <directory>' }
+  $provider = $null; $drive = $null
+  $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(
+    $Directory, [ref]$provider, [ref]$drive)
+  if ($provider.Name -ne 'FileSystem') { throw 'mkcd requires a filesystem directory.' }
+  if ([IO.File]::Exists($target)) { throw ('mkcd: not a directory: ' + $Directory) }
+  [void][IO.Directory]::CreateDirectory($target)
+  Set-Location -LiteralPath $target -ErrorAction Stop
 }
 
 function sysinfo { Get-ComputerInfo }
@@ -201,7 +192,7 @@ Function Search-Alias {
 function Find-File {
   <#
     .SYNOPSIS
-        Finds a file in the current directory and all subdirectories. Alias: ff
+        Finds a file in the current directory and all subdirectories as a table.
     #>
   [CmdletBinding()]
   param (
@@ -421,46 +412,23 @@ function git_all {
 }
 
 function gup {
+  [CmdletBinding()]
   param(
     [Parameter(Position = 0)]
+    [AllowEmptyString()]
     [string]$Message,
-    [switch]$All
+    [switch]$All,
+    [switch]$Yes,
+    [switch]$DryRun
   )
-  $gitusername = git config get --global user.name
-  if (Test-Path .git) {
-    $remoteUrl = git remote get-url origin 2>$null
-    if (-not $remoteUrl -or ($remoteUrl -notmatch $gitusername)) {
-      # Write-Host "Remote does not contain username '$gitusername'. Cannot push or fetch from remote." -ForegroundColor Yellow
-      return
-    }
-    $commitMessage = if ($Message) { $Message } else { "Update @ $(Get-Date -Format 'MM-dd-yyyy HH:mm')" }
-    if ($All) {
-      git_all add .
-      # Check for staged changes
-      $status = git_all diff --cached --name-only
-      if ($status) {
-        git_all commit -m "$commitMessage"
-        git_all push
-      }
-      else {
-        Write-Host "No changes to commit." -ForegroundColor Yellow
-      }
-    }
-    else {
-      git add .
-      $status = git diff --cached --name-only
-      if ($status) {
-        git commit -m "$commitMessage"
-        git push
-      }
-      else {
-        Write-Host "No changes to commit." -ForegroundColor Yellow
-      }
-    }
-  }
-  else {
-    Write-Error 'This directory does not contain a .git directory'
-  }
+  if ($PWD.Provider.Name -ne 'FileSystem') { throw 'gup requires a filesystem directory.' }
+  $forward = @('git', 'publish', '-C', $PWD.Path, '--no-wiki')
+  if ($All) { $forward += '--all' }
+  if ($Yes) { $forward += '--yes' }
+  if ($DryRun) { $forward += '--dry-run' }
+  if ($PSBoundParameters.ContainsKey('Message')) { $forward += @('--message', $Message) }
+  & (Join-Path $env:DOTS 'bin/dots.ps1') @forward
+  $global:LASTEXITCODE = $LASTEXITCODE
 }
 
 function New-Backup {
@@ -471,7 +439,7 @@ function New-Backup {
   if ($InPlace) { $forward += '--in-place' }
   if ($Store) { $forward += @('--store-dir', (Join-Path $HOME '.bakstore')) }
   if ($PSCmdlet.ShouldProcess(($Target -join ', '), 'Back up with Dots')) {
-    & (Join-Path $env:DOTS 'bin/dots.ps1') @forward -- @Target
+    & (Join-Path $env:DOTS 'bin/dots.ps1') @forward '--' @Target
   }
 }
 
@@ -482,13 +450,21 @@ function Test-CommandExists {
 }
 
 function y {
-  $command = Get-Command yazi -CommandType Application -ErrorAction Stop
+  $command = Get-Command yazi -CommandType Application -TotalCount 1 -ErrorAction Stop
   $tempFile = [IO.Path]::GetTempFileName()
+  $result = 1
   try {
     & $command @args "--cwd-file=$tempFile"
+    $result = $LASTEXITCODE
     $cwd = [IO.File]::ReadAllText($tempFile).TrimEnd("`r", "`n")
-    if ($cwd -and (Test-Path -LiteralPath $cwd -PathType Container)) { Set-Location -LiteralPath $cwd }
-  } finally { Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue }
+    if ($result -eq 0 -and $cwd -and (Test-Path -LiteralPath $cwd -PathType Container)) {
+      Set-Location -LiteralPath $cwd -ErrorAction Stop
+    }
+  } catch { $result = 1; throw }
+  finally {
+    Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue
+    $global:LASTEXITCODE = $result
+  }
 }
 
 function Invoke-DotsFuzzyCompletion {
@@ -517,11 +493,47 @@ function gcam { & git commit -a -m @args }
 function gcad { & git commit -a --amend @args }
 function gst { & git status @args }
 function in_git { & git rev-parse --is-inside-work-tree 2>$null }
-function gitcheck { & git diff --check @args }
+function gitcheck {
+  $paths = @($args); $verbose = $false
+  if ($paths.Count -and $paths[0] -in @('-v', '--verbose')) {
+    $verbose = $true; $paths = @($paths | Select-Object -Skip 1)
+  }
+  $output = @(& git status --porcelain=v1 -z --untracked-files=normal --ignore-submodules=none '--' @paths)
+  $result = $LASTEXITCODE
+  if ($result -ne 0) { $global:LASTEXITCODE = $result; return }
+  $records = ($output -join "`n").Split([char]0)
+  $changed = @()
+  for ($index = 0; $index -lt $records.Count; $index++) {
+    $row = $records[$index]
+    if ($row.Length -lt 3) { continue }
+    $changed += $row.Substring(3)
+    if ($row.Substring(0, 2) -match '[RC]') { $index++ }
+  }
+  if ($verbose) { $changed }
+  $global:LASTEXITCODE = if ($changed.Count) { 0 } else { 1 }
+}
 function gitmodified { & git ls-files --modified @args }
 function gitdeleted { & git ls-files --deleted @args }
 function gituntracked { & git ls-files --others --exclude-standard @args }
-function gitsubmodule { & git submodule status @args }
+function gitsubmodule {
+  $output = @(& git status --porcelain=v2 -z --ignore-submodules=none '--' @args)
+  $result = $LASTEXITCODE
+  if ($result -ne 0) { $global:LASTEXITCODE = $result; return }
+  $records = ($output -join "`n").Split([char]0)
+  $changed = @()
+  for ($index = 0; $index -lt $records.Count; $index++) {
+    $row = $records[$index]
+    if (-not $row) { continue }
+    $count = switch ($row[0]) { '1' { 9 }; '2' { 10 }; 'u' { 11 }; default { 0 } }
+    if (-not $count) { continue }
+    $fields = $row -split ' ', $count
+    if ($fields.Count -eq $count -and $fields[2].StartsWith('S') -and
+        ($fields[1] -ne '..' -or $fields[2] -ne 'S...')) { $changed += $fields[-1] }
+    if ($row[0] -eq '2') { $index++ }
+  }
+  $changed
+  $global:LASTEXITCODE = if ($changed.Count) { 0 } else { 1 }
+}
 function fname { param([string]$Path) [IO.Path]::GetFileNameWithoutExtension($Path) }
 function fext { param([string]$Path) [IO.Path]::GetExtension($Path).TrimStart('.') }
 function .c { Set-Location -LiteralPath (Join-Path $HOME '.config') }
@@ -554,4 +566,17 @@ function lsa { la @args }
 function lla { Invoke-DotsListing @('-lha') $args }
 function lt { Invoke-DotsListing @('--tree', '--level=2', '--long', '--git') $args }
 function lta { Invoke-DotsListing @('--tree', '--level=2', '--long', '--git', '-a') $args }
-function ff { Find-File @args }
+function ff {
+  $command = Get-Command fzf -CommandType Application -TotalCount 1 -ErrorAction Ignore
+  if (-not $command) {
+    [Console]::Error.WriteLine('ff: fzf is unavailable; use Find-File SEARCH for a table.')
+    $global:LASTEXITCODE = 127
+    return
+  }
+  # Windows PowerShell defaults native pipeline input to ASCII. Scope UTF-8 to
+  # this invocation so literal filenames survive without changing the caller.
+  $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+  if ($MyInvocation.ExpectingInput) { $input | & $command @args }
+  else { & $command @args }
+  $global:LASTEXITCODE = $LASTEXITCODE
+}

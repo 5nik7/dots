@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Writes colored text to the console with optional boxing and padding.
 

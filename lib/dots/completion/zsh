@@ -77,9 +77,9 @@ _dots() {
 }
 if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then
   if (( ${+functions[compdef]} )); then
-    compdef _dots dots theme todo fonts bak dots-bak
+    compdef _dots dots theme todo fonts bak dots-bak gup linked lnkd cpwd pathout dirout isdir isfile fzcmd fzenv fzfd fzfig fzg fzopt fzpyfig fzrg fzrg3 cht httpGet www
     if (( ! ${+functions[_dots_theme_completion_load]} )); then
-      source "${${(%):-%x}:h}/theme.bash"
+      source "${${funcsourcetrace[1]%:*}:h}/theme.bash"
     fi
     _dots_theme_completion_load "${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current"
   fi

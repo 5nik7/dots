@@ -180,9 +180,18 @@ Anodize LOGO1/LOGO2 static-help parity and Preview/Extract reader handling use s
 
 Anodize hint/info/accent text gradients use the shared Python helper on native Windows and a builtin Bash counterpart on POSIX. Colors come from bounded published data or explicit candidate palettes. Palette result headers and draft review share the selected background/foreground from the logo onward. No native Windows destinations or shell startup paths change; native PowerShell rendering acceptance remains pending.
 
-Blastoff and pkgs absorption adds standalone PowerShell launchers and shared native routes/completion. The explicit Blastoff session opt-in forwards to the bundled launcher on 5.1/7 without importing an external module. pkgs package operations are an explicit native Windows exception (status 3), while help/version remain available. Native 5.1/7 and WSL acceptance remains pending; see [bundled application plan](bundled-applications.md).
+Blastoff and pkgs absorption adds standalone PowerShell launchers and shared native routes/completion. The explicit Blastoff session opt-in forwards to the bundled launcher on 5.1/7 without importing an external module. The earlier native package refusal was superseded by the WinGet community backend, structured discovery and explicit user/machine scope. Native package mutation and desktop acceptance remain separate gates; see [bundled application plan](bundled-applications.md) and [current parity work](overkill-parity.md).
 
-Codex attention notifications (2026-10-28): explicit native-Windows exception for the tmux/procfs worker and Termux device calls; no Windows destination or Bash invocation is added. Shared event/configuration logic remains Python-testable. Termux native fixtures do not establish native PowerShell execution or Linux/WSL visual acceptance. See the [focused notification plan](tmux-status-and-sessions.md#codex-attention-notifications-2026-10-28).
+Codex attention notifications (2026-10-28 historical slice): explicit native-Windows exception for the tmux/procfs worker and Termux device calls; no Windows destination or Bash invocation was added in that slice. Shared event/configuration logic remained Python-testable. Termux native fixtures do not establish native PowerShell execution or Linux/WSL visual acceptance. See the [focused notification plan](tmux-status-and-sessions.md#codex-attention-notifications-2026-10-28).
+
+The 2026-11-13 Overkill follow-up adds native same-user process identity, protected
+storage in the existing attention queue and private exact-event acknowledgement.
+It preserves unknown pane/focus and existing application notification ownership;
+no native worker or hook activation is installed. It also adds bounded Windows
+cleanup deletion/private receipts, native standalone utility adapters/inert
+completion and a supported WinRT lock-screen adapter. These source capabilities
+and their distinct fixture/native/desktop acceptance limits are recorded in the
+[Overkill follow-up](overkill-parity.md#native-adapter-follow-up-source-stage).
 
 ## Todo follow-up
 
@@ -194,6 +203,6 @@ Profile backend acceptance: shared registry/profile controllers and generated na
 
 ## Package workflow follow-up
 
-Portable pkgs `format` and `manifest` use the shared controller on native Windows. Static routes/options/file completion cover export/update/restore, Git publication `--update-packages` and setup `--packages`/`-Packages`. Manifest-refresh publication explicitly refuses native Windows with status 3; normal Git publication is unchanged. Package operations remain an explicit Windows exception (status 3); the optional setup stage refuses before configuration writes. Native Config uses APPDATA or explicit XDG_CONFIG_HOME. Actual PowerShell 5.1/7 stream, Unicode-path, Config undo and refusal acceptance remains pending; see [package workflow acceptance](pkgs-workflows.md).
+Portable pkgs `format` and `manifest` use the shared controller on native Windows. Static routes/options/file completion cover export/update/restore, Git publication `--update-packages` and setup `--packages`/`-Packages`. The earlier blanket Windows package/setup refusal is superseded by the WinGet adapter and explicit package preparation stage. Native Config uses APPDATA or explicit XDG_CONFIG_HOME. Actual package acquisition and native interactive acceptance remain separate from fixture evidence; see [package workflow acceptance](pkgs-workflows.md) and [current parity work](overkill-parity.md).
 
 Shared preference/import and Bak completion follow `plans/config-preferences-completion.md`: native route/controller and completion registration are updated; real Windows PowerShell 5.1/7 acceptance remains a named pending check on this Termux host.

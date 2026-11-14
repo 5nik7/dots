@@ -32,6 +32,10 @@ class WinGetTests(unittest.TestCase):
         with self.assertRaisesRegex(Error, 'not uniquely'): b.transaction('uninstall', ['Both.App'], True)
 
     def test_literal_transactions_pins_and_multiple_ids(self):
+        # Machine-scope construction is a fixture, not permission to elevate.
+        elevated = patch('pkgs_lib.winget.is_admin', return_value=True)
+        elevated.start()
+        self.addCleanup(elevated.stop)
         b = self.backend('machine')
         b.pins = {'Vendor.App': '1.0'}
         with patch('pkgs_lib.winget.bridge', side_effect=lambda action, **kw: {'packages':[row(kw['id'])]}):
@@ -47,6 +51,13 @@ class WinGetTests(unittest.TestCase):
         b.pins = {'Vendor.App': '9.0'}
         with patch('pkgs_lib.winget.bridge', return_value={'packages':[row()]}), self.assertRaisesRegex(Error, 'version is unavailable'):
             b.transaction('install', ['Vendor.App'], True)
+
+    def test_machine_scope_refuses_unelevated_before_query_or_mutation(self):
+        b = self.backend('machine')
+        with patch('pkgs_lib.winget.is_admin', return_value=False), \
+             patch('pkgs_lib.winget.bridge', side_effect=AssertionError('unexpected query')):
+            with self.assertRaisesRegex(Error, 'elevat'):
+                b.transaction('install', ['Vendor.App'], True)
 
     def test_manifest_scope_and_casefold(self):
         document = dict(schema=1, groups=[dict(manager='winget',scope='user',packages=[dict(name='Vendor.App', pin='1.0')])])

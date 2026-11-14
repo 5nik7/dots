@@ -415,13 +415,22 @@ source "$DOTS/shells/zsh/zshrc"
         self.assertEqual(p.stderr, '')
 
     def test_bash_portable_links(self): self.assert_portable_links('bash')
-    def test_zsh_portable_links(self): self.assert_portable_links('zsh')
+    def test_zsh_portable_links(self):
+        self.env['LC_ALL'] = 'C'
+        self.assert_portable_links('zsh')
+
+    def test_zsh_portable_links_utf8_locale(self):
+        self.env['LC_ALL'] = 'C.UTF-8'
+        self.assert_portable_links('zsh')
     def test_fish_portable_links(self): self.assert_portable_links('fish')
     def test_nu_portable_links(self): self.assert_portable_links('nu')
     def test_xonsh_portable_links(self): self.assert_portable_links('xonsh')
     def test_powershell_portable_links(self): self.assert_portable_links('powershell')
 
     def test_native_linked_startup(self):
+        # Ubuntu's system bashrc otherwise prints its first-use sudo hint.
+        # Suppress that host banner only in this owned home, not product output.
+        (self.home / '.hushlogin').touch()
         for shell in ('bash', 'zsh', 'fish', 'nu', 'xonsh'):
             with self.subTest(shell=shell):
                 exe = executable(shell)

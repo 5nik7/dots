@@ -12,7 +12,7 @@ import re
 import uuid
 
 from catalog import read_json
-from file_platform import state_root, check_object, native_link_text
+from file_platform import state_root, check_object, native_link_text, native_staging_suffix
 from transactions import Store, digest, exists, parents_safe
 
 ID = re.compile(r'[0-9a-f]{32}')
@@ -143,14 +143,14 @@ class BackupPlan:
             raise ValueError('backup source does not exist: ' + str(path))
         ident = uuid.uuid4().hex
         now = datetime.now(timezone.utc)
-        filename = path.name + '.' + now.strftime('%Y%m%dT%H%M%S.%fZ') + '.bak'
+        filename = path.name + '.' + now.strftime('%Y%m%dT%H%M%S.%fZ') + '.bak' + native_staging_suffix(path)
         parent = path.parent if self.location == 'adjacent' else self.path(self.directory / ident)
         if self.location == 'store' and self.guard(parent) is not None:
             raise ValueError('backup container is occupied')
         payload = parent / filename
         # No directory collision or implicit overwrite, even with a frozen clock.
         if exists(payload):
-            payload = parent / (path.name + '.' + now.strftime('%Y%m%dT%H%M%S.%fZ') + '-' + ident[:8] + '.bak')
+            payload = parent / (path.name + '.' + now.strftime('%Y%m%dT%H%M%S.%fZ') + '-' + ident[:8] + '.bak' + native_staging_suffix(path))
         if exists(payload):
             raise ValueError('backup destination is occupied')
         self.add({'path': str(payload), 'source': str(path)})

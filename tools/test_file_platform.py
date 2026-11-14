@@ -21,6 +21,98 @@ class FilePlatformTests(unittest.TestCase):
         self.source = self.root / '-source ü'
         self.source.write_bytes(b'original\r\n\x00bytes\n')
 
+    def test_link_target_identity_preserves_original_digest_and_literal_text(self):
+        link = self.root / 'owned link'
+        try:
+            link.symlink_to(self.source)
+        except OSError as error:
+            self.skipTest('native symbolic links unavailable: ' + str(error))
+        before = digest(link)
+        original = os.readlink(link)
+        self.assertTrue(file_platform.link_target_matches(link, self.source))
+        self.assertFalse(file_platform.link_target_matches(link, self.root / 'different'))
+        self.assertFalse(file_platform.link_target_matches(self.source, self.source))
+        self.assertEqual(os.readlink(link), original)
+        self.assertEqual(digest(link), before)
+        link.unlink()
+        link.symlink_to(self.source.name)
+        self.assertTrue(file_platform.link_target_matches(link, self.source.name))
+        self.assertFalse(file_platform.link_target_matches(link, self.source))
+
+    def test_windows_readlink_normalization_is_bounded(self):
+        normalize = lambda value: file_platform.native_link_text(value, windows=True)
+        self.assertEqual(normalize('\\\\?\\C:\\owned\\target'), 'C:\\owned\\target')
+        self.assertEqual(normalize('\\\\?\\UNC\\server\\share\\target'), '\\\\server\\share\\target')
+        for value in ('\\\\?\\GLOBALROOT\\Device\\target', '\\\\.\\C:\\owned',
+                      '..\\relative', 'C:\\owned\\..\\target'):
+            with self.subTest(value=value):
+                self.assertEqual(normalize(value), value)
+        original = '\\\\?\\C:\\owned\\target'
+        self.assertEqual(file_platform.native_link_text(original, windows=False), original)
+
+    def test_legacy_payload_layout_and_rejected_suffix(self):
+        target = self.root / 'legacy'
+        target.write_bytes(b'before')
+        before = digest(target)
+        store = Store(self.root / 'state')
+        result = store.apply('fixture', [{'path': str(target), 'text': 'after'}],
+                             {str(target): before}, retain=True)
+        entry = result['operations'][0]
+        self.assertNotIn('payload_suffix', entry)
+        self.assertEqual(store.payload(result['id'], 0, 'before').name, '0-before')
+        operations, guards, catalogs = store.inverse(result['id'])
+        store.apply('undo', operations, guards, catalogs=catalogs)
+        self.assertEqual(digest(target), before)
+        for suffix in ('/../../outside', '.exe/child', '.ps1', None):
+            with self.subTest(suffix=suffix), self.assertRaisesRegex(ValueError, 'payload suffix'):
+                store.payload(result['id'], 0, 'before', dict(entry, payload_suffix=suffix))
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows filename-derived executable mode')
+    def test_native_executable_backups_undo_and_drift(self):
+        for suffix in file_platform.WINDOWS_EXECUTABLE_SUFFIXES:
+            with self.subTest(suffix=suffix):
+                target = self.root / ('original' + suffix)
+                source = self.root / ('replacement' + suffix)
+                target.write_bytes(b'original executable')
+                source.write_bytes(b'replacement executable')
+                before, after = digest(target), digest(source)
+                store = Store(self.root / ('state' + suffix))
+                result = store.apply('fixture', [{'path': str(target), 'source': str(source)}],
+                                     {str(target): before, str(source): after}, retain=True)
+                self.assertEqual(digest(target), after)
+                self.assertEqual(result['operations'][0]['payload_suffix'], suffix)
+                self.assertEqual(digest(store.payload(result['id'], 0, 'before')), before)
+                target.write_bytes(b'changed after apply')
+                with self.assertRaisesRegex(ValueError, 'drift blocks undo'):
+                    store.inverse(result['id'])
+                target.write_bytes(b'replacement executable')
+                operations, guards, catalogs = store.inverse(result['id'])
+                store.apply('undo', operations, guards, catalogs=catalogs)
+                self.assertEqual(digest(target), before)
+                self.assertEqual(digest(source), after)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows filename-derived executable mode')
+    def test_native_executable_failed_publication_rolls_back(self):
+        targets = [self.root / name for name in ('first.exe', 'second.cmd')]
+        for target in targets:
+            target.write_bytes(b'original')
+        guards = {str(path): digest(path) for path in targets}
+        store = Store(self.root / 'state')
+        save = store.save
+        failed = False
+        def fail_after_first(doc):
+            nonlocal failed
+            save(doc)
+            if not failed and doc['status'] == 'applying' and any(e['phase'] == 'done' for e in doc['operations']):
+                failed = True
+                raise OSError('injected publication failure')
+        with patch.object(store, 'save', side_effect=fail_after_first):
+            with self.assertRaisesRegex(OSError, 'injected publication failure'):
+                store.apply('fixture', [{'path': str(path), 'text': 'replacement'} for path in targets], guards)
+        self.assertEqual({str(path): digest(path) for path in targets}, guards)
+        self.assertEqual(store.records()[0]['status'], 'rolled-back')
+        self.assertFalse(list(self.root.glob('*.dots-*')))
+
     def test_copy_readonly_file_and_directory_preserves_metadata(self):
         self.source.chmod(0o444)
         before = digest(self.source)

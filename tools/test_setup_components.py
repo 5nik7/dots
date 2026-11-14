@@ -39,14 +39,15 @@ class SetupComponents(unittest.TestCase):
             files = self.setup(['files'], ['dots:example'])
             files.apply('install')
             self.assertTrue(self.target.is_symlink())
-            self.assertTrue((self.home/'.local/bin/dots').exists())
+            launcher = self.home/'.local/bin'/('dots.ps1' if os.name == 'nt' else 'dots')
+            self.assertTrue(launcher.exists())
             repeat = self.setup(['files'])
             self.assertEqual(repeat.apply('install')['status'], 'unchanged')
             remove = Installation(self.repo)
             remove.plan_uninstall(['files'])
             remove.apply('uninstall')
             self.assertFalse(self.target.exists())
-            self.assertTrue((self.home/'.local/bin/dots').exists())
+            self.assertTrue(launcher.exists())
             self.assertEqual(len(self.receipt()['entries']), 1)
 
     def test_unknown_or_inactive_resource_refused_before_mutation(self):

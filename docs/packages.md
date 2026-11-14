@@ -1,6 +1,14 @@
 # Package workflows
 
-`pkgs` and `dots pkgs` share the bundled core on Termux, Linux, WSL and native Windows. Native Windows uses WinGet only; Dots never launches WSL.
+`pkgs` and `dots pkgs` share the bundled core on Termux, Linux, WSL and native Windows.
+Windows defaults to WinGet and also supports explicit npm, uv-tool, pip, gem and
+Go managers when their native runtimes are available. Dots never launches WSL.
+Known npm/RubyGems script launchers run through native Node/Ruby with literal
+argument arrays; unknown batch or PowerShell shims are refused. Pip uses the
+executing Python interpreter. POSIX system managers remain unavailable natively.
+Fixtures verify transport and scope; installing/upgrading real host packages
+requires its own acceptance. An unavailable ownership provider cannot authorize
+source cleanup, and filesystem undo cannot remove installed packages.
 
 ## Upgrade and scope
 

@@ -1,5 +1,6 @@
 """Explicit irreversible cleanup, with per-rule verified durable subtotals."""
 from datetime import datetime, timezone
+from contextlib import ExitStack
 from pathlib import Path
 import os
 import time
@@ -19,17 +20,23 @@ def available(path):
     return shutil.disk_usage(path).free
 
 
-def run(adapter, targets, groups, issues, store, confirm, progress=lambda *args: None, inspect=references):
+def run(adapter, targets, groups, issues, store, confirm, progress=lambda *args: None, inspect=None):
+    if not adapter.can_delete:
+        raise ValueError(adapter.deletion_reason)
+    inspect_override = inspect
+    inspect = inspect or getattr(adapter,'references',references)
+    inventory_target = getattr(adapter,'inventory',inventory)
+    remove_target = getattr(adapter,'delete_entries',delete_entries)
     with sequence('Cleanup run', 2) as phases:
         started = time.monotonic()
-        report = dict(schema=1, id=None, platform='termux', started=now(), status='running',
+        report = dict(schema=1, id=None, platform=adapter.platform, started=now(), status='running',
                       selected_groups=list(groups), groups=[], issues=list(issues), totals=totals([]),
                       available_before=available(adapter.boundary))
         locked = False
         try:
             with phases.step('Process cleanup groups'), sequence('Cleanup groups', len(groups), unit='group') as selected:
                 for group in groups:
-                    with selected.step(group):
+                    with selected.step(group), ExitStack() as guards:
                         members = [target for target in targets if target.group == group]
                         if not members:
                             continue
@@ -49,6 +56,8 @@ def run(adapter, targets, groups, issues, store, confirm, progress=lambda *args:
                         store.write(report)
                         # Preflight the entire approved group before its first mutation.
                         try:
+                            if hasattr(adapter,'guard'):
+                                guards.enter_context(adapter.guard(members,inspect=inspect_override))
                             active, unknown = inspect([target.path for target in members])
                             if active or unknown:
                                 raise ValueError('active or uninspectable processes; group retained')
@@ -56,7 +65,7 @@ def run(adapter, targets, groups, issues, store, confirm, progress=lambda *args:
                                 for protected in (Path.cwd().resolve(), Path(__file__).resolve(), store.directory):
                                     if inside(protected, target.path):
                                         raise ValueError('target contains the working directory, executing code or receipts')
-                                if inventory(target, adapter.boundary) != target.entries:
+                                if inventory_target(target, adapter.boundary) != target.entries:
                                     raise ValueError('changed since scan: ' + str(target.path))
                         except (ValueError, OSError) as error:
                             row.update(status='blocked', reason=str(error))
@@ -75,13 +84,13 @@ def run(adapter, targets, groups, issues, store, confirm, progress=lambda *args:
                                         active, unknown = inspect([target.path])
                                         if active or unknown:
                                             raise ValueError('target became busy or process inspection failed')
-                                        if inventory(target, adapter.boundary) != target.entries:
+                                        if inventory_target(target, adapter.boundary) != target.entries:
                                             raise ValueError('target changed before deletion')
                                         progress('Cleaning ' + target.rule)
                                         if native:
                                             adapter.native(target)
                                         else:
-                                            delete_entries(target, adapter.boundary, progress, confirmed)
+                                            remove_target(target, adapter.boundary, progress, confirmed)
                                         result['status'] = 'completed'
                                     except KeyboardInterrupt:
                                         phases.cancel()
@@ -94,7 +103,7 @@ def run(adapter, targets, groups, issues, store, confirm, progress=lambda *args:
                                     if not native:
                                         result['deleted'] = measure(confirmed)
                                     try:
-                                        after = inventory(target, adapter.boundary)
+                                        after = inventory_target(target, adapter.boundary)
                                         result['remaining'] = measure(after)
                                         if native and result['status'] == 'completed':
                                             result['deleted'] = removed(target.entries, after)

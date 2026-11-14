@@ -10,7 +10,7 @@ import sys
 LIB = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(LIB / 'files'))
 from transactions import Store, digest, exists, parents_safe
-from file_platform import state_root
+from file_platform import state_root, link_target_matches
 from platform_info import detect
 
 
@@ -235,7 +235,7 @@ class Plan:
         elif 'data' in operation and path.is_file() and not path.is_symlink():
             if json.loads(path.read_text()) == operation['data'] and 'font_registry' not in operation: return
         elif operation.get('delete') and before is None and 'font_registry' not in operation: return
-        elif 'link' in operation and path.is_symlink() and os.readlink(path) == operation['link']: return
+        elif 'link' in operation and link_target_matches(path, operation['link']): return
         row = dict(path=str(path), **operation)
         existing = next((i for i, op in enumerate(self.operations) if op['path'] == str(path)), None)
         if existing is None: self.operations.append(row)

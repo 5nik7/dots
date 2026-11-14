@@ -1,5 +1,14 @@
 # Dots shell environment
 
+Nu and Xonsh completion use the private shared Python completion bridge, including
+standalone application names and generated theme aliases. They resolve state
+through the shared platform roots, not a hard-coded POSIX path, and do not launch
+Bash on Windows. Zsh source discovery and human Unicode output retain literal
+paths under both C and UTF-8 locales. Native Nu/Xonsh engine acceptance remains
+pending where those optional shells are absent; bridge fixtures alone do not
+establish interactive insertion behavior. See the
+[current parity evidence](../plans/overkill-parity.md).
+
 `dots init [bash|zsh|fish|nu|xonsh|powershell]` emits a hook for **Dots integration
 only**. The adapters under `lib/dots/shell/` own settings, derived paths, theme
 variables, Dots completions and prompt refresh. Personal aliases, prompt choice,

@@ -10,7 +10,10 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PWSH = shutil.which('pwsh') or (shutil.which('powershell') if os.name == 'nt' else None)
+PWSH = (shutil.which(os.environ['DOTS_TEST_POWERSHELL']) if os.environ.get('DOTS_TEST_POWERSHELL')
+        else shutil.which('pwsh') or (shutil.which('powershell') if os.name == 'nt' else None))
+if os.environ.get('DOTS_TEST_POWERSHELL') and not PWSH:
+    raise SystemExit('required PowerShell engine unavailable: ' + os.environ['DOTS_TEST_POWERSHELL'])
 
 
 class Adapters(unittest.TestCase):
@@ -22,15 +25,10 @@ class Adapters(unittest.TestCase):
         self.repo=self.base/'repo'
         self.home.mkdir()
         self.repo.mkdir()
-        shutil.copytree(ROOT/'lib/dots/files',self.repo/'lib/dots/files')
-        for name in ('progress.py','interaction.py','ui.bash','ui.ps1','bootstrap-ui.sh',
-                     'resources.py','resources.bash','resources.tsv',
-                     'dispatch.bash','catalog.bash','complete.bash','init.bash','native.py',
-                     'cli.py','command_metadata.py','help.ps1','environment.py','platform_info.py','profiles.py','profile_config.py','profile_views.py','style_config.py','config_values.py','style_catalog.py','row_layout.py'):
-            shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
-        shutil.copytree(ROOT/'lib/dots/shell',self.repo/'lib/dots/shell')
-        shutil.copytree(ROOT/'lib/dots/metadata',self.repo/'lib/dots/metadata')
-        shutil.copytree(ROOT/'lib/dots/completion',self.repo/'lib/dots/completion')
+        # Copy the controller dependency closure; this fixture deliberately has
+        # no theme publisher or application payloads to activate.
+        shutil.copytree(ROOT/'lib/dots',self.repo/'lib/dots',
+                        ignore=shutil.ignore_patterns('themes','__pycache__','*.pyc'))
         (self.repo/'bin').mkdir()
         for name in ('dots','dots.ps1','dots-files-install','dots-files-uninstall','dots-files-check','dots-files-stash','dots-files-edit','dots-files-repair'):
             shutil.copy2(ROOT/'bin'/name,self.repo/'bin'/name)
@@ -51,10 +49,31 @@ class Adapters(unittest.TestCase):
             self.env.pop(key, None)
 
     def run_command(self, argv, ok=True, **env):
-        result=subprocess.run(list(map(str,argv)),env=dict(self.env,**env),capture_output=True,text=True,timeout=30)
+        result=subprocess.run(list(map(str,argv)),env=dict(self.env,**env),stdin=subprocess.DEVNULL,
+                              capture_output=True,text=True,timeout=30)
         if ok:self.assertEqual(result.returncode,0,result.stderr+'\n'+result.stdout)
         else:self.assertNotEqual(result.returncode,0)
         return result
+
+    def native_home_baseline(self):
+        # These engines create their own StartupProfileData files even with
+        # -NoProfile. Establish that runtime baseline before Dots previews.
+        for engine in dict.fromkeys(filter(None, (PWSH, shutil.which('powershell'), shutil.which('pwsh')))):
+            self.run_command([engine,'-NoProfile','-NonInteractive','-Command',
+                              'Import-Module Microsoft.PowerShell.Management,Microsoft.PowerShell.Utility; exit 0'])
+        return self.nonruntime_home_paths()
+
+    def nonruntime_home_paths(self):
+        # Both native engines may lazily create these files on module discovery,
+        # including from the nested no-profile engine used to discover $PROFILE.
+        # Do not exempt arbitrary AppData/config/state files from preview checks.
+        allowed = {'AppData', 'AppData/Local', 'AppData/Roaming', 'AppData/Local/Microsoft'}
+        for base in ('AppData/Local/Microsoft/PowerShell',
+                     'AppData/Local/Microsoft/Windows/PowerShell'):
+            allowed.update((base, base+'/StartupProfileData-NonInteractive', base+'/telemetry.uuid'))
+        allowed.add('AppData/Local/Microsoft/Windows')
+        return sorted(path for path in self.home.rglob('*')
+                      if path.relative_to(self.home).as_posix() not in allowed)
 
     @unittest.skipIf(os.name=='nt','POSIX shell entry points')
     def test_shell_entry_points_and_setup_routing(self):
@@ -145,10 +164,11 @@ class Adapters(unittest.TestCase):
 
     @unittest.skipUnless(PWSH, 'PowerShell unavailable; native repair acceptance pending')
     def test_native_repair_route(self):
+        before = self.native_home_baseline()
         cmd = [PWSH, '-NoProfile', '-File', str(self.repo/'bin/dots.ps1'), 'files', 'repair']
         preview = json.loads(self.run_command([*cmd, '--dry-run', '--json']).stdout)
         self.assertEqual(preview['counts']['eligible'], 1)
-        self.assertFalse(list(self.home.iterdir()))
+        self.assertEqual(self.nonruntime_home_paths(), before)
         result = self.run_command([*cmd, '--yes', '--json'], ok=False) if os.name == 'nt' and not self.link_capability() else self.run_command([*cmd, '--yes', '--json'])
         if result.returncode:
             self.assertIn('symbolic links unavailable', result.stderr)
@@ -211,6 +231,7 @@ sys.exit(install.main(['install','--yes']))
 
     @unittest.skipUnless(PWSH,'PowerShell unavailable')
     def test_native_powershell_wrappers(self):
+        before = self.native_home_baseline()
         def quote(path):return "'"+str(path).replace("'","''")+"'"
         # Override the host profile explicitly; never inspect the runner's profile.
         prefix="$PROFILE = "+quote(self.home/'profile.ps1')+"; $PROFILE | Add-Member -NotePropertyName CurrentUserCurrentHost -NotePropertyValue $PROFILE -Force; "
@@ -219,12 +240,12 @@ sys.exit(install.main(['install','--yes']))
             json.loads(out.stdout)
         out=self.run_command([PWSH,'-NoProfile','-NonInteractive','-Command',prefix+'& '+quote(self.repo/'install.ps1')+' -DryRun -Verbose; exit $LASTEXITCODE'])
         self.assertIn('Would create',out.stderr)
-        self.assertFalse(list(self.home.iterdir()))
+        self.assertEqual(self.nonruntime_home_paths(), before)
 
     @unittest.skipUnless(os.name=='nt','Native Windows capability check')
     def test_native_windows_link_or_explicit_refusal(self):
         cmd=[sys.executable,'-B',self.repo/'lib/dots/files/install.py','install','--yes','--json']
-        result=subprocess.run(list(map(str,cmd)),env=self.env,capture_output=True,text=True)
+        result=subprocess.run(list(map(str,cmd)),env=self.env,stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=30)
         target=self.home/'.config/example/settings'
         if result.returncode:
             self.assertIn('symbolic links unavailable',result.stderr)

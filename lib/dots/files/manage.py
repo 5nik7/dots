@@ -606,7 +606,7 @@ def main():
                             continue
                         if current != entry['after'] and current is not None and not args.backup:
                             raise ValueError('changed restore target requires --backup')
-                        source = manager.store.root / identity / f'{i}-before'
+                        source = manager.store.payload(identity, i, 'before', entry)
                         if digest(source) != entry['before']:
                             raise ValueError('backup failed verification')
                         ops.append({'path': path, 'source': str(source)})

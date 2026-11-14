@@ -123,12 +123,14 @@ def query(args, timeout=45, env=None, cwd=None):
     start = time.monotonic()
     proc = None
     try:
-        proc = subprocess.Popen([str(x) for x in args], text=True, stdin=subprocess.DEVNULL,
+        from .native_process import argv
+        environment = {**os.environ, 'LC_ALL': 'C', 'NO_COLOR': '1', **(env or {})}
+        proc = subprocess.Popen(argv(args, environment), text=True, stdin=subprocess.DEVNULL,
                                 encoding='utf-8' if os.name == 'nt' else None,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 start_new_session=grouped,
                                 cwd=cwd,
-                                env={**os.environ, 'LC_ALL': 'C', 'NO_COLOR': '1', **(env or {})})
+                                env=environment)
         try:
             stdout, stderr = proc.communicate(timeout=seconds)
         except BaseException:

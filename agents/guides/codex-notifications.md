@@ -1,5 +1,19 @@
 # Codex Attention Maintenance
 
+Native Windows uses `lib/dots/codex_attention_native.py` for same-user process
+identity and protected storage under the existing attention root. The bridge's
+private `context`/`pending` inspection and exact `ack-event` interface do not
+establish pane visibility or focus. Keep those values unknown and preserve the
+application-owned notifier; do not activate a worker, chain previous callbacks
+or install hooks from source-test success. Run
+`python3 -B tools/test_codex_attention_native.py` in owned roots for native ACL,
+handle, SQLite and exact-event checks. Real hooks, trust, delivery and continuity
+remain a separately reviewed acceptance stage.
+The new private `pending`/`ack-event` operations refuse on POSIX before opening
+SQLite. Do not replace that boundary with a `mode=ro` connection: reading a WAL
+database can create a shared-memory sidecar. Existing POSIX event/acknowledgement
+paths remain owned by their established tmux adapter.
+
 The five toast fields are exposed as `apps.codex.toast.{fg,bg,position,short,bg_opacity}`
 through the existing Config CLI/popup, retaining the native TOML owner. See
 [toast configuration](../../docs/configuration.md#codex-warning-toast). Include

@@ -27,7 +27,7 @@ def global_options(reader):
     if name not in reader.names('lib/dots/'):
         return []  # Small documentation fixtures can omit the root frontend.
     text = reader.read(name).decode()
-    match = re.search(r'^DOTS_GLOBAL_OPTIONS=\(\n(.*?)^\)', text, re.M | re.S)
+    match = re.search(r'^DOTS_GLOBAL_OPTIONS=\(\r?\n(.*?)^\)', text, re.M | re.S)
     if not match:
         raise ValueError('missing static global option metadata')
     fields = []

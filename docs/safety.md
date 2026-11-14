@@ -13,6 +13,19 @@ Other command families retain their existing backup/rollback rules. Incomplete
 cleanup records retain only verified subtotals and are never replayed.
 See [scope and safeguards](cleanup.md).
 
+Windows cleanup pins every approved target and ancestor before deleting an exact
+entry through its open handle. It refuses reparse points, foreign ownership or
+write access, nonlocal/non-NTFS volumes, read-only/system/offline entries and
+multiply-linked files. Restart Manager is queried only during an approved run;
+no shutdown/restart API is called. Query failure or uncertain references retain
+the group. Its transient session metadata is an external effect, so actual API
+acceptance is separate from automated handle fixtures. New Windows receipts use
+private append-only JSONL snapshots in the same cleanup state directory. Each
+snapshot is flushed before mutation; an interrupted or failed append never
+licenses replay and may leave a conservative lower bound excluding later removals.
+Retain the JSONL-capable reader after a live run; rolling back source does not
+undo cleanup or safely discard its receipt history.
+
 
 ## Clipboard runtime state
 
@@ -310,6 +323,19 @@ switch does not imply wallpaper permission. Only explicit `bg` actions or
 
 ## Managed File Transactions
 
+Windows executable staging and retained backups preserve recognized executable
+suffixes because Windows derives executable mode bits from filenames. Journal
+payload suffixes are validated against a closed set; arbitrary path fragments
+are refused. Legacy unsuffixed journals remain readable, and stored digest
+contracts remain unchanged. Native link-target comparisons normalize only
+recognized drive/UNC substitution prefixes from observed `readlink` text, never
+arbitrary requested device paths or historical digest values.
+
+After a live operation creates suffixed executable payloads, retain the updated
+transaction reader until those operations have been undone or their recovery
+obligations are finished. Reverting source alone to an older reader would make
+it look for unsuffixed payloads; it is not a complete live rollback.
+
 File-ID changes use the same retained Store transaction for the core registry, every affected profile manifest, current receipt identities and any explicitly requested live operations. Preview guards cover all contributing manifests and identity history. Rename-only edits preserve live objects, including drifted or missing sources; live reconciliation keeps its existing source/target checks. Retained old IDs cannot be reused. Original receipt backup pointers survive, and historical journals are never rewritten. Other installations resolve old receipt IDs from registry history without cross-platform state writes. Undo/recovery restore the batch with normal drift protection; they never force stale data.
 
 `files stash`/`files edit` submit complete guarded catalog/link/receipt batches to
@@ -568,6 +594,17 @@ Blastoff/pkgs installation and removal use the shared Dots file transaction and 
 `dots files migrate-apps` is read-only unless `--yes` is supplied; `--dry-run` takes precedence. Known receipt paths are constrained before hash verification and all planned inputs are guarded. Replacement and retirement share retained backups, rollback and the installation baseline. Unsupported/edited ownership blocks apply; unknown payloads and existing recovery data are retained. No old uninstaller, package manager, theme publication or unrelated catalog installation runs. See [migration boundaries](plugins.md#legacy-application-migration).
 
 ## Codex attention bridge
+
+Native Windows attention storage requires a protected current-user/SYSTEM ACL
+and refuses unsafe existing directories, reparse points and multiply-linked
+files. It never repairs live ACLs automatically. PID/creation-time identity does
+not establish a visible terminal pane or focus, so native observations cannot
+automatically acknowledge or suppress events. The private exact-event
+acknowledgement revalidates the thread, event and expiry. Windows recording is
+marker-gated, stores no excerpt and does not invoke previous notify commands;
+the application's existing notification owner remains authoritative. Hook
+installation/trust, real delivery and remote-session continuity require separate
+activation acceptance.
 
 Config edits of toast and vibration fields use the existing Store, comment-preserving
 TOML edits, bounded regular-file reads, stale guards and retained undo. They

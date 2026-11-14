@@ -127,10 +127,13 @@ def npm_progress_environment(command, environment):
 
 def run(command, cfg, *, unattended=False, env=None, data=False):
     command = list(command)
-    try: tty = open('/dev/tty', 'r')
-    except OSError: tty = None
+    if os.name == 'nt':
+        tty = sys.stdin if sys.stdin.isatty() else None
+    else:
+        try: tty = open('/dev/tty', 'r')
+        except OSError: tty = None
     terminal_state = None
-    if tty is not None:
+    if tty is not None and os.name != 'nt':
         try:
             import termios
             try: terminal_state = termios.tcgetattr(tty)
@@ -152,7 +155,8 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
             pip_progress_environment(command, environment)
             npm_progress_environment(command, environment)
             observer.begin(command)
-        proc = subprocess.Popen(command, stdin=stdin, stdout=subprocess.PIPE if capture else stdout,
+        from .native_process import argv
+        proc = subprocess.Popen(argv(command, environment), stdin=stdin, stdout=subprocess.PIPE if capture else stdout,
                                 stderr=subprocess.PIPE if capture else sys.stderr, env=environment,
                                 start_new_session=isolated)
         if not capture: return proc.wait()
@@ -192,7 +196,9 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
         if proc:
             try:
                 if isolated: os.killpg(proc.pid, signal.SIGINT)
-                elif proc.poll() is None: proc.send_signal(signal.SIGINT)
+                elif proc.poll() is None:
+                    if os.name == 'nt': proc.terminate()
+                    else: proc.send_signal(signal.SIGINT)
                 try: proc.wait(timeout=2)
                 except subprocess.TimeoutExpired: pass
                 if isolated: os.killpg(proc.pid, signal.SIGKILL)
@@ -206,4 +212,4 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
             if terminal_state is not None:
                 try: termios.tcsetattr(tty, termios.TCSANOW, terminal_state)
                 except (OSError, termios.error): pass
-            tty.close()
+            if tty is not sys.stdin: tty.close()

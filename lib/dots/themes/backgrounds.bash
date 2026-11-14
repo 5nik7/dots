@@ -18,7 +18,7 @@ dt_bg_preflight() {
   DT_BG_COMMAND=()
   if [[ ${TERMUX_VERSION:-} && ${PREFIX:-} == */usr ]]; then
     DT_BG_COMMAND=(termux-wallpaper -f "$file"); (( ! locked )) || DT_BG_COMMAND+=(-l)
-  elif ((locked)); then dt_error 'lock-screen wallpaper is Android-only'; return 1
+  elif ((locked)); then dt_error 'lock-screen wallpaper requires Termux or native Windows PowerShell'; return 1
   elif [[ ${WSL_DISTRO_NAME:-} || ${WSL_INTEROP:-} || ${kernel,,} == *microsoft* ]]; then dt_error 'WSL wallpaper changes are unavailable'; return 1
   elif [[ ${OS:-} == Windows_NT || ${OSTYPE:-} == msys* || ${OSTYPE:-} == cygwin* ]]; then dt_error 'native Windows wallpaper changes are unavailable'; return 1
   elif [[ ${WAYLAND_DISPLAY:-} ]]; then DT_BG_COMMAND=(swww img "$file")
