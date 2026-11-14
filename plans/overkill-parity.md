@@ -1,6 +1,6 @@
 # Overkill Windows and WSL parity
 
-Status: source implementation and isolated verification; Windows activation packets 1–2 completed, remaining activation pending. Six native Termux fixture suites accepted at `b6daf0f7` on 2026-11-14; broader return and live acceptance remain pending. Baseline: clean Windows
+Status: source implementation and isolated verification; Windows activation packets 1–2 completed and packet 3 skill links restored, remaining activation pending. Six native Termux fixture suites accepted at `b6daf0f7` on 2026-11-14; broader return and live acceptance remain pending. Baseline: clean Windows
 `C:\Users\njen\dots` and Ubuntu `/home/njen/dots`, both at
 `800988ea331c132f29eaf5b645a00b068e38c96a`, audited 2026-11-13 Pacific.
 Windows Terminal Preview is the selected native terminal. Keep its profiles,
@@ -14,8 +14,10 @@ Do not modify the live WSL checkout or synchronize Git implicitly. No commits,
 pushes, worktrees, Todo changes, live startup, packages, services, registry,
 themes or clipboard changes are included. Repository link restoration and Git
 configuration changes require their separately reviewed activation packet.
-The subsequent explicit approval authorizes packets 1–2 only; their completed
-live effects and recovery records are documented below.
+The first subsequent explicit approval authorized packets 1–2 only. A later
+explicit approval authorized packet 3's 29 Windows repository skill links;
+their completed live effects and recovery records are documented below. This
+does not authorize packets 4–6 or a Git symlink-policy change.
 
 Subsequent explicit authorization also covered committing/pushing the coherent
 source repairs to GitHub `main`, and the phone's bounded fast-forward from
@@ -139,7 +141,9 @@ Re-enable these two workflows after isolated repairs and successful explicit man
 - [x] Harden and preflight the next profile/preferences/environment and bounded
   Git return batch; native Termux execution remains pending below.
 - [x] Rehearse packet 3 with all 29 skill links in an owned native Windows
-  transaction, including interruption/recovery; live restoration is unapproved.
+  transaction, including interruption/recovery.
+- [x] Apply the separately approved packet 3 with retained backups; verify all
+  links, unchanged repeat and native PowerShell undo previews.
 
 ### Profile and Git return preflight — 2026-11-14
 
@@ -220,7 +224,7 @@ desktop consumers and live application acceptance remain subsequent gates.
 
 ### Packet 3 refreshed review — 2026-11-14
 
-**Proposed; not activated.** Native Windows read-only inventory at `358b939f`
+**Historical review; subsequently approved and applied below.** Native Windows read-only inventory at `358b939f`
 finds all 72 tracked symlink entries materialized as exact plain-text Git blobs.
 Only the 29 `.agents/skills/<name>` entries are selected. Their canonical
 `.codex/skills/<name>/SKILL.md` files exist; none of the discovery paths currently
@@ -244,14 +248,14 @@ Developer Mode, elevation, Git configuration/index/refs or canonical skill files
 Future checkouts may materialize placeholders again while that Git setting
 remains false; changing that policy is separate work.
 
-After separate approval, recheck every placeholder byte/hash, index blob,
+The reviewed apply procedure requires rechecking every placeholder byte/hash, index blob,
 contained canonical target and ordinary parent, then use the existing managed
 transaction Store at `C:\Users\njen\AppData\Local\dots` for these 29 guarded
 operations. Retain exact original bytes and the returned transaction ID. A
 second unchanged plan must yield 29 no-ops without new journals. Review
 `dots files undo ID --dry-run --json` before a drift-refusing undo; never force
 through changed links or traverse/delete canonical target directories. No live
-transaction ID exists yet. Fresh CLI skill discovery is an independent final
+transaction ID existed at review time. Fresh CLI skill discovery is an independent final
 gate; the [official skills documentation](https://learn.chatgpt.com/docs/build-skills)
 describes repository `.agents/skills` and `/skills` inspection.
 
@@ -264,6 +268,81 @@ and post-apply wrong-link drift refusal without mutation. Reports and raw log
 remain in that evidence root under `store-native-validation-dt_wptwd/report.json`
 and `store-validation.log`. All live placeholders and `.git/config` hashes remain
 unchanged. This validates the proposed mechanics, not live Codex discovery.
+
+### Approved packet 3 activation — 2026-11-14
+
+The user explicitly approved Windows packet 3 after reviewing the frozen
+29-entry plan and owned transaction rehearsal. At source revision
+`1c2154177330fdda270c290a2393080f48cb098b`, the lead revalidated the plan digest,
+every Git mode/blob and exact placeholder byte sequence, ordinary parent paths,
+contained canonical directories/SKILL hashes, unchanged transaction engine and
+Git configuration/index. The intervening source commit changed no selected skill
+or transaction inputs. No unfinished Store transaction was present.
+
+Native Windows nonadministrator apply completed at 2026-11-14 22:24 UTC:
+
+- Transaction and retained backup ID: `9ebe9c7e05a94f209c4c3343e0f0f03b`.
+- Store: `C:\Users\njen\AppData\Local\dots`.
+- Exactly 29 `.agents/skills/<name>` placeholders became relative native directory
+  symlinks to the matching `.codex/skills/<name>` directories. Each linked
+  `SKILL.md` is traversable and byte-identical to its canonical file.
+- All 43 excluded tracked links, canonical skill contents, `.git/config` and the
+  Git index remained unchanged. The tracked worktree remained clean; the two
+  pre-existing untracked `.codex-attachments` images were preserved.
+- The repeated classification produced 29 no-ops. Store returned `unchanged`
+  without a new transaction or journal modification.
+- Inverse planning verified all 29 exact original before-images in reverse
+  operation order. Public `files undo --dry-run --json` passed in native
+  Windows PowerShell 5.1 and stable PowerShell 7 with 29 items, exit 0 and empty
+  stderr; journal hashes were unchanged. Undo was not executed.
+
+The guarded helper ran with Python `-B`; no bytecode, canonical source, Git
+configuration/index/ref, Developer Mode, elevation, package, theme, service or
+personal-shell changes were part of this activation. The native CLI previews
+used no-profile engines and child-only state selection, not personal startup.
+The current Git symlink policy remains false; a future checkout can rematerialize
+placeholders. This known limitation is separate from the completed restoration.
+
+Evidence stays under the previously recorded
+`dots-windows-skill-audit-doydvovp` root: `packet3-preflight.json`,
+`packet3-applied.json`, `packet3-verification.json`, `packet3-undo-preview.json`,
+`packet3-native-undo-preview.json` and both engines' raw preview streams. The
+retained transaction contains all original bytes. Recovery is:
+
+```powershell
+dots files undo 9ebe9c7e05a94f209c4c3343e0f0f03b --dry-run --json
+# Only when rollback is wanted, after reviewing the preview:
+dots files undo 9ebe9c7e05a94f209c4c3343e0f0f03b --yes --backup
+```
+
+Select the recorded Windows state root if a child environment overrides
+`XDG_STATE_HOME`; do not substitute WSL state. Undo refuses later link drift and
+restores placeholders without deleting the canonical directories. Keep retained
+recovery payloads until the rollback obligation ends.
+
+This is a Windows working-tree representation change. Git skill blobs, shared
+defaults, configuration precedence and Termux behavior are unchanged; the prior
+Termux prompt requiring `1c215417` still applies without an additional phone gate.
+Native fresh-process Codex discovery is recorded separately from filesystem
+traversal; current receiving-session metadata alone is not acceptance.
+
+An independent native inspection confirmed Codex CLI **0.169.0**, using the
+direct standalone AMD64 executable rather than an updating wrapper. Version,
+help and protocol-schema commands ran in empty, credential-free temporary roots.
+Actual user configuration has zero skill exclusions; repository
+`.codex/config.toml` is absent. The independent link check also verified 29/29
+canonical byte matches. Evidence is retained at
+`%TEMP%/dots-codex-skills-probe-kbgtqm5e` in `probe-report.json`,
+`prepared-protocol.jsonl` and `restored-link-check.json`.
+
+**Pending user check:** open a fresh native Windows Codex CLI in
+`C:\Users\njen\dots`, run `/skills` (or use `$`) and confirm the repository
+skills appear. No model task is needed. The programmatic `skills/list` schema
+was verified, but app-server was not started: release-matched startup includes
+an immediate online model-catalog refresh and plugin tasks, so a metadata-only
+RPC would not itself bound those effects. No personal Codex configuration,
+authentication, memory store, hooks or integrations were changed. Filesystem
+activation is complete; fresh personal picker visibility remains unverified.
 
 ## Delivery and verification contract
 
@@ -392,7 +471,8 @@ and runner are retained under the test-owned temporary directory
 ## Concrete live review packets
 
 Packets 1–2 were subsequently approved and completed; see the activation record
-below. Packets 3–6 remain unexecuted.
+below. Packet 3's skill restoration was separately approved and applied in the
+record above. Packets 4–6 remain unexecuted.
 
 1. **Windows core launchers.** Actual read-only preview:
    `python -B lib/dots/files/install.py install --component core --dry-run --offline --json`.
@@ -422,7 +502,7 @@ below. Packets 3–6 remain unexecuted.
    A fresh CLI session must verify skill discovery afterward. Existing receiving
    session skill visibility does not establish this gate. The [refreshed packet](#packet-3-refreshed-review--2026-11-14)
    selects only the 29 skill links and records the native transaction rehearsal;
-   it remains unapproved for live restoration.
+   the subsequent approval and live restoration are recorded immediately below it.
 4. **Terminal appearance.** Keep Windows Terminal Preview and its current
    profile/font/scheme. Approved publication may create the dedicated
    `%LOCALAPPDATA%/Microsoft/Windows Terminal/Fragments/Dots` directory and link
