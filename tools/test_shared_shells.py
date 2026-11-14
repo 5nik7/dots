@@ -23,6 +23,17 @@ class SharedShells(unittest.TestCase):
                 (self.fixture.root / 'tools' / name).symlink_to(exe)
         self.root, self.repo, self.home, self.env = (getattr(self.fixture, n) for n in ('root', 'repo', 'home', 'env'))
         shutil.copy2(REPO / 'scripts/mkcd', self.repo / 'scripts/mkcd')
+        # Full Bash startup must not source the host's installed completion base
+        # or enter a real Termux tmux session. Theme publication has its own fixture.
+        prefix = self.root / 'prefix/usr'
+        completion = prefix / 'share/bash-completion/bash_completion'
+        completion.parent.mkdir(parents=True)
+        completion.write_text('_FIXTURE_COMPLETION_BASE=yes\n')
+        self.env.update(PREFIX=str(prefix), TERMUX__PREFIX=str(prefix),
+                        DOTS_TERMUX_AUTOSTART='0', DOTS_INIT_THEME='0')
+        anodize = self.repo / 'plugins/anodize/completion/bash'
+        anodize.parent.mkdir(parents=True)
+        shutil.copy2(REPO / 'plugins/anodize/completion/bash', anodize)
 
     def shell(self, name, code, interactive=False):
         return self.fixture.shell(name, code, interactive)
@@ -33,6 +44,22 @@ source "$DOTS/bin/lib/common.sh"
 source "$DOTS/shells/shared/functions.sh"
 source "$DOTS/shells/shared/aliases.sh"
 '''
+
+    def full_bash(self):
+        return 'source "$DOTS/shells/bash/.bashrc" || exit 90\n'
+
+    def test_bash_integration_and_full_startup_boundary(self):
+        self.stub('mise', "printf '%s\\n' 'MISE_COUNT=$(( ${MISE_COUNT:-0} + 1 ))'\n")
+        (self.home / '.bash_aliases').write_text('LOCAL_FIXTURE=yes\n')
+        self.shell('bash', self.fixture.generated('bash') + '''
+[[ ! ${MISE_COUNT+x} && ! ${LOCAL_FIXTURE+x} ]] || exit 1
+typeset -f _dots_bash_prompt >/dev/null && exit 2
+''' + self.full_bash() + self.full_bash() + '''
+[[ $MISE_COUNT == 1 && $LOCAL_FIXTURE == yes ]] || exit 3
+[[ $_FIXTURE_COMPLETION_BASE == yes ]] || exit 4
+[[ ! ${_DOTS_BASH_TOOL_READY[rbenv]+x} ]] || exit 5
+typeset -f _dots_bash_prompt >/dev/null || exit 6
+''', interactive=True)
 
     def test_function_loading_preserves_aliases_and_expansion_mode(self):
         for shell in ('bash', 'zsh'):
@@ -357,7 +384,7 @@ y || exit 3
     def test_bash_failed_and_new_tools_retry_and_local_override(self):
         mise = self.stub('mise', "printf '%s\\n' 'SHOULD_NOT_RUN=yes'; exit 1\n")
         (self.home / '.bash_aliases').write_text("alias ll='fixture-list'\n")
-        code = self.fixture.generated('bash')
+        code = self.full_bash()
         self.shell('bash', code + '''
 [[ ! ${SHOULD_NOT_RUN+x} && ! ${_DOTS_BASH_TOOL_READY[mise]+x} ]] || exit 1
 [[ $(alias ll) == *fixture-list* ]] || exit 2
@@ -370,14 +397,14 @@ function mise { printf '%s\\n' 'MISE_COUNT=$(( ${MISE_COUNT:-0} + 1 ))'; }
     def test_bash_prompt_status_and_composition(self):
         for initial in ("PROMPT_COMMAND='old_prompt'", "PROMPT_COMMAND=(old_prompt ':')"):
             self.shell('bash', '''function old_prompt { OLD_STATUS=$?; }
-''' + initial + '\n' + self.fixture.generated('bash') + '''
+''' + initial + '\n' + self.full_bash() + '''
 function _dots_theme_precmd { return 0; }
 false
 _dots_bash_prompt
 [[ $? == 1 ]] || exit 1
 [[ ${PROMPT_COMMAND[*]} == *old_prompt* ]] || exit 2
 before=${PROMPT_COMMAND[*]}
-''' + self.fixture.generated('bash') + '''
+''' + self.full_bash() + '''
 [[ ${PROMPT_COMMAND[*]} == "$before" ]] || exit 3
 ''', interactive=True)
 
@@ -401,8 +428,8 @@ _dots_detect_platform linux "$HOME/missing" "$HOME/missing" "$HOME/missing"
 [[ -z ${BASH_VERSION:-} ]] || shopt -s expand_aliases
 [[ $(urldecode 'hello%20world') == 'hello world' ]] || exit 1
 [[ $(htmldecode '&#x41;') == A ]] || exit 2
-alias .sb >/dev/null || exit 3
-eval '.sb' || exit 4
+alias .dsb >/dev/null || exit 3
+eval '.dsb' || exit 4
 [[ $PWD == "$SHELLS/bash" ]] || exit 5
 PATH=':/a:/a:/b:'
 fixpath
@@ -411,7 +438,7 @@ fixpath
 
     def test_bash_completions_retry_and_explicit_refresh(self):
         self.stub('uv', "printf '%s\\n' 'SHOULD_NOT_RUN=yes'; exit 1\n")
-        code = self.fixture.generated('bash')
+        code = self.full_bash()
         self.shell('bash', code + '''
 [[ ! ${SHOULD_NOT_RUN+x} && ! ${_DOTS_BASH_COMPLETION_READY[uv]+x} ]] || exit 1
 function uv { printf '%s\\n' 'UV_COUNT=$(( ${UV_COUNT:-0} + 1 ))'; }
@@ -433,16 +460,17 @@ true
         (cargo / 'env').write_text('export CARGO_FIXTURE=yes\n')
         rbenv=self.home / '.rbenv/bin/rbenv'
         rbenv.parent.mkdir(parents=True)
-        rbenv.write_text('#!' + shutil.which('bash') + "\n[[ $* == 'init - --no-rehash bash' ]] || exit 2\nprintf '%s\\n' 'RBENV_COUNT=$(( ${RBENV_COUNT:-0} + 1 ))'\n")
+        rbenv.write_text('#!' + shutil.which('bash') + '\nprintf ran > "$HOME/rbenv-ran"\nexit 99\n')
         rbenv.chmod(0o700)
         private=self.repo / 'secrets'
         private.mkdir()
         for name in ('secrets.env', 'secrets.sh'):
             (private / name).write_text('PRIVATE_MUST_NOT_LOAD=yes\n')
-        hook=self.fixture.generated('bash')
+        hook=self.full_bash()
         self.shell('bash',hook + hook + '''
-[[ $NVM_COUNT == 1 && $NVM_COMPLETION == yes && $RBENV_COUNT == 1 && $CARGO_FIXTURE == yes ]] || exit 1
+[[ $NVM_COUNT == 1 && $NVM_COMPLETION == yes && $CARGO_FIXTURE == yes ]] || exit 1
 [[ ! ${PRIVATE_MUST_NOT_LOAD+x} ]] || exit 2
+[[ ! ${_DOTS_BASH_TOOL_READY[rbenv]+x} && ! -e $HOME/rbenv-ran ]] || exit 3
 ''',interactive=True)
 
     def test_bash_theme_refresh_builtin_unchanged_path(self):

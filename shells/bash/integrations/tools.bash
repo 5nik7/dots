@@ -22,7 +22,7 @@ if [[ -r $NVM_DIR/nvm.sh && -z ${_DOTS_BASH_TOOL_READY[nvm]:-} ]]; then
   fi
 fi
 # Evaluate at source scope: some native integrations declare global shell state.
-for _dots_bash_tool in zoxide direnv batpipe usage batman atuin tv mise rbenv starship; do
+for _dots_bash_tool in zoxide direnv batpipe usage batman atuin tv mise starship; do
   [[ -z ${_DOTS_BASH_TOOL_READY[$_dots_bash_tool]:-} ]] || continue
   if case $_dots_bash_tool in
     zoxide) _dots_bash_generated zoxide init bash ;;
@@ -42,6 +42,7 @@ for _dots_bash_tool in zoxide direnv batpipe usage batman atuin tv mise rbenv st
     tv) _dots_bash_generated tv init bash ;;
     mise) _dots_bash_generated mise activate bash ;;
     starship) _dots_bash_generated starship init bash ;;
+    *) false ;; # Never evaluate an earlier tool's output for an unknown entry.
   esac then
     if eval "$REPLY"; then
       _DOTS_BASH_TOOL_READY[$_dots_bash_tool]=1

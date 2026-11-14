@@ -360,6 +360,49 @@ failures; all seven reproduce when only `ui.bash` is restored to `95fb42e1` in
 the owned snapshot. That is a narrow source comparison, not a full revision
 baseline. Keep these separate failures open; they do not establish phone results.
 
+### Termux acceptance shared-shell repair
+
+The owner subsequently reported 21 shared-shell tests with five failures. Four
+tests used integration-only `dots init bash` while expecting the full Bash
+profile's aliases, prompt and tool activations. The fifth expected `.sb`, renamed
+to `.dsb` in `cc0ce86a`. These assertions now use the documented public startup
+entry point and current alias. The minimal shared fixture does not publish a
+theme, so theme initialization is explicitly disabled there; this warning was
+not evidence of a broken live phone theme.
+
+Full-startup coverage also exposed a product defect in `tools.bash`: `c2455f55`
+removed the rbenv case but left its loop entry, allowing the unmatched case to
+succeed and evaluate stale `REPLY`. A successful mise hook could run twice.
+Remove the retired entry and fail closed for unknown entries. Preserve the
+existing mise migration, user rbenv files and failed-tool retry behavior. A new
+boundary regression verifies integration-only exclusion, full-profile local
+overrides, once-only mise activation and retired rbenv nonactivation.
+
+Fixtures own HOME/XDG roots, tool stubs, both prefix variables, the inert base
+completion file and the public Anodize provider. They explicitly disable tmux
+autostart, use non-TTY Bash and retain the private-module exclusion. The palette
+refresh test continues to use a separate owned theme fixture.
+
+At source base `ba376c99` plus this patch, Ubuntu WSL's owned public snapshot
+passes all 22 shared-shell tests, both normally and with simulated Termux
+detection. The new boundary/runtime checks failed before the source repair.
+Shell-init runs 32 cases with 17 missing-runtime skips; shell-environment runs
+11 methods successfully with 20 unavailable-shell subtest skips. The completion
+catalog passes all 1,030 contexts across 296 routes and 299 prefixes. These are
+fixture results, not native phone or desktop acceptance. The owner must rerun
+shared-shell and completion-catalog checks on Termux after pulling the repair.
+
+Owner: shell integration. This Bash-only correction benefits Termux/Linux/WSL;
+native PowerShell adapters and Zsh activation are unchanged. Configuration,
+menu, completion grammar and presentation integration: **no change needed**,
+because no public route, preference or human/data output contract changes.
+Shared defaults, dependencies and generated profile namespaces are unchanged.
+Delivery is through the existing checkout-managed Bash source; a fresh shell
+uses the repair. No live startup, package or consumer activation was performed.
+Rollback is the narrow source patch and does not undo prior tool side effects.
+Documentation/source-only wiki checks apply; the absent wiki export remains a
+named synchronization gap. Native Termux acceptance remains pending.
+
 ### Native adapter follow-up source stage
 
 This follow-up uses the same Windows working checkout at `800988e` plus the

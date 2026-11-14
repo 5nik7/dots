@@ -86,6 +86,9 @@ Help distinguishes executables, commands, subcommands, options and arguments wit
 Human text preserves valid Unicode and renders malformed bytes and terminal
 controls as inert escapes across byte-oriented and Unicode-aware Bash locales.
 
+Bash startup evaluates each successful tool activation once per shell, including
+mise; reload retries failed or newly available tools. See [shared shell behavior](docs/shared-shells.md#interactive-startup).
+
 Use `dots cleanup` to review supported disposable caches and diagnostic logs
 in groups, then see the size and number of files removed. `dots cleanup scan`
 previews candidates; `dots cleanup history` shows runs and the combined verified

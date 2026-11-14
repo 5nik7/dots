@@ -4,7 +4,7 @@
 
 ## Commands and compatibility
 
-Zsh's effective behavior is the default for conflicting definitions. Existing Zsh command names and completion mappings are retained. Bash-only helpers are also available in Zsh. Both shells use the existing safe `mkcd` implementation, and directory shortcuts quote paths at invocation time. `.sb` now enters the Bash configuration directory.
+Zsh's effective behavior is the default for conflicting definitions. Existing Zsh command names and completion mappings are retained. Bash-only helpers are also available in Zsh. Both shells use the existing safe `mkcd` implementation, and directory shortcuts quote paths at invocation time. `.dsb` enters the Bash configuration directory.
 
 | Command | Shared behavior |
 | --- | --- |
@@ -34,7 +34,7 @@ Both shells share XDG defaults, editor selection, public application settings, o
 
 Bash uses native Readline vi mode, quiet bells, supported insert/command cursor indicators, a 100,000-entry history limit, duplicate suppression and append/read synchronization at prompts. Bash and Zsh keep separate history files. No Bash editing plugin is installed: Zsh's syntax highlighting, autosuggestions and FZF-tab completion UI remain Zsh-specific.
 
-Installed Bash integrations activate synchronously: zoxide, direnv, Atuin, Television, mise, usage, batpipe/batman and Starship, plus available Cargo, NVM, rbenv and Bun paths. Activation succeeds once per shell; failed and newly available tools can retry on reload. Bash-generated code is checked for successful generation and valid syntax before evaluation. Starship uses the same configuration as Zsh; a native prompt remains when it is unavailable. Batpipe's Bash environment is configured directly without its process-tree shell detection.
+Installed Bash integrations activate synchronously: zoxide, direnv, Atuin, Television, mise, usage, batpipe/batman and Starship, plus available Cargo, NVM and Bun paths. Automatic rbenv activation was retired in favor of mise; existing rbenv files remain untouched. Activation succeeds once per shell; failed and newly available tools can retry on reload. Bash-generated code is checked for successful generation and valid syntax before evaluation. Unknown activation entries fail closed instead of evaluating another tool's output. Starship uses the same configuration as Zsh; a native prompt remains when it is unavailable. Batpipe's Bash environment is configured directly without its process-tree shell detection.
 
 Bash loads installed bash-completion when available and the Dots/Anodize providers. Available uv, uvx, Starship, pip and ipinfo completions load once and can be explicitly refreshed. These Bash completion results are session-local; Zsh retains its existing generated-data cache. FZF bindings load after history/search integrations so FZF retains Ctrl-R, including after a newly available integration activates. Missing optional tools do not prevent shell startup.
 
