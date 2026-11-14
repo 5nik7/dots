@@ -127,6 +127,12 @@ _dots_fsh_theme() {
 
 # Only failures start a renderer. Healthy shell startup remains native and quiet.
 _dots_fsh_apply() {
+  # Editor route highlighting is independent of published-theme availability.
+  # Missing artifacts keep the existing FSH theme and its subcommand style.
+  if (( ! ${+functions[_dots_fsh_install_chroma]} )); then
+    source "${${(%):-%x}:h}/fsh-dots.zsh"
+  fi
+  _dots_fsh_install_chroma
   if _dots_fsh_theme; then
     _DOTS_FSH_WARNING_KEY=''
     return 0

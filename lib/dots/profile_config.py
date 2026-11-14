@@ -160,6 +160,8 @@ def main(args):
         for row in styles.rows(): print('\t'.join(row))
         for row in formatting_rows(selected=selected,controls=controls): print('\t'.join(row))
         for row in help_rows(selected=selected,styles=styles,controls=controls): print('\t'.join(row))
+        from completion_preferences import rows as completion_rows
+        for row in completion_rows(styles=styles,controls=controls): print('\t'.join(row))
         from cli_preferences import rows
         for row in rows(controls): print('\t'.join(row))
     elif args == ['__style-inputs']:

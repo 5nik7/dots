@@ -228,7 +228,7 @@ class UpgradeSummary(unittest.TestCase):
                 summary.package='package'; summary.stage='Building'; summary.last_activity=0
                 with patch.object(style_config,'current',side_effect=AssertionError('theme read during tick')):
                     summary.tick(now=65)
-                    self.assertEqual(meter.state[0], (('pip · 1:05 · Building','0;94'),(' · ','0;94'),('package','0;'+expected)))
+                    self.assertEqual(meter.state[0], (('pip','0;35'),(' · 1:05 · Building','0;94'),(' · ','0;94'),('package','0;'+expected)))
                     summary.last_activity=65; summary.tick(now=65)
                     self.assertNotIn('1:05',str(meter.state))
 

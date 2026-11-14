@@ -116,7 +116,10 @@ class LauncherContracts(MenuFixture):
             'theme': [('show','theme show','','output'),('list','theme list','','output'),('switcher','theme switcher','','terminal'),('files','theme files browse','','terminal'),('backgrounds','theme bg switcher','','terminal'),('plugins','theme plugins','','submenu')],
             'theme/plugins': [(n,'theme plugins '+n,'','output') for n in ('list','doctor')],
             'anodize': [(n,'anodize '+n,'--interactive --logo=text --logo-layout=base' if n in ('preview','extract') else '--interactive','document' if n in ('preview','extract') else 'terminal') for n in ('create','extract','edit','preview','apply')]+[('list','anodize list','','output')],
-            'debug': [(n,'debug '+n,'','output') for n in ('check','startup','path','cache')],
+            'debug': [(n,'debug '+n,'','output') for n in ('check','startup','path','cache')]+[('demos','debug demo','','submenu')],
+            'debug/demo': [(n,'debug demo',n,'terminal') for n in ('progress','spinner')]+[
+                ('sample-help' if n=='help' else n,'debug demo',n+' --static','output') for n in ('pkgs','git','files','messages','help','all')]+[
+                (n+'-static','debug demo',n+' --static','output') for n in ('progress','spinner')],
             'profile': [(n,'profile '+n,'','output') for n in ('show','list','paths','layers','files','commands','env','check')]+[('check-all','profile check','--all','output')],
             'wiki': [('browse','wiki browse','','document'),('search','wiki browse','','wiki-search'),('list','wiki list','','output'),('check','wiki check','','output'),('configuration','config browse','--query wiki','popup')],
         }

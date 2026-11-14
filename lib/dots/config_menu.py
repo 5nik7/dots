@@ -293,7 +293,7 @@ class Draft:
              ('; automatic refresh disabled' if visual and self.inventory.no_refresh else
               '; '+__import__('codex_toast').ACTIVATION if self.row.kind=='codex' else
               '; next Fonts invocation or popup' if key.startswith('apps.fonts.') else
-              '; next invocation; no theme refresh' if key in ('apps.cli.tagline','apps.cli.progress','apps.git.view') or key.startswith('colors.apps.cli.help.') else
+              '; next invocation; no theme refresh' if key in ('apps.cli.tagline','apps.cli.progress','apps.git.view') or key.startswith(('colors.apps.cli.help.','colors.apps.cli.progress.','icons.progress.bar.','icons.apps.cli.progress.bar.','icons.git.status.','icons.apps.cli.git.status.','colors.apps.pkgs.')) else
               '; next popup' if key.startswith('apps.menu.popup.') else '; refresh: '+(', '.join(effect['consumers']) or 'no active change') if effect else '')),
             ('Recovery', 'Retained transaction; undo command shown after saving')], ui=ui)
 

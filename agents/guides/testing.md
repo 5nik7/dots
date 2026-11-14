@@ -92,6 +92,14 @@ The test commands in `docs/testing.md` must exist before they are presented as r
 
 ## Bash Command Framework
 
+Completion grammar changes run `python3 -B tools/test_completion_catalog.py`;
+the cases grow with static command metadata. Use the
+[project inventory and menu checks](../../docs/testing.md#shell-completion-colors)
+when auditing Dots plugins and associated repositories. Never execute arbitrary
+project commands to discover completion support, and keep source coverage,
+installed freshness and real menu evidence distinct. CI runs the portable
+catalog/provider checks; personal `~/repos` is not a CI dependency.
+
 Use the [Bash test entry points](../../docs/testing.md#bash-command-framework) for
 `bin/dots`, `lib/dots`, and its three shell adapters. Test all installed Bash/Zsh/Fish
 interpreters with owned homes and fixture commands, including real Tab input and
@@ -364,3 +372,10 @@ Visual configuration changes additionally run `tools/test_config_live.py` and af
 For application/formatting configuration changes, use the focused [configuration coverage checks](../../docs/testing.md#configuration-coverage-checks), then the affected consumer suites. Native weather edits must retain comments/unknown fields and pass native validation; tree-list tests must prove context ancestors cannot mutate goals.
 
 Separated-preference or appearance-import changes require `tools/test_preference_files.py` plus affected Config/style/profile/shell regressions. Bak grammar and registrations require `tools/test_backup_completion.py`; test real installed shells separately from provider/protocol checks. Preserve exact data and verify missing/created preference files invalidate owned warm startup bundles.
+
+For Zsh completion appearance, run `tools/test_completion_colors.py` and affected
+Config/preferences/startup/shell/completion suites sequentially. Use owned PTYs
+and copies of public plugins, never personal startup or a live shell reload.
+Verify selected colors, exact insertion, group/preview identity, plain modes,
+reload compatibility and unchanged-prompt subprocess counts. Keep native desktop
+and optional binary-plugin evidence separate; see [completion checks](../../docs/testing.md#shell-completion-colors).

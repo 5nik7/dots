@@ -1,5 +1,7 @@
 # Native PowerShell
 
+Full-width progress bars, Config glyph/style fields, package-manager colors and `dots debug demo` share the Python implementation on native Windows. Demo fixtures require no Bash, real package manager or Git operation. The existing native debug dispatcher handles the new route; no app destination changes are needed. Native Windows PowerShell 5.1/7 resize, animation interruption and launcher handoff remain pending; Termux controller tests are not native Windows evidence.
+
 Git human views share `apps.git.view` and `--view default|short|verbose` (`-s`/`--short`, `-v`/`--verbose`) through the native Python controllers, including submodule and Wiki routes. Shared progress reads `apps.cli.progress=none|spinner|bar|both`, defaulting to `both`; `DOTS_PROGRESS=auto` follows Config. Existing Bash and native wrappers need no new app destination or shell dependency. Termux fixtures cover both controllers; actual PowerShell 5.1/7 terminal, prompt and interruption acceptance remains pending. See [Git views](git.md#output-views) and the [implementation evidence](../plans/git-output-and-progress.md).
 
 

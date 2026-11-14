@@ -1,6 +1,6 @@
 # Command Model
 
-Git report and operation routes accept `--view default|short|verbose`, `-s`/`--short` and `-v`/`--verbose`; tree `--details` aliases verbose. Named submodules and Wiki routes forward the same view options. Saved `apps.git.view` applies to terminal/menu reports; explicit flags can also format redirected human output. JSON/events remain unchanged. See [Git output views](git.md#output-views).
+Git report and operation routes accept `--view default|short|verbose`, `-s`/`--short` and `-v`/`--verbose`; tree `--details` aliases verbose. Named submodules and Wiki routes forward the same view options. Saved `apps.git.view` applies to terminal/menu reports; explicit flags can also format redirected human output. Default status prints each distinct status once per repository with repository rows at two spaces, status headings at four and file rows at six. Heading icons use the configurable `icons.git.status.*` glyphs and their existing status colors. JSON/events remain unchanged. See [Git output views](git.md#output-views).
 
 
 ## Cleanup
@@ -476,7 +476,7 @@ chain, theme generators, or the general-purpose `bin/lib/common.sh` helper. Comm
 
 Global help renders the optional `$DOTS/logo.txt` using `apps.cli.logo_gradient`: `classic` (default) retains the vertical blue-to-cyan gradient; `installer` uses the horizontal theme hint/info/accent gradient shared with setup. `dots config set apps.cli.logo_gradient installer` applies on the next invocation without a theme refresh. Bash and native PowerShell use the shared core renderer when Python is available and retain a builtin classic fallback for basic help without Python. Artwork and plain redirected output are preserved; JSON, scalar and completion output bypass branding. Configuration review: **add** the finite gradient choice through normal profile inheritance and Config editors/completion. Menu review: **unchanged**; existing Config editing exposes both values, and root help adds no action. Command maintenance owns the root renderer; Config owns the preference.
 
-`apps.cli.progress` controls the [operation progress display](presentation.md#operation-progress), independently of color/icons: `none`, `spinner`, `bar` or `both` (default). `DOTS_PROGRESS=auto` or unset follows Config; explicit modes override it, `never` aliases `none`, and invalid values disable progress. There is no new route, flag or completion token. Human terminal work can animate after 500 ms, including read-only scans and `--yes` operations. Two rows separate overall completion from current-step activity. Known managers, repositories and nested steps divide reserved shares; downloads remain local measurements. Counts are named, such as `manager 2/3` and `step 1/2`, and unknown work holds its overall position. Data, dry-run and redirected modes bypass the display even with forced decoration.
+`apps.cli.progress` controls the [operation progress display](presentation.md#operation-progress), independently of color/icons: `none`, `spinner`, `bar` or `both` (default). `DOTS_PROGRESS=auto` or unset follows Config; explicit modes override it, `never` aliases `none`, and invalid values disable progress. There is no new route, flag or completion token. Human terminal work can animate after 500 ms, including read-only scans and `--yes` operations. Two rows separate overall completion from current-step activity. Known managers, repositories and nested steps divide reserved shares; downloads remain local measurements. The overall row contains only a bar and percentage; the current row orders spinner, bare count such as `1/2`, activity, bar and measured percentage. Bars fill available width, reserving one terminal column. Glyphs and four color roles use [Config](configuration.md#progress-appearance); unknown work holds its overall position. Data, dry-run and redirected modes bypass the display even with forced decoration.
 
 Theme and file human views share this presentation policy. Terminal listings use
 headings, status colors/icons, counts and readable paths; forced color or icons also
@@ -516,6 +516,14 @@ word at index 0 and includes an empty current word when appropriate. It emits
 literal tab-separated candidate/value/description records or file/directory
 instructions; adapters never eval them. It is private to these adapters, not a
 versioned public API. Failed queries produce no candidates or diagnostics.
+
+The Zsh display adapter may opt into `__complete zsh INDEX --display-types --
+WORDS...`. Core and first-party delegated candidate rows then add a fourth
+literal type field (`command`, `option` or `value`), including Todo, Fonts, Bak,
+Clipboard, Cleanup, pkgs, Blastoff and Git submodule contexts. Unknown external
+three-field providers receive a neutral display style. Without this private opt-in the existing records are
+unchanged. No ANSI escapes are added to either form. Interactive Zsh styling is
+described under [completion appearance](shell-environment.md#completion-appearance).
 
 ## Implemented Bash Theme Commands
 
@@ -688,13 +696,15 @@ printing it does not clone or install anything. See [profiles](profiles.md).
 The implemented `profile show|layers|paths|env|files|commands|check [ID]` and
 `profile list|check` routes provide read-only inspection. Their flags and
 selection semantics are described in [profiles](profiles.md#profile-inspection-subcommands).
-`debug check|startup|path|command|cache|test|record|alert` uses the shared native controller,
+`debug check|startup|path|command|cache|test|record|alert|demo` uses the shared native controller,
 static command headers and contextual completions; see [debug commands](debug.md).
 Bare `debug` shows group help. No diagnostic silently activates or repairs state.
 `dots debug alert [--json]` explicitly sends a labelled Codex toast and configured
 vibration on Termux. It uses current native settings, reports per-tool API
 outcomes and never creates an attention event. It is excluded from curated
 self-tests and the read-only Debug launcher; see [the alert test](debug.md#test-codex-alerts).
+
+`dots debug demo [progress|spinner|pkgs|git|files|messages|help|all] [--static] [--duration SECONDS] [--loop] [--json]` previews fictional output through the real renderers and current preferences. Bare `demo` lists examples. Animation defaults to four seconds; duration accepts integers 1–60 for progress/spinner/all, with `all` sharing the total budget. Looping is limited to progress/spinner in usable terminals. Static/redirected/dumb-terminal views render immediately; JSON is versioned inert fixture data. No operation, discovery, hook, alert or settings mutation occurs. Exit statuses are 0 for completed mock views (including mock errors), 2 for invalid arguments and 130 for interruption. Debug → Output demos provides static readers and terminal handoffs for animation. Configuration assessment: reuse current presentation preferences; no separate demo settings. Installer assessment: existing checkout-linked bin/shared Python delivery covers both native frontends. Owner: `dots-debug-maintenance`. See [the gallery](debug.md#mock-output-gallery).
 
 File selectors use `termux:NAME` and `windows:NAME`, with `--repo termux|windows` for source filters. Legacy `androidots`/`windots` CLI names are rejected with a replacement hint; historical receipts remain recoverable. See [platform file identities](specification.md#canonical-platform-file-identities).
 

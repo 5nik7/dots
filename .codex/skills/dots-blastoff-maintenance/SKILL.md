@@ -5,6 +5,12 @@ description: Maintain the bundled Blastoff command family for Starship themes, m
 
 # Dots Blastoff Maintenance
 
+Standalone Zsh uses parser-derived commands/options/values tags; preserve them
+alongside Dots-prefixed types, literal names and no-space source prefixes. Run
+`plugins/blastoff/tests/test_completions.py` for the metadata-derived all-route
+tag check. Existing Dots completion preferences own colors; do not hardcode ANSI
+into candidates or call Starship to discover types.
+
 Read the plugin's [agent contract](../../../plugins/blastoff/AGENTS.md), [CLI contract](../../../plugins/blastoff/docs/CLI-CONTRACT.md), [recovery guide](../../../plugins/blastoff/docs/RECOVERY.md) and [Dots integration](../../../docs/bundled-applications.md). `plugins/blastoff/lib/cli.py` and `operations.py` own application behavior; `active_config.py`, `editor.py`, `provenance.py` and `backups.py` own distinct safety/state boundaries. Both command forms must retain the same arguments, output and exit status.
 
 Respect nonempty `STARSHIP_CONFIG` even when its target is absent; otherwise use the documented default. `BLASTOFF_HOME` changes storage, not the active config. Validate TOML structurally, retain unrelated fields, and preserve active-file symlink chains with locks and guarded atomic target replacement. Theme apply now switches the active link to the selected saved theme through `linked_apply.py` and the shared Store. Editing and module writes preserve that link and update its guarded saved source. Explicit `--replace-link` opts into a regular active file. Storage-root aliases share canonical locking; unsafe children and stale/foreign locks remain protected. Retain failed editor output and distinguish recorded provenance from an exact content match.

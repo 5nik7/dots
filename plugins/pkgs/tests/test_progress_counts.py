@@ -210,9 +210,10 @@ class ProgressCounts(unittest.TestCase):
                 self.assertEqual(out.getvalue(), '')
                 if mode == 'none': self.assertEqual(err.getvalue(), '')
                 else:
-                    self.assertIn('Overall', err.getvalue())
+                    self.assertNotIn('Overall', err.getvalue())
                     self.assertIn('33%', err.getvalue())
-                    self.assertIn('step 2/3', err.getvalue())
+                    self.assertIn('2/3', err.getvalue())
+                    self.assertNotIn('step 2/3', err.getvalue())
                     self.assertEqual(bool(re.search(r'\[[#━-]+\]', err.getvalue())), mode in ('bar', 'both'))
         for cfg, out in ((self.cfg, Terminal()), (dict(self.cfg, output='auto', _quiet_progress=True), Terminal()),
                          (dict(self.cfg, output='auto'), io.StringIO())):

@@ -39,9 +39,22 @@ view_file_label() {
     REPLY=${REPLY:-selected}
     [[ $GIT_VIEW != verbose ]] || REPLY="$xy $REPLY"
 }
+view_file_icon() {
+    local role fallback
+    # Match git_output.file_icon_role; stage affects the label/color, not type.
+    case $1 in
+        DD|AU|UD|UA|DU|AA|*U*) role=conflict; fallback='' ;;
+        '??') role=untracked; fallback='' ;; '!!') role=ignored; fallback='' ;;
+        *D*) role=deleted; fallback='󰆴' ;; *R*) role=renamed; fallback='' ;;
+        *C*) role=copied; fallback='' ;; *A*) role=added; fallback='󰐕' ;;
+        *T*) role=type_changed; fallback='󰑓' ;; *M*) role=modified; fallback='󰏫' ;;
+        *) role=selected; fallback='' ;;
+    esac
+    dots::icon "git.status.$role" "$fallback"
+}
 view_file() {
     local dir=$1 xy=$2 path=$3 old=${4:-} label display actual=$1/$3 code old_actual=''
-    local changed=${5:-0}
+    local changed=${5:-0} listed=${6:-}
     view_file_label "$xy"; label=$REPLY
     if [[ $changed == 1 && $GIT_VIEW != short ]]; then
         case ${xy:0:1} in M) label=modified ;; A) label=added ;; D) label=deleted ;; R) label=renamed ;; C) label=copied ;; T) label='type changed' ;; esac
@@ -53,7 +66,9 @@ view_file() {
     fi
     file_status_style "$xy"; code=$REPLY
     if [[ $changed == 1 && ( ${xy:0:1} == M || ${xy:0:1} == T ) ]]; then dots::git_style modified; code=$REPLY; fi
-    if [[ $GIT_VIEW == short ]]; then
+    if [[ $listed == list ]]; then
+        dots::resource_row '' "$actual" "$display" '' '' "$code" paths "$old_actual" "$old" list
+    elif [[ $GIT_VIEW == short ]]; then
         dots::settings
         local old_width=${_DOTS_FORMATTING[label_width]-} old_gap=${_DOTS_FORMATTING[label_gap]-}
         _DOTS_FORMATTING[label_width]=2; _DOTS_FORMATTING[label_gap]=2
@@ -61,6 +76,34 @@ view_file() {
         if [[ $old_width ]]; then _DOTS_FORMATTING[label_width]=$old_width; else unset '_DOTS_FORMATTING[label_width]'; fi
         if [[ $old_gap ]]; then _DOTS_FORMATTING[label_gap]=$old_gap; else unset '_DOTS_FORMATTING[label_gap]'; fi
     else dots::resource_row "$label" "$actual" "$display" '' '' "$code" paths "$old_actual" "$old"; fi
+}
+# Group only status snapshots; keep first-seen status and within-group file order.
+# Arrays belong to status_main, so grouping adds no repository queries.
+# shellcheck disable=SC2154
+view_status_files() {
+    local dir=$1 index xy group code label columns=${COLUMNS:-80}
+    [[ $columns =~ ^[0-9]+$ ]] || columns=80
+    columns=$((10#$columns)); ((columns >= 20)) || columns=20
+    local -a groups=()
+    local -A members=()
+    for ((index=0;index<${#paths[@]};index++)); do
+        xy=${codes[index]}
+        if [[ ! ${members[$xy]+set} ]]; then groups+=("$xy"); fi
+        members[$xy]+="$index "
+    done
+    for group in "${groups[@]}"; do
+        view_file_label "$group"; label=$REPLY
+        file_status_style "$group"; code=$REPLY
+        if [[ $DOTS_UI_INFO != '[i]' ]]; then
+            view_file_icon "$group"
+            [[ ! $REPLY ]] || label="$REPLY $label"
+        fi
+        dots::line "$label" "$code" 4 "$columns"
+        # Membership consists only of integer array indexes, never path text.
+        for index in ${members[$group]}; do
+            view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}" 0 list
+        done
+    done
 }
 # Small repository headers retain semantic colors across wrapped spans. File rows
 # continue to use the shared resource renderer; no formatting subprocess per row.

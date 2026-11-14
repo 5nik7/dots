@@ -179,7 +179,7 @@ that key replaces its object. Recipe changes take effect on the next invocation.
 ## Output colors
 
 All Dots-owned package views use `colors.apps.pkgs` through the existing Config
-browser and profile color files. Package names default to `accent`; other roles
+browser and profile color files. Package names default to `accent`; manager names use `colors.apps.pkgs.manager`, defaulting to `magenta` (pink in the current theme). Other roles
 fall back to their existing CLI or preview colors. Fields support foreground (`fg`),
 background (`bg`) and shared text attributes. Unset/reset inherits; defaults,
 parent profiles and the selected profile resolve field by field. Changes apply on
@@ -189,6 +189,7 @@ the next invocation or popup without publishing a theme.
 | --- | --- |
 | `heading`, `label`, `identity`, `count`, `value`, `version` | Help, lists, plans, manifests and reports |
 | `package` | Package names in results, inventories, previews and progress |
+| `manager` | Manager labels in reports, plans, results, diagnostics, help, pickers and progress |
 | `success`, `warning`, `error`, `muted`, `skipped` | Statuses, diagnostics, secondary text and skip counts |
 | `progress`, `spinner` | Transient activity text and marker |
 | `preview.heading`, `preview.label`, `preview.success`, `preview.warning`, `preview.version` | Package information and picker previews/rows |
@@ -293,7 +294,7 @@ paths and literal commands remain available in dry-run and raw output.
 
 Formatting strips terminal controls and uses shared semantic colors. Preparation, installs, removals and upgrades use shared progress controls, suspended while showing prompts. Explicit color, Dots color preferences, native color fallback and independent icons retain their precedence. JSON, completion and exported manifests remain undecorated.
 
-`pkgs up`, `dots pkgs up` and other compact install/remove/upgrade routes follow `apps.cli.progress` (`none`, `spinner`, `bar`, `both`; default `both`). Two rows separate overall completion from current activity. Bulk upgrades give each selected manager an equal share, then divide that share among preparation, execution and finalization; returned commands divide the execution share. Named counts such as `manager 2/3` and `step 1/2` replace trailing unit labels such as `· commands`. Different command counts do not change a manager's overall share. Native pip download percentages and pacman-family package measurements describe current activity only, so completing one download cannot finish an opaque command. Unknown work holds its overall position until its step returns. Existing confirmations suspend both rows, and cancellation freezes reached progress. Handled failures count as processed work; final manager status and verified Updated fields remain authoritative. No elapsed-time estimate is used.
+`pkgs up`, `dots pkgs up` and other compact install/remove/upgrade routes follow `apps.cli.progress` (`none`, `spinner`, `bar`, `both`; default `both`). Two rows separate overall completion from current activity. Bulk upgrades give each selected manager an equal share, then divide that share among preparation, execution and finalization; returned commands divide the execution share. The overall row contains only its full-width bar and percentage. The current row shows spinner, bare count such as `1/2`, activity, bar and measured percentage. Trailing unit labels such as `· commands` and the word `step` are omitted. Bars use the available width and configurable glyphs/colors; activity truncates first. Different command counts do not change a manager's overall share. Native pip download percentages and pacman-family package measurements describe current activity only, so completing one download cannot finish an opaque command. Unknown work holds its overall position until its step returns. Existing confirmations suspend both rows, and cancellation freezes reached progress. Handled failures count as processed work; final manager status and verified Updated fields remain authoritative. No elapsed-time estimate is used.
 
 Slow terminal exports count inspected managers on stderr while retaining the manifest on stdout. Animation requires both streams to be terminals and is suppressed for raw, JSON, dry-run and ordinary redirected output. Set `dots config set apps.cli.progress bar` for bars alone or `dots config set apps.cli.progress none` to disable progress. `DOTS_PROGRESS` can override the saved setting for one invocation; see [shared progress](presentation.md#operation-progress).
 

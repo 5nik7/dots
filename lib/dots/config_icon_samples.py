@@ -83,6 +83,12 @@ class PublishedSamples:
         return 'file-colors.toml: '+', '.join(sources) if sources else ''
 
     def sample(self, role, fields=('fg','bg')):
+        if role.startswith('git.status.'):
+            key = role.rsplit('.',1)[-1]
+            key = {'type_changed':'modified', 'selected':'staged'}.get(key,key)
+            annotation = self.annotation('git',key,fields)
+            source = annotation+' (published)' if annotation else 'Git '+key+' fallback'
+            return self.resources.git_style(key), source+'; default status heading, unstaged when applicable'
         if role in self.files:
             name, kind, mime = self.files[role]
             code, source = self.resources.match_style(name, kind, mime)

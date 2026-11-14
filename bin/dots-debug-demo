@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# dots:summary=Preview mock output using current Dots appearance
+# dots:usage=[progress|spinner|pkgs|git|files|messages|help|all] [--static] [--duration SECONDS] [--loop] [--json]
+# dots:option=--static||flag|Show immediate snapshots without animation
+# dots:option=--duration||string|Animation seconds (integer 1–60; default 4)
+# dots:option=--loop||flag|Repeat progress or spinner until Ctrl-C in a terminal
+# dots:option=--json||flag|Print versioned inert mock data
+# dots:argument=1|choice:progress,spinner,pkgs,git,files,messages,help,all|Mock output kind; omit to list demos
+# dots:example=dots debug demo
+# dots:example=dots debug demo progress --duration 4
+# dots:example=dots debug demo all --static
+# dots:example=dots debug demo spinner --loop
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" demo "$@"

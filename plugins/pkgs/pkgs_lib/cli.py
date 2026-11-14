@@ -79,10 +79,11 @@ def _main(argv=None):
         if argv and argv[0] == '__complete':
             split = argv.index('--') if '--' in argv else len(argv)
             fuzzy = '--pick' in argv[:split]
+            display_types = '--display-types' in argv[:split] and not fuzzy
             try:
-                candidates = complete(argv[split+1:], config(), fuzzy)
-                for name, desc in candidates:
-                    print(name if fuzzy else name + '\t' + desc)
+                candidates = complete(argv[split+1:], config(), fuzzy, display_types=display_types)
+                for row in candidates:
+                    print(row[0] if fuzzy else '\t'.join(row))
             except (Error, ValueError) as e:
                 # No diagnostics in completion candidate output; only interactive pickers report failures.
                 if fuzzy: print('pkgs: ' + str(e), file=sys.stderr)

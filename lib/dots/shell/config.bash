@@ -57,12 +57,14 @@ _dots_config_load() {
   typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS _DOTS_FORMATTING _DOTS_HELP_STYLES
   _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=() _DOTS_FORMATTING=()
   _DOTS_HELP_STYLES=()
+  typeset -ga _DOTS_COMPLETION_SETTING_ROWS=()
   typeset -g _DOTS_HELP_TAGLINE='Manage your dotfiles and more...'
   typeset -g _DOTS_CLI_PROGRESS=both _DOTS_GIT_VIEW=default
   for line in "${_DOTS_PROFILE_SETTING_ROWS[@]}"; do
     key=${line%%$'\t'*}
     value=${line#*$'\t'}; value=${value%%$'\t'*}
     case $key in
+      __completion.*) _DOTS_COMPLETION_SETTING_ROWS+=("$line"); continue ;;
       __cli.progress)
         case $value in none|spinner|bar|both) _DOTS_CLI_PROGRESS=$value ;; *) return 1 ;; esac
         continue ;;

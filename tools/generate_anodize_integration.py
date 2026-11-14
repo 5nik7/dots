@@ -175,8 +175,15 @@ def artifacts():
         # Dots. Standalone Anodize must register only its own command.
         if shell == 'bash':
             source = source[:source.index('complete -F _dots_complete_bash')] + 'complete -F _dots_complete_bash dots\n'
+            # Config branch suffixes are not part of the Anodize grammar.
+            source = source.replace('[[ $value != *= && $value != *. && $value != *\\[ ]]',
+                                    '[[ $value != *= ]]')
         elif shell == 'fish':
             source = source[:source.index('for name in dots theme')] + "complete -c dots -f -a '(__dots_complete_fish)'\n"
+            # The shared Config browser's edit-buffer retry is Dots-only.
+            start = source.index('    set -l key_position 0\n')
+            end = source.index('    set -l cursor ', start)
+            source = source[:start] + source[end:]
         else:
             source = source[:source.index('if [[ $ZSH_EVAL_CONTEXT')] + '''if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then
   (( ${+functions[compdef]} )) && compdef _dots dots
@@ -185,6 +192,9 @@ else
 fi
 '''
         source = re.sub(r'\bdots\b', 'anodize', source).replace('_dots', '_anodize').replace('DOTS_BASH', 'ANODIZE_BASH')
+        # These helpers belong to the shell-wide Dots display adapter. Renaming
+        # them would silently disable semantic types in standalone Anodize.
+        source = source.replace('_anodize_completion_', '_dots_completion_')
         yield REPO/'plugins/anodize/completion'/shell, source
     yield REPO/'plugins/anodize/man/anodize.1', manual()
 

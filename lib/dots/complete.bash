@@ -3,12 +3,22 @@
 source "$DOTS_LIB_DIR/catalog.bash"
 
 dots_candidate() {
-  local value=$1 description=${2:-}
+  local value=$1 description=${2:-} role=${3:-${DOTS_CANDIDATE_TYPE:-candidate}}
   [[ $value == "$DOTS_CURRENT"* ]] || return 0
-  DOTS_SUGGESTIONS+=("candidate"$'\t'"$value"$'\t'"$description")
+  if [[ ${DOTS_DISPLAY_TYPES:-0} == 1 && -n $value ]]; then
+    # Some static grammars repeat child commands as first-argument choices.
+    # Preserve the literal records, but keep their known command identity.
+    if [[ $role == command ]]; then DOTS_COMPLETION_COMMANDS[$value]=1
+    elif [[ $role == value && ${DOTS_COMPLETION_COMMANDS[$value]:-} ]]; then role=command
+    fi
+  fi
+  local record="candidate"$'\t'"$value"$'\t'"$description"
+  [[ ${DOTS_DISPLAY_TYPES:-0} != 1 ]] || record+=$'\t'"$role"
+  DOTS_SUGGESTIONS+=("$record")
 }
 dots_value_candidates() {
   local type=$1 lead=${2:-} value
+  local DOTS_CANDIDATE_TYPE=value
   local -a values=()
   case $type in
     wiki-page|wiki-section)
@@ -27,7 +37,11 @@ dots_value_candidates() {
       [[ $type != config-value ]] || kind=value
       output=$(python3 -B "$DOTS_LIB_DIR/config_completion.py" "$kind" "${DOTS_POSITIONALS[0]:-}" "$DOTS_CURRENT" "${DOTS_OPTION_VALUES[--profile]:-}" 2>/dev/null) || return 0
       while IFS=$'\t' read -r record value description; do
-        [[ $record != candidate ]] || DOTS_SUGGESTIONS+=("candidate"$'\t'"$lead$value"$'\t'"$description")
+        if [[ $record == candidate ]]; then
+          record="candidate"$'\t'"$lead$value"$'\t'"$description"
+          [[ ${DOTS_DISPLAY_TYPES:-0} != 1 ]] || record+=$'\t'value
+          DOTS_SUGGESTIONS+=("$record")
+        fi
       done <<< "$output"
       ;;
     dots-setting)
@@ -133,6 +147,7 @@ dots_find_option() {
 }
 dots_completion_children() {
   local prefix=$1 stem suffix next description
+  local DOTS_CANDIDATE_TYPE=command
   local -A seen=()
   # Complete only route-like current words, and inspect only matching filenames.
   # A flag or path prefix should not cause an unrelated full catalog scan.
@@ -151,12 +166,20 @@ dots_completion_children() {
 
 dots_complete() {
   local shell=${1:-} cursor=${2:-}
+  local DOTS_DISPLAY_TYPES=0 DOTS_CANDIDATE_TYPE=option
+  # Private opt-in semantic metadata. Legacy invocations remain byte-identical.
+  if [[ $shell == zsh && ${3:-} == --display-types ]]; then
+    DOTS_DISPLAY_TYPES=1
+    shift 3
+    set -- "$shell" "$cursor" "$@"
+  fi
   [[ $shell == bash || $shell == zsh || $shell == fish || $shell == nu || $shell == xonsh ]] || return 2
   [[ $cursor =~ ^[0-9]+$ && ${3:-} == -- ]] || return 2
   shift 3
+  local -x _DOTS_COMPLETION_DISPLAY_TYPES=$DOTS_DISPLAY_TYPES
   # shellcheck disable=SC2034
   local -a DOTS_POSITIONALS=() words=("$@") DOTS_SUGGESTIONS=() DOTS_EXTRA_ROOTS=() DOTS_ROOTS=()
-  local -A DOTS_OPTION_VALUES=()
+  local -A DOTS_OPTION_VALUES=() DOTS_COMPLETION_COMMANDS=()
   (( cursor >= 1 && cursor < ${#words[@]} )) || return 2
   # Standalone wrappers share this same completion protocol.
   local command_name=${words[0]##*/}
@@ -245,7 +268,7 @@ dots_complete() {
         dots_candidate "$long" "$description"
         [[ -z $short ]] || dots_candidate "$short" "$description"
       done
-      for token in "${DOTS_BUILTIN_NAMES[@]}"; do dots_candidate "$token" "${DOTS_BUILTIN_SUMMARY[$token]}"; done
+      for token in "${DOTS_BUILTIN_NAMES[@]}"; do dots_candidate "$token" "${DOTS_BUILTIN_SUMMARY[$token]}" command; done
       dots_completion_children '' || return
     fi
   else
@@ -286,7 +309,7 @@ dots_complete() {
       fi
     fi
     if (( index == cursor )); then
-      for token in "${DOTS_BUILTIN_NAMES[@]}"; do dots_candidate "$token" "${DOTS_BUILTIN_SUMMARY[$token]}"; done
+      for token in "${DOTS_BUILTIN_NAMES[@]}"; do dots_candidate "$token" "${DOTS_BUILTIN_SUMMARY[$token]}" command; done
       dots_completion_children '' || return
     elif [[ ${words[index]} == init ]]; then
       if (( cursor == index+1 )); then
@@ -314,7 +337,7 @@ dots_complete() {
         done
       fi
     elif [[ ${words[index]} == completion ]]; then
-      if (( cursor == index+1 )); then for token in bash zsh fish powershell; do dots_candidate "$token"; done; fi
+      if (( cursor == index+1 )); then for token in bash zsh fish powershell; do dots_candidate "$token" '' value; done; fi
     elif [[ ${words[index]} == commands ]]; then
       if (( ! help )); then
         dots_builtin_metadata commands
@@ -332,7 +355,7 @@ dots_complete() {
         source "$DT_LIB/families.bash"
         if ((${#args[@]} == 1)); then
           dt_family_index || return
-          for token in "${DT_FAMILIES[@]}"; do dt_family_reserved "$token" || dots_candidate "$token" 'Theme palette'; done
+          for token in "${DT_FAMILIES[@]}"; do dt_family_reserved "$token" || dots_candidate "$token" 'Theme palette' value; done
         elif ! dt_family_reserved "${args[1]}"; then
           source "$DT_LIB/complete.bash"
           dt_palette_candidates "${args[@]:1}" || return
@@ -351,6 +374,16 @@ dots_complete() {
         local executable=$DOTS_EXECUTABLE consumed=$DOTS_CONSUMED route=$DOTS_ROUTE
         if (( cursor == start+consumed )); then
           dots_completion_children "${route// /-}" || return
+        elif (( consumed < ${#args[@]} )); then
+          # An intermediate namespace can have descendants without its own
+          # executable (for example files migrate). The nearest executable
+          # ancestor must not hide those statically registered children.
+          prefix=''
+          for token in "${args[@]}"; do
+            [[ $token =~ ^[a-z][a-z0-9]*$ ]] || { prefix=''; break; }
+            prefix+=${prefix:+-}$token
+          done
+          [[ -z $prefix ]] || dots_completion_children "$prefix" || return
         fi
         if (( ! help )); then
           dots_metadata "$executable" || return

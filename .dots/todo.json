@@ -2358,6 +2358,118 @@
       "updated": "2026-11-12T22:14:43.086571+00:00",
       "completed": "2026-11-12T22:14:43.086571+00:00",
       "removed": null
+    },
+    {
+      "id": "17884af1fdce49cea103b7546b5d64f8",
+      "alias": null,
+      "title": "shell completion colors",
+      "notes": "colorize shell completions output if possible(zsh fzf tab comp, example 'git <tab>'). multiple colors by \"type\". update docs/preferences/skills to colorzie shell completion(if possible)\n\nuse subagents to help if needed\n\nAgreed implementation plan: Zsh/fzf-tab and native Zsh completion colors enabled by default; semantic candidate types plus separate text spans, theme-derived Config overrides, neutral unknowns, selected-row type colors, separate Git branch/tag/remote roles, next-prompt and Tab refresh. Children: bfc4a098880e4fe8903095a81376b9a7, 7eace0850d454a14bae5cacda8e5e0f3, cb80fdc47c2f4af78726636fc97e2762, b9396276de8e4984a227068842d5368d. Preserve raw completion/insertion contracts and other shells. Require verified Termux acceptance and accurate pending native-platform limits. Implement complete tree; no separate save gate. No live shell/theme activation, dependency installation, commit or push.\n\nImplementation progress: completion preferences, literal startup rows, bounded next-prompt refresh, semantic Zsh/native/fzf-tab adapter and optional private Dots types are implemented. Twelve focused tests passed, including 40/80/120-column menus, real Git refs, exact insertion, previews, groups, multi-selection, controls, plain/disabled modes and selected colors under inherited FZF strip styling. Additional compiled-cache test passes. Broader regression suites and final measurements/documentation verification are underway; live shells/plugins remain untouched.\n\nCompleted the agreed linked plan. All four children are verified done. Semantic completion colors, Config preferences and prompt/Tab refresh, preserved insertion/data/interaction contracts, documentation/skills and healthy local Wiki are delivered. Acceptance evidence, measured overhead and explicit native-platform/binary-plugin limits are recorded in plans/shell-completion-colors.md. Existing unrelated work remains intact; updated code loads in a new Zsh session.\n\nFollow-up complete for reported Todo/pkgs/Git/Blastoff/Debug gaps and the user-expanded Dots/plugin/associated-project scope. Added semantic types to trusted delegated and standalone providers; preserved identity when FZF-tab hides group headings; native argument choices use shared value colors. Fixed intermediate Dots namespaces and command/choice overlap, plus codex-termux, git-it and Paint provider tags. Existing completion preferences remain authoritative; no new preference store or startup repository scan.\n\nFollow-up acceptance verified: catalog-derived coverage of 295 routes and 1,028 completion contexts (full run plus corrected explicit-init setup and Files reruns); literal protocol projection and inert command sentinels; actual reported menus, eight standalone-plugin and fourteen associated-project menu contexts with exact insertion, custom preferences, hidden headings, native fallback and previews. Project inventory reconciles ten CLI owners, twelve non-CLI projects and two historical copies, with seven passing audit tests. Bundled plugin checks 21 passed; git-it four and Paint three passed; codex-termux full offline verifier 134 passed, including 37 completion contexts/150 queries. Updated docs, plan, owner skills/preferences and completion CI; local Wiki is healthy after transaction f720600a36734aefb7f94dd6f6821deb. Complete evidence and explicit native-platform/groff limits are in plans/shell-completion-colors.md and owner validation docs.\n\nExisting selected goal and four children remain done with their original IDs, parents and acceptance criteria. Source changes load with a new Zsh; separately installed project copies retain normal delivery requirements. No live install/reload, dependency install, commit or push was performed; unrelated work is preserved.\n\nFollow-up for plain text in both places after dots git<Tab>: normal public Zsh startup exposed Zinit-defined lazy wrappers hiding the FZF-tab interface from the color adapter. Materialize only recognized shims without executing helpers and restore them on incompatible interfaces. Added native FSH route highlighting through the existing subcommand theme role, including nested/deferred executable routes and the files migrate-apps alias, while preserving custom callbacks, literal BUFFER, options, operands, shell syntax and case-parser state. No per-keystroke processes or directory scans.\n\nVerification: all 21 completion-color cases pass, including the actual public startup order, exact git<Tab> insertion, native git/status input regions, colored child menus and Debug after reload. Eight native FSH cases and two plugin/suggestion reload checks pass. Six FSH theme checks pass across five initial successes and one isolated retry; the initial widget fixture timed out during theme publication before plugin loading and passed unchanged on retry. Native comparisons cover case arms, control flow and nested parsing. CI adds a hermetic Zinit regression and native input tests with public FSH pinned at 4672ad5dd9ad68a7effc1476d65afb7c584ce2b3; hosted CI remains unrun.\n\nMatched three-sample warm startup medians: 4.534 s before, 4.779 s after (+245 ms, with substantial device variation); three alternating 300-redraw samples: 1.120 ms native and 1.668 ms with Dots route highlighting. Evidence and limits are recorded in plans/shell-completion-colors.md. Existing completion preferences own lists; the existing FSH theme role owns input, with no new preference store or menu/installer path. README, architecture/environment/testing docs, shell guidance and skill updated. 1425 Markdown links, skill validation, workflow/shell/Python syntax and whitespace checks pass. Wiki transactions a195bcf1735f4e9aa738be922df1aa0c and 51275f3d5e254a8698fff54f624d9c26 were built and checked healthy. Native desktop/Windows and optional FZF-tab binary acceptance retain their named limits. No live shell reload, installation, commit or push; completed goal statuses and existing relationships remain preserved.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "shell",
+        "completion",
+        "fzf",
+        "tab",
+        "output",
+        "colors",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Interactive Zsh/fzf-tab and native Zsh completion listings provide the agreed semantic colors and separate text spans with configurable theme defaults and next-prompt refresh.",
+        "All four planned children are verified complete; raw completion data, literal insertion, existing interactions and unrelated work remain preserved.",
+        "Documentation and Wiki match implemented behavior, with Termux verification and unavailable desktop/Windows acceptance explicitly distinguished."
+      ],
+      "created": "2026-11-13T20:32:15.979534+00:00",
+      "updated": "2026-11-14T00:52:39.002210+00:00",
+      "completed": "2026-11-13T21:40:20.148577+00:00",
+      "removed": null
+    },
+    {
+      "id": "bfc4a098880e4fe8903095a81376b9a7",
+      "alias": null,
+      "title": "Add completion appearance preferences and refresh",
+      "notes": "Agreed plan: foundation for semantic rendering. Add apps.completion.enabled (true) and colors.apps.completion candidate/command/option/value/branch/tag/remote/description/heading/separator styles. Reuse Config inheritance and literal settings; next-prompt refresh, no completion-only theme publication, no extra steady-state subprocesses.\n\nVerified: shared/profile completion controls, fieldwise style inheritance/reset, fg/bg/attributes, portable appearance import and Config provenance. Completion-only saves do not publish themes. Tests prove existing-shell prompt/Tab refresh, including an external save while the editor waits; invalid inputs retain last-good styles and recover after a valid edit. Unchanged prompts and compiled warm loading invoke no completion Python; absent palette creation and literal control-bearing watch paths are guarded. Profile/preferences/Config/style regressions pass.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "17884af1fdce49cea103b7546b5d64f8",
+      "acceptance": [
+        "Completion controls resolve through shared, parent and selected-profile preferences; Config exposes effective values and provenance.",
+        "An existing isolated Zsh picks up saved changes at the next prompt and Tab; unchanged prompts add no subprocesses and invalid refresh retains last-good values."
+      ],
+      "created": "2026-11-13T20:49:22.340807+00:00",
+      "updated": "2026-11-13T21:37:41.097816+00:00",
+      "completed": "2026-11-13T21:37:41.097816+00:00",
+      "removed": null
+    },
+    {
+      "id": "7eace0850d454a14bae5cacda8e5e0f3",
+      "alias": null,
+      "title": "Implement semantic Zsh completion rendering",
+      "notes": "Depends on bfc4a098880e4fe8903095a81376b9a7. Zsh first, native fallback, guarded Dots-owned fzf-tab adapter, installed plugin unchanged. Use reliable tags/context and neutral unknowns; preserve selected type colors, raw insertion, internal group markers, previews and existing completion records.\n\nVerified semantic Zsh/fzf-tab and native rendering for Git commands, heads/branches, tags and remotes; Dots commands/options/values; descriptions/headings; LS_COLORS files and neutral unknowns. Owned PTY/private tmux checks cover 40/80/120 columns, selected colors under inherited fg+:strip, light/dark colors, native insertion and quoting, no-space prefixes, preview identity, multi-selection, group cycling, cancellation, control escaping, reload and incompatible-plugin fallback. Installed public plugin is unchanged. Optional compiled module and native desktop checks remain explicitly named acceptance limits, as agreed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "17884af1fdce49cea103b7546b5d64f8",
+      "acceptance": [
+        "Git and Dots examples show supported candidate types and separate description/heading spans; file colors and selected-row colors remain correct.",
+        "Insertion, previews, group switching, cancellation and reload remain correct; native, unknown-provider and incompatible-plugin fallbacks work."
+      ],
+      "created": "2026-11-13T20:49:25.847609+00:00",
+      "updated": "2026-11-13T21:37:44.174089+00:00",
+      "completed": "2026-11-13T21:37:44.174089+00:00",
+      "removed": null
+    },
+    {
+      "id": "cb80fdc47c2f4af78726636fc97e2762",
+      "alias": null,
+      "title": "Verify rendering, completion contracts, and performance",
+      "notes": "Depends on bfc4a098880e4fe8903095a81376b9a7 and 7eace0850d454a14bae5cacda8e5e0f3. Require isolated native Termux rendering, exact data and insertion, fallback/reload checks, 40/80/120 widths and before/after measurements. Native desktop Linux/WSL and Windows PowerShell remain named pending evidence; other shell display coloring is out of scope.\n\nVerification complete: 15 focused completion cases pass; 12 affected regression suites pass (four unavailable-PowerShell skips). The broad Zsh suite passes 26/29, and the same three failures reproduce in an owned HEAD archive: retired MSYS expectation, minimal-tools startup assertion, and stale theme-fixture paths. Existing Bash/Zsh/Fish/Nu/Xonsh provider records match the saved pre-change dispatcher byte-for-byte. Sequential matched startup medians: interactive warm 4.178 -> 4.115 s; 15 interleaved noninteractive samples 0.426 -> 0.466 s. Git Tab median 1.154 -> 1.204 s (about 50 ms / 4.3% for styling). No additional steady-state process or per-candidate configuration query. Native Windows/Linux/WSL and optional compiled FZF-tab module remain agreed environment limits. Full evidence is in plans/shell-completion-colors.md.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "17884af1fdce49cea103b7546b5d64f8",
+      "acceptance": [
+        "Isolated terminal acceptance passes at 40, 80 and 120 columns, including color modes, selection and literal insertion.",
+        "Existing completion data and alias contracts pass across adapters; startup/completion measurements and native-platform limits are recorded."
+      ],
+      "created": "2026-11-13T20:49:28.480970+00:00",
+      "updated": "2026-11-13T21:40:15.310474+00:00",
+      "completed": "2026-11-13T21:40:15.310474+00:00",
+      "removed": null
+    },
+    {
+      "id": "b9396276de8e4984a227068842d5368d",
+      "alias": null,
+      "title": "Document and deliver completion styling",
+      "notes": "Depends on bfc4a098880e4fe8903095a81376b9a7, 7eace0850d454a14bae5cacda8e5e0f3, cb80fdc47c2f4af78726636fc97e2762. Owner: dots-shell-integration with Config/presentation/command/docs/wiki skills. Add Config controls; update existing Config browser, no separate launcher. Deliver via existing shell/default components without installation. Preserve dirty work; no live activation, commit or push.\n\nDelivery complete: README, shell/config/presentation/architecture/data/testing documentation, Zsh README, testing guide, focused plan and shell/command/Config/presentation skills are synchronized. Existing Config browser exposes consumer-backed controls; no separate launcher or installer destination is needed. Source-link validation passed 1,420 links; static command validation passed 291 external commands; source/shell syntax and both Git diff checks passed. Wiki build transaction 4955e9ca16c04555895cacede3ed7579; final wiki check is healthy. Unrelated source/Wiki work and the installed plugin are preserved. No live reload, theme activation, dependency installation, commit or push.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "17884af1fdce49cea103b7546b5d64f8",
+      "acceptance": [
+        "README, canonical documentation, focused plan and maintenance skills describe verified behavior and platform limits.",
+        "Configuration, menu and bootstrap delivery assessments are recorded; documentation checks pass and available Wiki output is rebuilt and checked while preserving unrelated work."
+      ],
+      "created": "2026-11-13T20:49:31.426734+00:00",
+      "updated": "2026-11-13T21:40:17.525754+00:00",
+      "completed": "2026-11-13T21:40:17.525754+00:00",
+      "removed": null
     }
   ]
 }

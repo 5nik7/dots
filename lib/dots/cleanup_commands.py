@@ -38,7 +38,8 @@ def header(action):
     return '\n'.join(lines)+'\n'
 
 
-def complete(words):
+def complete(words, *, display_types=False):
+    from completion_records import candidate_record
     current = words[-1] if words else ''
     action = ''; pending = None; positional = []
     all_options = {o[0]: o for rows in OPTIONS.values() for o in rows}
@@ -55,21 +56,23 @@ def complete(words):
     if current.startswith('--') and '=' in current:
         pending, _, current = current.partition('='); lead = pending+'='
     options = OPTIONS[action]
-    choices = []
+    choices = []; role = 'value'
     if pending:
         option = next((o for o in options if o[0] == pending), None)
         if option and option[2].startswith('choice:'): choices = option[2][7:].split(',')
     elif current.startswith('-'):
+        role = 'option'
         choices = [o[0] for o in options]+[o[1] for o in options if o[1]]+['--help']
-    elif not action: choices = [a for a in COMMANDS if a]
+    elif not action: choices = [a for a in COMMANDS if a]; role = 'command'
     elif action == 'report' and not positional:
         from cleanup.receipts import Receipts
         try: choices = [r['id'] for r in Receipts().rows()]
         except (ValueError, OSError): return
     for choice in choices:
-        if choice.startswith(current): print('candidate\t'+lead+choice+'\t')
+        if choice.startswith(current): print('\t'.join(candidate_record(lead+choice, role=role, display_types=display_types)))
 
 
 if __name__ == '__main__':
     import sys
-    complete(sys.argv[1:])
+    from completion_records import requested
+    complete(sys.argv[1:], display_types=requested())

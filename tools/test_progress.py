@@ -113,6 +113,85 @@ class ProgressTests(unittest.TestCase):
                         self.python("with progress.Progress('Fast'): pass\nprint('done')")]:
             self.assertEqual(self.terminal(command), (0, b'done\r\n'))
 
+    def test_python_bash_and_zsh_rows_match_at_full_and_tiny_widths(self):
+        # Exercise the inert renderers directly: no sleeps, configuration reads,
+        # native commands or terminal state are needed for layout parity.
+        from fractions import Fraction
+        sys.path.insert(0, str(LIB))
+        import progress
+        from progress_preferences import Appearance
+        cases, expected = [], []
+        for width in (1, 2, 6, 7, 8, 12, 20, 39, 79, 119):
+            for mode in ('spinner', 'bar', 'both'):
+                for total in (0, 3):
+                    for steps in (0, 4):
+                        for label in ('', 'work', 'Downloading ' + 'x' * 120):
+                            work = progress.Progress(label, marker_style='96', label_style='94')
+                            work.appearance = Appearance()
+                            work.mode = mode
+                            work.overall = (Fraction(27,100), 'manager', 1, 4)
+                            work.step_hint = ('step',2,steps) if steps else None
+                            work.state = (label,1,total)
+                            rows = work.lines(3,width,False,False)
+                            expected.extend(row[0] for row in rows)
+                            cases.append('_dots_progress_rows ' + ' '.join(map(shlex.quote,
+                                map(str,(width,mode,3,'\\',270000,1,total,2,steps,label)))) +
+                                '\nprintf "%s\\n%s\\n" "$_dpr_top" "$_dpr_bottom"')
+                            self.assertTrue(all(cells <= width for _, cells in rows))
+                            if mode != 'spinner' and width >= 7:
+                                self.assertEqual(rows[0][1],width)
+        script = ('source '+shlex.quote(str(LIB/'progress_render.bash'))+
+                  '\ntypeset -A _dpr_colors _dpr_symbols\n_dots_progress_init 0 0\n'+'\n'.join(cases))
+        for name in ('bash','zsh'):
+            executable = shutil.which(name)
+            if not executable: continue
+            flags = ['--noprofile','--norc','-c'] if name == 'bash' else ['-dfc']
+            result = subprocess.run([executable,*flags,script],env=self.env,cwd=self.home,
+                                    text=True,capture_output=True,timeout=15)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(result.stderr,'')
+            self.assertEqual(result.stdout.splitlines(),expected,name)
+
+    def test_configured_symbols_and_empty_color_spans_match_shell_rows(self):
+        from fractions import Fraction
+        sys.path.insert(0,str(LIB))
+        import progress
+        from progress_preferences import Appearance
+        variants = [dict(filled='=',empty='.',left='(',right=')'),
+                    dict(filled='&',empty='\\',left='',right=''),
+                    dict(filled='〿',empty='🜁',left='│',right='│')]
+        colors = dict(filled='1;31',empty='',surround='33',percentage='38;2;1;2;3')
+        expected, cases = [], []
+        for symbols in variants:
+            for icons in (False,True):
+                for color in (False,True):
+                    for total in (0,3):
+                        work=progress.Progress('Working',marker_style='96',label_style='94')
+                        work.appearance=Appearance()
+                        work.appearance.symbols=dict(symbols)
+                        work.appearance.colors=dict(colors)
+                        work.mode='bar'; work.state=('Working',1,total)
+                        work.overall=(Fraction(27,100),'manager',1,4)
+                        expected.extend(row[0] for row in work.lines(3,39,color,icons))
+                        cases += ['_DOTS_STYLE_ICONS[progress.bar.'+key+']='+shlex.quote(value)
+                                  for key,value in symbols.items()]
+                        cases += ['_DOTS_STYLE_COLORS[progress.'+key+']='+shlex.quote(value)
+                                  for key,value in colors.items()]
+                        cases += ['_dots_progress_init '+str(int(color))+' '+str(int(icons)),
+                                  '_dots_progress_rows 39 bar 3 / 270000 1 '+str(total)+' 0 0 Working',
+                                  'printf "%s\\n%s\\n" "$_dpr_top" "$_dpr_bottom"']
+        script=('source '+shlex.quote(str(LIB/'progress_render.bash'))+
+                '\ntypeset -A _dpr_colors _dpr_symbols _DOTS_STYLE_COLORS _DOTS_STYLE_ICONS\n'+'\n'.join(cases))
+        for name in ('bash','zsh'):
+            executable=shutil.which(name)
+            if not executable: continue
+            flags=['--noprofile','--norc','-c'] if name=='bash' else ['-dfc']
+            result=subprocess.run([executable,*flags,script],env=dict(self.env,LC_ALL='C.UTF-8'),
+                                  cwd=self.home,text=True,capture_output=True,timeout=10)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(result.stderr,'')
+            self.assertEqual(result.stdout.splitlines(),expected,name)
+
     def test_explicit_modes_known_and_unknown_totals(self):
         for mode in ('none','spinner','bar','both'):
             for counted in (False,True):
@@ -126,7 +205,7 @@ class ProgressTests(unittest.TestCase):
                     self.assertEqual(b'33%' in data,counted and mode!='none',data)
                     self.assertEqual(b'[' in ANSI.sub(b'',data),mode in ('bar','both'),data)
                     self.assertEqual(b'%' in data,mode!='none',data)
-                    self.assertEqual(b'Overall' in data,mode!='none',data)
+                    self.assertNotIn(b'Overall',data)
 
     def test_counted_bars_leave_room_for_activity_on_narrow_terminals(self):
         label = 'npm - Script postinstall'
@@ -135,7 +214,8 @@ class ProgressTests(unittest.TestCase):
         for command in commands:
             code, data = self.terminal(command, dict(self.env, DOTS_PROGRESS='both', DOTS_COLOR='never'), 40)
             self.assertEqual(code, 0, data)
-            self.assertIn(label.encode(), data)
+            self.assertIn(b'npm - Script', data)
+            self.assertRegex(ANSI.sub(b'',data), rb'npm - Script[^\r\n]* \[-{8,}\] 0%')
             self.assertIn(b'[', data); self.assertIn(b'0%', data)
 
     def test_disabled_modes_and_redirection(self):
@@ -338,7 +418,8 @@ manage.main()
         self.assertEqual(code, 0, data)
         self.assertIn(b'Inspecting repositor', data)
         self.assertIn(b'0%', data)
-        self.assertIn(b'repo 1/1', data)
+        self.assertIn(b'1/1', data)
+        self.assertNotIn(b'repo 1/1', data)
         self.assertIn(b'clean', data)
         for settings in (env, dict(env, DOTS_PROGRESS='never')):
             code, data = self.terminal(command + ['--json'], settings)

@@ -87,13 +87,13 @@ class Presentation:
         from style_config import icon
         return icon(name, fallback)
 
-    def paint(self, value, code, *, preferences=None):
+    def paint(self, value, code, *, preferences=None, icon_styles=True):
         from style_config import code as style_code, current
         if self.color: code = preferences.code(code) if preferences is not None else style_code(code)
         value = self.clean(value)
         # Apply independent icon styles only where a configured glyph occurs as
         # its own display token. Plain strings/data never carry embedded ANSI.
-        if self.color and self.icons:
+        if self.color and self.icons and icon_styles:
             prefs=preferences if preferences is not None else current()
             if prefs:
                 if not hasattr(self,'_icon_paints'):
@@ -176,21 +176,24 @@ class Presentation:
         prefix = self.indentation(indent)+' '*left+label+' '*(padding-left+label_gap)
         self._spans(spans, prefix, label_code)
 
-    def _spans(self, spans, prefix='', prefix_code=None, *, continuation_prefix=None):
+    def _spans(self, spans, prefix='', prefix_code=None, *, continuation_prefix=None, icon_styles=True):
         """Wrap inert text first, then color independently styled value spans."""
+        # Keep existing paint overrides compatible unless the caller explicitly
+        # owns the entire span style (including any repeated UI glyph).
+        paint_options = {} if icon_styles else {'icon_styles': False}
         spans = [(self.clean(text), code) for text, code in spans if str(text)]
         index, offset = 0, 0
         continuation = ' ' * resource_cells(prefix) if continuation_prefix is None else self.clean(continuation_prefix)
         width = max(1, self.width - max(resource_cells(prefix), resource_cells(continuation)))
         for number, part in enumerate(resource_wrap(''.join(text for text, _ in spans), width)):
             lead = prefix if number == 0 else continuation
-            line = self.paint(lead, prefix_code) if prefix_code and (number == 0 or continuation_prefix is not None) else lead
+            line = self.paint(lead, prefix_code, **paint_options) if prefix_code and (number == 0 or continuation_prefix is not None) else lead
             remaining = len(part)
             while remaining:
                 text, code = spans[index]
                 count = min(remaining, len(text) - offset)
                 piece = text[offset:offset + count]
-                line += self.paint(piece, code) if code else piece
+                line += self.paint(piece, code, **paint_options) if code else piece
                 remaining -= count
                 offset += count
                 if offset == len(text):
@@ -207,7 +210,7 @@ class Presentation:
         spans = [(glyph + ' ', code or resolved)] if icon and self.icons else []
         return spans + [(text[:boundary], directory), (text[boundary:], code or resolved)]
 
-    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None, *, label_width=None, path_components=False, previous=None):
+    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None, *, label_width=None, path_components=False, previous=None, listed=False):
         text = self.clean(self.path(path) if display is None else display)
         if (path_components and path is not None and self.human and (self.color or self.icons) and
                 ('/' in text or os.name == 'nt' and '\\' in text or previous)):
@@ -216,6 +219,7 @@ class Presentation:
                 prefix = spans[:1] if self.icons else []
                 spans = (prefix + self.path_spans(*previous, icon=False) + [(' → ', '2')] +
                          (spans[1:] if self.icons else spans))
+            if listed: return self._spans(spans, prefix='      ')
             return self.detail_spans(label, spans, label_width=label_width,
                                      label_code='94' if label_code is None else label_code)
         if previous: text = self.clean(previous[1]) + ' → ' + text
@@ -225,6 +229,7 @@ class Presentation:
             style = code or resolved
             if self.icons:
                 text = icon + ' ' + text
+        if listed: return self._spans([(text, style)], prefix='      ')
         if self.human:
             return self.detail_spans(label,[(text,style)],label_width=label_width,
                                      label_code='94' if label_code is None else label_code)

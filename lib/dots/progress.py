@@ -25,10 +25,18 @@ def configure(human=True):
     _enabled = bool(human)
 
 
-def eligible():
+def eligible(mode_override=None):
     return (_enabled and os.environ.get('TERM', 'dumb') != 'dumb'
             and sys.stdout.isatty() and sys.stderr.isatty()
-            and progress_mode() != 'none')
+            and (mode_override or progress_mode()) in ('spinner','bar','both'))
+
+
+def terminal_columns(stream=None):
+    """Prefer the actual terminal over an inherited, possibly stale COLUMNS."""
+    try:
+        return max(1, os.get_terminal_size((stream or sys.stderr).fileno()).columns)
+    except (AttributeError, OSError, ValueError):
+        return max(1, shutil.get_terminal_size((80, 24)).columns)
 
 
 def clean(value):
@@ -48,9 +56,13 @@ def clip(text, width):
 
 
 class Progress(ContextDecorator):
-    def __init__(self, label, *, marker_style=None, label_style=None):
+    def __init__(self, label, *, marker_style=None, label_style=None, mode_override=None):
+        if mode_override not in (None, 'none', 'spinner', 'bar', 'both'):
+            raise ValueError('invalid progress preview mode')
         self.label = label
         self.marker_style, self.label_style = marker_style, label_style
+        self.mode_override = mode_override
+        self.appearance = None
         self.owner = False
         self.worker = None
         self.done = threading.Event()
@@ -70,23 +82,15 @@ class Progress(ContextDecorator):
 
     def __enter__(self):
         global _current
-        if not eligible():
+        if not (eligible(self.mode_override) if self.mode_override is not None else eligible()):
             return self
         if _current is not None:
             self.parent = _current
             self.previous_state = _current.state
             return _current
-        if self.marker_style is None or self.label_style is None:
-            try:
-                from style_config import code
-                self.marker_style = code('96') if self.marker_style is None else self.marker_style
-                self.label_style = code('94') if self.label_style is None else self.label_style
-            except (ImportError, OSError, ValueError, KeyError, TypeError):
-                pass  # Optional presentation cannot prevent an operation.
-        if not isinstance(self.marker_style, str) or not re.fullmatch(r'[0-9;]{1,80}', self.marker_style): self.marker_style = '96'
-        if not isinstance(self.label_style, str) or not re.fullmatch(r'[0-9;]{1,80}', self.label_style): self.label_style = '94'
+        self.resolve_styles()
         self.owner = True
-        self.mode = progress_mode()
+        self.mode = self.mode_override or progress_mode()
         self.started = time.monotonic()
         _current = self
         try:
@@ -100,6 +104,22 @@ class Progress(ContextDecorator):
                 self.term_handler = self._terminate
                 signal.signal(signal.SIGTERM, self.term_handler)
         return self
+
+    def resolve_styles(self):
+        """Resolve once before the worker, or explicitly for a static preview."""
+        if self.appearance is not None: return
+        from progress_preferences import Appearance
+        try:
+            from style_config import current
+            styles = current()
+            if styles is not None:
+                if self.marker_style is None: self.marker_style = styles.code('96')
+                if self.label_style is None: self.label_style = styles.code('94')
+            self.appearance = Appearance(styles)
+        except (ImportError, OSError, ValueError, KeyError, TypeError):
+            self.appearance = Appearance()
+        if not isinstance(self.marker_style, str) or not re.fullmatch(r'[0-9;]{1,80}', self.marker_style): self.marker_style = '96'
+        if not isinstance(self.label_style, str) or not re.fullmatch(r'[0-9;]{1,80}', self.label_style): self.label_style = '94'
 
     def update(self, label, completed=0, total=0):
         # Reporting is optional: malformed observer data cannot break a mutation.
@@ -139,7 +159,7 @@ class Progress(ContextDecorator):
         if self.drawn_lines:
             # Account for a terminal reflow after a width reduction. Never hide
             # the cursor or use an alternate screen owned by another workflow.
-            columns = max(1, shutil.get_terminal_size((80, 24)).columns)
+            columns = terminal_columns(self.stream)
             rows = sum(max(1, (cells + columns - 1) // columns) for cells in self.drawn_lines)
             # Reflow keeps the cursor with the current row; saved absolute
             # cursor coordinates do not follow that row when the terminal shrinks.
@@ -150,40 +170,75 @@ class Progress(ContextDecorator):
 
     def lines(self, frame, width, color, icons):
         """Two inert, cell-bounded rows, then optional SGR; no operation logic."""
-        fraction, unit, index, count = self.overall
+        self.resolve_styles()
+        width = max(1, width)
+        fraction = self.overall[0]
         label, completed, total = self.state
         completed = min(completed, total) if total else 0
+        glyphs, styles = self.appearance.glyphs(icons), self.appearance.colors
+        surrounds = len(glyphs['left'] + glyphs['right'])
         spinner = ('⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' if icons else '|/-\\')[frame % (10 if icons else 4)]
+
         def bar(value, size):
             if value is None:
-                point = frame % (2 * (size - 1)); point = min(point, 2 * (size - 1) - point)
-                return '[' + '-' * point + ('━' if icons else '#') + '-' * (size-point-1) + ']'
-            filled = int(size * value)
-            return '[' + ('━' if icons else '#') * filled + '-' * (size-filled) + ']'
-        size = min(14, max(3, width // 6))
-        # The overall counter has a stable meaning throughout nested activity.
-        counter = f' · {unit} {index}/{count}' if count else ''
-        overall = 'Overall ' + (bar(fraction, size)+' ' if self.mode in ('bar','both') else '')
-        overall += str(int(100 * fraction)) + '%' + counter
-        current = spinner+' ' if self.mode in ('spinner','both') else ''
-        hint = self.step_hint
-        count_text = f'{hint[0]} {hint[1]}/{hint[2]} · ' if hint and hint[2] else ''
-        if width >= 59 and (self.mode == 'bar' or self.mode == 'both' and total):
-            current += bar(Fraction(completed,total) if total else None, max(3,min(size,width-len(count_text)-28)))+' '
-        if total: current += str(100*completed//total)+'% · '
-        current += count_text
-        spans = ((label, None),) if isinstance(label, str) else label
+                point = frame % (2 * (size - 1)) if size > 1 else 0
+                point = min(point, 2 * (size - 1) - point)
+                before, filled, after = point, 1, size-point-1
+            else:
+                before, filled = 0, int(size * value)
+                after = size-filled
+            return [(glyphs['left'], styles['surround']),
+                    (glyphs['empty'] * before, styles['empty']),
+                    (glyphs['filled'] * filled, styles['filled']),
+                    (glyphs['empty'] * after, styles['empty']),
+                    (glyphs['right'], styles['surround'])]
+
+        def bounded(parts, limit):
+            result, used = [], 0
+            for text, style in parts:
+                piece, cells = clip(text, max(0, limit-used))
+                if piece: result.append((piece, style))
+                used += cells
+                if len(piece) < len(text): break
+            return result, used
+
         def paint(parts):
-            remaining = width; text = '\033[0m' if color else ''; used = 0
-            for part, style in parts:
-                piece, cells = clip(part, remaining)
-                if piece:
-                    text += ('\033['+(style or self.label_style or '94')+'m'+piece+'\033[0m') if color else piece
-                used += cells; remaining -= cells
-                if len(piece) < len(part): break
+            parts, used = bounded(parts, width)
+            text = '\033[0m' if color else ''
+            for piece, style in parts:
+                code = self.label_style if style is None else style
+                text += ('\033['+code+'m'+piece+'\033[0m') if color and code else piece
             return text, used
-        return (paint(((overall,self.marker_style),)),
-                paint(((current,self.marker_style), *spans)))
+
+        percent = str(int(100 * fraction))+'%'
+        size = width-surrounds-1-len(percent)
+        overall = bar(fraction, size)+[(' ', '')] if self.mode in ('bar','both') and size > 0 else []
+        overall.append((percent, styles['percentage']))
+
+        prefix = spinner if self.mode in ('spinner','both') else ''
+        hint = self.step_hint
+        if hint and hint[2]: prefix += (' ' if prefix else '')+f'{hint[1]}/{hint[2]}'
+        prefix, prefix_cells = clip(prefix, width)
+        suffix = ' '+str(100*completed//total)+'%' if total else ''
+        spans = ((label, None),) if isinstance(label, str) else label
+        separator = ' · ' if hint and hint[2] else ' ' if prefix else ''
+        wants_bar = self.mode == 'bar' or self.mode == 'both' and total
+        # Reserve an eight-cell interior before truncating activity. A short
+        # activity gives its spare cells to the bar; very narrow rows shrink it.
+        reserve = 8+surrounds+1 if wants_bar else 0
+        activity, activity_cells = bounded(spans, width-prefix_cells-len(separator)-len(suffix)-reserve)
+        current = [(prefix, self.marker_style)]
+        if activity_cells:
+            current += [(separator, self.marker_style), *activity]
+            prefix_cells += len(separator)+activity_cells
+        if wants_bar:
+            gap = 1 if prefix_cells else 0
+            size = width-prefix_cells-gap-len(suffix)-surrounds
+            if size > 0:
+                if gap: current.append((' ', ''))
+                current += bar(Fraction(completed,total) if total else None, size)
+        current.append((suffix, styles['percentage']))
+        return paint(overall), paint(current)
 
     def _run(self):
         try:
@@ -191,7 +246,7 @@ class Progress(ContextDecorator):
                 return
             frame = 0
             while not self.done.is_set():
-                width = max(1, shutil.get_terminal_size((80, 24)).columns - 1)
+                width = max(1, terminal_columns(self.stream) - 1)
                 mode = os.environ.get('DOTS_COLOR', 'auto')
                 color = mode == 'always' or (mode == 'auto' and not os.environ.get('NO_COLOR'))
                 icons = os.environ.get('DOTS_ICONS', 'auto') in ('auto', 'always')

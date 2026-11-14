@@ -17,7 +17,7 @@ Record the [configuration review](../../../agents/guides/commands.md#configurati
 ## Choose the view
 
 Identify which outputs are human views and which are APIs before editing.
-Scalar queries, JSON, raw exports, completion and generated shell code bypass
+Scalar queries, JSON, raw exports, completion records and generated shell code bypass
 presentation even when color is forced. Preserve documented redirected formats;
 disabled color in a terminal should retain a useful human layout.
 
@@ -91,7 +91,11 @@ Use existing `progress.bash`/`progress.py` scopes: delayed bars for known counts
 spinners for unknown work, static phases for children that print or prompt.
 Clear before results/prompts and clean up on interruption. Do not add animation
 to help, dry runs, redirected/data output or ordinary shell startup. The
-presentation contract owns delay, controls and lifecycle details.
+presentation contract owns delay, controls and lifecycle details. Shared bars
+fill the available width and read the existing Config progress glyph/color roles;
+reuse `progress_render.bash` for shell rows. The explicitly requested
+`dots debug demo` gallery may render static mock progress and override its own
+mode without changing saved preferences.
 
 For cross-renderer changes, run `tools/test_resources.py`, the applicable
 presentation/progress and command suites, and actual 40/80/120-column PTYs.
@@ -102,3 +106,9 @@ Measure representative listings; preserve the dependency-free help/dispatch path
 Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.
 
 Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.
+
+Interactive shell completion is a display consumer: keep provider records and
+inserted words literal while styling captured labels, descriptions and headings.
+Use `colors.apps.completion.*`, neutral unknown types and LS_COLORS for files.
+Selected-row colors, control escaping and native insertion must pass
+`tools/test_completion_colors.py`; shell integration owns the guarded adapter.

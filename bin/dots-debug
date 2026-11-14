@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # dots:summary=Inspect and diagnose Dots without automatic repairs
-# dots:usage=check|startup|path|command|cache|test|record|alert [OPTIONS]
+# dots:usage=check|startup|path|command|cache|test|record|alert|demo [OPTIONS]
 # dots:example=dots debug startup --shell zsh --isolated
 # dots:example=dots debug startup --shell zsh --live --view slowest
 # dots:example=dots debug startup --shell zsh --live --detail deep --changes path,aliases
 # dots:example=dots debug test
+# dots:example=dots debug demo all --static
 DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
 exec python3 -B "$DOTS/lib/dots/debug_cli.py" "$@"

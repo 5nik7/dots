@@ -22,6 +22,19 @@ STATES = {'M': 'modified', 'A': 'added', 'D': 'deleted', 'R': 'renamed',
           'C': 'copied', 'T': 'type changed', 'U': 'unmerged'}
 CONFLICTS = {'DD': 'both deleted', 'AU': 'added by us', 'UD': 'deleted by them',
              'UA': 'added by them', 'DU': 'deleted by us', 'AA': 'both added', 'UU': 'both modified'}
+STATUS_ICONS = dict(modified='󰏫', added='󰐕', deleted='󰆴', renamed='', copied='',
+                    type_changed='󰑓', untracked='', ignored='', conflict='', selected='')
+
+
+def file_icon_role(xy):
+    """One type icon for the complete XY group, independent of staging color."""
+    if xy in CONFLICTS or 'U' in xy: return 'conflict'
+    if xy == '??': return 'untracked'
+    if xy == '!!': return 'ignored'
+    for marker, role in (('D','deleted'),('R','renamed'),('C','copied'),('A','added'),
+                         ('T','type_changed'),('M','modified')):
+        if marker in xy: return role
+    return 'selected'
 
 
 def file_label(xy, verbose=False):
@@ -75,7 +88,7 @@ class GitView:
         if row.get('pointer_changed'): ui.detail('Pointer', 'differs from parent index', self.role('modified'))
         if row.get('reason'): ui.detail('Reason', row['reason'], self.role('blocked'))
 
-    def file(self, repo, row, ui=None):
+    def file(self, repo, row, ui=None, *, listed=False):
         path = row['path']; old = row.get('old_path', '')
         xy = row.get('xy', '')
         label = xy if self.mode == 'short' else file_label(xy, self.mode == 'verbose')
@@ -83,9 +96,9 @@ class GitView:
         previous = (Path(repo) / old, str(Path(repo) / old) if self.full_paths else old) if old else None
         if row.get('changed') and self.mode != 'short': label = STATES.get(xy.strip(), xy.strip())
         role = 'modified' if row.get('changed') and xy[:1] in ('M','T') else file_role(xy)
-        (ui or self.ui).resource_detail(label, Path(repo) / path, display=display,
+        (ui or self.ui).resource_detail('' if listed else label, Path(repo) / path, display=display,
                                        label_code=self.role(role), label_width=2 if self.mode == 'short' else None,
-                                       path_components=True, previous=previous)
+                                       path_components=True, previous=previous, listed=listed)
 
     def metadata(self, row):
         ui = self.ui
@@ -105,7 +118,20 @@ class GitView:
     def status(self, row, label=None):
         self.header(row, label)
         if self.mode == 'verbose': self.metadata(row)
-        for file in row.get('files', []): self.file(row['path'], file)
+        files = row.get('files', [])
+        if self.mode == 'default':
+            groups = {}
+            for file in files: groups.setdefault(file['xy'], []).append(file)
+            for xy, entries in groups.items():
+                role = file_icon_role(xy)
+                icon = self.ui.icon('git.status.' + role, STATUS_ICONS[role]) if self.ui.icons else ''
+                label = (icon + ' ' if icon else '') + file_label(xy)
+                # A shared glyph (for example the edit pencil) must not pick up
+                # another UI surface's icon-color override by literal matching.
+                self.ui._spans([(label, self.role(file_role(xy)))], prefix='    ', icon_styles=False)
+                for file in entries: self.file(row['path'], file, listed=True)
+        else:
+            for file in files: self.file(row['path'], file)
 
     def info(self, row, label=None):
         self.header(row, label)

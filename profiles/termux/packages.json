@@ -108,7 +108,7 @@
         },
         {
           "name": "atuin",
-          "observed_version": "18.24.6",
+          "observed_version": "18.24.8",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -297,7 +297,7 @@
         },
         {
           "name": "cmake",
-          "observed_version": "4.4.5",
+          "observed_version": "4.5.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -633,7 +633,7 @@
         },
         {
           "name": "gh",
-          "observed_version": "2.103.3",
+          "observed_version": "2.104.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1984,7 +1984,7 @@
         },
         {
           "name": "rumdl",
-          "observed_version": "0.3.3",
+          "observed_version": "0.3.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2961,14 +2961,14 @@
         },
         {
           "name": "@openai/codex",
-          "observed_version": "0.168.0",
+          "observed_version": "0.169.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "@openai/codex-linux-arm64",
-          "observed_version": "0.168.0-linux-arm64",
+          "observed_version": "0.169.0-linux-arm64",
           "pin": null,
           "selection": "explicit",
           "enabled": true

@@ -103,6 +103,11 @@ replacement, and stale compiled startup code is invalidated. Reload once after u
 adapter code. See [Vivid and FSH](../../docs/themes.md#vivid-and-fast-syntax-highlighting)
 for palette mappings and fallback behavior.
 
+Dots route words on the command line use FSH's native `subcommand` theme role.
+The callback also loads without published theme data or with `DOTS_INIT_THEME=0`;
+it preserves existing user chroma entries. Completion menus have separate
+[appearance preferences](../../docs/shell-environment.md#completion-appearance).
+
 Missing generated FSH data and loader/cache failures report the affected path
 and a repair step once per generation/failure in a shell. Use `dots init --setup`
 for missing installation links, or `dots theme refresh` for missing generated
@@ -165,3 +170,14 @@ Platform modules now load only for their active profile. See [profiles](../../do
 ## Keybinding reference
 
 `dots keys zsh` captures the current shell's maps through the Dots integration adapter. Use `--mode viins` or `--mode vicmd` to focus the reference. No keymap scans occur during startup. The Termux local vi-mode hook normalizes both Backspace encodings after initialization and transitions. See [keybindings](../../docs/keys.md).
+
+## Completion appearance
+
+Dots colors command, option, value and Git reference labels independently from
+descriptions and headings, while preserving LS_COLORS for files and literal
+insertion. Configure `apps.completion.enabled` and `colors.apps.completion.*` in
+the existing Config browser. After loading the updated code once in a new shell
+or with `rl`, preference edits refresh at the next prompt. The Dots adapter
+supports the installed FZF-tab capture interface and native Zsh fallback without
+editing plugin files. See [completion appearance](../../docs/shell-environment.md#completion-appearance)
+and [isolated verification](../../docs/testing.md#shell-completion-colors).

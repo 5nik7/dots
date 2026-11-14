@@ -354,7 +354,7 @@ _dots_common_spinner_width() {
   fi
   [[ $_common_candidate =~ ^[0-9]{1,4}$ ]] || _common_candidate=80
   _common_width=$((10#$_common_candidate))
-  (( _common_width > 1 )) || _common_width=80
+  (( _common_width > 0 )) || _common_width=80
   _common_size_dirty=0
 }
 _dots_common_clear_spinner() {
@@ -382,10 +382,21 @@ spinner() {
   [[ -t 1 && -t 2 && ${TERM:-dumb} != dumb ]] || return 0
   command -v sleep >/dev/null 2>&1 || return 0
   setup_colors 2
-  local _common_progress_mode=${DOTS_PROGRESS:-auto} _common_position=0 _common_frame=0 _common_left _common_right
+  local _common_progress_mode=${DOTS_PROGRESS:-auto} _common_frame=0 _common_label _common_color=0 _common_icons=0
+  local _dpr_color _dpr_top _dpr_bottom _dpr_top_plain _dpr_bottom_plain
+  local -A _dpr_symbols _dpr_colors
   [[ $_common_progress_mode != auto ]] || _common_progress_mode=${_DOTS_CLI_PROGRESS:-both}
   case $_common_progress_mode in spinner|bar|both) ;; *) return 0 ;; esac
-  _dots_common_text "${3:-Working...}"
+  [[ -r ${_DOTS_COMMON_UI%/*}/progress_render.bash ]] || return 0
+  # shellcheck source=lib/dots/progress_render.bash
+  source "${_DOTS_COMMON_UI%/*}/progress_render.bash" || return 0
+  # Match Bash operation progress: escaped transient labels have stable cells
+  # even when names contain wide/combining characters or terminal controls.
+  _dots_progress_clean "${3:-Working...}"
+  _common_label=$REPLY
+  [[ -z $DOTS_UI_RESET ]] || _common_color=1
+  [[ $DOTS_UI_OK == '[+]' ]] || _common_icons=1
+  _dots_progress_init "$_common_color" "$_common_icons"
   case $_common_style in
     1) _common_chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' ;;
     2) _common_chars='▁▂▃▄▅▆▇█▇▆▅▄▃▂' ;;
@@ -405,7 +416,9 @@ spinner() {
     16) _common_chars='⌜⌝⌟⌞' ;;
     17) _common_chars='◜◝◞◟' ;;
     18) _common_chars='⬖⬘⬗⬙' ;;
-    19) _common_chars='⏳⌛' ;;
+    # The legacy hourglass frames occupy two cells. Use the shared single-cell
+    # animation so an otherwise full-width row cannot wrap.
+    19) _common_chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' ;;
     *) _common_chars='/-\|' ;;
   esac
   [[ $DOTS_UI_OK != '[+]' ]] || _common_chars='/-\|'
@@ -421,19 +434,11 @@ spinner() {
   command sleep 0.5 || :
   while (( ! _common_signal_status )) && kill -0 "$_common_pid" 2>/dev/null; do
     _dots_common_clear_spinner
-    if [[ $_common_progress_mode == bar ]]; then
-      _common_position=$((_common_frame%14)); ((_common_position<8)) || _common_position=$((14-_common_position))
-      printf -v _common_left '%*s' "$_common_position" ''
-      printf -v _common_right '%*s' "$((7-_common_position))" ''
-      _common_line="[${_common_left// /-}#${_common_right// /-}] $REPLY"
-      ((_common_frame+=1))
-    else _common_line="${_common_chars:_common_index:1} $REPLY"; fi
-    _common_line=${_common_line:0:_common_width-1}
-    _common_overall='Overall 0% · step 1/1'
-    [[ $_common_progress_mode == spinner ]] || _common_overall='Overall [--------] 0% · step 1/1'
-    _common_overall=${_common_overall:0:_common_width-1}
+    _dots_progress_rows "$((_common_width-1))" "$_common_progress_mode" "$_common_frame" "${_common_chars:_common_index:1}" 0 0 0 1 1 "$_common_label"
+    _common_overall=$_dpr_top_plain _common_line=$_dpr_bottom_plain
     printf '\r\n\r\033[1A\r' >&2
-    printf '\r%s%s%s\n\r%s%s%s' "$DOTS_UI_CYAN" "$_common_overall" "$DOTS_UI_RESET" "$DOTS_UI_CYAN" "$_common_line" "$DOTS_UI_RESET" >&2
+    printf '\r%s\n\r%s' "$_dpr_top" "$_dpr_bottom" >&2
+    ((_common_frame+=1))
     _common_drawn=1 _common_old_width=$_common_width
     _common_index=$(((_common_index+1)%${#_common_chars}))
     command sleep 0.1 || break

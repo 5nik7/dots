@@ -156,7 +156,7 @@ snapshots, omitting unchanged/skipped packages and newly added dependencies.
 No changes reports Updated none; an inventory failure reports Updated unavailable
 without blocking the transaction or changing its exit status. These reads apply
 only to compact upgrades. The skipped suffix uses the theme's muted foreground.
-Package identities in results and progress default to the active palette's accent through `colors.apps.pkgs`.
+Package identities in results and progress default to the active palette's accent through `colors.apps.pkgs`. Manager labels use `colors.apps.pkgs.manager`, defaulting to magenta (pink in the current theme), across owned help, reports, previews, diagnostics and progress.
 Compact npm output hides deprecations and the two routine force/allow-scripts
 notices described in [package output](../../docs/packages.md#output). Other warnings/errors
 remain visible; raw and ordinary redirected output retain all notices.
@@ -202,8 +202,10 @@ ownership queries. See [package output and export](../../docs/packages.md#output
 `pkgs up` and `dots pkgs up` use the shared `apps.cli.progress` preference, defaulting
 to `both`. An overall bar tracks equal manager shares and their preparation,
 execution and finalization steps. A second row shows the current step, spinner
-and measured download/transaction progress. Named counts such as `manager 2/3`
-and `step 1/2` replace trailing unit labels. Downloads never complete an enclosing
+and measured download/transaction progress. The overall row has only a full-width
+bar and percentage; the current row uses a bare count such as `1/2`. Bars expand
+to the available width and have configurable glyphs and colors; transient activity
+truncates first. See [progress appearance](../../docs/configuration.md#progress-appearance). Downloads never complete an enclosing
 opaque command, and progress does not estimate time remaining. Final results
 determine success. Export counts inspected managers. Raw, JSON, dry-run and
 ordinary redirected output remain free of animation.
@@ -326,6 +328,11 @@ packages inserts quoted names and excludes names already entered.
 **Completion never runs package transactions or registry searches.** Candidates
 come from local catalogs and caches; previews inside a fuzzy picker may fetch
 registry metadata, and Alt-O opens a URL only on your keypress.
+
+Zsh labels commands, options and values separately, so Dots completion colors
+apply to standalone `pkgs` as well as `dots pkgs`. Package names and descriptions
+remain literal; the display adapter owns colors. Ordinary completion records
+retain their undecorated format, including in Bash and Fish.
 
 ### Bash
 

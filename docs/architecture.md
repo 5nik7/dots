@@ -496,3 +496,22 @@ Configuration discovery uses `config_keys.py` for bounded public/legacy translat
 Backup/link controllers compose operations through `files/backup_catalog.py` into the existing Store. `setup_anodize.py` owns isolated engine preparation and `setup_starship.py` owns the saved palette/active link plan. Standalone bootstrap adapters own minimum acquisition/prerequisite handling and delegate to the shared installer. Blastoff `linked_apply.py` journals saved-theme selection and provenance; editor/module writes retain application locks and publication boundaries. Blastoff `shared_backups.py` supplies app metadata over the common Bak catalog for every new retained snapshot; `backups.py` also reads legacy pairs. Transaction recovery copies remain internal to Store.
 
 `preference_files.py` composes shared/profile preference files and retains legacy inline reads. `profile.json` owns structural identity, environment and mappings; adjacent JSON owns behavior/formatting/settings, and TOML owns colors/icons. `config_transfer.py` composes guarded migration/import transactions through Store. Native application configuration remains with its existing adapters.
+
+## Shell completion appearance
+
+`lib/dots/completion_preferences.py` resolves shared/profile completion controls
+and style roles into literal startup rows. The existing startup compiler and
+Bash/Zsh settings reader carry them; `lib/dots/completion/styles.zsh` owns native
+Zsh list styles, bounded prompt invalidation and the guarded FZF-tab adapter.
+The personal Zsh completion/plugin loaders connect that adapter after plugins
+load. Command providers supply optional literal types, while the display layer
+owns ANSI, escaped labels and inert lookup IDs for control-bearing labels.
+Insertion metadata stays with Zsh/FZF-tab. Installed plugin files remain
+untouched. See [completion appearance](shell-environment.md#completion-appearance).
+
+`lib/dots/themes/fsh-dots.zsh` owns editor highlighting of known Dots route words
+through FSH's native chroma callback and `subcommand` style. Plugin loading
+registers it independently of theme initialization; the theme adapter also
+reconnects it. Exact executable-path checks avoid catalog scans or command
+execution during redraw. Existing user callbacks and native shell syntax retain
+their ownership. Completion-list preferences do not change the input theme.

@@ -116,6 +116,11 @@ routes. Record each outcome in the focused plan and tracked Todo acceptance:
   aliases. Cover options, finite values, literal file paths and safe dynamic IDs.
   Completion never runs extensions, prompts, downloads or writes state. Name any
   platform exception and unavailable native acceptance explicitly.
+- Run `python3 -B tools/test_completion_catalog.py` for Dots grammar changes.
+  First-party delegated and standalone providers must preserve semantic
+  command/option/value identity without inserting ANSI. Associated project
+  coverage uses the [completion audit](../../docs/testing.md#shell-completion-colors);
+  static inventory and native menu verification establish different facts.
 - Apply shared colors, icons and formatting to human output, with plain fallbacks
   and exact scalar/JSON/raw/completion contracts. Review existing Config controls.
 - Add or update a shared popup/menu when repeated selection, browsing or review

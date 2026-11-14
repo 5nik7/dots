@@ -3,9 +3,10 @@ import os
 import subprocess
 import sys
 from todo_commands import COMMANDS, OPTIONS, SCOPE
+from completion_records import candidate_record, requested
 
 
-def complete(words, standalone=False):
+def complete(words, standalone=False, *, display_types=False):
     current = words[-1] if words else ''
     previous = words[:-1]
     action, pending, positionals, values, literal = '', None, [], {}, False
@@ -33,10 +34,10 @@ def complete(words, standalone=False):
     if current.startswith('--') and '=' in current:
         pending, _, current = current[2:].partition('=')
         lead = '--' + pending + '='
-    def emit(value, description=''):
+    def emit(value, description='', role='value'):
         from resources import clean
         if value.startswith(current) and not any(c in value for c in '\t\r\n\0'):
-            print('candidate\t' + lead + value + '\t' + clean(description))
+            print('\t'.join(candidate_record(lead + value, clean(description), role, display_types=display_types)))
     names = (*SCOPE, *COMMANDS[action][2])
     if pending:
         if pending not in names:
@@ -53,12 +54,12 @@ def complete(words, standalone=False):
     elif current.startswith('-') and not literal:
         for name in names:
             if standalone or name not in ('project', 'global'):
-                emit('--' + name, OPTIONS[name][1])
-        emit('--help', 'Show help')
+                emit('--' + name, OPTIONS[name][1], 'option')
+        emit('--help', 'Show help', 'option')
         return
     elif not action:
         for name, row in COMMANDS.items():
-            if name: emit(name, row[0])
+            if name: emit(name, row[0], 'command')
         return
     elif COMMANDS[action][1] and COMMANDS[action][1][1] == 'todo-id' and not positionals:
         kind = 'todo-id'
@@ -84,6 +85,6 @@ def complete(words, standalone=False):
 
 if __name__ == '__main__':
     try:
-        complete(sys.argv[2:], standalone=sys.argv[1] == 'standalone')
+        complete(sys.argv[2:], standalone=sys.argv[1] == 'standalone', display_types=requested())
     except (ValueError, OSError, subprocess.SubprocessError):
         pass

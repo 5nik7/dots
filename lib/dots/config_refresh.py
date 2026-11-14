@@ -78,6 +78,7 @@ def explain(key, root=None, selected=None, defaults=False, app=None, *, _style=N
             expected=style.color(resolved['value']) if field in ('fg','bg') and resolved['value'] is not None else resolved['value']
         else: actual=actual.get(base); expected=resolved['value']
         status=('unsupported' if consumer not in choices else 'inactive scope' if not is_active else
+                'next Zsh prompt and completion' if consumer=='completion' else
                 'next invocation' if consumer in ('cli','wttr') else 'published' if actual==expected and published else 'pending')
         from config_keys import description,canonical
         from style_catalog import constraints
@@ -92,6 +93,9 @@ def explain(key, root=None, selected=None, defaults=False, app=None, *, _style=N
                 fields=style._help_preferences.style(role[5:])
                 if role=='help.tagline' and field=='fg' and style._help_preferences.tagline_fallback:
                     details['fallback']='Theme accent unavailable; ordinary foreground'
+            if consumer=='cli' and role.startswith('progress.'):
+                from progress_preferences import fields as progress_fields
+                fields=progress_fields(style,role.split('.',1)[1])
             details['resolved_color']=style.color(fields.get(field,resolved['value']), 'default' if field=='bg' else 'foreground')
             if str(resolved['value']).startswith('palette.') and resolved['value'][8:] not in style.native_palette:
                 details['fallback']='Palette name unavailable; inherited semantic or terminal default'
@@ -217,6 +221,7 @@ def tmux_servers(root, selected, state):
 
 def reload_consumers(root, selected, state, generation, changed):
     results=[]
+    if 'completion' in changed: results.append(dict(app='completion',status='next Zsh prompt and completion'))
     if 'cli' in changed: results.append(dict(app='cli',status='next invocation'))
     if set(changed)&{'cli','fzf','gum'}: results.append(dict(app='shell',status='next prompt'))
     if 'tmux' in changed:
@@ -318,12 +323,31 @@ def refresh(root=None, *, dry=False, before=None, retry=True):
                 transaction=transaction,generation=generation.name,consumers=results)
 
 
+def invocation_visuals_only(before, after):
+    """These CLI-owned preferences are read at invocation, even in a batch."""
+    def remaining(doc):
+        cli = doc.get('apps', {}).get('cli', {})
+        return dict(cli,
+                    colors={k:v for k,v in cli.get('colors',{}).items()
+                            if not k.startswith(('progress.', 'help.', 'pkgs.'))},
+                    icons={k:v for k,v in cli.get('icons',{}).items() if not k.startswith(('progress.bar.', 'git.status.'))},
+                    options={k:v for k,v in cli.get('options',{}).items() if k not in ('tagline','progress')})
+    return affected(before, after) == ['cli'] and remaining(before) == remaining(after)
+
+
 def after_save(root, before):
     try:
         after = effective(root)
         changed=affected(before,after)
+        if changed==['completion']:
+            return dict(schema=1,status='complete',consumers=[dict(app='completion',status='next Zsh prompt and completion')])
         old_cli=before.get('apps',{}).get('cli',{})
         new_cli=after.get('apps',{}).get('cli',{})
+        def without_progress(doc):
+            return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('progress.')},
+                        icons={k:v for k,v in doc.get('icons',{}).items() if not k.startswith('progress.bar.')})
+        if changed==['cli'] and without_progress(old_cli)==without_progress(new_cli):
+            return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         def without_help(doc):
             return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('help.')},
                         options={k:v for k,v in doc.get('options',{}).items() if k not in ('tagline','progress')})
@@ -373,6 +397,8 @@ def after_save(root, before):
             if before.get('config',{}).get('apps',{}).get('menu') != after.get('config',{}).get('apps',{}).get('menu'):
                 return dict(schema=1,status='complete',consumers=[dict(app='menu',status='next popup')])
             return dict(schema=1,status='unchanged',consumers=[])
+        if invocation_visuals_only(before,after):
+            return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         return refresh(root,before=before,retry=False)
     except (OSError,ValueError,KeyError,TypeError) as error:
         return dict(schema=1,status='failed',reason=str(error),consumers=[],retry='dots config refresh')
@@ -387,6 +413,8 @@ def preview_save(root, plan):
         before=snapshot(None,root,styles=style)
         after=snapshot(None,root,styles=style,controls=values)
         changes=affected(before,after)
+        if changes==['completion']:
+            return dict(schema=1,status='preview',consumers=changes,reason='Next Zsh prompt and completion; no theme publication or reload')
         if before['config'].get('apps',{}).get('git') != after['config'].get('apps',{}).get('git'):
             changes.append('git')
         if plan.items and all(item.get('key') in ('apps.cli.progress','apps.git.view') for item in plan.items):
@@ -401,5 +429,10 @@ def preview_save(root, plan):
             changes.append('setup')
         return dict(schema=1,status='preview',consumers=changes,reason='Refresh affected active consumers after saving' if changes else 'No active consumer change')
     proposed = Styles(root, replacements={plan.path: plan.data}, palette=dict(colors=style.palette,palette=style.native_palette))
-    changes = affected(snapshot(style.palette, root, styles=style), snapshot(style.palette, root, styles=proposed))
-    return dict(schema=1,status='preview', consumers=changes, reason='Refresh affected active visuals after saving' if changes else 'No active visual change')
+    before,after = snapshot(style.palette, root, styles=style), snapshot(style.palette, root, styles=proposed)
+    changes = affected(before,after)
+    if changes==['completion']:
+        return dict(schema=1,status='preview',consumers=changes,reason='Next Zsh prompt and completion; no theme publication or reload')
+    reason = ('Next invocation or popup; no theme publication or reload' if invocation_visuals_only(before,after) else
+              'Refresh affected active visuals after saving' if changes else 'No active visual change')
+    return dict(schema=1,status='preview', consumers=changes, reason=reason)

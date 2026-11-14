@@ -5,6 +5,12 @@ description: Maintain the bundled pkgs command family, manager adapters, package
 
 # Dots Packages Maintenance
 
+Check standalone Zsh as well as Dots-prefixed completion. Its private
+`--display-types` projection supplies command/option/value roles without changing
+ordinary two-field records. Preserve native group tags and literal package names;
+run `plugins/pkgs/tests/test_completion_types.py` when changing grammar/providers.
+Use existing shared completion preferences; no backend query is needed for types.
+
 Preserve grammar aliases `in`, `un`, `up`, `xup`, `upls` across standalone/Dots
 entry points. `upgrade ls` / `upgrade --list` query native candidates without
 transactions or recipes, using cached system indexes and bounded language

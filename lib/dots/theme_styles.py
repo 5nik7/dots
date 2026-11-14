@@ -6,7 +6,7 @@ import re
 from style_config import Styles, ATTRS
 
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr')
+APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr', 'completion')
 
 
 def snapshot(palette, root=None, *, styles=None,controls=None):

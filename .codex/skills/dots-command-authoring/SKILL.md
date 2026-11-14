@@ -35,6 +35,12 @@ Implement Bash on Termux/Linux/WSL and native PowerShell surfaces together, reco
 
 Use [documentation maintenance](../dots-documentation-maintenance/SKILL.md) to update metadata-derived help, user/reference docs, the family index when needed, plan status and local wiki. Finish only after the recorded config/menu decisions are implemented or justified, checks pass and remaining native limits are named. Report delivery and activation separately; command authoring does not itself authorize live installation, publication or unrelated changes.
 
+Run `tools/test_completion_catalog.py` after adding routes or finite choices.
+Emit command/option/value identity from the parser, including delegated and
+standalone providers, while keeping inserted words literal. Use existing
+completion preferences; verify real Zsh menus with group headings both visible
+and hidden through the shell-integration workflow.
+
 Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.
 
 For command or user-facing script work, include the [command/script delivery gate](../../../agents/guides/commands.md#command-and-script-delivery) in the plan and tracked acceptance: six-shell completion including aliases, human presentation, useful menus, README/wiki and installer/bootstrap integration. Implement add/update decisions; record reasons for unchanged integrations and distinguish native checks from fixtures.

@@ -47,6 +47,9 @@ claim about what every future project must use.
 - **Color without breaking pipelines.** Respect `NO_COLOR`; omit escape codes,
   banners and interactive behavior from machine/forwarded output. Completion
   should not launch the application, start services or use the network.
+  Label Zsh commands, options and values using semantic completion tags so the
+  user's shared completion preferences apply at every command depth; keep raw
+  candidate records and inserted names undecorated.
 - **Documentation that lets him verify the result.** Include exact commands,
   paths, expected output, dependency checks, limitations and recovery steps.
   Keep source/generated artifacts/help/manual/completions/release notes aligned.

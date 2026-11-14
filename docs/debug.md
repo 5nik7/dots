@@ -27,6 +27,26 @@ input metadata; the native loader additionally checks its own shell version and
 runtime guards. `check` treats malformed caches as failures and reports ordinary
 staleness as a need for normal startup preparation.
 
+## Mock output gallery
+
+```sh
+dots debug demo
+dots debug demo progress
+dots debug demo spinner --loop
+dots debug demo pkgs --static
+dots debug demo git --static
+dots debug demo all --duration 6
+dots debug demo all --json
+```
+
+The gallery renders fixed fictional data using the current shared progress, package, Git, resource, message and help renderers. Kinds are `progress`, `spinner`, `pkgs`, `git`, `files`, `messages`, `help` and `all`; omitting the kind lists descriptions and examples. No real package manager, Git query, network provider, hook, alert or settings mutation runs. Paths, package names and failures are samples, not observations of your machine.
+
+`progress` demonstrates overall sequence completion alongside an independent download percentage. `spinner` shows unknown work. Each explicitly selects its demonstration mode for this invocation, even when saved progress is `none`; colors and icons still follow current preferences. Defaults are four seconds of animation. `--duration SECONDS` accepts integers 1–60 for progress/spinner/all; `all` splits that total between its two animated sections. `--loop` repeats only progress or spinner until Ctrl-C and requires usable stdout/stderr terminals. Appearance is resolved at invocation start; restart a demo to inspect changed preferences.
+
+`--static`, redirected output or `TERM=dumb` produces immediate snapshots with no sleep. `--json` emits version 1 inert fixture data (`mock: true`) without decoration or delay. Looping cannot combine with static or JSON output. Mock failures still exit 0; invalid arguments exit 2 and interruption exits 130 after clearing the transient rows. Finite demos show a final static sample after animation.
+
+The Dots launcher has **Debug → Output demos**. Static package, Git, file, message, help and gallery samples open in its output reader. Progress and spinner entries close the selector and hand off the terminal for animation. Both Bash and native PowerShell route to the same Python controller. These previews reuse [progress and manager preferences](configuration.md#progress-appearance); there is no separate demo configuration.
+
 ## Test Codex alerts
 
 ```sh

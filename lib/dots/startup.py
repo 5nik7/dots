@@ -33,6 +33,7 @@ class Compiler:
     def __init__(self, root, shell):
         self.root, self.shell = root, shell
         self.inputs = set()
+        self.missing_inputs = set()
         self.stack = set()
         self.observed = {}
         self.modules = []
@@ -132,6 +133,15 @@ class Compiler:
         controls = Controls(self.root, profile)
         setting_rows += ['\t'.join(row) for row in formatting_rows(self.root,profile,controls=controls)]
         setting_rows += ['\t'.join(row) for row in help_rows(self.root,profile,styles=styles,controls=controls)]
+        from completion_preferences import rows as completion_rows
+        for row in completion_rows(styles=styles,controls=controls):
+            setting_rows.append('\t'.join(row))
+            if row[0] in ('__completion.watch', '__completion.watch.hex'):
+                # Guard missing inputs with shell existence checks. Watching a
+                # distant home/state ancestor would invalidate on unrelated I/O.
+                path = Path(bytes.fromhex(row[1]).decode() if row[0].endswith('.hex') else row[1])
+                if path.exists(): self.inputs.add(path)
+                else: self.missing_inputs.add(path)
         from cli_preferences import rows as cli_rows
         setting_rows += ['\t'.join(row) for row in cli_rows(controls)]
         self.inputs.add(LIB/'cli_preferences.py')
@@ -200,6 +210,8 @@ def prepare(root, shell, destination):
             if expected != (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns): raise ValueError('startup input changed during preparation')
         signature = subprocess.check_output(['stat','-c','%d:%i:%s:%y:%z','--', *map(str,inputs)], text=True).rstrip('\n')
         guard = '[[ $DOTS == ' + shlex.quote(str(root)) + ' && ${ZSH_VERSION:-${BASH_VERSION:-}} == ' + shlex.quote(os.environ.get('DOTS_BUILD_SHELL_VERSION','')) + ' ]] || return 1\n'
+        for path in sorted(compiler.missing_inputs):
+            guard += '[[ ! -e ' + shlex.quote(str(path)) + ' ]] || return 1\n'
         guard += '_dots_bundle_inputs=(' + ' '.join(map(lambda p: shlex.quote(str(p)),inputs)) + ')\n'
         guard += '[[ $(command stat -c \'%d:%i:%s:%y:%z\' -- "${_dots_bundle_inputs[@]}" 2>/dev/null) == ' + shlex.quote(signature) + ' ]]\n'
         shell_bin = shutil.which(shell)

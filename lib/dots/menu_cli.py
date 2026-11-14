@@ -142,7 +142,16 @@ FAMILIES = {
                        'document' if name in ('preview', 'extract') else 'terminal', '󰏘')
                        for name in ('create', 'extract', 'edit', 'preview', 'apply')),
                 Action('list', 'list', ('anodize', 'list'))),
-    'debug': leaves('debug', 'check startup path cache'),
+    'debug': (*leaves('debug', 'check startup path cache'),
+              Action('demos', 'Output demos', ('debug', 'demo'), kind='submenu', submenu='debug/demo', icon='󰃤')),
+    'debug/demo': (
+        *tuple(Action(name, name + ' animation', ('debug', 'demo'), (name,), kind='terminal')
+               for name in ('progress', 'spinner')),
+        *tuple(Action('sample-help' if name == 'help' else name, name + ' snapshot', ('debug', 'demo'), (name, '--static'))
+               for name in ('pkgs', 'git', 'files', 'messages', 'help', 'all')),
+        Action('progress-static', 'progress snapshot', ('debug', 'demo'), ('progress', '--static')),
+        Action('spinner-static', 'spinner snapshot', ('debug', 'demo'), ('spinner', '--static')),
+    ),
     'profile': (*leaves('profile', 'show list paths layers files commands env check'),
                 Action('check-all', 'check all', ('profile','check'), ('--all',))),
     'wiki': (Action('browse', 'browse', ('wiki', 'browse'), kind='document', icon='󰈙'),

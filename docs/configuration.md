@@ -7,6 +7,59 @@
 CLI Git view flags override the saved view. `DOTS_PROGRESS=auto` follows Config; explicit modes override it, with `never` retained as an alias for `none`. Terminal/data gates still apply. See [Git views](git.md#output-views) and [progress](presentation.md#operation-progress).
 
 
+### Git status icons
+
+Default Git status uses two spaces per level: repository, status heading, then files. Edit heading icons with `dots config browse --query icons.git.status`. Each key below is prefixed by `icons.git.status.`:
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `modified` | `󰏫` | Pencil: modified file, staged or unstaged |
+| `added` | `󰐕` | Plus: added file |
+| `deleted` | `󰆴` | Trash: deleted file |
+| `renamed` | `` | Arrow: renamed file |
+| `copied` | `` | Copy: copied file |
+| `type_changed` | `󰑓` | Change arrows: file type changed |
+| `untracked` | `` | Question mark: untracked file |
+| `ignored` | `` | Hidden eye: ignored file, when present in a report |
+| `conflict` | `` | Warning triangle: any unmerged/conflicting state |
+| `selected` | `` | Check: fallback for a selected file without a status code |
+
+These glyphs follow shared-default, parent-profile and selected-profile inheritance, with optional `icons.apps.cli.git.status.*` overrides. Empty hides an individual icon; unset/reset removes an override. The existing `DOTS_ICONS` policy controls all icons. Each heading uses its Git status color for both glyph and text; staged and unstaged colors retain their existing meanings. Other apps' `icons.git.*` symbols are independent. These controls apply on the next invocation without theme publication or application reload.
+
+```sh
+dots config set icons.git.status.modified ''
+dots config set icons.git.status.ignored ''
+dots config unset icons.git.status.modified
+dots debug demo git --static
+```
+
+These commands edit shared defaults; add `--profile ID` for a profile override. Glyphs are literal printable text (up to 64 characters), so text alternatives also work. Status icons decorate existing records and do not change which files Git inspects or includes. See [Git views](git.md#output-views) for combined-state selection and plain output.
+
+### Progress appearance
+
+Use `dots config browse --query progress` to edit the shared bar appearance. All controls inherit shared defaults, parent profiles and the selected profile; reset/unset removes an override. Changes apply on the next invocation, including compiled shell helpers, without publishing a theme.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `icons.progress.bar.filled` | `━` | Filled cell |
+| `icons.progress.bar.empty` | `-` | Unfilled cell |
+| `icons.progress.bar.left` / `right` | `[` / `]` | Surrounds; empty hides either side |
+| `colors.apps.cli.progress.filled.fg` / `percentage.fg` | `colors.ui.heading.fg` | Filled cells and percentage; current theme aqua |
+| `colors.apps.cli.progress.empty.fg` / `surround.fg` | `colors.ui.muted.fg` | Empty cells and surrounds |
+| `colors.apps.pkgs.manager.fg` | `magenta` | Manager labels such as npm, pip, apt and uv; current theme pink |
+
+Each glyph is a single printable display cell. Config suggests alternatives such as `─`, `═`, `█`, `#`, `=`, `░` and `·`; choose them individually. Combining, wide, control and multicharacter values are rejected. ASCII mode preserves configured ASCII glyphs and substitutes `#`, `-`, `[` and `]` for non-ASCII ones. Each progress color role also supports `bg`, `bold`, `dim`, `italic`, `underline`, `reverse` and `strikethrough`. Spinner/activity styles retain their separate controls.
+
+```sh
+dots config set icons.progress.bar.filled '='
+dots config set colors.apps.cli.progress.empty.fg muted
+dots config set colors.apps.pkgs.manager.fg magenta
+dots debug demo progress
+dots debug demo pkgs --static
+```
+
+The [mock output gallery](debug.md#mock-output-gallery) previews current settings without running package or repository operations. Restart a running demo to pick up changed settings.
+
 ## Help and usage preferences
 
 `apps.cli.tagline` sets the root help phrase beneath the Dots artwork. Its default is `Manage your dotfiles and more...`, without a `dots —` prefix. The value is literal, printable single-line text; an empty string hides it, and null/unset inherits. The default tagline style uses the selected theme's accent if present, otherwise the ordinary foreground.
@@ -314,3 +367,14 @@ The repository's Termux appearance has been promoted to shared defaults; redunda
 Termux declarations were removed so future shared edits take effect there.
 
 The [tmux clock controls](tmux.md#retained-widget-readings) include automatic location acquisition, its refresh interval and sun-time retention. They use the same Config editor, completion, precedence and published preference refresh as the other `apps.tmux.clock` settings.
+
+## Completion appearance controls
+
+`apps.completion.enabled` and `colors.apps.completion.*` configure the Zsh
+completion display through the same CLI/browser and shared/profile preferences.
+Foreground, background and text attributes are supported for candidate, command,
+option, value, branch, tag, remote, description, heading and separator roles.
+Completion-only saves activate at the next Zsh prompt without theme publication;
+other shells expose the same configuration data without a new display consumer.
+See [completion appearance](shell-environment.md#completion-appearance) for
+examples, defaults, color policy and the initial code-loading requirement.

@@ -360,6 +360,7 @@ def activation(key):
     path=parts(internal(key))
     app=path[1] if path[0]=='apps' else path[2] if path[:2]==('formatting','apps') else ''
     return (app, {'tmux':'visual publication; verified tmux servers receive owned controls',
+                  'completion':'next Zsh prompt and completion',
                   'nvim':'visual publication; Neovim refreshes on focus',
                   'fzf':'visual publication; existing shells follow on the next prompt',
                   'menu':'next popup', 'fonts':'next Fonts invocation or popup',

@@ -138,12 +138,13 @@ def help_view(words):
     return 0
 
 
-def complete(words):
+def complete(words, *, display_types=False):
+    from completion_records import candidate_record
     current = words[-1] if words else ''
     prior = words[:-1]
-    def emit(value, description=''):
+    def emit(value, description='', role='value'):
         if value.startswith(current) and not any(ord(c) < 32 or ord(c) == 127 for c in value + description):
-            print('candidate\t' + value + '\t' + description)
+            print('\t'.join(candidate_record(value, description, role, display_types=display_types)))
     try:
         positional, _, directory, expected = parse(prior, partial=True)
         names, action, tail, pending = route(positional, partial=True)
@@ -152,9 +153,9 @@ def complete(words):
             return 0
         if current.startswith('-') and '--' not in prior:
             for long, short, _, description in metadata(action)['option']:
-                emit(long, description)
-                if short: emit(short, description)
-            emit('--help', 'Show contextual help')
+                emit(long, description, 'option')
+                if short: emit(short, description, 'option')
+            emit('--help', 'Show contextual help', 'option')
             return 0
         if pending:
             import inspection
@@ -181,9 +182,9 @@ def complete(words):
                 for row in inspection.discover(Path(selected['path']))[0]:
                     if row['availability'] != 'blocked': emit(row['relative_path'])
         elif positional[-1:] == ['submodules']:
-            for value in ('info', 'status', 'publish'): emit(value, metadata('submodules ' + value)['summary'])
+            for value in ('info', 'status', 'publish'): emit(value, metadata('submodules ' + value)['summary'], 'command')
         elif len(positional) == 2 * len(names) - 1:
-            for value in ACTIONS: emit(value, 'Submodule action')
+            for value in ACTIONS: emit(value, 'Submodule action', 'command')
     except (ValueError, OSError):
         pass
     return 0
@@ -193,7 +194,9 @@ def main(argv=None):
     words = list(sys.argv[1:] if argv is None else argv)
     native = words[:1] == ['--frontend=native']
     if native: words.pop(0)
-    if words[:1] == ['--complete']: return complete(words[1:])
+    if words[:1] == ['--complete']:
+        from completion_records import requested
+        return complete(words[1:], display_types=not native and requested())
     explicit_help = words[:1] == ['--help-context']
     if explicit_help: words.pop(0)
     boundary = words.index('--') if '--' in words else len(words)

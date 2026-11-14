@@ -114,7 +114,15 @@ _dots_suggestion_plugin() {
 _dots_widget_plugins() {
   _dots_plugin_setup || return
   _dots_load_plugin Aloxaf/fzf-tab
+  (( ! ${+functions[_dots_completion_install_fzf]} )) || _dots_completion_install_fzf
   _dots_load_plugin zdharma-continuum/fast-syntax-highlighting
+  # Route highlighting is useful with theme initialization disabled too.
+  if (( ${+FAST_HIGHLIGHT} )); then
+    if (( ! ${+functions[_dots_fsh_install_chroma]} )); then
+      source "$DOTS/lib/dots/themes/fsh-dots.zsh"
+    fi
+    _dots_fsh_install_chroma
+  fi
   if ((${+functions[_dots_fsh_apply]})); then
     _dots_fsh_apply || :
   fi

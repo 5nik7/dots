@@ -5,9 +5,10 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bak_commands import COMMANDS, COMMON, OPTIONS
+from completion_records import candidate_record, requested
 
 
-def complete(words, shell='bash'):
+def complete(words, shell='bash', *, display_types=False):
     current = words[-1] if words else ''
     action = ''; positional = []; pending = None; literal = False
     all_options = {row[0]: row for rows in [COMMON, *OPTIONS.values()] for row in rows}
@@ -28,10 +29,10 @@ def complete(words, shell='bash'):
     lead = ''
     if not literal and current.startswith('--') and '=' in current:
         pending, _, current = current.partition('='); lead = pending + '='
-    def emit(value, description=''):
+    def emit(value, description='', role='value'):
         if value.startswith(current) and not any(ord(c) < 32 or 127 <= ord(c) < 160 for c in value):
             description = ''.join(c if ord(c) >= 32 and not 127 <= ord(c) < 160 else ' ' for c in description)
-            print('candidate\t' + lead + value + '\t' + description)
+            print('\t'.join(candidate_record(lead + value, description, role, display_types=display_types)))
     def paths(kind):
         if shell not in ('nu', 'xonsh'):
             print(kind + '\t' + lead + '\t'); return
@@ -58,13 +59,13 @@ def complete(words, shell='bash'):
         return
     if current.startswith('-') and not literal:
         for flag, short, _, description in options:
-            emit(flag, description)
-            if short: emit(short, description)
-        emit('--help', 'Show help'); return
+            emit(flag, description, 'option')
+            if short: emit(short, description, 'option')
+        emit('--help', 'Show help', 'option'); return
     if not action or action in ('create', 'import'):
         if not action and not positional and not literal:
             for key, row in COMMANDS.items():
-                if key: emit(key, row[0])
+                if key: emit(key, row[0], 'command')
         paths('file'); return
     if action not in ('show', 'restore', 'delete') or positional and action != 'delete': return
     from files.file_platform import state_root
@@ -83,5 +84,5 @@ def complete(words, shell='bash'):
 
 
 if __name__ == '__main__':
-    try: complete(sys.argv[2:], shell=sys.argv[1])
+    try: complete(sys.argv[2:], shell=sys.argv[1], display_types=requested())
     except (ValueError, OSError, KeyError, TypeError): pass

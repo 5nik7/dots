@@ -5,13 +5,20 @@ description: Maintain dots debug inspection, startup tracing, PATH recording and
 
 # Dots Debug Maintenance
 
-Read [debugging](../../../docs/debug.md), [diagnostic safety](../../../docs/safety.md#explicit-startup-diagnostics) and [profile behavior](../../../docs/profiles.md). `lib/dots/debug_cli.py` routes into `debug/inspect.py`, `startup.py`, `record.py`, `changes.py` and `selftest.py`; native tracing adapters also live under `lib/dots/shell`. Keep inspection, opted-in tracing and recording separate.
+Read [debugging](../../../docs/debug.md), [diagnostic safety](../../../docs/safety.md#explicit-startup-diagnostics) and [profile behavior](../../../docs/profiles.md). `lib/dots/debug_cli.py` routes into `debug/inspect.py`, `startup.py`, `record.py`, `changes.py`, `selftest.py` and `demo.py`; native tracing adapters also live under `lib/dots/shell`. Keep inspection, opted-in tracing and recording separate.
 
 `dots debug alert` is an explicitly invoked Termux device test, using the existing
 Codex toast/vibration preferences and fixed mock text. It uses no Codex queue or
 attention state. Keep it out of generic checks, curated self-tests and the
 read-only launcher. Verify with Android stand-ins in `tools/test_codex_vibration.py`;
 API success does not prove physical delivery.
+
+`dots debug demo` previews fixed mock data through current shared renderers. Keep
+it free of provider discovery, package/Git execution, hooks, alerts and settings
+writes. Static/redirected/JSON views never sleep. Named progress demos override
+only their invocation's mode, retain current appearance, and clean up on Ctrl-C.
+Use [the gallery contract](../../../docs/debug.md#mock-output-gallery) and
+`tools/test_debug_demo.py`; menu animation hands off the terminal after selection.
 
 Default checks explain declared paths, command resolution and cache metadata. They must not execute discovered commands, source cache guards, prepare caches, activate profiles or repair files. Startup traversal without `--live`/`--isolated` describes potential modules, not observed execution. `--live` executes ordinary child-shell startup and its side effects; do not select it automatically or promise sandboxing. Use the existing owned public fixture for `--isolated` and curated tests.
 

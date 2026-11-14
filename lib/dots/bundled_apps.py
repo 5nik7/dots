@@ -31,8 +31,9 @@ def run(root, family, arguments):
     return status if status >= 0 else 128 - status
 
 
-def complete(root, words):
+def complete(root, words, *, display_types=False):
     """Use generated metadata only; completion never launches an application."""
+    from completion_records import candidate_record
     if not words or words[0] not in FAMILIES:
         return 0
     rows = json.loads((Path(root)/'lib/dots/metadata/bundled-apps.json').read_text())
@@ -59,9 +60,9 @@ def complete(root, words):
         else:
             positionals.append(word)
     suggestions = []
-    def add(value, description=''):
+    def add(value, description='', role='value'):
         if value.startswith(current) and not any(c in value+description for c in '\t\r\n'):
-            suggestions.append(('candidate', value, description))
+            suggestions.append(candidate_record(value, description, role, display_types=display_types))
     def values(kind, prefix=''):
         if kind.startswith('choice:'):
             for value in kind[7:].split(','): add(prefix+value)
@@ -76,13 +77,13 @@ def complete(root, words):
                 if flag == long: values(kind, flag+'=')
         else:
             for long, short, _, description in row['option']:
-                add(long, description)
-                if short: add(short, description)
+                add(long, description, 'option')
+                if short: add(short, description, 'option')
     else:
         if not positionals and not literal:
             for key, child in rows.items():
                 if key.startswith(stem+'-') and '-' not in key[len(stem)+1:]:
-                    add(key[len(stem)+1:], child['summary'])
+                    add(key[len(stem)+1:], child['summary'], 'command')
         for number, kind, description in row['argument']:
             if int(number) == len(positionals)+1: values(kind)
     for record in dict.fromkeys(suggestions):
@@ -91,4 +92,5 @@ def complete(root, words):
 
 
 if __name__ == '__main__':
-    sys.exit(complete(ROOT, sys.argv[1:]))
+    from completion_records import requested
+    sys.exit(complete(ROOT, sys.argv[1:], display_types=requested()))

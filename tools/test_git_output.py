@@ -49,6 +49,58 @@ class Views(unittest.TestCase):
             self.assertEqual(self.run_cmd([*command, '--short', '--verbose'], ok=False).returncode, 2)
             self.assertEqual(self.run_cmd([*command, '--view', 'bad'], ok=False).returncode, 2)
 
+    def test_default_groups_nonadjacent_states_with_nested_indentation(self):
+        repo = self.repo('grouped')
+        for name in ('a.txt', 'b.txt', 'c.txt', 'd.txt'):
+            (repo/name).write_text('initial\n')
+        self.git(repo, 'add', '.')
+        self.git(repo, 'commit', '-m', 'grouped fixture')
+        for name in ('a.txt', 'b.txt', 'c.txt', 'd.txt'):
+            (repo/name).write_text('changed\n')
+        self.git(repo, 'add', 'b.txt', 'd.txt')
+        (repo/'d.txt').write_text('partially staged\n')
+        (repo/'-literal ü [x].txt').write_text('untracked\n')
+        expected = ('    unstaged modified\n      a.txt\n      c.txt\n'
+                    '    staged modified\n      b.txt\n'
+                    '    staged modified + unstaged modified\n      d.txt\n'
+                    '    untracked\n      -literal ü [x].txt\n')
+        index = (repo/'.git/index').read_bytes()
+        for native in (False, True):
+            command = self.command(native, repo, 'status')
+            data = self.run_cmd([*command, '--json']).stdout
+            for capture in (False, True):
+                env = dict(self.env, DOTS_PROGRESS='none', DOTS_MENU_CAPTURE='1' if capture else '0')
+                output = self.run_cmd([*command, '--view', 'default'], env=env).stdout
+                self.assertIn(expected, output)
+                self.assertEqual(output.splitlines().count('    unstaged modified'), 1)
+                self.assertEqual(self.run_cmd([*command, '--view', 'default', '--json'], env=env).stdout, data)
+            for mode in ('short', 'verbose'):
+                self.assertNotIn(expected, self.run_cmd([*command, '--view', mode]).stdout)
+        # Automatic terminal default still groups with icons and wraps safely.
+        ansi = re.compile(rb'\x1b\[[0-?]*[ -/]*[@-~]')
+        for native in (False, True):
+            for width in (40, 80, 120):
+                code, data = self.terminal(self.command(native, repo, 'status'),
+                    dict(self.env, DOTS_PROGRESS='none', DOTS_COLOR='always', DOTS_ICONS='always', TERM='xterm-256color'), width)
+                self.assertEqual(code, 0, data)
+                lines = ansi.sub(b'', data).decode().splitlines()
+                self.assertEqual(lines.count('    󰏫 unstaged modified'), 1)
+                for name in ('a.txt', 'c.txt'):
+                    line = next(line for line in lines if line.endswith(name))
+                    self.assertTrue(line.startswith('      ') and not line.startswith('       '), line)
+                self.assertTrue(all(len(line) <= width for line in lines), lines)
+        self.assertEqual((repo/'.git/index').read_bytes(), index)
+
+    def test_grouped_status_keeps_repositories_separate(self):
+        repo = self.repo('group-root'); source = self.repo('group-source')
+        child = self.sub(repo, source, 'modules/child')
+        (repo/'file').write_text('parent changed\n')
+        (child/'file').write_text('child changed\n')
+        for native in (False, True):
+            output = self.run_cmd(self.command(native, repo, 'status', '--view', 'default')).stdout
+            self.assertEqual(output.splitlines().count('    unstaged modified'), 2, output)
+            self.assertEqual(output.splitlines().count('      file'), 2, output)
+
     def test_sync_reports_only_actual_changed_paths(self):
         for native in (False, True):
             source, bare, repo = self.remote_repo('sync'+str(native))

@@ -5,6 +5,10 @@
 Typed `apps.git.view` (`default|short|verbose`, default `default`) and `apps.cli.progress` (`none|spinner|bar|both`, default `both`) live in the existing Config store and inherit the immediate profile/parent/shared-default chain. Null/unset removes a profile override. They are next-invocation preferences, separate from Git operation events and theme publication. Compiled shell settings carry validated literal projections and invalidate when their source preferences or reader change. No new Git JSON schema, event suppression, persistent progress state or separate preference store is introduced. Two-row progress hierarchy, reserved work shares and current-step measurements are transient presentation state governed by the [progress contract](presentation.md#operation-progress). [Git output selection](git.md#output-views) defines terminal/redirected behavior.
 
 
+Progress glyphs use `icons.progress.bar.{filled,empty,left,right}` and optional CLI overrides, with one printable display cell per value (empty allowed only for surrounds). `colors.apps.cli.progress.{filled,empty,surround,percentage}` and `colors.apps.pkgs.manager` use existing fg/bg/attribute fields and precedence. They are invocation preferences, including batched appearance saves, and do not publish a theme. See [Config defaults and fallback](configuration.md#progress-appearance). The debug gallery emits `version: 1` fixture documents with `mock: true`, selected `kind` and `demos` records; it has no persistence or operational side effects.
+
+Default Git status heading glyphs use CLI-only `icons.git.status.*` fields and optional `icons.apps.cli.git.status.*` overrides, with the existing printable-string, empty-to-hide and inheritance/reset rules. They are read on the next invocation, including compiled shell helpers, without publishing a theme. Existing shared `icons.git.*` prompt/app symbols and semantic Git status colors remain independent. The [status icon catalog](configuration.md#git-status-icons) defines the consumed fields. Grouping, icons and 2/4/6-space hierarchy are human projections of unchanged Git records.
+
 ## Cleanup receipts
 
 Cleanup JSON and metadata-only receipts use `schema: 1`. Scan records contain
@@ -585,3 +589,25 @@ Appearance imports use declared source-profile layers, omit shared defaults unle
 The three clock controls and retention behavior are defined in [tmux widget configuration](tmux.md#retained-widget-readings). They use the existing typed profile configuration and published `preferences.json` projection. Shared automatic location defaults false; the Termux profile enables it. Config discovery, completion and both shell frontends use the same definitions.
 
 Private disposable widget records use schema 1 with finite acquisition/write/next-attempt/lease timestamps, a worker token and a validated consumer value. Battery values contain only the bounded battery record; Git values contain independently timestamped validated output/icon fields; solar values contain dated sun times, location fingerprints, timezone identity and acquisition/retry timing. No raw coordinates or provider error text are stored. Cache-only reads never initialize storage. Future write timestamps invalidate the record; expired leases permit recovery. Widget refresh does not change public wttr JSON/scalar schemas or renew old data timestamps.
+
+## Completion appearance contract
+
+`apps.completion.enabled` is a boolean, default true, in the existing shared or
+profile `config.json`. `colors.apps.completion.*` lives in the corresponding
+`colors.toml` and supports the standard foreground/background and attribute
+fields. It follows normal preference inheritance, with no separate store or
+published completion artifact. The ten roles and activation contract are listed
+under [completion appearance](shell-environment.md#completion-appearance).
+
+Startup compilation includes validated literal `__completion.enabled`,
+`__completion.color.ROLE` and repeated `__completion.watch` rows (a `.hex`
+variant preserves control-bearing paths without evaluating shell text). Zsh consumes
+these privately, checks bounded input metadata at prompts and resolves changed
+inputs once. A failed read preserves the last successful in-memory projection.
+The private Zsh `--display-types` request may append one literal semantic field
+to core and first-party delegated completion records; unrequested and other-shell records retain their
+existing shape. Rendering adds ANSI only after capture, never to provider data.
+The dispatcher scopes the private request to its trusted providers; an ambient
+environment flag cannot change ordinary or native-controller records. Semantic
+identity is captured before FZF-tab hides group headings, so heading visibility
+does not change the candidate's role.

@@ -22,7 +22,8 @@ class CommonTests(unittest.TestCase):
         shutil.copy2(REPO / 'bin/lib/common.sh', self.repo / 'bin/lib/common.sh')
         (self.repo / 'scripts').mkdir()
         shutil.copy2(REPO / 'scripts/dirout', self.repo / 'scripts/dirout')
-        shutil.copy2(REPO / 'lib/dots/ui.bash', self.repo / 'lib/dots/ui.bash')
+        for name in ('ui.bash', 'progress_render.bash'):
+            shutil.copy2(REPO / 'lib/dots' / name, self.repo / 'lib/dots' / name)
         self.fake = self.root / 'tools'
         self.fake.mkdir()
         self.env = dict(HOME=str(self.root), DOTS=str(self.repo),
@@ -427,6 +428,57 @@ spinner 99999999 1 quiet
         self.assertEqual((self.root / 'count').read_text(), 'xx')
         self.both("run_with_spinner 'return 9' 1 failure 1; [[ $? == 9 ]]", stderr='[x] Failed!\n')
 
+    def test_shared_progress_rows_fill_width_and_resolve_custom_spans_without_tools(self):
+        self.both('''set -eu
+source "$DOTS/lib/dots/ui.bash"
+source "$DOTS/lib/dots/progress_render.bash"
+typeset -A _dpr_colors _dpr_symbols
+_DOTS_STYLE_ICONS[progress.bar.filled]='='
+_DOTS_STYLE_ICONS[progress.bar.empty]='.'
+_DOTS_STYLE_ICONS[progress.bar.left]='('
+_DOTS_STYLE_ICONS[progress.bar.right]=')'
+_DOTS_STYLE_COLORS[progress.filled]='31'
+_DOTS_STYLE_COLORS[progress.empty]='32'
+_DOTS_STYLE_COLORS[progress.surround]='33'
+_DOTS_STYLE_COLORS[progress.percentage]='35'
+_dots_progress_init 1 0
+for columns in 8 40 80 120; do
+  width=$((columns-1))
+  _dots_progress_rows "$width" both 0 / 270000 1 3 2 4 'npm - Downloading file'
+  [[ ${#_dpr_top_plain} == "$width" ]]
+  (( ${#_dpr_bottom_plain} <= width ))
+  [[ $_dpr_top == *$'\\e[33m('* && $_dpr_top == *$'\\e[35m27%'* ]]
+  if ((columns>=40)); then
+    [[ $_dpr_top == *$'\\e[31m='* && $_dpr_top == *$'\\e[32m.'* ]]
+    [[ $_dpr_bottom_plain == '/ 2/4 · npm - '* && $_dpr_bottom_plain == *' 33%' ]]
+    [[ $_dpr_bottom_plain != *step* && $_dpr_top_plain != *Overall* ]]
+    [[ ${#_dpr_bottom_plain} == "$width" ]]
+  fi
+done
+_DOTS_STYLE_ICONS[progress.bar.filled]='━'
+_DOTS_STYLE_ICONS[progress.bar.left]=''
+_DOTS_STYLE_ICONS[progress.bar.right]=''
+_dots_progress_init 0 0
+[[ ${_dpr_symbols[filled]} == '#' && ${_dpr_symbols[left]} == '' ]]
+_dots_progress_rows 39 both 0 / 500000 1 2 2 4 'work'
+[[ ${#_dpr_top_plain} == 39 && $_dpr_top_plain == '#'* && $_dpr_top_plain == *' 50%' ]]
+_DOTS_STYLE_ICONS[progress.bar.filled]=$'\\e[31m'
+_dots_progress_init 0 0
+[[ ${_dpr_symbols[filled]} == '#' ]]
+_DOTS_STYLE_ICONS[progress.bar.filled]='&'
+_DOTS_STYLE_ICONS[progress.bar.empty]='\\'
+_dots_progress_init 0 0
+_dots_progress_rows 12 bar 0 / 500000 0 0 0 0 ''
+expected='&&&&'
+for unused in 1 2 3 4; do expected+='\\'; done
+expected+=' 50%'
+[[ $_dpr_top_plain == "$expected" ]]
+_dots_progress_clean $'wide 界 and e\\u0301 plus \\e[31m'
+[[ $REPLY == 'wide \\u754c and e\\u0301 plus \\u001b[31m' ]]
+_dots_progress_rows 39 both 0 / 0 1 3 1 1 "$REPLY"
+[[ ${#_dpr_bottom_plain} == 39 ]]
+''', PATH='')
+
     @unittest.skipUnless(os.name == 'posix', 'requires a native Unix PTY')
     def test_spinner_terminal_animation_and_disabled_fallback(self):
         import pty
@@ -450,13 +502,45 @@ spinner 99999999 1 quiet
                         self.assertEqual('[#' in output or '[-' in output, progress in ('auto','bar','both'))
                         self.assertNotRegex(output, r'\x1b\[[0-9;]*m')
                         if progress not in ('never','none'):
-                            self.assertIn('Overall', output)
+                            self.assertNotIn('Overall', output)
                             self.assertIn('0%', output)
-                            self.assertIn('step 1/1', output)
+                            self.assertIn('1/1', output)
+                            self.assertNotIn('step 1/1', output)
                         self.assertNotIn('⏳', output)  # Explicit ASCII icons.
                     finally:
                         os.close(master)
                         os.close(slave)
+
+    @unittest.skipUnless(os.name == 'posix', 'requires a native Unix PTY')
+    def test_spinner_wide_activity_and_legacy_frames_stay_within_terminal(self):
+        import pty
+        import re
+        import shlex
+        import unicodedata
+        (self.fake/'sleep').symlink_to(shutil.which('sleep'))
+        for shell,executable in SHELLS.items():
+            if not executable: continue
+            flags=['--noprofile','--norc','-c'] if shell=='bash' else ['-dfc']
+            master,slave=pty.openpty()
+            try:
+                label='wide 界 e\u0301 '+'x'*80
+                script=('source "$DOTS/bin/lib/common.sh"; run_with_spinner "sleep .8" 19 '+
+                        shlex.quote(label)+'; printf DONE')
+                result=subprocess.run([executable,*flags,script],cwd=self.root,
+                    env=self.env|dict(DOTS_PROGRESS='both',DOTS_COLOR='always',DOTS_ICONS='always',
+                                      TERM='xterm-256color',COLUMNS='40'),stdout=slave,stderr=slave,timeout=5)
+                output=os.read(master,8192).decode()
+                self.assertEqual(result.returncode,0,output)
+                self.assertTrue(output.endswith('DONE'),output)
+                plain=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',output)
+                self.assertIn('wide \\u754c e\\u0301',plain)
+                self.assertNotIn('⏳',plain); self.assertNotIn('⌛',plain)
+                for line in plain.splitlines():
+                    cells=sum(0 if unicodedata.combining(c) else
+                              2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in line)
+                    self.assertLess(cells,40,repr(line))
+            finally:
+                os.close(master);os.close(slave)
 
     @unittest.skipUnless(os.name == 'posix', 'requires process signals')
     def test_foreground_spinner_signals_restore_traps_and_return_status(self):

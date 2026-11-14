@@ -25,10 +25,14 @@ dots::progress_clean() {
 
 # The worker consumes immutable frame snapshots. Sequence arithmetic stays in
 # the operation shell, so presentation cannot reorder or complete work.
-dots::progress_worker() (
+dots::progress_worker() {
   local parent=$1 line='' width=${COLUMNS:-80} old_width=0 drawn=0 ticks=0 frame=0 status geometry_dirty=0
   local label='' completed=0 total=0 overall=0 unit=step group=1 groups=1 step=0 steps=0
-  local cyan='' blue='' reset='' glyphs="|/-\\" bar='#' spinner marker text top bottom percent suffix size filled position
+  local glyphs="|/-\\" spinner top bottom color=0 icons=0
+  local _dpr_color _dpr_top _dpr_bottom _dpr_top_plain _dpr_bottom_plain
+  local -A _dpr_symbols _dpr_colors
+  # shellcheck source=lib/dots/progress_render.bash
+  source "${BASH_SOURCE[0]%/*}/progress_render.bash" || exit 0
   exec 8>&- 9>&-
   dots::_progress_width() {
     local candidate=${COLUMNS:-80}
@@ -36,8 +40,8 @@ dots::progress_worker() (
       read -r _ candidate < <(stty size <&2 2>/dev/null) || candidate=${COLUMNS:-80}
     fi
     [[ $candidate =~ ^[0-9]{1,4}$ ]] || candidate=80
-    width=$((10#$candidate)); ((width > 1 && width < 10000)) || width=80
-    ((width-=1))
+    width=$((10#$candidate)); ((width > 0 && width < 10000)) || width=80
+    ((width-=1)); ((width>0)) || width=1
   }
   dots::_progress_clear() {
     ((drawn)) || return 0
@@ -54,26 +58,10 @@ dots::progress_worker() (
     printf '\r' >&2
     drawn=0
   }
-  dots::_progress_bar() {
-    local value=$1 known=$2
-    size=$((width/6)); ((size<=12)) || size=12; ((size>=3)) || size=3
-    if ((known)); then
-      filled=$((size*value/1000000))
-      printf -v marker '%*s' "$filled" ''; marker=${marker// /$bar}
-      printf -v text '%*s' "$((size-filled))" ''; marker="[$marker${text// /-}]"
-    else
-      position=$((frame%(2*(size-1)))); ((position<size)) || position=$((2*(size-1)-position))
-      printf -v marker '%*s' "$position" ''; printf -v text '%*s' "$((size-position-1))" ''
-      marker="[${marker// /-}$bar${text// /-}]"
-    fi
-  }
   dots::_progress_width
-  if [[ ${DOTS_COLOR:-auto} == always || ( ${DOTS_COLOR:-auto} == auto && -z ${NO_COLOR:-} ) ]]; then
-    printf -v cyan '\e[%sm' "${_DOTS_STYLE_COLORS[96]:-96}"
-    printf -v blue '\e[%sm' "${_DOTS_STYLE_COLORS[94]:-94}"
-    reset=$'\e[0m'
-  fi
-  if [[ ${DOTS_ICONS:-auto} == auto || ${DOTS_ICONS:-auto} == always ]]; then glyphs='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'; bar='━'; fi
+  if [[ ${DOTS_COLOR:-auto} == always || ( ${DOTS_COLOR:-auto} == auto && -z ${NO_COLOR:-} ) ]]; then color=1; fi
+  if [[ ${DOTS_ICONS:-auto} == auto || ${DOTS_ICONS:-auto} == always ]]; then glyphs='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'; icons=1; fi
+  _dots_progress_init "$color" "$icons"
   trap 'dots::_progress_clear' EXIT
   trap 'exit 0' TERM HUP
   trap 'geometry_dirty=1' WINCH
@@ -98,26 +86,14 @@ dots::progress_worker() (
     if ((geometry_dirty)); then dots::_progress_width; geometry_dirty=0; fi
     dots::_progress_clear
     spinner=${glyphs:frame%${#glyphs}:1}
-    percent=$((overall/10000)); suffix="$percent%"
-    ((groups<=0)) || suffix+=" · $unit $group/$groups"
-    marker=''
-    if [[ $DOTS_PROGRESS_MODE == bar || $DOTS_PROGRESS_MODE == both ]]; then dots::_progress_bar "$overall" 1; marker+=" "; fi
-    top="Overall $marker$suffix"; top=${top:0:width}
-    marker=''
-    if [[ $DOTS_PROGRESS_MODE == spinner || $DOTS_PROGRESS_MODE == both ]]; then marker="$spinner "; fi
-    if ((width>=59)) && [[ $DOTS_PROGRESS_MODE == bar || $DOTS_PROGRESS_MODE == both && $total -gt 0 ]]; then
-      local activity=$((total>0 ? 1000000*completed/total : 0)) prefix=$marker
-      dots::_progress_bar "$activity" "$total"; marker="$prefix$marker "
-    fi
-    suffix=''; ((total<=0)) || suffix="$((100*completed/total))% · "
-    ((steps<=0)) || suffix+="step $step/$steps · "
-    bottom="$marker$suffix$label"; bottom=${bottom:0:width}
+    _dots_progress_rows "$width" "$DOTS_PROGRESS_MODE" "$frame" "$spinner" "$overall" "$completed" "$total" "$step" "$steps" "$label"
+    top=$_dpr_top_plain bottom=$_dpr_bottom_plain
     # Reserve the second row before painting, including at the screen bottom.
     printf '\r\n\r\033[1A\r' >&2
-    printf '\r%s%s%s\n\r%s%s%s' "$cyan" "$top" "$reset" "$blue" "$bottom" "$reset" >&2
+    printf '\r%s\n\r%s' "$_dpr_top" "$_dpr_bottom" >&2
     drawn=1 old_width=$width; ((frame+=1))
   done
-)
+}
 
 dots::progress_start() {
   local parent=$BASHPID

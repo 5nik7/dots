@@ -11,6 +11,9 @@ tmux = ""
 yazi = "󰉋"
 zsh = ""
 
+[apps.cli.git.status]
+modified = ""
+
 [apps.tmux.clock]
 day = "󰖙"
 fixed = ""
@@ -62,17 +65,29 @@ staged = "+"
 stashed = "*"
 untracked = "?"
 
+[git.status]
+added = "󰐕"
+conflict = ""
+copied = ""
+deleted = "󰆴"
+ignored = ""
+modified = ""
+renamed = ""
+selected = ""
+type_changed = "󰑓"
+untracked = ""
+
 [hosts]
 bitbucket = ""
 github = "󰊤"
 gitlab = ""
 
 [menu]
-cleanup = "󰃢"
 anodize = "󰏘"
 backgrounds = "󰸉"
 bak = "󰁯"
 blastoff = "󱓞"
+cleanup = "󰃢"
 clipboard = "󰅌"
 debug = "󰃤"
 env = "󰒓"
@@ -106,6 +121,12 @@ session = ""
 
 [operations]
 link = "󰡯"
+
+[progress.bar]
+empty = "-"
+filled = "━"
+left = "["
+right = "]"
 
 [status]
 error = ""

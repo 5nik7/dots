@@ -16,9 +16,21 @@ Terminal reports use `apps.git.view`, initially `default`. Select a view for one
 
 | View | Status and operation reports |
 | --- | --- |
-| `default` | Compact repository/branch/state/cached tracking header, followed by one readable file list. Index and worktree states share a row; renames show `old → new`. Clean repositories need only a header. |
+| `default` | Compact repository/branch/state/cached tracking header, followed by one heading per distinct status and a file list nested beneath it. Index and worktree states share a heading; renames show `old → new`. Clean repositories need only a header. |
 | `short` | Compact headers and Git-style two-column XY file states. |
-| `verbose` | Default report plus repository metadata and operation phase details. No patches or file contents. |
+| `verbose` | Per-file status labels, repository metadata and operation phase details. No patches or file contents. |
+
+Default status groups matching full index/worktree states within each repository, keeping first-seen group order and file order inside each group. For example:
+
+```text
+Git status
+   dots  main  modified  0 ahead / 0 behind (cached)
+    󰏫 unstaged modified
+       .dots-wiki.json
+       Command-reference.md
+```
+
+Each level adds two spaces: repository rows start at two, status headings at four, and files and wrapped continuation lines at six. A heading icon identifies the change type and shares its status color. Configure it with `icons.git.status.*`; [status icon settings](configuration.md#git-status-icons) lists defaults and examples. Disabled icons or an empty glyph leave the label at the same indentation without an extra separator. Combined states such as `staged modified + unstaged modified` remain a single heading. When types differ, the icon follows conflict, deleted, renamed, copied, added, type changed, then modified precedence; the full label always remains visible. Short and verbose views retain per-file labels. This layout also applies to submodule/Wiki status and the mock Git gallery.
 
 Info and submodule trees keep their inspection structure. Publish reviews selected paths once, then reports phases and outcomes; prospective child-pointer staging stays explicit. Sync lists paths changed between the actual before/after commits after an update. Its dry-run does not invent an incoming file list before fetching. Every view retains blockers and recovery instructions.
 

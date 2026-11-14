@@ -241,8 +241,14 @@ def serialized(entries):
 
 def preview(entries, cfg, *, stream=None):
     stream = stream or sys.stdout
+    from .reports import report
+    ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'), stream=stream)
     for entry in entries:
         if entry['plan']: workflows.display(entry['plan'], cfg, stream=stream)
+        elif ui:
+            ui.row([(entry['group']['manager'], 'manager'), (': ', 'value'),
+                    (entry['status'], 'value'),
+                    (' · '+entry['reason'], 'value')], indent=0)
         else: print(entry['group']['manager']+': '+entry['status']+' · '+entry['reason'], file=stream)
 
 
@@ -323,13 +329,13 @@ def cli(args, cfg):
     if args.command == 'manifest':
         if args.json: print(json.dumps(document, indent=2, ensure_ascii=False))
         else:
-            from .reports import report
+            from .reports import report, manager_heading
             ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'))
             if ui: ui.heading('Package manifest', len(document['groups']))
             else: print('Package manifest')
             for group in document['groups']:
                 title = group['manager']+' · '+group['scope']
-                if ui: ui.heading(title, len(group['packages']))
+                if ui: manager_heading(ui, group['manager'], group['scope'], len(group['packages']))
                 else: print('  '+title)
                 for p in group['packages']:
                     text = p['name']+' · '+('pin '+p['pin'] if p['pin'] else 'installed or latest')+' · '+p['selection']
@@ -351,5 +357,13 @@ def cli(args, cfg):
     if args.json: print(json.dumps(result, ensure_ascii=False))
     else:
         human_message('Restore '+result['status'],'success' if result['status']=='complete' else 'error')
-        for group in result['groups']: human_message('  '+group['manager']+': '+group['status']+(' · '+group['reason'] if group['reason'] else ''))
+        from .reports import report
+        ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'))
+        for group in result['groups']:
+            suffix = ' · '+group['reason'] if group['reason'] else ''
+            if ui:
+                ui.row([(group['manager'], 'manager'), (': ', 'value'),
+                        (group['status'], 'value'),
+                        (suffix, 'value')])
+            else: human_message('  '+group['manager']+': '+group['status']+suffix)
     return int(result['status'] != 'complete')

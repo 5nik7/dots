@@ -364,6 +364,13 @@ storage links work; linked child directories/files and unsafe names are excluded
 PowerShell retains network-root/reparse guards and uses native TabExpansion2 tests
 where an engine exists; native Windows remains deferred.
 
+The Zsh adapter assigns `commands`, `options` and `values` tags from its parser
+context. Keep the same tags for root/nested commands, options and operand choices
+when extending the grammar. These are display hints for native Zsh/fzf-tab;
+providers and inserted words contain no color escapes. Shared Dots completion
+preferences own the colors. The metadata-derived Zsh type check in
+`tests/test_completions.py` covers every static command context.
+
 | Exit | Meaning |
 |---|---|
 | 0 | Success/no-op or reported dry-run (possibly with unresolved choices) |

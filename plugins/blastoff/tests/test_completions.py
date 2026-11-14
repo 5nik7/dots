@@ -77,7 +77,7 @@ class CompletionTests(unittest.TestCase):
         return {str(p.relative_to(self.home)): (p.lstat().st_mode, p.lstat().st_size, p.lstat().st_mtime_ns)
                 for p in [self.home, *self.home.rglob('*')]}
 
-    def complete(self, shell, args):
+    def complete(self, shell, args, typed=False):
         if not SHELLS[shell]:
             self.skipTest(shell + ' unavailable')
         script = getattr(self, 'completion_directory', ROOT / 'completions') / ('blastoff.' + shell)
@@ -91,9 +91,11 @@ class CompletionTests(unittest.TestCase):
         elif shell == 'zsh':
             # Capture candidates, not matching (normally handled by compadd).
             code = (f'source {shlex.quote(str(script))}; '
-                    'compadd() { local x; [[ $1 == -S ]] && shift 2; if [[ $1 == -a ]]; then '
-                    'for x in "${(@P)2}"; do print -r -- "$x"; done; '
-                    'else for x in "$@"; do [[ $x == -- ]] || print -r -- "$x"; done; fi; }; '
+                    'compadd() { local x group; while [[ $1 == -J || $1 == -X || $1 == -S ]]; do '
+                    '[[ $1 != -J ]] || group=$2; shift 2; done; local prefix=""; '
+                    + ('prefix="$curtag/$group:"; ' if typed else '') +
+                    'if [[ $1 == -a ]]; then for x in "${(@P)2}"; do print -r -- "$prefix$x"; done; '
+                    'else for x in "$@"; do [[ $x == -- ]] || print -r -- "$prefix$x"; done; fi; }; '
                     '_files() { print -r -- "@FILES:$*"; }; '
                     f'words=({quoted}); CURRENT={len(args)+1}; _blastoff')
             command = [SHELLS[shell], '-f', '-c', code]
@@ -109,6 +111,28 @@ class CompletionTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stderr, '', result.stderr)
         return {line.split('\t')[0] for line in result.stdout.splitlines() if line}
+
+    def test_zsh_types_follow_every_static_command_context(self):
+        import json
+        metadata=json.loads((ROOT.parents[1]/'lib/dots/metadata/bundled-apps.json').read_text())
+        routes=[key for key in metadata if key == 'blastoff' or key.startswith('blastoff-')]
+        for route in routes:
+            words=route.split('-')[1:]
+            children={key[len(route)+1:] for key in routes
+                      if key.startswith(route+'-') and '-' not in key[len(route)+1:]}
+            with self.subTest(route=route):
+                got=self.complete('zsh',[*words,''],typed=True)
+                self.assertTrue({'commands/commands:'+name for name in children} <= got,got)
+                options=self.complete('zsh',[*words,'--'],typed=True)
+                self.assertTrue(options)
+                self.assertTrue(all(value.startswith('options/options:') for value in options),options)
+                values=self.complete('zsh',[*words,'--color',''],typed=True)
+                self.assertEqual(values,{'values/values:'+name for name in ('auto','always','never')})
+        for words in (['completion',''],['pick',''],['theme','apply','local:'],['backup','restore','']):
+            with self.subTest(words=words):
+                got=self.complete('zsh',words,typed=True)
+                self.assertTrue(got)
+                self.assertTrue(all(value.startswith('values/values:') for value in got),got)
 
     def test_release_017_contexts(self):
         for reserved in ('all','y','yes'):

@@ -13,6 +13,7 @@ from files.file_platform import state_root
 
 
 DISPLAY_KEYS = {
+    'apps.completion.enabled',
     'apps.cli.logo_gradient',
     'apps.fonts.list_details', 'apps.fonts.provenance', 'apps.fonts.menu_descriptions',
     'apps.fonts.preview.enabled', 'apps.fonts.preview.sample',

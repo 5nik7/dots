@@ -3,9 +3,10 @@ from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from fonts.commands import COMMANDS,OPTIONS,COMMON
+from completion_records import candidate_record,requested
 
 
-def complete(words):
+def complete(words, *, display_types=False):
     current=words[-1] if words else '';previous=words[:-1]
     action='';pending=None;values={};positionals=[];literal=False
     for word in previous:
@@ -22,10 +23,10 @@ def complete(words):
     lead=''
     if current.startswith('--') and '=' in current:
         pending,_,current=current[2:].partition('=');lead='--'+pending+'='
-    def emit(value,description=''):
+    def emit(value,description='',role='value'):
         from resources import clean
         if value.startswith(current) and not any(c in value for c in '\t\r\n\0'):
-            print('candidate\t'+lead+value+'\t'+clean(description))
+            print('\t'.join(candidate_record(lead+value,clean(description),role,display_types=display_types)))
     names=(*COMMON,*COMMANDS[action][2])
     if pending:
         if pending not in names:return
@@ -41,11 +42,11 @@ def complete(words):
         if kind in ('file','directory'):print(kind+'\t'+lead+'\t');return
         if pending not in ('version','face'):return
     elif current.startswith('-') and not literal:
-        for name in names:emit('--'+name,OPTIONS[name][1])
-        emit('--help','Show help');return
+        for name in names:emit('--'+name,OPTIONS[name][1],'option')
+        emit('--help','Show help','option');return
     elif not action:
         for name,row in COMMANDS.items():
-            if name:emit(name,row[0])
+            if name:emit(name,row[0],'command')
         return
     elif COMMANDS[action][1]=='path':print('file\t\t');return
     elif action=='restore':
@@ -93,5 +94,5 @@ def complete(words):
 
 
 if __name__=='__main__':
-    try:complete(sys.argv[1:])
+    try:complete(sys.argv[1:],display_types=requested())
     except (ValueError,OSError,KeyError):pass

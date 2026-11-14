@@ -129,6 +129,34 @@ class Integration(unittest.TestCase):
         self.assertNotIn('\x1b', self.candidates('--color=always', 'create', 'new', '--m'))
         self.assertFalse((self.home/'engine-ran').exists())
 
+    def test_private_zsh_types_cover_parser_commands_options_and_choices(self):
+        actions = next(a for a in parser()._actions if isinstance(a, argparse._SubParsersAction))
+        cases=[(('',),None), (('--',),'option'), (('--logo=a',),'value'),
+               (('--logo-layout',''),'value')]
+        for name, command in actions.choices.items():
+            cases += [((name,''),None), ((name,'--'),'option')]
+            for action in command._actions:
+                if action.option_strings and action.choices:
+                    cases.append(((name,action.option_strings[0],''),'value'))
+        for words, role in cases:
+            with self.subTest(words=words):
+                args=('__complete','zsh',str(len(words)))
+                plain=self.cli(*args,'--','anodize',*words)
+                typed=self.cli(*args,'--display-types','--','anodize',*words)
+                rows=[row.split('\t') for row in typed.splitlines()]
+                self.assertEqual(''.join('\t'.join(row[:3])+'\n' for row in rows),plain)
+                self.assertNotIn('\x1b',typed)
+                for row in rows:
+                    if row[0]=='candidate':
+                        self.assertEqual(len(row),4,row)
+                        self.assertIn(row[3],('command','option','value'))
+                        if role: self.assertEqual(row[3],role,row)
+        root=self.cli('__complete','zsh','1','--display-types','--','anodize','')
+        for name in actions.choices:
+            self.assertTrue(any(row.split('\t')[1]==name and row.endswith('\tcommand')
+                                for row in root.splitlines()),name)
+        self.assertFalse((self.home/'engine-ran').exists())
+
     def test_dots_logo_prefix_completions(self):
         for shell in ('bash','zsh','fish','native'):
             for words, value in [

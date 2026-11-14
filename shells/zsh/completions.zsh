@@ -6,6 +6,7 @@ zstyle -e ':completion:*' list-colors 'reply=("${(@s.:.)LS_COLORS}")'
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:*' use-fzf-default-opts yes
 zstyle ':fzf-tab:*' switch-group '<' '>'
+source "$DOTS/lib/dots/completion/styles.zsh"
 
 local extract="
 local in=\${\${\"\$(<{f})\"%\$'\0'*}#*\$'\0'}

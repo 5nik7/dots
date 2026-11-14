@@ -72,7 +72,8 @@ def header(action):
     return '\n'.join(lines) + '\n'
 
 
-def complete(words):
+def complete(words, *, display_types=False):
+    from completion_records import candidate_record
     import sqlite3
     action = ''; positional = []; pending = None; literal = False
     current = words[-1] if words else ''
@@ -91,14 +92,16 @@ def complete(words):
     lead = ''
     if not literal and current.startswith('--') and '=' in current:
         pending, _, current = current.partition('='); lead = pending + '='
-    choices = []
+    choices = []; role = 'value'
     options = OPTIONS.get(action, [])
     if pending:
         option = next((o for o in options if o[0] == pending), None)
         if option and option[2].startswith('choice:'): choices = option[2][7:].split(',')
     elif current.startswith('-') and not literal:
+        role = 'option'
         choices = [o[0] for o in options] + [o[1] for o in options if o[1]] + ['--help']
     elif not positional and not literal and action in ('', 'watch'):
+        role = 'command'
         choices = ['start','stop','pause','resume','status'] if action else [a for a in COMMANDS if a and ' ' not in a]
     elif action == 'init' and not positional:
         choices = ['bash','zsh','fish','powershell']
@@ -107,9 +110,10 @@ def complete(words):
         try: choices = [identity for identity in History().ids() if identity not in positional]
         except (ValueError, OSError, sqlite3.Error): return
     for choice in choices:
-        if choice.startswith(current): print('candidate\t' + lead + choice + '\t')
+        if choice.startswith(current): print('\t'.join(candidate_record(lead+choice, role=role, display_types=display_types)))
 
 
 if __name__ == '__main__':
     import sys
-    complete(sys.argv[1:])
+    from completion_records import requested
+    complete(sys.argv[1:], display_types=requested())

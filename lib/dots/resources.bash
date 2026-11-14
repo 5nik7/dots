@@ -177,6 +177,7 @@ dots::_resource_path_spans() {
 
 # Optional sixth argument styles the label independently from the resource.
 # `paths` in argument seven splits path colors; eight/nine supply a rename source.
+# `list` in argument ten emits an unlabelled item with six-space indentation.
 dots::resource_row() {
   local label=$1 actual=$2 shown=${3-} kind=${4:-} mime=${5:-} label_style=${6-${DOTS_UI_BLUE:-}}
   local -a DOTS_RESOURCE_SPANS=()
@@ -199,6 +200,15 @@ dots::resource_row() {
   fi
   [[ $# -ge 6 ]] || label_style=$DOTS_UI_BLUE
   [[ $DOTS_UI_RESET ]] || label_style=''
+  if [[ ${10:-} == list ]]; then
+    local columns=${COLUMNS:-80}
+    [[ $columns =~ ^[0-9]+$ ]] || columns=80
+    columns=$((10#$columns)); ((columns >= 20)) || columns=20
+    if ((${#DOTS_RESOURCE_SPANS[@]})); then
+      dots::spans_line 6 "$columns" '' "${DOTS_RESOURCE_SPANS[@]}"
+    else dots::line "$DOTS_RESOURCE_TEXT" "$DOTS_RESOURCE_STYLE" 6 "$columns"; fi
+    return
+  fi
   if dots::human && [[ ${_DOTS_FORMATTING[label_width]+set} ]]; then
     dots::aligned_row "$label" "$DOTS_RESOURCE_TEXT" "$label_style" "$DOTS_RESOURCE_STYLE" "${DOTS_RESOURCE_SPANS[@]}"
     return

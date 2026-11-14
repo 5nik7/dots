@@ -5,6 +5,12 @@ description: Maintain Dots Anodize palette authoring, its CLI, previews and engi
 
 # Dots Anodize Maintenance
 
+Standalone Zsh opts into private command/option/value types through
+`integration.py`; preserve its normal three-field records, native semantic groups
+and literal no-space prefixes. `tools/test_anodize_integration.py` derives type
+checks from parser commands/options/choices. Keep this path engine-free and use
+shared Dots completion preferences for display colors.
+
 Read [Anodize](../../../docs/anodize.md), [authoring boundaries](../../../docs/decisions/0011-anodize-authoring.md) and the affected [plan](../../../plans/anodize.md). `plugins/anodize/cli.py`, `authoring.py` and `interactive.py` own Python authoring/workflows; `integration.py` bridges Dots. The reusable Go package under `plugins/anodize/engine` owns palette algorithms without filesystem/process access. Keep native invocation and mutation outside that package.
 
 Standalone `anodize` and `dots anodize` share behavior. Help must work without a built engine; authoring uses a prebuilt engine and never builds/downloads it at runtime or startup. Saving a user theme is separate from applying it. Preserve user-default saves, explicit built-in promotion, literal imports/exports, preview purity and retained transactions; use [theme maintenance](../dots-theme-maintenance/SKILL.md) for publication/connectors and [plugin maintenance](../dots-plugin-maintenance/SKILL.md) for installed assets.

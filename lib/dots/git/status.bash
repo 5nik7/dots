@@ -91,9 +91,12 @@ status_main() {
                 view_status_header "$dir" "$branch" "$state" "$ahead" "$behind"
                 [[ ! -v STATUS_ERRORS[$dir] ]] || dots::row Reason "${STATUS_ERRORS[$dir]}"
                 [[ $GIT_VIEW != verbose || $state == missing ]] || view_metadata "$dir"
-                for ((index=0;index<count;index++)); do
-                    view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}"
-                done
+                if [[ $GIT_VIEW == default ]]; then view_status_files "$dir"
+                else
+                    for ((index=0;index<count;index++)); do
+                        view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}"
+                    done
+                fi
                 continue
             fi
             repo_label "$dir"; display "$REPLY"; branch_label=$REPLY

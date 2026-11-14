@@ -1,5 +1,7 @@
 # Implementation Plans
 
+- [Shell completion colors](shell-completion-colors.md): semantic Zsh/FZF-tab display, preferences, literal insertion and performance evidence.
+
 [Clipboard history](clipboard-history.md) implements Todo `clipboard-history`: local text storage, shared command/popup controls, optional capture, editor widgets and isolated cross-platform verification.
 
 - [Documentation, topics and manual](docs-update.md) — implemented and locally verified: compact README, practical guides, offline topic discovery and generated dots(1).
@@ -13,7 +15,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
-| [Git output and progress](git-output-and-progress.md) | Default/short/verbose Git reports and configurable shared activity displays; implementation and acceptance evidence. |
+| [Git output and progress](git-output-and-progress.md) | Default/short/verbose Git reports, full-width progress appearance, package-manager colors and mock debug gallery; implementation and acceptance evidence. |
 | [Cleanup](cleanup.md) | Termux cleanup groups, approvals, confirmed totals, receipts and platform extension workflow. |
 | [Tmux widget reliability](tmux-widget-reliability.md) | Retained solar/battery/Git readings, quiet Termux location refresh and bounded status workers. |
 | [Dots FIGlet fonts](figlet-fonts.md) | Implemented logo and mixed-case fonts, Termux prefix destinations and verified managed file links. |

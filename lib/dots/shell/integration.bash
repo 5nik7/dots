@@ -55,6 +55,9 @@ _dots_shell_prompt() {
   if [[ ${dots_options[DOTS_INIT_THEME]} == 1 && ${dots_options[DOTS_THEME_AUTO_UPDATE]} == 1 ]]; then
     _dots_theme_precmd
   fi
+  if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_completion_refresh]} )); then
+    _dots_completion_refresh
+  fi
   return "$previous_status"
 }
 if [[ -n ${ZSH_VERSION:-} ]]; then

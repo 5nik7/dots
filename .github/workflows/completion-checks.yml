@@ -1,0 +1,48 @@
+name: Completion checks
+
+on:
+  push:
+    branches: [main]
+    paths: ['bin/**', 'lib/dots/**', 'shells/zsh/**', 'plugins/**', 'tools/*completion*', 'tools/test_fsh_dots.py', 'tools/test_anodize*', 'tools/test_profile_config.py', '.github/workflows/completion-checks.yml']
+  pull_request:
+    paths: ['bin/**', 'lib/dots/**', 'shells/zsh/**', 'plugins/**', 'tools/*completion*', 'tools/test_fsh_dots.py', 'tools/test_anodize*', 'tools/test_profile_config.py', '.github/workflows/completion-checks.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  completion-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Native Zsh provider checks
+        run: sudo apt-get update && sudo apt-get install --yes zsh
+      - name: Every Dots route and finite choice
+        run: python3 -B tools/test_completion_catalog.py -v
+      - name: Delegated and native record contracts
+        run: python3 -B tools/test_completion_colors.py CompletionColors.test_delegated_provider_types_and_native_record_contracts -v
+      - name: Zinit lazy loading without executing plugin helpers
+        run: python3 -B tools/test_completion_colors.py CompletionColors.test_zinit_lazy_helpers_load_without_execution_and_restore_on_mismatch -v
+      - name: Pinned FSH source for native editor regressions
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: zdharma-continuum/fast-syntax-highlighting
+          ref: 4672ad5dd9ad68a7effc1476d65afb7c584ce2b3
+          path: .completion-test-fsh
+          persist-credentials: false
+      - name: Dots input highlighting and native shell syntax
+        env:
+          DOTS_TEST_FSH: ${{ github.workspace }}/.completion-test-fsh
+        run: python3 -B tools/test_fsh_dots.py -v
+      - name: Project inventory safety and gap detection
+        run: python3 -B tools/test_project_completion_audit.py -v
+      - name: Standalone pkgs semantic types
+        run: python3 -B plugins/pkgs/tests/test_completion_types.py -v
+      - name: Standalone Blastoff grammar and insertion
+        run: python3 -B -m unittest discover -s plugins/blastoff/tests -p test_completions.py -v
+      - name: Standalone Anodize semantic types
+        run: python3 -B tools/test_anodize_integration.py Integration.test_private_zsh_types_cover_parser_commands_options_and_choices -v

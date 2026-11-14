@@ -34,19 +34,22 @@ _blastoff() {
         positional+=("$word")
     done
     local command=$positional[1] action=$positional[2] count=${#positional}
-    local kind='' prefix='' file base upper value
+    local kind='' prefix='' file base upper value curtag=values
     if ((pending == 1)); then candidates=(auto always never)
     elif ((pending == 2)); then candidates=(unicode ascii)
     elif ((!literal)) && [[ $cur == --fancy=* ]]; then candidates=(--fancy=unicode --fancy=ascii)
     elif ((!literal)) && [[ $cur == --color=* ]]; then candidates=(--color=auto --color=always --color=never)
     elif ((!literal)) && [[ $cur == -* ]]; then
+        curtag=options
         candidates=(-h --help --json --color --force --replace-link -v --verbose --dry-run)
         [[ $command == pick || ( $command:$action == module:show && $count == 2 ) || ( $command:$action == backup:delete && $selection == --pick ) ]] && candidates+=(--fancy --fzf)
         [[ $command:$action == backup:delete ]] && candidates+=(--pick --all -y --yes)
         ((count)) || candidates+=(--version -l --list -t --theme)
     elif ((count == 0)); then
+        curtag=commands
         candidates=(list current pick doctor theme preset module backup migrate completion)
     elif ((count == 1)); then
+        case $command in theme|preset|module|backup) curtag=commands ;; esac
         case $command in
             theme) candidates=(list apply save copy import delete edit) ;;
             preset) candidates=(list apply save) ;;
@@ -127,8 +130,8 @@ _blastoff() {
         if [[ $value == *: ]]; then prefixes+=("$value")
         else names+=("$value"); fi
     done
-    ((${#names})) && compadd -a names
-    ((${#prefixes})) && compadd -S '' -a prefixes
+    ((${#names})) && compadd -J "$curtag" -X "${(C)curtag}" -a names
+    ((${#prefixes})) && compadd -J "$curtag" -X "${(C)curtag}" -S '' -a prefixes
     return 0
 }
 # Works both as a sourced script (after compinit) and as an autoloaded _blastoff.

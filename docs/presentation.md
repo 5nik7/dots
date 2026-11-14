@@ -78,6 +78,8 @@ Automatic color requires a terminal on the destination stream, `TERM` other than
 
 Dots Git metadata has a scoped [theme-role integration](file-colors.md#git-styles): repository identities, branches, file-status labels and tracking counts consume published Git styles through the shared Bash layer. Filenames retain their type/MIME resource styles. Generic headings, informational messages and final diagnostic summaries retain the shared treatment above.
 
+Default Git status groups files under one semantic heading per complete index/worktree state, independently for each repository. Repository rows use two leading spaces, status headings four, and file icons/paths and wrapped continuations six. Heading glyphs use `icons.git.status.*`, follow the icon policy, and share the heading's Git status color; empty glyphs omit the separating space. Combined states keep complete labels and one dominant type icon as defined in [Git views](git.md#output-views). The list avoids key/value label padding and retains directory/basename colors and rename pairs. Short/verbose file rows retain their existing layout.
+
 Human Git identities add `` directly before named branches (including upstreams)
 and a host glyph plus one space before repository names/paths: `󰊤 dots` for
 GitHub, `` for GitLab, `` for Bitbucket, and `` for local/unknown hosts.
@@ -167,7 +169,7 @@ After selection has returned, `run_action` either inherits a normal terminal, op
 
 Blastoff current, theme list (including list aliases), theme save, backup list and doctor, plus pkgs help, operation previews, list, managers and doctor, use the shared Python presentation layer in terminals and menu readers. Reports have cyan headings/counts, blue labels/identities, quiet source prefixes, green current/success markers, yellow attention states and red errors. Paths use published resource styles and optional icons. Theme provenance retains its distinction between exact current content and last-loaded history. Package doctor expands FZF and completion records into labeled sections; package lists retain their installed/external markers. All views wrap complete values at narrow widths.
 
-Compact package transactions use profile-aware `colors.apps.pkgs` roles across reports, previews, formatted streams and progress; package identities default to theme accent independently of warning/identity roles. Statuses, labels and muted skip counts retain their own styles. Bounded diagnostics and the exact npm/pip noise filters are described in [package output](packages.md#output).
+Compact package transactions use profile-aware `colors.apps.pkgs` roles across reports, previews, formatted streams and progress; package identities default to theme accent and manager labels to `colors.apps.pkgs.manager` (magenta), independently of warning/identity roles. Statuses, labels and muted skip counts retain their own styles. Bounded diagnostics and the exact npm/pip noise filters are described in [package output](packages.md#output).
 
 The private capture context selects a human layout independently of color/icons; disabling both still leaves a readable popup. Existing application color flags override Dots color settings, then pkgs configuration supplies its fallback. Dots automatic/forced color and independent icon rules apply to these reports. Ordinary redirected output, JSON, raw TOML and generated completion bytes retain their formats. Save prompts keep their existing choices and cancellation behavior. Blastoff help artwork and application pickers retain their own presentation. Package help derives commands/options from its grammar without manager probes; plain terminal help retains the same layout. Owned pkgs subprocess streams use the shared semantic palette in terminal/menu contexts; `pkgs format` explicitly formats stdin. Raw mode and ordinary redirected subprocess bytes remain unchanged. Formatted APT output suppresses its exact unstable-CLI advisory. Other warnings, full unknown messages and partial prompts remain visible; formatting never determines process status. See [package output](packages.md#output).
 
@@ -175,20 +177,22 @@ The private capture context selects a human layout independently of color/icons;
 
 Slow human views use a shared transient display on stderr. Animation starts after 500 ms; fast work remains quiet. Both stdout and stderr must be terminals, and `TERM` must not be `dumb`. `apps.cli.progress` controls existing consumers, independently of colors and icons, and defaults to `both`.
 
-The first row shows overall completion and a named position, such as `manager 2/3` or `repo 2/5`. The second row shows the current step and its activity. Equal sibling managers, repositories or groups receive equal shares; known steps divide their parent's reserved share. Totals are fixed before crediting work. Later discovery happens inside a reserved step, so it cannot reset or expand the overall denominator.
+The first row shows only a full-width bar and overall percentage, such as `[━━--------] 27%`. The second row orders the spinner, bare current-step count (`1/2`), activity, bar and measured percentage. It omits the `Overall` label, root manager/repository counts and count unit words. Equal sibling managers, repositories or groups receive equal shares; known steps divide their parent's reserved share. Totals are fixed before crediting work. Later discovery happens inside a reserved step, so it cannot reset or expand the overall denominator.
 
 | Mode | Overall row | Current-step row |
 | --- | --- | --- |
 | `none` | Hidden | Hidden |
-| `spinner` | Percentage and named count | Spinner, named count and measured percentage when available |
-| `bar` | Bar, percentage and named count | Measured or indeterminate bar with activity |
-| `both` | Bar, percentage and named count | Spinner, activity and a bar when measured |
+| `spinner` | Percentage | Spinner, bare step count, activity and measured percentage when available |
+| `bar` | Bar and percentage | Bare step count, activity, measured or indeterminate bar and percentage when known |
+| `both` | Bar and percentage | Spinner, bare step count, activity, bar and percentage when measured |
 
 `DOTS_PROGRESS=auto` (also the unset behavior) follows Config. Explicit `none|spinner|bar|both` overrides it; `never` remains an alias for `none`. Invalid values disable the optional UI. There is no new global progress CLI flag or required optional tool. Existing command-specific switches remain compatible.
 
 Overall progress measures completed work, not elapsed time. Opaque commands hold their reserved share until they return. Native download percentages describe only the current transfer; finishing one archive cannot complete an enclosing command that may fetch more archives. Verification and finalization have reserved steps. Handled failures and skips can count as processed; final results remain authoritative for success. Cancellation freezes reached progress, and recovery activity does not complete the failed operation. No remaining-time estimate is inferred, and Git does not parse transfer percentages.
 
-Bars shorten in narrow terminals. Below 60 columns, the current row omits its mini-bar to retain the named count, measured percentage and activity; the overall bar remains visible in `bar` and `both` modes. Existing semantic heading/label styles mark progress, and callers with explicit progress styles retain them.
+Bars fill the available terminal width, reserving its last column to prevent wrapping. The current row reserves eight interior bar cells when possible, truncates transient activity first, and expands the bar into unused space. Only extremely narrow rows shrink or omit the bar. Both rows follow terminal resizing; actual terminal dimensions take priority over stale `COLUMNS`. Unknown activity has no invented percentage.
+
+`icons.progress.bar.filled|empty|left|right` defaults to `━`, `-`, `[` and `]`. Each is one printable display cell; only surrounds may be empty. Config offers individual glyph suggestions, not presets. `colors.apps.cli.progress.filled|empty|surround|percentage` supports foreground, background and shared attributes. Filled cells and percentages retain the heading color (aqua in the current theme); surrounds and empty cells use theme muted. Spinner and activity styles stay separate. These controls use normal Config inheritance and apply at the next invocation without publishing a theme. See [progress appearance](configuration.md#progress-appearance).
 
 | Family | Progress coverage |
 | --- | --- |
@@ -205,7 +209,7 @@ Prompt-capable or directly outputting external commands use a static phase messa
 
 `--yes` retains progress but bypasses confirmation. JSON, raw paths, scalar queries, raw exports/app previews, generated shell code, ordinary shell initialization, completion, help, dry runs and redirected output bypass the progress UI, including static phase messages. Explicit color/icon settings never override this gate. Slow human read-only discovery is eligible and does not write progress files or application state.
 
-The existing color and icon policy applies. ASCII mode uses `|/-\` and `#` bars; disabled color removes ANSI color sequences while terminal cursor/erase controls update both rows. Neither renderer hides the cursor or changes terminal input mode. Transient labels are sanitized and shortened to fit; final result and recovery text keeps complete paths. Bash escapes non-ASCII path characters for predictable cell widths, while Python measures combining and wide characters. Bash uses optional `stty` to read terminal width and handles resize notifications and otherwise falls back to `COLUMNS` or 80 columns.
+The existing color and icon policy applies. ASCII mode uses `|/-\` spinners; configured ASCII bar glyphs remain, while non-ASCII glyphs fall back to `#`, `-`, `[` and `]`; disabled color removes ANSI color sequences while terminal cursor/erase controls update both rows. Neither renderer hides the cursor or changes terminal input mode. Transient labels are sanitized and shortened to fit; final result and recovery text keeps complete paths. Bash escapes non-ASCII path characters for predictable cell widths, while Python measures combining and wide characters. Bash uses optional `stty` to read terminal width and handles resize notifications and otherwise falls back to `COLUMNS` or 80 columns.
 
 Python progress also accepts structured inert text/style spans. Resolve palette styles once per operation, clip by display cells before applying color, and keep the existing string API for other callers. Package progress uses this for configurable identities and activity colors; plain/NO_COLOR views contain the same clipped text. Nested phases restore the prior activity state while retaining monotonic overall progress. Activity-only updates cannot overwrite overall completion.
 
@@ -366,3 +370,14 @@ except muted human `null`. Future formatting additions require typed validation,
 CLI/popup discovery, actual consumer checks and an explicit activation contract.
 
 Dots selector frames use [dedicated popup controls](profiles.md#dots-popup-appearance): centered placement, a rounded frame and a theme-accent border by default. Generic shell FZF border flags do not remove this frame. Popup colors override inherited picker colors only where configured; row-specific field styles remain intact. Terminal fallbacks retain the frame, plain mode stays readable, and native tmux hosts use the same applicable position/frame/colors without changing server defaults.
+
+## Interactive shell completion
+
+Color belongs in the shell's rendered menu, after literal candidates have been
+captured. Completion records and inserted words remain undecorated. Zsh/FZF-tab
+uses separate semantic candidate, description, separator and heading spans;
+selected rows retain those spans. Files keep LS_COLORS. Escape untrusted control
+characters for display without changing insertion or preview identity. Unknown
+completion types stay neutral. Honor the shared color policy and the feature
+switch. Use the [completion acceptance](testing.md#shell-completion-colors) for
+40/80/120-column menus, literal insertion and plugin compatibility.

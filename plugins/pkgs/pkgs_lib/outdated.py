@@ -142,7 +142,7 @@ def display(group, cfg):
     title = manager+' · '+group['scope']
     status = 'unavailable' if group['error'] else str(len(group['packages']))+' upgradable' if group['packages'] else 'up to date'
     if group['skipped']: status += ' · '+str(len(group['skipped']))+' skipped'
-    if ui: ui.row([(manager, 'identity'), (' · '+group['scope']+' · ', 'muted'),
+    if ui: ui.row([(manager, 'manager'), (' · '+group['scope']+' · ', 'muted'),
                    (status, 'error' if group['error'] else 'value')])
     else: print('  '+title+' · '+status)
     for row in group['packages']:

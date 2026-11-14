@@ -28,3 +28,15 @@ When this change affects documentation, follow [documentation maintenance](../do
 Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.
 
 For command or user-facing script work, include the [command/script delivery gate](../../../agents/guides/commands.md#command-and-script-delivery) in the plan and tracked acceptance: six-shell completion including aliases, human presentation, useful menus, README/wiki and installer/bootstrap integration. Implement add/update decisions; record reasons for unchanged integrations and distinguish native checks from fixtures.
+
+Completion providers must emit literal undecorated records. The private Zsh
+`--display-types` opt-in adds a semantic type to core and trusted first-party
+delegated records; preserve legacy shape without it and keep unknown external
+three-field providers neutral. Interactive
+coloring belongs to the shell display adapter under shell-integration ownership.
+Test exact provider bytes and editor insertion, including aliases and prefixes.
+Run `tools/test_completion_catalog.py` when grammar, metadata or providers change;
+it discovers routes and finite choices from authoritative metadata. For project
+coverage audits, run `tools/check_project_completions.py --repos-root PATH --check`
+and the affected owners' tests. Static inventory does not prove installed
+freshness or menu colors; use the real-menu checks in the testing reference.

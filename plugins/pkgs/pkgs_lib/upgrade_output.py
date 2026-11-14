@@ -68,7 +68,7 @@ def packages(cfg, label, names, *, placeholder=False):
             spans.append((identity, ui.styles['muted'] if placeholder else package_color(cfg)))
             if separator: spans.append((separator+status, None))
         ui.ui.detail_spans(label, spans, label_width=11)
-    elif ui: ui.field(label, value, 'identity')
+    elif ui: ui.field(label, value, 'manager' if label == 'Manager' else 'identity')
     else: print('  '+label+': '+value)
     sys.stdout.flush()
 
@@ -241,7 +241,7 @@ class Output:
         if self.progress is None or self.pause is not None: return
         now = time.monotonic() if now is None else now
         quiet = max(0, int(now-self.last_activity))
-        label = self.manager+' · '
+        label = ' · '
         if quiet >= 15 and self.manager in ('pip', 'npm', 'go'): label += f'{quiet//60}:{quiet%60:02d} · '
         if self.stage == 'Downloading' and (self.total or self.transferred):
             def amount(size):
@@ -250,7 +250,7 @@ class Output:
                 label += 'Downloading '+amount(self.transferred)+'/'+amount(self.total)
             else: label += 'Downloaded '+amount(self.transferred)
         else: label += self.stage
-        spans = [(label, self.styles['progress'])]
+        spans = [(self.manager, self.styles['manager']), (label, self.styles['progress'])]
         if self.package: spans += [(' · ', self.styles['progress']), (self.package, self.package_style)]
         if self.stage == 'Downloading' and self.total:
             completed, total = min(self.transferred, self.total), self.total
@@ -331,7 +331,8 @@ class Output:
         ui = renderer(self.cfg, sys.stdout)
         if ui:
             role = 'error' if rc else 'muted' if unchanged else 'success'
-            ui.ui.detail_spans(self.manager, [(status, ui.styles[role]), (suffix, ui.styles['skipped'])], label_width=11)
+            ui.ui.detail_spans(self.manager, [(status, ui.styles[role]), (suffix, ui.styles['skipped'])],
+                               label_width=11, label_code=ui.styles['manager'])
         else: print('  '+self.manager+': '+status+suffix)
         sys.stdout.flush()
         if not rc and not unchanged and self.action in ('install', 'uninstall'):
@@ -352,10 +353,10 @@ class Output:
             messages = [('Repository metadata is inconsistent (mirror sync). Retry pkgs refresh later, then '+retry+'.', 'error')]
         error_ui = renderer(self.cfg, sys.stderr)
         for message, role in messages:
-            if error_ui: error_ui.text(self.manager+': '+message, role)
+            if error_ui: error_ui.row([(self.manager, 'manager'), (': ', 'value'), (message, role)])
             else: print('  '+self.manager+': '+message, file=sys.stderr)
         extra = self.extra + (self.success_extra if not rc else 0)
         if extra:
             text = self.manager+': '+str(extra)+' more diagnostic lines; --raw shows full output.'
-            if error_ui: error_ui.text(text, 'muted')
+            if error_ui: error_ui.row([(self.manager, 'manager'), (text[len(self.manager):], 'muted')])
             else: print('  '+text, file=sys.stderr)

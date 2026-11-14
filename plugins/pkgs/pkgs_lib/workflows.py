@@ -36,11 +36,11 @@ def _progress(label, cfg):
     if cfg.get('_quiet_progress') or cfg.get('output') == 'raw': return nullcontext()
     try:
         from . import reports  # establishes the shared renderer import path
-        from progress import Progress, configure
-        from .presentation import styles
+        from progress import configure
+        from .presentation import styles, progress as package_progress
         configure(True)
         colors=styles()
-        return Progress(label,marker_style=colors['spinner'],label_style=colors['progress'])
+        return package_progress(label, colors)
     except (ImportError, OSError): return nullcontext()
 
 
@@ -131,7 +131,7 @@ def display(plan, cfg, *, stream=None):
     title = plan.action.upper()+' · '+plan.backend.name+' · '+plan.backend.scope
     if ui:
         ui.heading(plan.action.capitalize()+' packages' if plan.action != 'refresh' else 'Refresh repositories')
-        ui.field('Manager', plan.backend.name, 'identity')
+        ui.field('Manager', plan.backend.name, 'manager')
         ui.field('Scope', plan.backend.scope)
     else: print(title, file=stream)
     for command in plan.commands:
@@ -369,7 +369,14 @@ def upgrade(args, cfg):
                             if compact:
                                 output = upgrade_output.Output(manager, cfg)
                                 output.errors.append(str(error)); output.result(1)
-                            else: print('pkgs: '+manager+': '+str(error), file=sys.stderr)
+                            else:
+                                from .reports import report
+                                error_ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'),
+                                                  stream=sys.stderr, data=cfg.get('output') == 'raw')
+                                if error_ui:
+                                    error_ui.row([('pkgs: ', 'error'), (manager, 'manager'),
+                                                  (': '+str(error), 'error')], indent=0)
+                                else: print('pkgs: '+manager+': '+str(error), file=sys.stderr)
                         entries.append((manager, 'failed')); failed = True
     if compact:
         if not entries: human_message('No supported user-wide managers found.','muted')
@@ -378,7 +385,9 @@ def upgrade(args, cfg):
     ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'))
     if ui:
         ui.heading('Upgrade summary', len(entries))
-        for manager, status in entries: ui.field(manager, status, 'error' if status == 'failed' else 'success')
+        for manager, status in entries:
+            ui.ui.detail_spans(manager, [(status, ui.styles['error' if status == 'failed' else 'success'])],
+                               label_width=11, label_code=ui.styles['manager'])
     else:
         print('Upgrade summary')
         for manager, status in entries: print('  '+manager+': '+status)

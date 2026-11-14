@@ -18,6 +18,9 @@ wordmark and a compact header for narrow/redirected output. Global flags without
 a command also show help; `blastoff --json` retains its JSON welcome object.
 Help groups and colors commands/options without losing descriptions;
 `-h --color always` works in either option order. Help never discovers presets.
+Zsh completion groups commands, options and values separately, including nested
+commands and local source prefixes. Dots completion preferences color these
+groups in standalone `blastoff` and `dots blastoff`; inserted names stay literal.
 Fancy Unicode is the default picker;
 `pick --fzf` (or `pick fzf`) respects compatible user styling.
 `pick --fancy [unicode|ascii]` and `pick fancy` remain explicit choices. Ctrl-X toggles initially

@@ -56,6 +56,79 @@ when enabled. No settings watcher, background service, theme-directory scan or
 palette calculation runs on ordinary prompts. Shell/plugin activation preferences
 may still require a new shell.
 
+## Completion appearance
+
+Repository Zsh startup colors interactive completion labels by type: commands,
+options, values and Git branches/tags/remotes. Descriptions, separators and group
+headings have separate styles; unknown types use neutral text. File candidates
+retain `LS_COLORS`. FZF-tab keeps these colors on the selected row, while native
+Zsh uses group-aware list colors when FZF-tab is absent or disabled.
+
+This includes Dots subcommands and delegated providers, plus standalone bundled
+Anodize, Blastoff and pkgs completions. Associated project providers use native
+Zsh command/option/value tags; ordinary `_arguments` finite choices also use the
+value style. Hidden or brief FZF-tab group headings retain candidate colors.
+Source updates to a separately installed project require its normal completion
+delivery and a new shell before they affect that installation.
+
+The command line has a separate owner: Fast Syntax Highlighting (FSH). Dots
+registers known literal route words such as `git` and `status` in `dots git status`
+with FSH's existing `subcommand` theme style. It preserves quoting, operators,
+operands and custom chroma callbacks. Recognition uses exact executable paths
+without running commands or scanning catalogs while typing. Intermediate words
+such as `migrate` in `dots files migrate apps` receive the style when the full
+executable path resolves; unknown or unresolved prefixes retain ordinary FSH
+handling. This also works
+without published theme artifacts or with `DOTS_INIT_THEME=0`.
+Typing `dots git<Tab>` normally inserts a space because `git` is already a
+complete unique match; a second Tab opens its subcommands. The input style comes
+from the FSH theme, while the preferences below control completion lists.
+
+`apps.completion.enabled` defaults to `true`. The existing Config browser exposes
+`colors.apps.completion.{candidate,command,option,value,branch,tag,remote,description,heading,separator}`
+with foreground, background and text attributes. Command/option/value defaults
+are blue/yellow/green; branch/tag/remote defaults are magenta/cyan/blue. Other
+roles reference the shared foreground, muted and heading styles. Shared/profile
+precedence and `unset` work like other appearance preferences.
+
+```sh
+dots config browse --query apps.completion
+dots config set colors.apps.completion.command.fg cyan
+dots config set colors.apps.completion.description.italic true
+dots config set apps.completion.enabled false
+dots config unset colors.apps.completion.command.fg
+```
+
+After initially loading the adapter in a new shell (or explicitly using `rl`),
+saved preferences and published palette changes refresh at the next prompt or
+Tab completion. A completion-only preference save does not publish
+a theme or reload another application. `--no-refresh` still saves preferences
+that the next-prompt reader can observe. The reader checks bounded metadata with
+Zsh builtins; unchanged prompts spawn no completion-preference process. Changed
+inputs resolve once, and failed preference reads retain the last good styles
+until another input change. Missing palette snapshots use terminal color names.
+
+Automatic color honors `NO_COLOR`, `TERM=dumb` and the terminal destination.
+`DOTS_COLOR=always` forces color and `DOTS_COLOR=never` disables it. The feature
+switch restores the plugin's ordinary renderer. Display controls are escaped;
+accepting a result still uses the original literal word and native quoting.
+
+The Dots-owned adapter checks FZF-tab's capture/list interface before wrapping it;
+unknown interfaces retain native plugin behavior. It does not edit the installed
+plugin. Known Zinit lazy-loading wrappers are materialized without executing
+their helpers before checking that interface. Group switching, selection and
+preview identities remain with FZF-tab.
+Other shells keep their existing completion interfaces and display behavior;
+native Windows has no new display consumer or application destination. See
+[verification and platform limits](testing.md#shell-completion-colors).
+
+For development, the [completion checks](testing.md#shell-completion-colors)
+enumerate the Dots command catalog and inventory associated projects under
+`~/repos`. These are explicit checks, never shell startup scans. New routes use
+their existing metadata; new CLI projects require an identified completion owner
+and verification command. The shared preferences above remain the single place
+to choose colors for all supported providers.
+
 ## Variables and diagnostics
 
 DOTS is the selected checkout. [paths.tsv](../lib/dots/shell/paths.tsv) defines

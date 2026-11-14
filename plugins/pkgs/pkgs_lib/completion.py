@@ -58,14 +58,16 @@ def context(words, cfg):
     return current, before, manager, command, global_scope, used
 
 
-def complete(words, cfg, fuzzy=False):
+def complete(words, cfg, fuzzy=False, *, display_types=False):
     with budget(45 if fuzzy else 1.5):
-        return _complete(words, cfg, fuzzy)
+        return _complete(words, cfg, fuzzy, display_types=display_types)
 
 
-def _complete(words, cfg, fuzzy=False):
+def _complete(words, cfg, fuzzy=False, *, display_types=False):
     current, before, manager, command, global_scope, used = context(words, cfg)
     candidates = []
+    role = 'value'
+    roles = {}
     if before and before[-1] == '--manager':
         candidates = [(m, 'package manager') for m in MANAGERS if available(m)]
     elif before and before[-1] == '--scope':
@@ -81,12 +83,16 @@ def _complete(words, cfg, fuzzy=False):
                       if p.is_dir() or p.suffix == '.json']
     elif current.startswith('-'):
         candidates = list(OPTIONS.items())
+        role = 'option'
     elif not command:
         candidates = list(COMMANDS.items())
+        role = 'command'
     elif command == 'completion':
         candidates = [(x, 'shell') for x in ('bash', 'zsh', 'fish')] if not used else [(x, 'completion action') for x in ('install', 'update', 'status', 'uninstall')]
+        if used: role = 'command'
     elif command == 'cache':
         candidates = [('clear', 'Clear package inventory cache')]
+        role = 'command'
     elif command == 'upgrade' and (used == ['ls'] or '--list' in before):
         return []
     elif command in ('install', 'uninstall', 'remove', 'info', 'upgrade', 'search', 'list'):
@@ -107,7 +113,9 @@ def _complete(words, cfg, fuzzy=False):
         if fuzzy:
             return [(p.name, '') for p in pick(rows, backend, cfg, current, completion=True)]
         candidates = [(p.name, ('[i] ' if p.installed else '') + (p.description or p.version)) for p in rows]
-        if command == 'upgrade' and not used: candidates.insert(0, ('ls', 'List available upgrades without installing'))
+        if command == 'upgrade' and not used:
+            candidates.insert(0, ('ls', 'List available upgrades without installing'))
+            roles['ls'] = 'command'
     if fuzzy and candidates and which('fzf'):
         # Simple menus for commands/options; package candidates use the full preview above.
         args, env = invocation()
@@ -121,7 +129,8 @@ def _complete(words, cfg, fuzzy=False):
         selected = p.stdout.split('\t', 1)[0].strip()
         return [(a, b) for a, b in candidates if a == selected]
     remaining()
-    return [(a, clean(b)) for a, b in candidates if a.startswith(current)]
+    return [(a, clean(b), roles.get(a, role)) if display_types else (a, clean(b))
+            for a, b in candidates if a.startswith(current)]
 
 
 # Exact release artifacts; a marker alone never establishes ownership.

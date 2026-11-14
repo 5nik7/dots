@@ -167,7 +167,7 @@ def complete(root, directories, words):
     if previous[:2] == ['git', 'submodule']:
         stem, path, _ = resolve(directories, previous)
         if stem == 'git-submodule' and path.parent.resolve() == (LIB.parents[1] / 'bin').resolve():
-            return controller('git/submodule.py', ['--complete', *previous[2:], current])
+            return controller('git/submodule.py', ['--frontend=native', '--complete', *previous[2:], current])
     rows = catalog(directories)
     stem, path, consumed = resolve(directories, previous)
     metadata = read(path.with_suffix('.meta') if path.suffix == '.exe' else path) if path else None

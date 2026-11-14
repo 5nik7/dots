@@ -9,7 +9,7 @@ import stat
 from profile_config import checkout, context
 from style_catalog import canonical, split, ALIASES as ICON_ALIASES
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr')
+APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr', 'completion')
 LIMIT = 2 * 1024 * 1024
 NAME = re.compile(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*\Z')
 ATTRS = dict(bold=1, dim=2, italic=3, underline=4, reverse=7, strikethrough=9)
@@ -93,6 +93,10 @@ def validate(group, values):
         if group == 'icons':
             if not isinstance(value, str) or len(value) > 64 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in value):
                 raise ValueError('icons require short printable literal strings: ' + key)
+            if split(key)[1].startswith('progress.bar.'):
+                from progress_preferences import valid_symbol
+                if not valid_symbol(key.rsplit('.',1)[-1], value):
+                    raise ValueError('progress symbols require one printable single-cell glyph; only surrounds may be empty: '+key)
         elif group == 'colors':
             field = key.rsplit('.', 1)[-1]
             if field in ATTRS:
@@ -256,6 +260,9 @@ class Styles:
         for key in self.values['icons']:
             if not key.startswith('apps.'): yield '__icon.'+key, self.icon(key, app='cli'), 'style'
         for code in ROLES: yield '__color.'+code, self.code(code), 'style'
+        from progress_preferences import ROLES as PROGRESS_ROLES, fields
+        for role in PROGRESS_ROLES:
+            yield '__color.progress.'+role, self.sgr_fields(fields(self, role)), 'style'
 
     def startup_inputs(self):
         from files.file_platform import state_root
@@ -265,6 +272,8 @@ class Styles:
         from config_values import Controls
         paths.add(Path(__file__).with_name('preference_files.py'))
         paths.add(Path(__file__).with_name('config_values.py'))
+        paths.add(Path(__file__).with_name('progress_preferences.py'))
+        paths.add(Path(__file__).with_name('completion_preferences.py'))
         for path in [*self.paths,*Controls(self.root,self.selected).paths]:
             if path.exists(): paths.add(path)
             if path.parent.is_dir(): paths.add(path.parent)

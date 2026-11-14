@@ -16,7 +16,7 @@ from .catalog import external, EvidenceCache
 from .fzf import invocation, PROTOCOL
 from .detect import termux
 
-PALETTE = {'title': '1;35', 'heading': '1;36', 'good': '32', 'warn': '33', 'dim': '2', 'label': '36'}
+PALETTE = {'title': '1;35', 'heading': '1;36', 'good': '32', 'warn': '33', 'dim': '2', 'label': '36', 'manager': '35'}
 
 def colored(text, kind, mode='auto', preview=False):
     enabled = mode == 'always' or (mode == 'auto' and 'NO_COLOR' not in os.environ and (preview or sys.stdout.isatty()))
@@ -55,7 +55,7 @@ def render(p, backend, color='auto', preview=False, message=''):
             out.extend(' ' * len(prefix) + c(l,kind or 'value') for l in lines[1:])
     out.append(c(clean(p.name), 'title'))
     out.append(c('─' * min(width, 44), 'dim'))
-    field('Manager', backend.name)
+    field('Manager', backend.name, 'manager')
     field('Scope', backend.scope)
     field('Status', 'Installed [i]' if p.installed else 'Not installed', 'good' if p.installed else 'dim')
     field('Version', p.version, 'version')
@@ -154,7 +154,7 @@ def pick(rows, backend, cfg, query='', completion=False):
         args += ['--ansi', '--multi', '--cycle', '+e', '--no-hscroll',
                 '--delimiter=\t', '--with-nth=2..', '--preview=' + helper + 'preview {1}',
                 '--preview-window=' + cfg['preview'], '--query=' + query,
-                '--header=' + backend.name + ' · ' + backend.scope + '\nTab select · Ctrl-X preview · Alt-I installed · Alt-O URL\nEnter ' + ('insert names' if completion else 'accept') + ' · Esc cancel · [e] cached; highlight for current evidence',
+                '--header=' + colored(backend.name, 'manager', cfg['color'], True) + ' · ' + backend.scope + '\nTab select · Ctrl-X preview · Alt-I installed · Alt-O URL\nEnter ' + ('insert names' if completion else 'accept') + ' · Esc cancel · [e] cached; highlight for current evidence',
                 '--bind=' + ','.join(binds)]
         if cfg['color'] == 'never' or (cfg['color'] == 'auto' and 'NO_COLOR' in os.environ):
             args += ['--color=bw']

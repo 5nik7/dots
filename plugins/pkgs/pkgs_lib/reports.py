@@ -47,7 +47,11 @@ def help_report(parser, argv, stream=None):
             help_ui.text(label, 'option', indent=2)
             help_ui.text(description, indent=4)
     help_ui.emit(); help_ui.heading('Managers')
-    help_ui.text(', '.join(MANAGERS), 'argument', indent=2)
+    spans=[]
+    for manager in MANAGERS:
+        if spans: spans.append((', ', 'value'))
+        spans.append((manager, 'manager'))
+    ui.row(spans)
     help_ui.emit(); help_ui.heading('Examples')
     examples = DESCRIPTION.split('Examples:\n', 1)[1].split('\n\n', 1)[0]
     for example in examples.splitlines(): help_ui.text(example.strip(), 'syntax', indent=2)
@@ -71,14 +75,20 @@ def managers(ui, rows):
         ui.text('No supported package managers found.', 'muted')
     for item in rows:
         ui.gap()
-        ui.text(item['manager'], 'identity')
+        ui.text(item['manager'], 'manager')
         for key in ('scope', 'catalog', 'actions'):
             ui.field(key.title(), item[key])
 
 
+def manager_heading(ui, manager, scope, count):
+    ui.ui.heading_spans([(manager, ui.styles['manager']), (' · '+scope, ui.styles['heading']),
+                         (' (', ui.styles['muted']), (str(count), ui.styles['count']),
+                         (')', ui.styles['muted'])])
+
+
 def packages(ui, rows, backend, *, installed=False):
     ui.heading('Installed packages' if installed else 'Packages', len(rows))
-    ui.field('Manager', backend.name, 'identity')
+    ui.field('Manager', backend.name, 'manager')
     ui.field('Scope', backend.scope)
     if not rows:
         ui.text('No packages match the selected manager and filters.', 'muted')
@@ -104,7 +114,8 @@ def packages(ui, rows, backend, *, installed=False):
 def doctor(ui, data):
     ui.heading('pkgs doctor')
     for key in ('version', 'environment', 'default_manager', 'configured_manager'):
-        role = 'warning' if key == 'default_manager' and data[key] not in MANAGERS else 'value'
+        role = ('manager' if key in ('default_manager', 'configured_manager') and data[key] in MANAGERS else
+                'warning' if key == 'default_manager' and data[key] not in MANAGERS else 'value')
         ui.field(label(key), data[key], role)
     ui.gap()
     ui.heading('Runtime and paths')

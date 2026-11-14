@@ -1,5 +1,7 @@
 # Native PowerShell parity
 
+Full-width progress bars, Config glyph/style fields, package-manager colors and `dots debug demo` share the Python implementation on native Windows. Demo fixtures require no Bash, real package manager or Git operation. The existing native debug dispatcher handles the new route; no app destination changes are needed. Native Windows PowerShell 5.1/7 resize, animation interruption and launcher handoff remain pending; Termux controller tests are not native Windows evidence.
+
 Git output/progress work uses shared view flags, Config enums and native Python progress. Both controller paths are tested in isolated Termux fixtures; native Windows PowerShell 5.1/7 40/80/120-column rendering, prompt/credential suspension and Ctrl-C/Ctrl-Break remain separate pending checks. No Windows application destination changes are required. See [Git output and progress](git-output-and-progress.md).
 
 
@@ -161,7 +163,7 @@ presentation acceptance remain pending. See the [profile plan](platform-profiles
 
 ## Profile and debug diagnostics
 
-Profile subcommands and `debug check|startup|path|command|cache|test` have shared
+Profile subcommands and `debug check|startup|path|command|cache|test|demo` have shared
 native routing, metadata and completions. PowerShell has native phase events and
 Windows child ownership; no Bash dependency. PowerShell 5.1/7 live profile chains,
 Job Object cleanup, redirected/terminal behavior and visual checks remain pending.

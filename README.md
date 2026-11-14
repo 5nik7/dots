@@ -12,7 +12,20 @@ Manage dotfiles, shells, themes and your development environment through one com
 
 Tmux clock, battery and Git widgets retain recent valid readings through temporary refresh failures. The Termux clock supports quiet six-hour location updates and seven-day sun-time retention; battery/Git show `~` while using an older reading. See [widget settings and activation](docs/tmux.md#retained-widget-readings).
 
-Git reports offer a clean default file list, `dots git status --short` for XY rows, and `--verbose` for metadata and phases. File rows use the configured directory color for prefixes such as `bin/`, with file colors on basenames. Save your preferred view with `dots config set apps.git.view short`. Shared progress shows overall completion on one row and current-step activity on another, with a bar and spinner by default; `dots config set apps.cli.progress bar` selects bars alone. Available modes are `none`, `spinner`, `bar` and `both`. See [Git views](docs/git.md#output-views) and [progress settings](docs/presentation.md#operation-progress).
+Git reports group default status files under one heading per status, with two spaces per level beneath each repository. Headings use configurable status icons: `dots config browse --query icons.git.status`. Use `dots git status --short` for XY rows and `--verbose` for metadata and phases. File rows use the configured directory color for prefixes such as `bin/`, with file colors on basenames. Save your preferred view with `dots config set apps.git.view short`. Shared progress fills the available terminal width, with only a bar and overall percentage on the first row, and a spinner, bare step count, activity and measured bar on the second. Bar glyphs and colors are configurable; `dots config set apps.cli.progress bar` selects bars alone. Available modes are `none`, `spinner`, `bar` and `both`. See [Git views](docs/git.md#output-views) and [progress settings](docs/configuration.md#progress-appearance).
+
+Preview your current appearance with `dots debug demo progress`, `dots debug demo spinner --loop`, or `dots debug demo all --static`. The [mock gallery](docs/debug.md#mock-output-gallery) includes package, Git, file, message and help views without running operations. Package-manager labels have a separate `colors.apps.pkgs.manager` color, defaulting to the theme's magenta/pink.
+
+Zsh completion menus distinguish commands, options, values and Git references,
+with separate descriptions and existing file colors. Use
+`dots config browse --query apps.completion` to customize them; see
+[completion appearance](docs/shell-environment.md#completion-appearance).
+Known Dots route words also use Fast Syntax Highlighting's subcommand theme
+style on the command line, including after Tab insertion.
+The same preferences cover Dots subcommands and standalone plugin completions,
+including when FZF-tab group headings are hidden. Development checks enumerate
+the command catalog and audit completion ownership in associated projects;
+see [completion verification](docs/testing.md#shell-completion-colors).
 
 ## Platforms
 

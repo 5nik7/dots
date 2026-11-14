@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dots diagnostics: inspection, explicit startup execution and device tests."""
+"""Dots diagnostics: inspection, startup/device tests and inert output demos."""
 import argparse
 import json
 import os
@@ -22,8 +22,11 @@ def parser():
     from help_adapters import HelpArgumentParser
     p=HelpArgumentParser(description=__doc__)
     sub=p.add_subparsers(dest='action')
-    for name in ('check','startup','path','command','cache','test','record','alert'):
+    for name in ('check','startup','path','command','cache','test','record','alert','demo'):
         s=sub.add_parser(name);s.add_argument('--json',action='store_true')
+        if name=='demo':
+            from debug.demo import arguments
+            arguments(s)
         if name=='check':s.add_argument('--only',choices=('platform','profiles','commands','startup','environment'))
         if name=='path':
             s.add_argument('command',nargs='?');s.add_argument('--history',action='store_true');s.add_argument('--entry')
@@ -50,6 +53,9 @@ def parser():
 def main(argv=None):
     p=parser();args=p.parse_args(argv)
     root=Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2]).resolve()
+    if args.action=='demo':
+        from debug.demo import run
+        return run(args,p,root)
     if not args.action:
         from files.catalog import Presentation
         from command_metadata import catalog, roots, read

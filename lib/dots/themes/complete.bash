@@ -1,6 +1,7 @@
 # Data-only palette completion. Never execute a theme or generated command.
 dt_palette_candidates() {
   local target=$1 family flavor='' token name id='' previous='' color='' action=''
+  local DOTS_CANDIDATE_TYPE=value
   shift
   dt_family_index || return
   if [[ ${DT_ID_FAMILIES[$target]:-} ]]; then
@@ -26,14 +27,16 @@ dt_palette_candidates() {
     -f|--flavor) dt_family_flavors "$family"; for name in "${DT_FAMILY_FLAVORS[@]}"; do dots_candidate "$name"; done; return ;;
   esac
   if [[ $action == set ]]; then
-    for name in --dry-run --background --verbose -v --help; do dots_candidate "$name"; done; return
+    for name in --dry-run --background --verbose -v --help; do dots_candidate "$name" '' option; done; return
   elif [[ $action ]]; then return; fi
   if [[ $color && ! $previous ]]; then
     for name in "${DT_FORMATS[@]}"; do dots_candidate "$name"; done; return
   fi
   if [[ ! $previous ]]; then
     dt_family_flavors "$family"
-    for name in "${DT_FAMILY_FLAVORS[@]}" show set color init --color=auto --color=always --color=never --color=none --help --raw --array --all --flavor --color --format --completion; do dots_candidate "$name"; done
+    for name in "${DT_FAMILY_FLAVORS[@]}"; do dots_candidate "$name"; done
+    for name in show set color init; do dots_candidate "$name" '' command; done
+    for name in --color=auto --color=always --color=never --color=none --help --raw --array --all --flavor --color --format --completion; do dots_candidate "$name" '' option; done
   fi
   if dt_family_pick "$family" "$flavor" 2>/dev/null; then
     id=$REPLY

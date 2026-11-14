@@ -1,3 +1,45 @@
+[apps.completion.candidate]
+fg = "colors.ui.foreground.fg"
+
+[apps.completion.command]
+fg = "blue"
+
+[apps.completion.option]
+fg = "yellow"
+
+[apps.completion.value]
+fg = "green"
+
+[apps.completion.branch]
+fg = "magenta"
+
+[apps.completion.tag]
+fg = "cyan"
+
+[apps.completion.remote]
+fg = "blue"
+
+[apps.completion.description]
+fg = "colors.ui.muted.fg"
+
+[apps.completion.heading]
+fg = "colors.ui.heading.fg"
+
+[apps.completion.separator]
+fg = "colors.ui.muted.fg"
+
+[apps.cli.progress.filled]
+fg = "colors.ui.heading.fg"
+
+[apps.cli.progress.percentage]
+fg = "colors.ui.heading.fg"
+
+[apps.cli.progress.empty]
+fg = "colors.ui.muted.fg"
+
+[apps.cli.progress.surround]
+fg = "colors.ui.muted.fg"
+
 [apps.cli.help.argument]
 fg = "green"
 
@@ -75,6 +117,9 @@ fg = "warning"
 
 [apps.pkgs.package]
 fg = "accent"
+
+[apps.pkgs.manager]
+fg = "magenta"
 
 [apps.tmux.battery.icon]
 bg = "dark_background"

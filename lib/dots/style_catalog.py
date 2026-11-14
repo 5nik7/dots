@@ -2,7 +2,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr')
+APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr', 'completion')
 ATTRIBUTES = ('bold', 'dim', 'italic', 'underline', 'reverse', 'strikethrough')
 ALIASES = {'navigation.codex': 'applications.codex'}
 TODO = ('status.open', 'status.doing', 'status.blocked', 'status.done', 'status.removed',
@@ -12,7 +12,7 @@ FONTS = ('heading','label','identity','version','source','face','glyph')
 HELP = ('executable','command','subcommand','option','argument','heading','description','punctuation','tagline')
 CLIPBOARD = ('heading','label','identity','text','source','timestamp','pinned','error')
 WIKI = ('heading','label','page','section','snippet','url')
-PKGS = ('heading','label','identity','package','version','value','count','muted','skipped',
+PKGS = ('heading','label','identity','manager','package','version','value','count','muted','skipped',
         'success','warning','error','progress','spinner','preview.heading','preview.label',
         'preview.success','preview.warning','preview.version')
 TMUX = ('window.active', 'window.inactive', 'window.attention', 'pane.active_border', 'pane.inactive_border')
@@ -41,13 +41,17 @@ def split(name):
 @lru_cache(maxsize=8192)
 def fields(role, app):
     """Only fields actually consumed by each native adapter are editable."""
+    if app == 'completion':
+        from completion_preferences import ROLES
+        return ('fg', 'bg', *ATTRIBUTES) if role in ROLES else ()
     if app == 'cli':
+        if role in ('progress.'+name for name in ('filled','empty','surround','percentage')): return ('fg','bg',*ATTRIBUTES)
         if role in ('help.'+name for name in HELP): return ('fg','bg',*ATTRIBUTES)
         if role in ('pkgs.'+name for name in PKGS): return ('fg','bg',*ATTRIBUTES)
         if role in ('clipboard.'+name for name in CLIPBOARD): return ('fg','bg',*ATTRIBUTES)
         if role in ('wiki.'+name for name in WIKI): return ('fg','bg',*ATTRIBUTES)
         if role in ('fonts.'+name for name in FONTS): return ('fg','bg',*ATTRIBUTES)
-        if role.startswith('icons.') and role[6:] in icon_roles():return ('fg','bg',*ATTRIBUTES)
+        if role.startswith('icons.') and role[6:] in icon_roles() and not role.startswith(('icons.progress.bar.', 'icons.git.status.')):return ('fg','bg',*ATTRIBUTES)
         if role in ('menu.icon','menu.label','menu.description','menu.shortcut','menu.state') or role in ('todo.field.'+name+'.'+kind for name in TODO_FIELDS for kind in ('label','value')):
             return ('fg','bg',*ATTRIBUTES)
         if role in ('ui.border', 'ui.cursor', 'ui.match', 'ui.separator'): return ()
@@ -91,7 +95,7 @@ def consumers(group, name):
         if base not in icon_roles(): return []
         apps = [] if base in ('menu.profiles','menu.themes') else ['cli']
         if base.startswith('files.'): apps += ['yazi']
-        if base.startswith('git.'): apps += ['yazi', 'gitmux', 'starship']
+        if base.startswith('git.') and not base.startswith('git.status.'): apps += ['yazi', 'gitmux', 'starship']
         if base.startswith('hosts.') or base in ('git.repository','applications.codex', 'status.working', 'status.waiting', 'status.todo', 'navigation.separator'):
             apps += ['tmux']
     else:
@@ -105,6 +109,12 @@ def supported(group, name):
 
 
 def constraints(group,name):
+    if group=='icons' and split(name)[1].startswith('progress.bar.'):
+        part=name.rsplit('.',1)[-1]
+        examples={'filled':['━','─','═','█','#','='], 'empty':['-','░','·',' '],
+                  'left':['[','(','│',''], 'right':[']',')','│','']}
+        return dict(type='string', examples=examples.get(part,[]),
+                    syntax='One printable single-cell glyph'+('; empty hides the surround' if part in ('left','right') else '')+'; reset inherits')
     if group=='icons':return dict(type='string',syntax='Up to 64 printable characters; empty hides the icon; reset inherits')
     if name.rsplit('.',1)[-1] in ATTRIBUTES:return dict(type='boolean',choices=[True,False],syntax='Reset a profile override to inherit')
     return dict(type='color',syntax='Semantic role, #RRGGBB, palette.NAME or global colors.ROLE.fg/bg reference; reset inherits')
@@ -130,9 +140,10 @@ def known_keys(group,styles):
         shared={key.rsplit('.',1)[0] for key in styles.values['colors'] if not key.startswith('apps.')}
         roles={role for role in roles if role not in ROLES or role in shared or role in TMUX}
         bases={role+'.'+field for role in roles for app in APPS for field in fields(role,app)}
-    # Help is one CLI-owned surface; expose its app namespace, not a second
+    # Help/progress are CLI-owned surfaces; expose their app namespace, not a second
     # global set of controls alongside it.
-    result.update(key for key in bases if not key.startswith('help.'))
+    from completion_preferences import ROLES as COMPLETION_ROLES
+    result.update(key for key in bases if not key.startswith(('help.','progress.')) and key.split('.')[0] not in COMPLETION_ROLES)
     for key in bases:
         result.update('apps.'+app+'.'+key for app in consumers(group,key))
     return result

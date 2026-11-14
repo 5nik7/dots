@@ -114,9 +114,13 @@ Follow with `tools/test_file_operations.py`, `tools/test_files.py`, `tools/test_
 
 Run `python3 -B tools/test_progress.py` for isolated native Unix PTY coverage of Bash/Python progress. The suite owns home/config/state/cache roots and checks delayed/fast work, counted phases, nested rendering, output modes, color/icon policy, 40/80/120 columns, control-character labels, prompt suspension, child exit status, interruption, renderer failure and worker cleanup. Disposable file transactions verify progress during real apply and injected rollback; controller tests prohibit animation for JSON/dry-run paths. PTY tests require Bash and Python; Gum is unnecessary.
 
+Run `python3 -B tools/test_progress_styles.py` for glyph validation, shared/profile inheritance, independent fg/bg/attribute spans, ASCII fallback, completion/browser discovery, reset, next-invocation saves without theme publication, and compiled Bash/Zsh preference invalidation with Python disabled on warm startup. Shared renderer tests compare full-width rows at 40/80/120 columns and extremely narrow widths, with activity truncation before the eight-cell current bar and separate configured bar segments.
+
 Run `python3 -B tools/test_progress_sequences.py` for reserved equal shares, fixed denominators, monotonic measured work, opaque command/download separation, cancellation and recovery. Its private tmux fixture checks both transient rows through 80→40→120-column resizes, including preserved scrollback and complete clearing. Run `python3 -B tools/test_progress_consumers.py` for finalization, rollback and cleanup-cancellation boundaries. Disabled colors prohibit SGR while allowing cursor controls needed to clear both rows.
 
 Run the existing Bash, Git, files, browser, theme, picker, confirmation and isolated Anodize suites for integrations. Keep sequential Git/file benchmark intervals separate from tests. Native Termux PTY results do not establish native Windows, Linux or WSL acceptance. See [the focused plan](../plans/progress.md) for actual results and pre-existing suite failures.
+
+Run `python3 -B tools/test_debug_demo.py` for mock-only gallery output, shared-renderer use, static/JSON purity, duration/loop bounds, current preference overrides, Bash/native-controller parity, all six completion emitters and launcher handoff. Owned PTYs cover 40/80/120 columns, resize, loop interruption and clearing. No live manager, Git operation, alert or external provider is invoked. Native Windows PowerShell 5.1/7 and Linux/WSL visual checks remain separate acceptance gates.
 
 ## Yazi Plugin Bundle
 
@@ -467,6 +471,10 @@ workflow tests, 23 Bash framework tests and 23 theme compatibility tests (66 tot
 ShellCheck, relative Markdown links and `git diff --check` also passed.
 
 ## Git and Managed File Operations
+
+`python3 -B tools/test_git_output.py` checks default status grouping across nonadjacent matching states, separate repositories and combined staging states; 2/4/6-space repository/status/file indentation and heading icons; rename/path colors and wrapping; unchanged short/verbose/data views; and read-only index preservation through both controllers. Owned PTYs cover 40/80/120 columns.
+
+`python3 -B tools/test_git_status_icons.py` verifies all heading types and conflict states through Bash and Python, custom/inherited/hidden glyphs, independent color/icon policies, Config save/reset/validation/browser/completion and truthful samples, next-invocation batch saves without theme publication, and compiled Bash/Zsh projection invalidation with Python unavailable on the warm path. All configuration, state and repository paths belong to disposable fixtures.
 
 Run `python3 -B tools/test_git_submodules.py` for both entry paths: isolated
 info/tree/status fixtures, depth/dirty semantics, redacted URLs, completion and
@@ -1267,3 +1275,76 @@ warm reads after regeneration.
 ## Retained tmux widget checks
 
 Run `python3 -B tools/test_tmux_widgets.py -v`, then the existing tmux status, Gitmux, Config layout and weather suites sequentially. The widget suite covers private atomic records, corruption/special files, timestamps, concurrent scheduling, expired reservations, bounded provider output/descendants, retained readings and expiration, Git identity changes, solar boundaries/rollover/timezone changes, geo acquisition intervals/backoff, and Config publication. Existing layout fixtures inject daylight tokens; the widget suite checks actual solar retention separately. Private terminal acceptance includes 40/48/80/120 columns, stable battery marker space and two clients. Never use live Android/weather acquisition or reload the user's server as a test.
+
+## Shell completion colors
+
+Run `python3 -B tools/test_completion_catalog.py -v` to check every first-party
+route, intermediate namespace, option context and statically enumerable first
+argument/option choice. It derives cases from command headers and bundled
+metadata, replaces action bodies with failure sentinels, and checks semantic
+types, ANSI absence and the exact ordinary record projection in an owned
+checkout. Dynamic values still require each provider's owned fixtures.
+For a focused rerun, set `DOTS_TEST_COMPLETION_PREFIX`, for example
+`DOTS_TEST_COMPLETION_PREFIX='files migrate' python3 -B tools/test_completion_catalog.py -v`.
+The report labels filtered runs; leave it unset for complete coverage.
+
+For the associated project checkout inventory, run
+`python3 -B tools/check_project_completions.py --repos-root ~/repos --check`.
+Add `--json` for the structured report. This bounded read-only check identifies
+canonical completion owners, aliases, historical copies and non-CLI projects.
+Missing sources, untyped/custom unmapped groups and new unreviewed projects fail
+the check. It never executes project code or claims installed freshness.
+`python3 -B tools/test_project_completion_audit.py -v` verifies that discovery in
+owned fixtures. Command trees stay in their existing parser/metadata sources.
+
+Run `python3 -B tools/test_project_completion_menus.py -v` for real FZF-tab menus
+from available battery, git-it, gitsub, paint, leaf and codex-termux completion
+sources. `DOTS_TEST_REPOS_ROOT` selects the checkout directory. It extracts literal
+embedded completion scripts into owned roots without executing project actions.
+Missing source checkouts are reported; absent checkouts are not native evidence.
+For bundled standalone names, also run pkgs' `tests/test_completion_types.py`,
+Blastoff's `tests/test_completions.py`, and Anodize's typed-provider case in
+`tools/test_anodize_integration.py`. These complement the Dots-prefixed route audit.
+
+The [completion CI workflow](../.github/workflows/completion-checks.yml) runs the
+catalog, record, inventory-fixture, Zinit lazy-loader and bundled-provider checks on Ubuntu.
+It also checks native input highlighting with a pinned public FSH source checkout;
+fixtures copy that source into disposable roots without installing it.
+It does not require personal projects or claim hosted CI has run locally.
+
+Run `python3 -B tools/test_completion_colors.py -v` sequentially with affected
+profile/preferences, Config, startup, shell and completion regressions. The
+runner owns HOME/XDG/checkouts, copies the available public FZF-tab plugin and
+uses PTYs without personal startup files. `DOTS_TEST_FZF_TAB` can select an
+existing plugin checkout; the runner never installs it. Missing optional
+executables skip the relevant native tests.
+
+The normal-startup case uses the public Zsh entry point and copied Zinit/plugins
+in owned roots, including reload. It checks exact `dots git<Tab>` insertion,
+native input highlight ranges and the following subcommand menu. Direct plugin
+loading alone cannot establish startup integration: Zinit's lazy wrappers differ
+from builtin autoloads. A separate hermetic test proves helper materialization
+does not execute plugin functions and restores wrappers on interface mismatch.
+Run `python3 -B tools/test_fsh_dots.py -v` for the native FSH callback, theme-disabled
+startup, custom overrides, aliases, native syntax fallback, no command execution,
+and actual Tab insertion. Control-flow comparisons preserve `case` arms and
+subsequent native syntax. It copies an available public FSH checkout into owned
+roots; `DOTS_TEST_FSH` can select that checkout. Missing FSH is an explicit skip.
+
+Acceptance covers 40/80/120-column Git/Dots menus, independent semantic and
+description colors, exact editor insertion, group cycling, multi-selection,
+cancellation, control-bearing words, spaces/Unicode/leading-dash files, symlinks,
+plain/disabled modes, native Zsh fallback, adapter reload and incompatible-plugin
+fallback. Config checks include literal typed records, preference reset,
+next-prompt activation without publication and last-good refresh. Visible
+headings and brief/hidden headings must preserve the same types; delegated
+providers and standalone names must obey the same shared color preferences.
+Unchanged prompt guards must invoke no completion subprocess. Compare sequential startup
+and completion timings using test-owned roots and record the baseline and limits
+in the [focused plan](../plans/shell-completion-colors.md).
+
+Termux evidence does not establish native desktop Linux/WSL rendering or Windows
+PowerShell 5.1/7 regressions. Those remain named pending native checks. Native
+Windows has no new completion display consumer or destination; its shared Config
+and literal completion contracts remain applicable. An optional compiled
+FZF-tab module requires separate evidence when absent from the local plugin.

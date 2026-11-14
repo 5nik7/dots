@@ -1,6 +1,9 @@
 {
   "schema": 1,
   "apps": {
+    "completion": {
+      "enabled": true
+    },
     "wiki": {
       "list_details": "summary",
       "search_snippets": true,
@@ -150,7 +153,7 @@
       }
     },
     "clipboard": {
-      "record_copies": false,
+      "record_copies": true,
       "max_entries": 500,
       "max_age_days": 30,
       "max_entry_bytes": 65536,
