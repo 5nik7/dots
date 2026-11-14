@@ -41,6 +41,9 @@ class EzaTheme(unittest.TestCase):
 
     @unittest.skipUnless(yaml, 'PyYAML required for schema comparisons')
     def test_all_palettes_and_native_renderer(self):
+        eza = shutil.which('eza')
+        if eza:
+            (self.tools / 'eza').symlink_to(os.path.abspath(eza))
         self.wal_export()
         (self.home / 'cache/wal/colors.json').write_text(json.dumps({
             'special': {'background':'#102030', 'foreground':'#eeeeee', 'cursor':'#abcdef'},
@@ -65,7 +68,7 @@ class EzaTheme(unittest.TestCase):
                 with patch.dict(os.environ, self.env, clear=True):
                     Themes().render(identity, native)
                 self.assertEqual(yaml.safe_load((native / 'eza.yml').read_text()), doc)
-                if shutil.which('eza'):
+                if eza:
                     # eza consumes theme.yml, not the artifact filename.
                     (out / 'theme.yml').symlink_to('eza.yml')
                     result = self.run_command(['eza', '--color=always', '--icons=never', str(self.repo)],
@@ -171,7 +174,9 @@ dt_set catppuccin mocha''', code=137)
         with patch.dict(os.environ, self.env, clear=True):
             native = self.root / 'native'; native.mkdir(); Themes().render('nord', native)
         self.assertEqual((native / 'eza.yml').read_text(), raw)
-        if shutil.which('eza'):
+        eza = shutil.which('eza')
+        if eza:
+            (self.tools / 'eza').symlink_to(os.path.abspath(eza))
             (out / 'theme.yml').symlink_to('eza.yml')
             self.env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1',
                             GIT_TERMINAL_PROMPT='0', EZA_CONFIG_DIR=str(out))
@@ -242,6 +247,7 @@ dt_set catppuccin mocha''', code=137)
 
     @unittest.skipUnless(shutil.which('eza'), 'eza unavailable')
     def test_native_eza_dark_light_and_environment_precedence(self):
+        (self.tools / 'eza').symlink_to(os.path.abspath(shutil.which('eza')))
         directory = self.home / 'config/eza'; directory.mkdir(parents=True)
         listing = self.home / 'listing'; listing.mkdir(); (listing / 'folder').mkdir()
         (listing / 'plain').write_text('fixture')

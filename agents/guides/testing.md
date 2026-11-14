@@ -45,6 +45,14 @@ Never let a test:
 
 File-ID rename changes also require `python3 -B tools/test_file_renames.py` after the file-platform checks. Cover registry history, all-profile references, selected-profile combined edits and receipt/recovery behavior in owned roots.
 
+## Cross-host acceptance handoffs
+
+Give the receiving agent the exact required source commit, a bounded list of existing runners, and separate permissions for checkout updates, tests and final delivery. Verify a clean intended branch and the repository identity before an authorized fast-forward; an existing SSH URL for the same repository need not be replaced with HTTPS. Never treat elapsed time or missing local objects as permission to fetch or merge. Keep each suite's raw streams, exit code, elapsed time, runtime identity and skips in an owned evidence root; run suites independently so an unrelated failure cannot hide later safe results.
+
+Inspect both the suite and its helper fixtures. A temporary HOME alone does not isolate executable discovery: exclude installed notification clients and other live consumers, then explicitly enroll native renderers only in cases with owned configuration, cache and output. Termux's executable redirection also needs `bin/env` and applicable interpreters beneath an overridden `TERMUX__PREFIX`; preserve required native runtime variables without copying the whole user environment. Do not repair isolation by restoring the entire host PATH.
+
+Return a paste-ready handoff with inline failure evidence and exact reproduction commands; the other host cannot assume access to local artifacts. Preserve failed harness attempts separately from final suite totals. Clipboard delivery requires explicit authorization and wrapper inspection, literal stdin and no recording/watchers; carry any task-specific delivery instruction into subsequent prompts. The [Overkill acceptance record](../../plans/overkill-parity.md#native-termux-fixture-acceptance--2026-11-14) contains that user's authorized delivery instruction and distinguishes reported phone evidence from PC reruns.
+
 ## Test Layers
 
 For Todo-to-Codex changes, run `tools/test_todo_plan.py`, `tools/test_todo_menu.py` and affected Todo/command/completion/shared-menu suites sequentially. The opt-in `DOTS_TEST_CODEX_NATIVE=1 python3 -B tools/test_todo_codex_native.py` uses an owned Codex home, a local fake model and a private terminal; never substitute the developer's shared server or account as its fixture. Verify actual Plan Mode, reasoning, early question replay/answer, busy-thread deduplication and uncertain-submission recovery separately from prompt wording. Keep native Linux/WSL/Windows runtime and clipboard acceptance explicit.

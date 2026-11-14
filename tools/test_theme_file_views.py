@@ -240,6 +240,8 @@ class NativeHighlight(unittest.TestCase):
     def test_existing_published_cache_and_syntaxes(self):
         import test_themes as themes
         case=themes.Themes('test_routes_values_and_plain_output');case.setUp();self.addCleanup(case.doCleanups)
+        bat = shutil.which('bat') or shutil.which('batcat')
+        (case.tools / 'bat').symlink_to(os.path.abspath(bat))
         case.dots('theme','set','nord')
         before={str(p):p.lstat().st_mtime_ns for p in case.home.rglob('*')}
         with patch.dict(os.environ,case.env,clear=True):

@@ -54,7 +54,9 @@ class FileColors(unittest.TestCase):
         self.assertFalse(doc['styles']['type']['dir']['bold'])
         self.assertEqual(fc.parse_ls(doc['ls_colors'])['types']['di']['style']['fg'],'#a6e3a1')
         self.assertTrue((self.generation()/'colors.lua').is_file())
-        if fc.shutil.which('lua'):
+        lua = fc.shutil.which('lua')
+        if lua:
+            (self.tools / 'lua').symlink_to(os.path.abspath(lua))
             # Yazi supplies plugin-relative requires; standalone Lua must load
             # the real validator dependency explicitly, without starting Yazi.
             plugin = REPO/'config/yazi/plugins/dots.yazi'

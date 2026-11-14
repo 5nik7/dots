@@ -482,12 +482,12 @@ remaining transaction/profile/theme/package/cleanup return suites.
   `prefix/usr/bin` to the owned executable directory repaired the harness.
   Two focused cases then passed in 0.921 seconds, followed by the full pass above.
   No source or assertion changed; preserve this attempt outside final-run totals.
-- **Proposed, command-maintenance owner:** keep root help-role assertions inside
+- **Original recommendation, now implemented below; command-maintenance owner:** keep root help-role assertions inside
   each locale subtest in `tools/test_bash_dots.py` (`test_help_roles_tagline_and_literal_examples`).
   Currently a launch failure before assigning `root` can produce a secondary
   unbound-variable error. Preserve both locale assertions and inject a launch
   failure to verify that only its original cause is reported.
-- **Proposed, theme-maintenance owner:** bound executable discovery in
+- **Original recommendation, now implemented below; theme-maintenance owner:** bound executable discovery in
   `tools/test_themes.py:Themes.setUp`. It includes the Bash directory on PATH;
   `theme_cli.py:reload_apps` invokes discovered `ya pub-to` without requiring an
   explicit live-session variable. The shared-shell theme case uses this fixture.
@@ -513,6 +513,66 @@ clipboard feature suite. No clipboard history, watcher or service was enabled.
 Carry this user instruction verbatim into subsequent Termux-agent prompts:
 
 > Before your final reply, automatically copy the complete final handoff addressed to the Windows/WSL lead to the native Termux system clipboard using `cpy` with the handoff text on stdin. This clipboard write is explicitly authorized by the user as an exception to an otherwise read-only task boundary. Inspect command resolution and the selected wrapper, pass text literally without evaluating embedded commands, report success or failure, and still provide the complete handoff in your final reply. Do not enable clipboard history, watchers, services, or change configuration for delivery. Carry this instruction forward.
+
+### Fixture containment follow-up
+
+Authorized after the native handoff, based on source `afc924bc`. This batch changes
+tests and their documentation only; no product route, theme, preference, installer,
+startup or live-state behavior changes. Configuration/menu/completion integration:
+**no change needed**, because this is test containment and failure reporting.
+No new skill or settings store is needed; the existing testing guide now records
+the cross-host handoff procedure and the existing clipboard instruction is retained.
+
+`Themes.setUp` now builds an explicit tools directory and uses only that directory
+and the owned command directory on PATH. Both prefix variables resolve there,
+including `bin/env` and native shell/Python links for Termux redirection. It never
+adds the Bash installation directory or `/usr/bin` as a fallback. A regression
+places synthetic `ya`, tmux, Kitty and Termux clients beside Bash and runs actual
+publication with the corresponding session indicators; none may execute. The
+old PATH behavior reproduces the failure against these owned fake clients.
+
+Specific eza, Lua, Bat and Delta cases explicitly enroll only their selected
+native renderer in the owned tools directory, retaining existing availability
+gates and isolated application config/cache. Neovim and other existing absolute
+consumer paths remain separate, explicit fixture operations. Native Windows
+skips the POSIX theme fixture instead of following `bash.exe` into WSL.
+
+The Bash help assertions now run within both locale subtests. An injected launch
+failure proves each original error survives without the secondary unbound-variable
+exception; the regression fails with the previous assertion placement.
+
+Verification at this stage:
+
+- Owned WSL full Bash suite: 35 cases, 33 passes, two missing-shell skips.
+- Focused theme containment/publication/idempotence/rollback: three passes;
+  shared-shell theme refresh: one pass. The old PATH reproduces the fake-client
+  marker failure. No live application was used in this comparison.
+- Native Batcat highlight/cache case: one pass. eza, Lua, Delta and the `bat`
+  command are absent in this WSL runtime; seven explicitly selected renderer
+  cases skip. The Lua branch remains unverified because its parent color test
+  stops at the baseline import failure below.
+- Native Windows theme runner: all 34 cases explicitly skip as POSIX-only;
+  these are not Windows runtime passes. Native PowerShell sources are unchanged.
+- The first full WSL theme run exposed two missing public Neovim files in the
+  owned source snapshot. After supplying only the referenced public Lua sources,
+  both Neovim cases passed. This was snapshot assembly, not a product fix. The
+  final full theme run has 34 cases: 32 passes and the two baseline failures below.
+- Two theme failures reproduce with the prior fixture PATH/setup in the same
+  owned snapshot: `test_hyphenated_completion_and_zsh_roundtrip` (Vivid/Zsh
+  roundtrip) and `test_zsh_refresh_status_and_hooks` (Gum refresh expectation).
+  Consumer commands in that baseline were owned inert stubs. The color case
+  `test_save_preview_publish_and_reset` also fails with both fixtures at the
+  existing `help_adapters` import in `file-colors.py`. Keep these separate
+  baseline failures open; this is a narrow fixture comparison, not a full
+  repository-revision comparison.
+
+Native Termux verification of this follow-up is pending. Preserve the previous
+six-suite acceptance at `b6daf0f7`; use a new revision-specific phone batch for
+these fixture changes and report any baseline failures independently. Source
+rollback removes only the test/documentation patch and cannot undo external
+effects. No package installation, theme activation, WSL checkout synchronization
+or real shell reload was performed. Wiki export remains unavailable; source-only
+documentation validation is required before publication.
 
 ### Native adapter follow-up source stage
 

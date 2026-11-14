@@ -7,9 +7,11 @@ from pathlib import Path
 import shutil
 from public_fixture import copy_public_tree
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[1]
 BASH = shutil.which('bash')
@@ -19,6 +21,8 @@ NVIM = shutil.which('nvim')
 
 class Themes(unittest.TestCase):
     def setUp(self):
+        if os.name == 'nt' or not BASH:
+            self.skipTest('requires native POSIX Bash; Windows bash.exe may be WSL interop')
         self.temp = tempfile.TemporaryDirectory(prefix='dots-themes-test-')
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
@@ -31,8 +35,25 @@ class Themes(unittest.TestCase):
             shutil.copy2(p, self.repo / 'bin' / p.name)
         self.home = self.root / 'home'
         self.home.mkdir()
+        # Never expose the directory containing Bash (or another host PATH
+        # directory): publication discovers consumer clients such as ya there.
+        self.tools = self.root / 'prefix/usr/bin'
+        self.tools.mkdir(parents=True)
+        for name in ('env', 'sh', 'zsh', 'awk', 'cat', 'chmod', 'cmp', 'cp', 'cut',
+                     'date', 'dirname', 'expr', 'find', 'flock', 'git', 'grep', 'head', 'id',
+                     'ln', 'ls', 'mkdir', 'mktemp', 'mv', 'readlink', 'realpath',
+                     'rm', 'rmdir', 'sed', 'sha256sum', 'sleep', 'sort', 'stat', 'sync', 'tail', 'tee',
+                     'touch', 'tr', 'uname', 'wc', 'xargs'):
+            executable = shutil.which(name)
+            if executable:
+                (self.tools / name).symlink_to(executable)
+        for name, executable in (('bash', BASH), ('python', sys.executable),
+                                 ('python3', sys.executable)):
+            (self.tools / name).symlink_to(executable)
         self.env = {'HOME': str(self.home), 'DOTS': str(self.repo), 'DOTS_COLOR': 'never',
-                    'PATH': str(self.repo / 'bin') + ':' + str(Path(BASH).parent) + ':/usr/bin:/bin',
+                    'PATH': os.pathsep.join((str(self.repo / 'bin'), str(self.tools))),
+                    'PREFIX': str(self.tools.parent), 'TERMUX__PREFIX': str(self.tools.parent),
+                    'DOTS_TERMUX_AUTOSTART': '0', 'PYTHONDONTWRITEBYTECODE': '1',
                     'TMPDIR': str(self.root), 'TMUX_TMPDIR': str(self.root), 'TERM': 'xterm-256color', 'ZDOTDIR': str(self.home)}
         for kind in ('CONFIG', 'CACHE', 'STATE', 'DATA'):
             self.env['XDG_' + kind + '_HOME'] = str(self.home / kind.lower())
@@ -42,6 +63,34 @@ class Themes(unittest.TestCase):
         self.env['XDG_RUNTIME_DIR'] = str(runtime)
         self.state = self.home / 'state/dots/themes'
         self.lib = self.repo / 'lib/dots/themes'
+
+    def test_publication_excludes_host_consumers(self):
+        # Model installed clients beside Bash without touching any real app.
+        host = self.root / 'host bin ü'
+        host.mkdir()
+        (host / 'bash').symlink_to(BASH)
+        for name in ('ya', 'kitty', 'tmux', 'termux-reload-settings'):
+            client = host / name
+            client.write_text('#!' + BASH + '\nprintf ran > "$HOME/host-consumer-ran"\nexit 95\n')
+            client.chmod(0o700)
+        self.assertEqual(shutil.which('ya', path=str(host)), str(host / 'ya'))
+        fixture = Themes()
+        self.addCleanup(fixture.doCleanups)
+        with patch.dict(globals(), BASH=str(host / 'bash')), patch.dict(
+                os.environ, PATH=str(host) + os.pathsep + os.environ['PATH']):
+            fixture.setUp()
+            fixture.env.update(TERMUX_VERSION='fixture', TMUX='fixture',
+                               KITTY_LISTEN_ON='unix:' + str(fixture.root / 'kitty.sock'))
+            (fixture.home / '.termux').mkdir()
+            # Publish through the real CLI, including its consumer refresh stage.
+            fixture.dots('theme', 'set', 'nord')
+            self.assertFalse((fixture.home / 'host-consumer-ran').exists())
+            for name in ('ya', 'kitty', 'tmux', 'termux-reload-settings'):
+                self.assertIsNone(shutil.which(name, path=fixture.env['PATH']))
+            for directory in fixture.env['PATH'].split(os.pathsep):
+                self.assertTrue(Path(directory).resolve().is_relative_to(fixture.root))
+            self.assertTrue((fixture.tools / 'env').is_file())
+            self.assertEqual(Path(fixture.env['TERMUX__PREFIX']) / 'bin', fixture.tools)
 
     def run_command(self, argv, code=0, env=None):
         p = subprocess.run(argv, env=env or self.env, cwd=self.home, text=True,

@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 REPO = Path(__file__).resolve().parents[1]
 BASH = shutil.which('bash')
@@ -305,9 +306,9 @@ dots::error 'Error'
             with self.subTest(locale=locale):
                 root = self.run_dots('--color=always', 'help', env=dict(self.env, LC_ALL=locale)).stdout
                 self.assertIn(span('tagline', document['apps']['cli']['tagline']), root)
-        for role, text in [('executable', 'dots'), ('option', 'OPTIONS'),
-                           ('command', 'COMMAND'), ('argument', 'ARGS')]:
-            self.assertIn(span(role, text), root)
+                for role, text in [('executable', 'dots'), ('option', 'OPTIONS'),
+                                   ('command', 'COMMAND'), ('argument', 'ARGS')]:
+                    self.assertIn(span(role, text), root)
         leaf = self.run_dots('--color=always', 'help', 'samples', 'deep').stdout
         for role, text in [('executable', 'dots'), ('command', 'samples'),
                            ('subcommand', 'deep'), ('option', '--flavor'),
@@ -338,6 +339,25 @@ dots::error 'Error'
         self.assertIn('Manage your dotfiles and more...', fallback.stdout)
         self.assertIn('\x1b[36mdots\x1b[0m', fallback.stdout)
         self.assertIn('\x1b[33mOPTIONS\x1b[0m', fallback.stdout)
+
+    def test_help_role_launch_errors_preserve_original_failures(self):
+        # Run only this case, with its own disposable fixture. Each failed locale
+        # must retain its launch error instead of reading an unassigned `root`.
+        case = DotsFixture('test_help_roles_tagline_and_literal_examples')
+        result = unittest.TestResult()
+        with mock.patch.object(case, 'run_dots',
+                               side_effect=FileNotFoundError('fixture launch failure')) as launch:
+            case.run(result)
+        self.assertEqual(result.testsRun, 1)
+        self.assertEqual(result.failures, [])
+        # Both locale subtests and the subsequent leaf request fail at launch.
+        self.assertEqual(launch.call_count, 3)
+        self.assertEqual([call.kwargs['env']['LC_ALL'] for call in launch.call_args_list[:2]],
+                         ['C', 'C.UTF-8'])
+        self.assertEqual(len(result.errors), 3)
+        for _, error in result.errors:
+            self.assertIn('FileNotFoundError: fixture launch failure', error)
+            self.assertNotIn('UnboundLocalError', error)
 
     def test_text_keeps_utf8_literal_and_controls_inert_in_c_locale(self):
         for locale in ('C', 'C.UTF-8'):

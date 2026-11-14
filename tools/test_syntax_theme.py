@@ -120,6 +120,7 @@ class SyntaxTheme(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which('bat'), 'bat unavailable')
     def test_real_bat_tokens_and_attributes_dark_light(self):
+        (self.tools / 'bat').symlink_to(os.path.abspath(shutil.which('bat')))
         samples = [
             ('Python', 'def greet(name):\n    # note\n    return "hello"\n', [('greet','blue'), ('note','muted'), ('hello','bright_green')]),
             ('Rust', 'fn greet() { let message = "hello"; }\n', [('greet','blue'), ('hello','bright_green')]),
@@ -165,6 +166,8 @@ class SyntaxTheme(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which('bat') and shutil.which('delta'), 'bat or delta unavailable')
     def test_delta_uses_generation_syntax_cache(self):
+        for name in ('bat', 'delta'):
+            (self.tools / name).symlink_to(os.path.abspath(shutil.which(name)))
         normal_cache=self.home/'cache/bat'; normal_cache.mkdir(parents=True)
         sentinel=normal_cache/'sentinel'; sentinel.write_text('keep')
         self.dots('theme','set','nord'); generation=self.generation()

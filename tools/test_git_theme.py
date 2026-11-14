@@ -21,6 +21,9 @@ class GitTheme(unittest.TestCase):
     engine = fixtures.Themes.engine
 
     def prepare(self):
+        # Only this native-consumer fixture needs bat publication and Delta.
+        for name in ('bat', 'delta'):
+            (self.tools / name).symlink_to(os.path.abspath(shutil.which(name)))
         self.config=Path(self.env['XDG_CONFIG_HOME'])/'git';self.config.mkdir(parents=True)
         for name in ('gitconfig','gitppuccin'):
             shutil.copy2(REPO/'config/git'/name,self.config/name)

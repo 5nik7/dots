@@ -168,6 +168,7 @@ class Publication(fixture.Themes):
     def setUp(self):
         super().setUp()
         if not BAT: self.skipTest('Bat unavailable')
+        (self.tools / 'bat').symlink_to(os.path.abspath(BAT))
         self.source = self.home / 'custom bat ü'
         (self.source / 'syntaxes').mkdir(parents=True)
         self.syntax = self.source / 'syntaxes/fixture.sublime-syntax'
