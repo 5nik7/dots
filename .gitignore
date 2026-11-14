@@ -92,3 +92,8 @@ bin-release/
 
 # Downloaded font versions in explicitly selected Dots font stores.
 **/.dots-fonts/
+
+# Python bytecode caches are generated locally.
+__pycache__/
+*.pyc
+*.pyo
