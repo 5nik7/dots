@@ -18,6 +18,8 @@ The next bounded repair is covered by `tools/test_file_colors.py`: fresh standal
 
 `Themes.test_neovim_all_native_families` keeps every palette, background, highlight, gradient, pywal and source-invalidation assertion, but limits each editor invocation to one publication. Each still has a 40-second deadline. `python3 -B tools/test_nvim_theme_fixture.py` checks the POSIX fixture process group using fake editors/children: success and timeout terminate remaining group members and reap the editor; timeout output remains raw bytes. OS reaping owns orphan grandchildren. The normal Windows runner remains separate. Git/Delta fixtures use owned fallback/include/platform configuration and read only the two shipped pager/filter values with includes disabled; the optional `gitppuccin` checkout is not required. Missing native renderers remain explicit acceptance skips.
 
+GitTheme's missing-cache fallback checks visible diff payload after removing SGR sequences, while independently requiring styling in the raw output. Token-level color boundaries must not be mistaken for missing text. Exit status, empty stderr, include precedence and cache preservation remain separate assertions. Use `python3 -B tools/test_git_theme.py GitTheme.test_role_overrides_reset_and_missing_cache` for the focused case, then the full `tools/test_git_theme.py` suite for native Bat/Delta acceptance.
+
 Run `python3 -B tools/test_native_wallpaper.py` for literal lock-screen transport,
 read-only preflight, failed journal/record preservation and the owned WinRT
 asynchronous file projection. Setters are substituted: this never proves visible

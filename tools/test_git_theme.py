@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import unittest
@@ -156,8 +157,13 @@ class GitTheme(unittest.TestCase):
         script=self.run_command(['git','config','--get','core.pager']).stdout.strip()
         result=subprocess.run([BASH,'--noprofile','--norc','-c',script],input='--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x=1\n+x=2\n',cwd=self.home,env=self.env,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stderr,'')
-        self.assertIn('x=1', result.stdout)
-        self.assertIn('x=2', result.stdout)
+        # Syntax highlighting may put SGR boundaries between every token.
+        # Keep raw styling checks separate from assertions about visible text.
+        self.assertRegex(result.stdout, r'\x1b\[[0-9;:]+m')
+        self.assertIn('\x1b[0m', result.stdout)
+        visible = re.sub(r'\x1b\[[0-9;:]*m', '', result.stdout)
+        self.assertIn('x=1', visible)
+        self.assertIn('x=2', visible)
         self.assert_include_contract(published=True)
         self.assertEqual((self.normal_cache/'sentinel').read_text(),'keep my cache')
 

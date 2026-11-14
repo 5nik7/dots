@@ -662,6 +662,63 @@ live WSL checkout or service was activated. Source rollback is limited to this
 patch; retain phone evidence independently. Documentation/source-only wiki checks
 must pass before publication; the absent wiki export remains pending.
 
+### Native repair acceptance and GitTheme assertion follow-up
+
+The owner's 2026-11-14 native Termux report at
+`d31824db6db3f6fa6a0c9837ad1df6558106280e` records **32 tests: 30 passed, one
+failed, one skipped, zero errors**, in 813.246 seconds. The authorized SSH
+fast-forward from `24a5977e` took 2.012800 seconds; final checkout/branch remained
+clean at the required revision. The accepted `b6daf0f7` batch and the earlier
+`24a5977e` findings remain separate historical records.
+
+| Phone group | Counted | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: | ---: |
+| Fake-editor process cleanup | 3 | 3 | 0 | 0 |
+| FileColors | 14 | 13 | 0 | 1 |
+| Selected theme/Neovim repairs | 5 | 5 | 0 | 0 |
+| GitTheme | 2 | 1 | 1 | 0 |
+| Public FSH plugin | 8 | 8 | 0 | 0 |
+
+The sole skip is `StandaloneBootstrap.test_native_query_save_reset_without_publication`
+because it requires the Windows controller. Native context remained Android 15 /
+API 35, Termux 0.119.0-beta.3 aarch64, Python 3.14.10, Bash 5.3.20, Zsh 5.9.2,
+Git 2.56.1, Bat 0.26.1, Delta 0.20.1, Lua 5.4.9 and Neovim 0.12.6; outer locale
+C.UTF-8. Public inputs: Anodize `992e4ff8`, nvim config `fabfc6ac`, FSH `4672ad5d`.
+The installed FSH source's existing untracked `..ini` was preserved and excluded
+by exporting committed public files into the owned fixture.
+
+Accepted native gates: FileColors bootstrap and previously unreached workflow;
+Vivid absence/failure distinctions; Zsh round-trip, Gum and warning-free startup;
+literal FSH Unicode/C-locale loading and all eight plugin cases; all 13 Neovim
+palette transitions and final source invalidation under separate 40-second
+deadlines; all process cleanup cases; and native GitTheme dark/light rendering,
+include/fallback preservation and idempotence. No surviving test-owned process
+was reported. Full Themes and earlier broad batches were intentionally not rerun.
+
+The remaining `test_role_overrides_reset_and_missing_cache` failure is a fixture
+assertion: Delta returned 0 with empty stderr and correct visible `x=1`/`x=2`,
+but token-level SGR sequences interrupted the raw substrings. A focused phone
+rerun retained the same failure and raw bytes, confirming visible text without
+altering assertions. The later cache/include assertions were not reached.
+
+This test-only follow-up strips SGR solely for the two visible-text assertions.
+It also explicitly requires raw styling and reset sequences; exit status, empty
+stderr, include-contract and cache-sentinel checks remain. Synthetic checks
+against the actual assertion block accept split-token SGR, reject a missing
+payload and reject unstyled output. Actual Bat/Delta acceptance remains pending
+on Termux; these synthetic checks do not replace it. No product renderer, command,
+configuration/menu/completion interface, shared default or managed resource is
+changed. Rollback is the narrow test/documentation patch; no activation is needed.
+
+Phone evidence remains at
+`/data/data/com.termux/files/usr/tmp/dots-termux-repair-acceptance-5hiqnnc9`, with
+raw per-suite streams, runtime/source identities, final Git/process checks and
+`focus-git-fallback/` raw/visible diagnostics. The lead received the inline
+handoff, not direct artifact access. Clipboard delivery exited 0 with literal
+stdin and no history/watchers/services. Continue carrying the recorded clipboard
+instruction into the next prompt, with an exact repair revision and only the
+focused fallback case followed by the full two-case GitTheme suite.
+
 ### Native adapter follow-up source stage
 
 This follow-up uses the same Windows working checkout at `800988e` plus the
