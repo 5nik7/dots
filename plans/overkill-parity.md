@@ -45,7 +45,7 @@ Read-only inspection found these actual hosted failures at `31e07b3a54d5ba00528b
 | Same run, Windows lifecycle | Five failures: two theme preparations hit the encoding error; Fonts/Todo launcher strings and a restored-link assertion disagree on `RUNNER~1` versus `runneradmin` | Resolve fixture path identity without weakening drift/link protections; rerun the full lifecycle. |
 | Same run, Ubuntu lifecycle | Both the fresh-checkout WSL fixture and full bundled-install fixture encounter Go older than the required 1.27.1 | Inspect provider isolation and prerequisite setup, then run both strict unchanged-repeat/recovery cases. Hosted simulated WSL remains distinct from native Ubuntu WSL evidence. |
 
-The Ubuntu PowerShell/controller job in the installation run succeeded; this is Linux runtime evidence only. Later steps in failed jobs were skipped, so fixing the first failure does not establish their acceptance. A separate [Completion checks run](https://github.com/5nik7/dots/actions/runs/43579636166) at `d31824db` failed the FSH editor PTY timeout; it remains an independently tracked hosted gap and its automatic triggers are unchanged in this batch. Earlier native Termux passes are preserved.
+The Ubuntu PowerShell/controller job in the installation run succeeded; this is Linux runtime evidence only. Later steps in failed jobs were skipped, so fixing the first failure does not establish their acceptance. A separate [Completion checks run](https://github.com/5nik7/dots/actions/runs/43579636166) at `d31824db` failed the FSH editor PTY timeout; it was a separate hosted gap when these two workflows were paused. Its subsequent repair and successful hosted acceptance are recorded below; its automatic triggers remain enabled. Earlier native Termux passes are preserved.
 
 Re-enable these two workflows after isolated repairs and successful explicit manual runs of the full Linux/Windows matrices. Restore only the original trigger/filter blocks from `31e07b3a54d5ba00528bf0d0f2aeb2480295c31b`, preserving later job fixes; retain manual dispatch if useful. The [testing reference](../docs/testing.md#hosted-ci-during-platform-development) contains exact manual-run commands. This scheduling change needs no Termux update/test/activation and has no CLI, configuration/menu, completion or installer interface effects. Local documentation, source-only wiki and workflow-structure checks apply; no failing workflow is deliberately rerun merely to verify the pause.
 
@@ -122,6 +122,16 @@ These logs are retained under `blastoff-empty-audit-path/` and
 and its no-external-tools contract remain unchanged. Hosted acceptance must cover
 the entire workflow at the follow-up revision, including the unreached Anodize
 step; the first repair's partial hosted success is not a whole-workflow pass.
+
+**Hosted acceptance passed:** [run 43649259319](https://github.com/5nik7/dots/actions/runs/43649259319)
+completed successfully on 2026-11-14 at repair revision
+`e2b60f569b27e6048842044950c00930f18085b4`. All eight test steps and job cleanup
+succeeded: catalog 1 case/1030 contexts, records 1, lazy loader 1, FSH 9, project
+audit 7, pkgs 3, Blastoff 15 methods and Anodize 1. Blastoff retained 83
+unavailable-Fish method/subtest skips; no workflow step was skipped. The full
+run closes both reproduced hosted fixture failures. Completion checks remains
+automatic; the two separately paused workflows remain manual-only. This hosted
+Ubuntu evidence does not replace native Windows/Termux or live visual gates.
 
 ## Baseline and evidence boundaries
 
