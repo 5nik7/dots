@@ -1412,6 +1412,11 @@ adds a test-owned world-writable completion directory, proves `compaudit` detect
 it, verifies its path/provider is excluded, and still requires exact Tab
 insertion, expected highlight regions and no command execution. The ordinary
 editor case remains separate; deadlines and runtime shell policy are unchanged.
+Blastoff additionally enrolls only native `grep` in an owned tool directory for
+Zsh's local group-audit fallback during initialization, then restores its empty
+PATH and verifies `grep` is unavailable before invoking completion. Its separate
+insecure-directory case covers this boundary; the completion provider must still
+work without external tools.
 
 Acceptance covers 40/80/120-column Git/Dots menus, independent semantic and
 description colors, exact editor insertion, group cycling, multi-selection,

@@ -102,6 +102,27 @@ not yet native Termux evidence and needs no live phone activation. Source
 rollback is limited to the two fixture edits and matching documentation. Wiki
 export synchronization remains pending while its checkout is absent.
 
+The first repair was published as `0350bcda2f4d945e19fded5396153d4f0090852f`.
+[Hosted run 43648835662](https://github.com/5nik7/dots/actions/runs/43648835662)
+passed all nine FSH cases and the project/pkgs steps, confirming the original
+blocker was fixed. It exposed the next previously skipped failure: Blastoff's
+empty-PATH autoload fixture made compaudit's local `getent` fallback report
+`getent:6: command not found: grep`. Anodize remained skipped in that hosted run.
+
+The follow-up enrolls only native `grep` in a test-owned directory while Zsh
+initializes, then restores empty PATH, clears command lookup and asserts `grep`
+is absent before invoking Blastoff completion. No host PATH restoration or live
+permission change is used. A separate owned insecure-directory case proves
+audit detection, path/provider exclusion and poison nonexecution. Restoring only
+the empty audit PATH in an owned baseline reproduces the exact hosted stderr
+in 0.542 seconds. The final WSL Blastoff suite completes 15 methods with no
+failures/errors and the same 83 Fish method/subtest skips in 1.702 seconds.
+These logs are retained under `blastoff-empty-audit-path/` and
+`blastoff-audit-tools/` in the same evidence root. The public completion provider
+and its no-external-tools contract remain unchanged. Hosted acceptance must cover
+the entire workflow at the follow-up revision, including the unreached Anodize
+step; the first repair's partial hosted success is not a whole-workflow pass.
+
 ## Baseline and evidence boundaries
 
 - Windows: PowerShell 5.1.26100.9818, stable 7.6.10 and preferred Preview

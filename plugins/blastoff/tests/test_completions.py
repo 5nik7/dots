@@ -246,20 +246,48 @@ class CompletionTests(unittest.TestCase):
                 self.assertEqual(set(result.stdout.split()), expected)
 
     def test_zsh_autoload_registration(self):
+        self.zsh_autoload_registration()
+
+    def test_zsh_autoload_excludes_insecure_directories(self):
+        self.zsh_autoload_registration(insecure=True)
+
+    def zsh_autoload_registration(self, insecure=False):
         if not SHELLS['zsh']:
             self.skipTest('zsh unavailable')
         folder = self.home / 'completion functions'
         folder.mkdir()
         shutil.copyfile(ROOT / 'completions/blastoff.zsh', folder / '_blastoff')
+        # compaudit's local getent fallback needs grep when insecure paths are
+        # present. Enroll only that tool for initialization, never host PATH.
+        audit_tools = self.home / 'audit tools'
+        audit_tools.mkdir()
+        grep = shutil.which('grep')
+        self.assertIsNotNone(grep, 'grep is required by the native Zsh permission audit')
+        (audit_tools / 'grep').symlink_to(grep)
+        prefix, checks = '', ''
+        if insecure:
+            unsafe = self.home / 'insecure completion functions'
+            unsafe.mkdir(mode=0o700)
+            (unsafe / '_blastoff_fixture_poison').write_text(
+                '#compdef blastoff-poison\nprint executed > "$HOME/audit-poison-ran"\n')
+            unsafe.chmod(0o777)
+            prefix = (f'_fixture_insecure={shlex.quote(str(unsafe))}; fpath=("$_fixture_insecure" $fpath); '
+                      'autoload -Uz compaudit; audit=$(compaudit 2>/dev/null); audit_status=$?; '
+                      '[[ $audit_status == 1 && $audit == *"$_fixture_insecure"* ]] || exit 8; ')
+            checks = '(( ! ${fpath[(Ie)$_fixture_insecure]} && ! ${+_comps[blastoff-poison]} )) || exit 10; '
         # Keep compaudit enabled but exclude insecure host completion paths;
         # unattended fixtures must not prompt or opt into trusting them.
-        code = (f'fpath=({shlex.quote(str(folder))} $fpath); autoload -Uz compinit; compinit -i -D || exit 9; '
+        code = (f'path=({shlex.quote(str(audit_tools))}); '+prefix+
+                f'fpath=({shlex.quote(str(folder))} $fpath); autoload -Uz compinit; compinit -i -D || exit 9; '+checks+
+                # Preserve the completion suite's no-external-tools contract.
+                'path=("$HOME/empty-bin"); rehash; (( ! ${+commands[grep]} )) || exit 11; '
                 '[[ $_comps[blastoff] == _blastoff ]] || exit 1; '
                 'compadd() { :; }; words=(blastoff theme apply ""); CURRENT=4; _blastoff')
         result = subprocess.run([SHELLS['zsh'], '-f', '-c', code], env=self.env,
                                 text=True, capture_output=True, timeout=5)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stderr, '')
+        self.assertFalse((self.home / 'audit-poison-ran').exists())
 
     def test_safe_names(self):
         valid = {'alpha', 'auto', 'always', 'never', 'apply', 'a' * 96}
