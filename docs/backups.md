@@ -75,6 +75,7 @@ Like `ln`, a directory destination receives each source basename; `-T` names an
 exact destination. Sources become absolute by default; relative links are
 explicit. The final source symlink is preserved rather than dereferenced.
 Missing sources require `--allow-missing`. Correct links are no-ops.
+On Windows, repeat checks recognize the native drive/UNC substitution spelling returned by the operating system without rewriting the link, creating another backup or adding a transaction.
 
 Replacement applies immediately with backups, including occupied directories and
 broken links. Whole-batch preflight, guarded linked parents, overlap refusal and

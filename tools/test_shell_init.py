@@ -52,7 +52,7 @@ class InitTests(unittest.TestCase):
                     'XONSH_DATA_DIR': str(self.home / 'xonsh-data'),
                     'XONSH_CACHE_DIR': str(self.home / 'xonsh-cache'),
                     'XONTRIBS_AUTOLOAD_DISABLED': '*'}
-        for key in ('LD_PRELOAD', 'PREFIX', 'TERMUX_VERSION', 'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'PATHEXT'):
+        for key in ('LD_PRELOAD', 'PREFIX', 'TERMUX__PREFIX', 'TERMUX_VERSION', 'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'PATHEXT'):
             if key in os.environ:
                 self.env[key] = os.environ[key]
         self.env['USERPROFILE'] = str(self.home)

@@ -224,6 +224,8 @@ Ubuntu evidence does not replace native Windows/Termux or live visual gates.
   changes and native Termux gates; validate application in an owned baseline tree.
 - [x] Harden and preflight the profile/preferences/environment and bounded Git return batch.
 - [x] Record native Termux acceptance of that batch at `1c215417`: 49 test-method executions across eight commands, with no failures, errors or method/subtest skips. This closes only the selected gate below.
+- [x] Repair native Windows repeat-link identity and preflight the bounded transaction/Bak return batch in owned Windows/WSL roots.
+- [ ] Run that seven-command transaction/Bak batch on native Termux at its published repair commit; earlier accepted batches stay separate.
 - [x] Rehearse packet 3 with all 29 skill links in an owned native Windows
   transaction, including interruption/recovery.
 - [x] Apply the separately approved packet 3 with retained backups; verify all
@@ -363,6 +365,51 @@ Carry this current instruction into every subsequent Termux prompt:
 Include the exact required commit, bounded checks and explicit checkout-update authorization preserving a valid existing SSH/HTTPS transport in acceptance prompts. The provider choice above supersedes earlier `cpy` delivery instructions; their historical success/failure records remain unchanged.
 
 Historical records remain separate: the six-suite acceptance at `b6daf0f7`, subsequent theme repair batches and GitTheme's two distinct passing cases at `788a7fdfe286a13e6e718fa5b1b850ddfdf3e1a9` were not rerun or added to these totals. The phone reported that their four documented `/usr/tmp` evidence directories were already absent; none was removed or recreated during this task. Preserve the committed inline summaries while treating those raw retention paths as unavailable. This batch provides automated native Termux fixture/owned-PTY evidence only. Broader transaction/Bak, package/cleanup, Windows/WSL execution and live/visual application gates remain separate.
+
+### Transaction and Bak follow-up — 2026-11-14
+
+Scope: preflight the seven bounded durability/catalog/Bak/managed-operation/link/completion runners before native Termux acceptance. Work starts from `cbe6ebb23082f2562fb6c479cef388bf492bae15` in the Windows source checkout; WSL runs an owned LF public snapshot, leaving its live checkout unchanged. No package, clipboard, startup, live backup, installation receipt or desktop activation is part of this batch.
+
+Native Windows reproduced an existing `dots link` idempotence defect: `Links.test_replace_backup_noop_and_exact_directory` returned `complete` on repeat instead of `unchanged`. `link_cli.prepare()` compared raw Windows readlink substitution text with an ordinary absolute source path. The repair uses the existing bounded `file_platform.native_link_text()` adapter for comparison only; the original link text, journal digests and source symlink identity remain intact. Extend the existing test to require unchanged link text/digest, backup catalog and transaction history, and exercise the actual PowerShell bridges separately.
+
+Fixture work adds explicitly selected native PowerShell 5.1/7 Bak coverage, preserves the seven POSIX CLI cases, excludes insecure Zsh completion directories while retaining the permission audit, carries the outer owned Termux loader prefix into shell children, and reconciles stale static registration assertions with shared Nu/Xonsh completion metadata. Keep failed harness attempts and unavailable runtime skips separate from final results. Native Termux must run its own selected batch at the eventual published repair commit.
+
+Delivery assessment: file maintenance owns the link repair; no route, option, alias, metadata, human/data output schema or completion grammar changes. No configuration integration change needed: correct-link identity is an existing invariant, not a preference. No menu change needed: existing link entry points and approval semantics remain. Existing core installer delivery already includes the shared controller; no new assets/dependencies. No startup performance path changes. Termux uses the same helper with Windows normalization disabled; its selected safe-link and backup gates remain required. Source rollback restores this bounded comparison/fixture patch; journal schemas and payload layouts do not change, and no live operation is performed by this verification. README/backups/testing documentation describes the corrected existing contract and new native fixture. Source-only wiki validation applies; the wiki checkout remains absent.
+
+Actual contexts: Windows Python 3.15.2, PowerShell 5.1.26100.9818 at `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe` and PowerShell 7.6.10 at `C:\Program Files\PowerShell\7\pwsh.exe`, explicitly selected per suite. The tool host's bundled PowerShell 7.6.9 was not substituted as the acceptance engine. Ubuntu WSL ran as `njen`/UID 1000, Python 3.12.3, Ubuntu 24.04.5 LTS, kernel `6.18.58.1-microsoft-standard-WSL2`, using native `/usr/bin` executables enrolled into an owned allowlist. Bash/Zsh were available; Fish/Nu/Xonsh/PowerShell were absent from that WSL allowlist. The live WSL checkout was not synchronized or used for tests.
+
+| Runner / selected cases | Execution | Final result | Runner wall seconds |
+| --- | --- | --- | ---: |
+| `test_file_platform.py -v` | Native Windows | 9 passed, 1 POSIX umask skip | 0.880 |
+| `test_backup_catalog.py -v` | Native Windows | 15 passed | 2.586 |
+| `test_backup_cli.py NativeBackupCLI -v` | Native Windows PowerShell 5.1 | 6 passed | 38.576 |
+| Same native class | Native Windows PowerShell 7 | 6 passed | 23.326 |
+| Final preview/cache negative controls | Native Windows PowerShell 7 | 1 passed, repeated subset | 6.353 |
+| `Links.test_replace_backup_noop_and_exact_directory` | Native Windows Python | 1 passed after repair | 0.439 |
+| `test_file_platform.py -v` | Ubuntu WSL | 8 passed, 2 Windows executable-mode skips | 0.843 |
+| `test_backup_catalog.py -v` | Ubuntu WSL | 15 passed | 5.350 |
+| `test_backup_cli.py BackupCLI -v` | Ubuntu WSL, Bash/Python controller | 7 passed | 3.790 |
+| `test_file_operations.py -v` | Ubuntu WSL, Python controller and owned PTYs | 22 passed | 8.459 |
+| `test_safe_link.py -v` | Ubuntu WSL, Bash/Python controller | 9 passed | 3.192 |
+| `test_backup_completion.py Completion -v` | Ubuntu WSL | 3 passed | 1.944 |
+| `test_backup_shell_completion.py -v` | Ubuntu WSL, installed-shell callbacks | 3 passed, 4 unavailable-shell skips | 1.738 |
+
+The seven final WSL commands count **73 methods: 67 passed and 6 skipped**, with no failures/errors. The shell skips are exactly `fish`, `nu`, `xonsh` and `powershell`, each reported unavailable with no native verification. The platform skips are the two `Windows filename-derived executable mode` cases. Native Windows's one skip is `POSIX permission and umask contract`. No missing requested Windows engine was counted as a skip: an explicit nonexistent engine exited 1 before collection (0.236 seconds). The repeated PowerShell 7 preview case is additional execution of one of its six cases, not a seventh distinct case. Timings include runner overhead/source checks and are not startup benchmarks.
+
+Coverage includes default move/copy and retained restore, occupied-target preservation, whole-batch refusal, catalog/container races, deletion/prune ownership, uninstall baseline protection, rollback, actual abrupt child interruption and recovery, legacy unsuffixed payload reading, native Windows executable-suffixed undo/drift, plain/JSON/quiet and literal/empty operands, source symlink identity on POSIX, and unchanged correct links on both platforms. Core repeat-link assertions retain raw link text/digest, catalog and transaction-history identity; the two real Windows shell bridges also check absolute/relative links, source bytes/mode/mtime and unchanged backup count. Provider tests verify emitted shared Bak names and Nu/Xonsh consumers; installed-shell tests invoke callbacks, not complete editor-insertion or visible-terminal acceptance.
+
+Preserved failures and negative controls:
+
+- The original native repeat-link case failed once with `complete != unchanged` (0.434 seconds). After the comparison repair, that case and both actual Windows shell routes passed. Native UNC execution was not tested; bounded UNC normalization remains fixture evidence.
+- WSL's initial completion-provider run had 2 passes/1 failure (1.888 seconds): a stale assertion required literal `dots-bak` text in `init.nu`, although names now come from shared metadata. The replacement checks real inert JSON emission, unchanged owned files, and both consumers; the three final cases passed.
+- The new insecure-Zsh-path regression passed. Restoring only the old `compinit -D` in an owned diagnostic copy failed the same case (0.334 seconds) with `not interactive and can't open terminal` / `compinit: initialization aborted`; no production source was reverted.
+- Initial native PowerShell harness attempts passed an array as one argument instead of splatting it: 5 failures on 5.1 (9.325 seconds), 5 on 7 (5.519 seconds). The corrected invocation then exposed only owned native startup artifacts: 5.1 had 4 passes/1 failure (24.950 seconds), 7 had 1 pass/4 failures (14.292 seconds), and one focused cache diagnosis failed as expected (3.534 seconds). Core-only profiling suppression left 5.1 with 1 pass/5 Framework-cache failures (25.040 seconds). These are retained harness attempts, not final product failures.
+
+Final Windows containment precreates standard owned AppData directories, redirects module analysis into an owned runtime sibling and suppresses child .NET Core profile gathering. Framework's one exact regular, non-reparse `AppData/Local/Microsoft/Windows/PowerShell/StartupProfileData-NonInteractive` and its precreated parent's mtime are permitted; all other home/config/data/state/cache bytes/modes/mtimes remain asserted. Negative controls reject an unrelated cache file and a directory at the allowed profile filename. This is the existing native-runtime exception, not blanket cache exclusion or a live environment change.
+
+Windows evidence: `C:\Users\njen\dots-review-evidence\bak-native-core-20261114-150105-f5985f56`, with each attempt's raw streams, argv/environment/runtime/source hashes and timings, `summary-final.json` and `owned-process-check.json` (zero remaining owned Python/PowerShell processes). WSL evidence: `/home/njen/dots-review-evidence/transaction-bak-20261114T230136Z`, with original/final 2,849-entry public-source manifests, per-file patch hashes, context/tool identities, owned environments, raw streams, argv/results and process-group records for every attempt. Its command-scoped LF archive excludes the three external absolute links and optional/private Gitlink contents. Every WSL command reported an unchanged source snapshot, no timeout, no cleanup signal and no surviving owned process group. The retained supervisor/archive are also at `C:\Users\njen\dots-review-evidence\transaction-bak-20261114T230136Z`. No live backup, configuration, receipt, package, clipboard, service or personal startup was used as a fixture.
+
+Next phone gate: the seven WSL runner identities above, executed independently on native Termux after an explicitly authorized clean fast-forward containing the published repair SHA. Select `BackupCLI` and `Completion` to avoid collecting native-Windows-only or imported duplicate classes. Inspect native runtimes/helpers; enroll available Fish/Nu/Xonsh rather than hiding them, retain owned `/usr` prefixes and verify platform `termux` before execution. Use the current direct `termux-clipboard-set` handoff instruction. Earlier phone results remain intact. Broader bootstrap/install repeat/baseline/font/application readers, interruption at every journal boundary, native Windows UNC and editor/desktop acceptance, packages and cleanup remain separate subsequent gates.
 
 ### Packet 3 refreshed review — 2026-11-14
 

@@ -11,6 +11,7 @@ sys.path.insert(0, str(LIB))
 sys.path.insert(0, str(LIB / 'files'))
 from backup_catalog import BackupPlan, absolute, disjoint
 from catalog import Presentation
+from file_platform import native_link_text
 from transactions import exists
 
 
@@ -32,7 +33,7 @@ def prepare(plan, sources, destination, *, exact=False, relative=False, allow_mi
         plan.protect_source(target)
         link = os.path.relpath(source, target.parent) if relative else str(source)
         plan.guard(target)
-        if target.is_symlink() and absolute(target.parent / os.readlink(target)) == source:
+        if target.is_symlink() and absolute(target.parent / native_link_text(os.readlink(target))) == source:
             plan.items.append(dict(action='unchanged', source=str(source), target=str(target)))
             continue
         record = plan.snapshot(target, origin='link') if exists(target) and backup else None

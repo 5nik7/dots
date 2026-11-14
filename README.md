@@ -111,7 +111,7 @@ separate from source verification. See the [Overkill acceptance record](plans/ov
 - [Themes](docs/themes.md), [Neovim](docs/neovim.md), [tmux](docs/tmux.md) and [keybindings](docs/keys.md).
 - [Packages](docs/packages.md), [fonts](docs/fonts.md), [Todo](docs/todo.md) and [weather](docs/wttr.md).
 
-`bak PATH` moves files to `~/.bakstore` by default (`--copy` retains originals). `dots link SOURCE TARGET` safely replaces destinations with recoverable links. Blastoff uses the same backup store; deleting backups also removes their empty owned containers. See [backups and safe links](docs/backups.md).
+`bak PATH` moves files to `~/.bakstore` by default (`--copy` retains originals). `dots link SOURCE TARGET` safely replaces destinations with recoverable links; repeating a correct link leaves it and its backups unchanged, including on native Windows. Blastoff uses the same backup store; deleting backups also removes their empty owned containers. See [backups and safe links](docs/backups.md).
 
 Package installs, removals and upgrades show compact progress and one result per manager.
 `pkgs up` / `dots pkgs up` give managers equal shares of overall progress, with
