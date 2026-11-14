@@ -1,12 +1,9 @@
 name: Repository checks
 
+# Automatic runs are paused during cross-platform development.
+# Keep all jobs available for explicit runs; see docs/testing.md#hosted-ci-during-platform-development.
 on:
-  push:
-    branches: [main]
-    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'lib/dots/catalog.bash', 'lib/dots/metadata/*.meta', 'tools/test_wiki*.py', 'tools/generate_dots_manual.py', 'tools/test_manual.py', 'man/*.1', '.github/workflows/repository-checks.yml']
-  pull_request:
-    branches: [main]
-    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'lib/dots/catalog.bash', 'lib/dots/metadata/*.meta', 'tools/test_wiki*.py', 'tools/generate_dots_manual.py', 'tools/test_manual.py', 'man/*.1', '.github/workflows/repository-checks.yml']
+  workflow_dispatch:
 
 permissions:
   contents: read

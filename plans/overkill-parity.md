@@ -29,6 +29,24 @@ documentation, remaining family work and all live-operation review. Source
 profiles, Yazi and Neovim have live links/junctions: source changes can affect
 subsequent launches even without installation.
 
+## Hosted CI development pause — 2026-11-14
+
+The owner requested stopping repeated failure emails during cross-platform development, authorizing repair or temporary removal of the two named workflows. Repository checks and Checkout installation now retain their complete jobs under manual `workflow_dispatch` only; automatic push and pull-request triggers are temporarily removed. This is a CI scheduling change, not a test repair or a successful CI claim. Completion checks and Development worktree lifecycle are unchanged. No notification account setting, branch policy, package, runtime configuration or acceptance assertion is altered.
+
+Read-only inspection found these actual hosted failures at `31e07b3a54d5ba00528bf0d0f2aeb2480295c31b`:
+
+| Hosted run/job | Observed failure | Repair required before restoring automatic runs |
+| --- | --- | --- |
+| [Repository checks](https://github.com/5nik7/dots/actions/runs/43582538292), Windows | `test_native_and_link_text_checkouts`: broken fixture link `README.md -> alias` | Inspect native link construction/resolution with actual Windows links; preserve link-text checkout coverage. |
+| Same run, Ubuntu | Wiki preference provenance expects `profiles/linux/profile.json`, but receives `profiles/linux/config.json` | Reconcile the assertion with the current preference-file contract and retain inheritance/reset/consumer checks. |
+| [Checkout installation](https://github.com/5nik7/dots/actions/runs/43582538378), Windows native authoring | Both PowerShell jobs fail native palette publication; inspected PS5.1 job reports a `cp1252` `UnicodeEncodeError` writing icons in `theme_styles.py` | Repair explicit UTF-8 serialization and test without ambient UTF-8 mode; rerun both required engines. |
+| Same run, Windows lifecycle | Five failures: two theme preparations hit the encoding error; Fonts/Todo launcher strings and a restored-link assertion disagree on `RUNNER~1` versus `runneradmin` | Resolve fixture path identity without weakening drift/link protections; rerun the full lifecycle. |
+| Same run, Ubuntu lifecycle | Both the fresh-checkout WSL fixture and full bundled-install fixture encounter Go older than the required 1.27.1 | Inspect provider isolation and prerequisite setup, then run both strict unchanged-repeat/recovery cases. Hosted simulated WSL remains distinct from native Ubuntu WSL evidence. |
+
+The Ubuntu PowerShell/controller job in the installation run succeeded; this is Linux runtime evidence only. Later steps in failed jobs were skipped, so fixing the first failure does not establish their acceptance. A separate [Completion checks run](https://github.com/5nik7/dots/actions/runs/43579636166) at `d31824db` failed the FSH editor PTY timeout; it remains an independently tracked hosted gap and its automatic triggers are unchanged in this batch. Earlier native Termux passes are preserved.
+
+Re-enable these two workflows after isolated repairs and successful explicit manual runs of the full Linux/Windows matrices. Restore only the original trigger/filter blocks from `31e07b3a54d5ba00528bf0d0f2aeb2480295c31b`, preserving later job fixes; retain manual dispatch if useful. The [testing reference](../docs/testing.md#hosted-ci-during-platform-development) contains exact manual-run commands. This scheduling change needs no Termux update/test/activation and has no CLI, configuration/menu, completion or installer interface effects. Local documentation, source-only wiki and workflow-structure checks apply; no failing workflow is deliberately rerun merely to verify the pause.
+
 ## Baseline and evidence boundaries
 
 - Windows: PowerShell 5.1.26100.9818, stable 7.6.10 and preferred Preview

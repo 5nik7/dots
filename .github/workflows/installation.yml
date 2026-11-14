@@ -1,10 +1,9 @@
 name: Checkout installation
 
+# Automatic runs are paused during cross-platform development.
+# Keep all jobs available for explicit runs; see docs/testing.md#hosted-ci-during-platform-development.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
