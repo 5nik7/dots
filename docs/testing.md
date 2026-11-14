@@ -10,6 +10,8 @@ scalars, private-use icons, the Unicode upper bound and unchanged caller locale.
 The full Bash suite also retains narrow help/layout and machine-output checks.
 WSL reproduction of the Unicode-aware branch is not a native Termux pass.
 
+The [2026-11-14 native Termux acceptance record](../plans/overkill-parity.md#native-termux-fixture-acceptance--2026-11-14) at `b6daf0f7` records six final passing suites: 95 counted tests, 91 passed and four native-Windows/PowerShell skips. It includes the sanitizer and shared-shell repairs, full runtime context, retained harness failure, evidence paths and remaining gates. Those runs used an additional bounded executable environment: `test_themes.py` still exposes host app clients through its discovered Bash directory unless externally contained. Its shared-shell consumer case must exclude real `ya` and other consumer clients or supply owned stubs before execution. Native Termux outer fixtures must also supply an owned `TERMUX__PREFIX/bin/env` path for shebang redirection. These are fixture-containment requirements, not product dependency changes; follow-up hardening remains proposed in the acceptance record.
+
 Run `python3 -B tools/test_native_wallpaper.py` for literal lock-screen transport,
 read-only preflight, failed journal/record preservation and the owned WinRT
 asynchronous file projection. Setters are substituted: this never proves visible

@@ -1,6 +1,6 @@
 # Overkill Windows and WSL parity
 
-Status: source implementation and isolated verification; Windows activation packets 1–2 completed, remaining activation pending. Baseline: clean Windows
+Status: source implementation and isolated verification; Windows activation packets 1–2 completed, remaining activation pending. Six native Termux fixture suites accepted at `b6daf0f7` on 2026-11-14; broader return and live acceptance remain pending. Baseline: clean Windows
 `C:\Users\njen\dots` and Ubuntu `/home/njen/dots`, both at
 `800988ea331c132f29eaf5b645a00b068e38c96a`, audited 2026-11-13 Pacific.
 Windows Terminal Preview is the selected native terminal. Keep its profiles,
@@ -16,6 +16,12 @@ themes or clipboard changes are included. Repository link restoration and Git
 configuration changes require their separately reviewed activation packet.
 The subsequent explicit approval authorizes packets 1–2 only; their completed
 live effects and recovery records are documented below.
+
+Subsequent explicit authorization also covered committing/pushing the coherent
+source repairs to GitHub `main`, and the phone's bounded fast-forward from
+`ba376c99` to `b6daf0f7`. These do not authorize further live activation. Native
+Termux handoff clipboard delivery has its own narrow exception below; it does
+not authorize clipboard use as a test fixture or recording/history services.
 
 Three workers own disjoint source/test sets: Windows startup/help, installation
 and link safety, and POSIX/ancillary-shell adapters. The lead owns integration,
@@ -41,9 +47,10 @@ subsequent launches even without installation.
   current preview correctly refuses that reparse point. Preserve that refusal.
 - Required baseline suites contain fixture assembly/encoding/runtime-selection
   defects. Retain baseline failures, skips and post-fix evidence separately.
-- No desktop, real clipboard, notification, package activation, remote-session
-  continuity or native Termux acceptance has been claimed. Wiki checkouts are
-  absent on both hosts; source-only validation is required.
+- At the initial audit, no desktop, real clipboard, notification, package activation,
+  remote-session continuity or native Termux acceptance was claimed. Later native
+  Termux fixture evidence and handoff clipboard delivery are recorded below.
+  Wiki checkouts are absent on both hosts; source-only validation is required.
 
 ## Batches
 
@@ -348,7 +355,8 @@ human sanitization without adding controls or grammar. Installer delivery is the
 existing `lib/dots/ui.bash` source. Defaults, managed resources and preference
 precedence are unchanged. Data-output paths continue to bypass the sanitizer.
 Source rollback is limited to this follow-up patch; no live activation is needed.
-Retain the phone rerun as a pending native acceptance gate.
+The phone rerun was pending at publication; the native fixture acceptance below
+subsequently closes this sanitizer gate at `b6daf0f7`.
 
 Verification in the owned Ubuntu WSL snapshot: the original failure reproduces
 with the pre-fix sanitizer under `C.UTF-8`; both focused regressions pass after
@@ -389,8 +397,9 @@ detection. The new boundary/runtime checks failed before the source repair.
 Shell-init runs 32 cases with 17 missing-runtime skips; shell-environment runs
 11 methods successfully with 20 unavailable-shell subtest skips. The completion
 catalog passes all 1,030 contexts across 296 routes and 299 prefixes. These are
-fixture results, not native phone or desktop acceptance. The owner must rerun
-shared-shell and completion-catalog checks on Termux after pulling the repair.
+fixture results, not native phone or desktop acceptance. The subsequent phone
+handoff below supplies the separate native shared-shell and completion-catalog
+results after pulling the repair.
 
 Owner: shell integration. This Bash-only correction benefits Termux/Linux/WSL;
 native PowerShell adapters and Zsh activation are unchanged. Configuration,
@@ -401,7 +410,109 @@ Delivery is through the existing checkout-managed Bash source; a fresh shell
 uses the repair. No live startup, package or consumer activation was performed.
 Rollback is the narrow source patch and does not undo prior tool side effects.
 Documentation/source-only wiki checks apply; the absent wiki export remains a
-named synchronization gap. Native Termux acceptance remains pending.
+named synchronization gap. Native Termux acceptance was pending at publication;
+the next section records its bounded completion.
+
+### Native Termux fixture acceptance — 2026-11-14
+
+**Accepted from the owner's native-agent handoff, not rerun by the PC lead.**
+Physical checkout `/data/data/com.termux/files/home/dots`, branch `main`, moved
+from `ba376c992bad42048f027374323b1621fe4f64db` to
+`b6daf0f7452d418d9b5b44a442ff066d6cbad36b`. The authorized fast-forward exited 0
+in 1.990 seconds; required ancestry and final diff checks passed. Status was
+clean before updating, after updating and after testing, including untracked
+files and submodules. No source fixes were made on the phone. The earlier
+revision-blocked handoff at `ba376c99` ran no suites and is not a test failure.
+
+Preflight found `git@github.com:5nik7/dots.git`, inactive sample hooks only, no
+custom hooks/fsmonitor/filter setup. Pull used `--ff-only`,
+`--no-recurse-submodules`, `submodule.recurse=false`, `gc.auto=0` and
+`maintenance.auto=false`. A command-scoped HTTPS URL added a second URL rather
+than replacing the configured SSH URL; the expected repository was fetched over
+SSH. Persistent remote configuration and optional/private submodules were not
+changed. Future transport selection must not assume a command-scoped URL
+overrides a multi-valued remote setting.
+
+Native runtime: Android 15 / API 35, Termux 0.119.0-beta.3, aarch64, kernel
+`5.4.274-qgki-30957850-abG996USQSJHZB1`; Python 3.14.10, Bash 5.3.20,
+Zsh 5.9.2, Fish 4.9.3, Nu 0.117.0 and Xonsh 0.25.0. Both PowerShell engines
+were absent. LANG/LC_ALL/LC_CTYPE were `C.UTF-8`, Python UTF-8 mode was 0.
+Xonsh's version came from distribution metadata; shell-init exercised its native
+runtime. These runtime results do not establish all Nu/Xonsh interactive paths.
+
+The agent inspected suites/helpers before execution and ran each sequentially
+and independently under an additional clean outer harness. HOME, config, data,
+state, cache, runtime, prefix and executable roots were owned; the executable
+directory linked required shells/basic tools and excluded real app clients,
+package managers and optional activation tools. Each suite also retained its
+own fixtures. The harness and raw streams remain on the phone.
+
+| Suite (`python -B tools/…`) | Counted | Passed | Skipped | Failures/errors | Exit | Wall seconds |
+| --- | ---: | ---: | ---: | --- | ---: | ---: |
+| `test_public_fixture.py` | 2 | 2 | 0 | 0 / 0 | 0 | 0.141 |
+| `test_utility_completion.py` | 4 | 3 | 1 | 0 / 0 | 0 | 1.680 |
+| `test_bash_dots.py` (corrected harness) | 34 | 34 | 0 | 0 / 0 | 0 | 66.161 |
+| `test_shell_init.py` | 32 | 29 | 3 | 0 / 0 | 0 | 73.280 |
+| `test_shared_shells.py` | 22 | 22 | 0 | 0 / 0 | 0 | 88.235 |
+| `test_completion_catalog.py` | 1 | 1 | 0 | 0 / 0 | 0 | 378.665 |
+| **Final-run total** | **95** | **91** | **4** | **0 / 0** | | |
+
+Skips: `UtilityCompletion.test_powershell_real_tab_expansion_preserves_literal_insertion`
+requires native Windows editor acceptance; `InitTests.test_native_powershell_adapter`,
+`test_powershell_environment` and `test_powershell_portable_links` lack PowerShell.
+The utility skip was printed by its verbose runner; shell-init skip identities
+were matched to runner order/current branches and independently verified engine
+absence. Timings are whole-process observations, not startup benchmarks.
+
+Native accepted coverage includes both `C`/`C.UTF-8` sanitizer regressions, the
+Bash/Zsh/Fish Tab fixture, integration-only versus full Bash startup, tool and
+completion failure/retry, prompt composition, private-module/rbenv boundaries,
+and all 1,030 completion contexts across 296 routes and 299 prefixes. This closes
+the six listed automated phone gates, including both acceptance repairs. It does
+not close native Windows PowerShell/editor gates, visible 40/80/120-column
+appearance, live consumer/reload, Android integrations, remote continuity or the
+remaining transaction/profile/theme/package/cleanup return suites.
+
+**Retained diagnostic history and separate fixture follow-ups:**
+
+- Initial Bash attempt: 34 tests, 32 errors, exit 1, 24.690 seconds. The outer
+  harness lacked `TERMUX__PREFIX/bin/env`, breaking Termux redirection of
+  `#!/usr/bin/env bash` in copied scripts. There were 31 `FileNotFoundError`
+  reports and one secondary `UnboundLocalError`. Linking only the owned
+  `prefix/usr/bin` to the owned executable directory repaired the harness.
+  Two focused cases then passed in 0.921 seconds, followed by the full pass above.
+  No source or assertion changed; preserve this attempt outside final-run totals.
+- **Proposed, command-maintenance owner:** keep root help-role assertions inside
+  each locale subtest in `tools/test_bash_dots.py` (`test_help_roles_tagline_and_literal_examples`).
+  Currently a launch failure before assigning `root` can produce a secondary
+  unbound-variable error. Preserve both locale assertions and inject a launch
+  failure to verify that only its original cause is reported.
+- **Proposed, theme-maintenance owner:** bound executable discovery in
+  `tools/test_themes.py:Themes.setUp`. It includes the Bash directory on PATH;
+  `theme_cli.py:reload_apps` invokes discovered `ya pub-to` without requiring an
+  explicit live-session variable. The shared-shell theme case uses this fixture.
+  The phone outer harness excluded the real client before execution; no live
+  notification was reported. Use owned consumer stubs/bounded PATH and prove an
+  installed host consumer cannot be invoked. Do not treat the accepted run as
+  proof that the bare fixture is contained on an arbitrary host.
+
+Evidence root on the phone:
+`/data/data/com.termux/files/usr/tmp/dots-termux-acceptance-gcpj2j44/`.
+It retains `suite-results.json`, `context.json`, `commands.json`, `hooks.json`,
+`skips.json`, isolation/update notes, update/final Git evidence and `run_suite.py`.
+Final suite directories retain raw stdout/stderr, result and sanitized environment
+JSON; `bash-dots/` retains the failed attempt, `bash-harness-focus/` the two-case
+confirmation. Full handoff: `handoff-for-windows-wsl-lead.txt`. The lead has the
+inline handoff evidence, not direct access to those artifacts. A targeted Xonsh
+bytecode audit found no writes since the task began; this is not a device-wide
+filesystem audit.
+
+The agent reported `cpy` exit 0 and exact clipboard readback for the complete
+handoff, after wrapper inspection. This is handoff-delivery evidence, not the
+clipboard feature suite. No clipboard history, watcher or service was enabled.
+Carry this user instruction verbatim into subsequent Termux-agent prompts:
+
+> Before your final reply, automatically copy the complete final handoff addressed to the Windows/WSL lead to the native Termux system clipboard using `cpy` with the handoff text on stdin. This clipboard write is explicitly authorized by the user as an exception to an otherwise read-only task boundary. Inspect command resolution and the selected wrapper, pass text literally without evaluating embedded commands, report success or failure, and still provide the complete handoff in your final reply. Do not enable clipboard history, watchers, services, or change configuration for delivery. Carry this instruction forward.
 
 ### Native adapter follow-up source stage
 
@@ -415,9 +526,9 @@ edits to already linked resources can affect a later explicit invocation.
 | Windows `cleanup scan/run/history/report` | Native Python, PowerShell surface; `800988e` + patch | Implemented; 55 native suite cases: 18 pass, 37 POSIX skips. Handles, ACL, cwd/mapping refusal and append-only storage use real owned Windows files; Restart Manager is substituted | Cleanup maintenance; separately review actual API integration before live cache use | Actual API and approved cache acceptance pending. Shared engine hooks retain POSIX path; Termux cleanup regression pending |
 | POSIX cleanup regression | Ubuntu WSL Python 3.12, owned snapshot | 55 cases: 40 pass, 15 Windows skips; no live caches | Cleanup maintenance; retain process-visibility refusal | WSL fixture evidence only; no phone acceptance |
 | `theme bg set FILE --lock-screen` | Native Windows OS PowerShell WinRT from shared controller; `800988e` + patch | Implemented; three owned tests pass; read-only API support reports true. Setter substituted; StorageFile/action projection exercised on disposable file | Theme maintenance; approved visible image acceptance next | Confirm lock-screen display and recovery manually; external API failure may leave changed image. Shared journal/background regression remains in phone gate |
-| Standalone utility contextual completion | PowerShell 5.1, stable 7 and Preview 7; same patch | Four cases per engine, three pass and one POSIX skip; resolved scripts and functions verified. WSL: three pass, one Windows skip | Command/shell maintenance; retain inert metadata and platform option differences | No providers/extensions execute. Actual Nu/Xonsh and Termux shell completion remain pending |
+| Standalone utility contextual completion | PowerShell 5.1, stable 7 and Preview 7; same patch | Four cases per engine, three pass and one POSIX skip; resolved scripts and functions verified. WSL: three pass, one Windows skip. Termux at `b6daf0f7`: three pass, one native-Windows skip; full context above | Command/shell maintenance; retain inert metadata and platform option differences | No providers/extensions execute. Native Termux fixture gate accepted; Nu/Xonsh utility editor interactions and visible acceptance remain pending |
 | Native attention identity/storage/exact acknowledgement | Native Python; same patch | Implemented source with independent handle review and owned concurrency validation; no live hook or notifier activation | Codex attention owner; preserve unknown pane/focus and application delivery ownership | Hook trust, duplicate suppression, real delivery and continuity remain pending; POSIX baseline failures recorded separately |
-| Native standalone utilities | PowerShell 5.1, stable 7 and Preview 7; same patch | 18 cases pass per engine: 14 shared/provider fixtures plus four native wrapper cases, including all 19 help entries; these are repeated scenarios, not 54 independent scenarios | Shell/command/menu family owners; preserve literal provider boundary and named CHT gaps | Live clipboard/network/browser/editor and visible 40/80/120-column checks pending. POSIX completion additions require Termux return checks |
+| Native standalone utilities | PowerShell 5.1, stable 7 and Preview 7; same patch | 18 cases pass per engine: 14 shared/provider fixtures plus four native wrapper cases, including all 19 help entries; these are repeated scenarios, not 54 independent scenarios | Shell/command/menu family owners; preserve literal provider boundary and named CHT gaps | Live clipboard/network/browser/editor and visible 40/80/120-column checks pending. Termux utility-completion fixture passes at `b6daf0f7`; this does not establish every utility's live behavior |
 
 Attention follow-up: independent review reproduced metadata-only handles allowing
 rename/write despite the intended pin. The corrected adapter requests actual
@@ -539,17 +650,17 @@ were made to conceal those failures.
   `dots git publish` already supplies native publication and `rwd.ps1` exists;
   do not list those as absent. Optional color/art demos and third-party `bat-*`
   scripts require separate inventory decisions.
-- Actual Nu/Xonsh, visible desktop applications, native clipboard/editor,
+- Nu/Xonsh interactions beyond the accepted Termux shell-init fixtures, visible desktop applications, native clipboard/editor,
   notification delivery, remote-session continuity and approved package effects
   retain separate named acceptance gates. Configured CI is not a successful run.
-- **Termux return gate:** rerun shell/dispatch, shared helper/Git review,
-  profile/preferences, completion, transaction/Bak, theme/connector and affected
-  package/cleanup suites before phone rollout. Existing preference defaults and
+- **Termux return gate:** the six native suites above are accepted at `b6daf0f7`;
+  run broader Git review, profile/preferences, transaction/Bak, theme/connector and
+  affected package/cleanup suites before their phone rollout. Existing preference defaults and
   precedence are unchanged; shared default templates add artifacts, and shared
   startup/output/recovery behavior changes. In addition,
   `gup` changes its default approval/staging behavior. No PC test marks this gate
-  complete. The generated return patch is the source identity until an explicitly
-  authorized commit exists.
+  complete. Published source identities are `95fb42e1`, `ba376c99` and `b6daf0f7`;
+  the original return patch remains historical evidence for its recorded scope.
 - Source-only rollback before live activation restores the reviewed patch.
   After any live suffixed executable journals exist, keep the updated reader
   until undo is finished; older readers do not understand those payload names.
