@@ -870,6 +870,19 @@ Their inner environment uses empty owned Git templates/hooks, file-only transpor
 
 Native Windows connector lifecycle coverage comes from `InstallationTests.test_eza_setup_respects_destination_and_restore` and `InstallationTests.test_leaf_setup_two_connectors_and_restore`; Leaf here is configuration publication, not a Rust build. The native controller's inspection/preparation and publication undo/rollback cases in `tools/test_native_cli.py` provide separate owned generation evidence. Application reloads are substituted in those publication cases. The existing `python -B tools/verify_anodize.py check` runner can compile/test/vet the real native engine and run its authoring cases from an owned source snapshot with a restricted outer PATH. None of these checks establishes visible desktop behavior or live application activation.
 
+For native Windows full-checkout wrapper acceptance, run these commands separately in an owned outer environment with both engines, native Python/Git and a preinstalled Go satisfying `go.mod` enrolled:
+
+```powershell
+$env:DOTS_TEST_POWERSHELL = 'powershell'
+python -B tools/test_native_installation.py -v
+$env:DOTS_TEST_POWERSHELL = 'pwsh'
+python -B tools/test_native_installation.py -v
+```
+
+Explicit executable paths are also supported. Missing required engines, compiler or link capability fail the native prerequisite; other operating systems skip the Windows-only class. The fixture copies tracked public inputs without Gitlink contents or external absolute links, includes Windows resources/native scripts, constructs owned application/agent/build roots and enables offline native preparation. It exercises the original `install.ps1`/`uninstall.ps1`, all six default components, an actual native Anodize executable, generated theme artifacts, native bundled launchers, unchanged repeat/receipt, drift-preserving uninstall preview and restoration of pre-existing profiles and source files. Source enumeration requires a reviewed public Git index; an archive alone is insufficient.
+
+Changing HOME does not redirect Windows KnownFolders. The fixture therefore binds the launching process's `$PROFILE.CurrentUserAllHosts` and prepends the same binding to the **copied** discovery payload, using two owned paths beneath a Unicode redirected-Documents directory. Real child-engine enumeration, process invocation, version/JSON transport and deadlines remain intact. Every preview destination must be lexically and physically within the fixture before apply. This tests injected destination handling, not real KnownFolders discovery or personal profile startup. Only the existing exact native startup-cache allowance applies to preview purity; app reloads, packages, fonts, services and real desktop configuration stay outside this gate. Keep an outer owned Windows Job Object/process-tree backstop, sanitized tool discovery and serial builds; the fixture's per-wrapper timeout is 600 seconds. Native Termux-profile full installation and visible/live acceptance remain separate gates.
+
 Run `python3 -B tools/test_file_platform.py` (`python` on Windows) for native file
 durability before the lifecycle suites. It covers writable and read-only payloads,
 Unicode paths, flush-error propagation before replacement, permission-sensitive
