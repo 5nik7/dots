@@ -593,21 +593,37 @@ p.apply('install')
             else:
                 shutil.copy2(source,target)
         self.env={k:v for k,v in self.env.items() if k in (
-            'PATH','PREFIX','LD_PRELOAD','LD_LIBRARY_PATH','TMPDIR','HOME','USERPROFILE',
+            'PATH','TERMUX__PREFIX','LD_PRELOAD','LD_LIBRARY_PATH','TMPDIR','TMP','TEMP','HOME','USERPROFILE',
             'DOTS','XDG_CONFIG_HOME','XDG_STATE_HOME','XDG_DATA_HOME','XDG_CACHE_HOME',
+            'XDG_RUNTIME_DIR','LANG','LC_ALL','LC_CTYPE','PYTHONNOUSERSITE','PYTHONUTF8','PYTHONIOENCODING',
             'CODEX_HOME','PI_CODING_AGENT_DIR','GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM',
-            'GIT_TERMINAL_PROMPT','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
-        self.env.pop('PREFIX', None)
-        self.env.pop('TERMUX_VERSION', None)
+            'GIT_TERMINAL_PROMPT','GIT_EXEC_PATH','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
+        # Keep the outer fixture's owned Termux loader prefix, not the canonical
+        # live prefix (which selects Termux even without TERMUX_VERSION).
         self.env['WSL_DISTRO_NAME']='Fixture'
         self.env['DOTS_PROGRESS']='never'
+        from platform_info import detect
+        self.assertEqual(detect(env=self.env)['platform'], 'wsl',
+                         'WSL simulation requires an owned loader prefix outside /com.termux/files/usr')
+        templates=self.base/'git-templates'; templates.mkdir()
+        hooks=self.base/'git-hooks'; hooks.mkdir()
+        build_tmp=self.base/'build-tmp'; build_tmp.mkdir()
+        self.env.update(GIT_ALLOW_PROTOCOL='file', GIT_TEMPLATE_DIR=str(templates),
+                        GIT_CONFIG_COUNT='5', GIT_CONFIG_KEY_0='core.hooksPath', GIT_CONFIG_VALUE_0=str(hooks),
+                        GIT_CONFIG_KEY_1='commit.gpgsign', GIT_CONFIG_VALUE_1='false',
+                        GIT_CONFIG_KEY_2='tag.gpgsign', GIT_CONFIG_VALUE_2='false',
+                        GIT_CONFIG_KEY_3='gc.auto', GIT_CONFIG_VALUE_3='0',
+                        GIT_CONFIG_KEY_4='maintenance.auto', GIT_CONFIG_VALUE_4='false',
+                        GOENV='off', GOWORK='off', GOTOOLCHAIN='local', GOPROXY='off', GOSUMDB='off',
+                        GOVCS='*:off', CGO_ENABLED='0', GOTMPDIR=str(build_tmp))
         legacy_bin = self.base/'legacy-bin'
         legacy_bin.mkdir()
         install_vivid(legacy_bin)
         self.env['PATH'] = str(legacy_bin) + os.pathsep + self.env['PATH']
         self.assertEqual(list((self.repo/'config/fsh').iterdir()),[self.repo/'config/fsh/README.md'])
         def run(script,*args):
-            result=subprocess.run(['sh',str(self.repo/script),*args,'--json'],env=self.env,
+            preparation=['--offline'] if script == 'install.sh' else []
+            result=subprocess.run(['sh',str(self.repo/script),*args,*preparation,'--json'],env=self.env,
                                   capture_output=True,text=True,timeout=600)
             self.assertEqual(result.returncode,0,result.stderr + result.stdout)
             self.assertNotIn('\x1b',result.stdout)
@@ -617,6 +633,11 @@ p.apply('install')
         self.assertEqual(list(self.home.iterdir()),[])
         fsh=next(row for row in preview['items'] if row['id']=='dots:fsh')
         self.assertEqual(fsh['status'],'create')
+        # Go telemetry is controlled by a file, not a GOTELEMETRY env override.
+        # Seed it only after the no-write preview assertion and before compilation.
+        telemetry=self.home/'.config/go/telemetry'
+        telemetry.mkdir(parents=True)
+        (telemetry/'mode').write_text('off\n', encoding='utf-8')
         result=run('install.sh','--yes')
         active=self.home/'.state/dots/current/theme'
         self.assertTrue((self.home/'.config/fsh').is_symlink())

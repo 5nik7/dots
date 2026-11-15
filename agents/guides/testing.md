@@ -294,6 +294,8 @@ For root installer, installation receipt or native file-adapter changes, run `py
 
 For bounded source-update/acquisition acceptance, use the four existing [local-Git installation selectors](../../docs/testing.md#checkout-installation) after Git fixture containment. Keep outer Git transport file-only, templates/hooks/configuration owned, and the whole process tree bounded. The fresh optional-source fixture must retain its nested child and advanced upstream tip: a cached/deinitialized child alone does not prove fresh acquisition, pinning or nonrecursion. These checks invoke the shared Python controller; PowerShell wrappers, full-checkout builds and live updates remain separate gates.
 
+For the two full-checkout lifecycle selectors, prepare an owned public source index and an already installed native Go toolchain satisfying the module's requirement. Review nested environment filtering: outer restrictions must survive or be explicitly reconstructed. Keep offline install, local toolchain selection, owned caches/temp and a real owned Go telemetry mode file; never acquire a compiler or expose live consumers to make a fixture pass. On Termux retain the owned loader prefix while verifying the inner fixture selects WSL, and label the result as WSL-profile simulation. Native Windows skips these POSIX cases; use the separate native connector/controller and engine gates described in [checkout testing](../../docs/testing.md#checkout-installation).
+
 For shared file/path presentation, run `python3 -B tools/test_resources.py` and the
 owning command suites. Test forced-decoration data interfaces, old publications,
 resource matching parity and 40/80/120-column PTYs; never generate a live theme to
