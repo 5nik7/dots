@@ -562,7 +562,15 @@ p.apply('install')
     def test_full_checkout_bundled_install_repeat_and_restore(self):
         self.full_checkout_lifecycle(bundled_only=True)
 
-    def full_checkout_lifecycle(self, bundled_only=False):
+    @unittest.skipIf(os.name == 'nt', 'POSIX Termux-profile full-checkout lifecycle')
+    @unittest.skipUnless(shutil.which('git'), 'Git required to enumerate tracked sources')
+    def test_fresh_checkout_termux_setup_connectors_check_and_restore(self):
+        # A non-Android POSIX host is explicitly a profile simulation. Native
+        # Termux acceptance must run this same case on the phone independently.
+        self.full_checkout_lifecycle(profile='termux')
+
+    def full_checkout_lifecycle(self, bundled_only=False, profile='wsl'):
+        self.assertIn(profile, ('wsl', 'termux'))
         # Copy only versioned public inputs, never ignored connectors or local
         # submodule contents. Include this change's new source files before commit.
         names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','--cached','--others','--exclude-standard','-z','--',
@@ -570,11 +578,16 @@ p.apply('install')
             '.codex/skills/dots-todo-maintenance','bin','lib','plugins','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
         # Profile implementations and visual inputs accompany the core registry.
-        for filename in ('profile.json','colors.toml','icons.toml'):
+        for filename in ('profile.json','config.json','colors.toml','icons.toml'):
             names.update(str(p.relative_to(ROOT)) for p in (ROOT/'profiles').glob('*/'+filename))
         names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','default/themed/leaf.toml.tpl','lib/dots/themes/generation.bash',
                       'lib/dots/files/events.py', 'lib/dots/verbose.bash', 'lib/dots/files/app_paths.py'))
         names.update(str(p.relative_to(ROOT)) for p in (ROOT/'lib/dots/metadata').glob('*.meta'))
+        external_termux_links = {'profiles/termux/config/termux/colors.properties',
+                                'profiles/termux/config/termux/shell'}
+        if profile == 'termux':
+            names.update(subprocess.check_output(['git','-C',str(ROOT),'ls-files','-z','--',
+                'profiles/termux/config','man']).decode().rstrip('\0').split('\0'))
         shutil.rmtree(self.repo)
         self.repo.mkdir()
         for name in sorted(names):
@@ -587,11 +600,14 @@ p.apply('install')
             target.parent.mkdir(parents=True,exist_ok=True)
             if source.is_symlink():
                 link=os.readlink(source)
+                if name in external_termux_links and os.path.isabs(link):
+                    continue  # Never follow the shipped phone-local links.
                 self.assertFalse(os.path.isabs(link),name)
                 self.assertTrue(Path(os.path.abspath(target.parent/link)).is_relative_to(self.repo),name)
                 target.symlink_to(link)
             else:
                 shutil.copy2(source,target)
+        termux_version = self.env.get('TERMUX_VERSION') or 'fixture'
         self.env={k:v for k,v in self.env.items() if k in (
             'PATH','TERMUX__PREFIX','LD_PRELOAD','LD_LIBRARY_PATH','TMPDIR','TMP','TEMP','HOME','USERPROFILE',
             'DOTS','XDG_CONFIG_HOME','XDG_STATE_HOME','XDG_DATA_HOME','XDG_CACHE_HOME',
@@ -600,11 +616,24 @@ p.apply('install')
             'GIT_TERMINAL_PROMPT','GIT_EXEC_PATH','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
         # Keep the outer fixture's owned Termux loader prefix, not the canonical
         # live prefix (which selects Termux even without TERMUX_VERSION).
-        self.env['WSL_DISTRO_NAME']='Fixture'
+        if profile == 'termux':
+            prefix = self.base/'prefix/usr'
+            bindir = prefix/'bin'
+            bindir.mkdir(parents=True)
+            # Termux's shebang redirection must find native env/interpreters
+            # beneath the owned prefix, without exposing its real package tree.
+            for name in ('env', 'sh', 'bash', 'python', 'python3'):
+                native = sys.executable if name in ('python', 'python3') else shutil.which(name, path=self.env['PATH'])
+                self.assertTrue(native, 'required native runtime: '+name)
+                (bindir/name).symlink_to(native)
+            self.env.update(PREFIX=str(prefix), TERMUX__PREFIX=str(prefix), TERMUX_VERSION=termux_version)
+            self.env['PATH'] = str(bindir)+os.pathsep+self.env['PATH']
+        else:
+            self.env['WSL_DISTRO_NAME']='Fixture'
         self.env['DOTS_PROGRESS']='never'
         from platform_info import detect
-        self.assertEqual(detect(env=self.env)['platform'], 'wsl',
-                         'WSL simulation requires an owned loader prefix outside /com.termux/files/usr')
+        self.assertEqual(detect(env=self.env)['platform'], profile,
+                         'the selected profile must match the owned prefix/runtime fixture')
         templates=self.base/'git-templates'; templates.mkdir()
         hooks=self.base/'git-hooks'; hooks.mkdir()
         build_tmp=self.base/'build-tmp'; build_tmp.mkdir()
@@ -621,16 +650,58 @@ p.apply('install')
         install_vivid(legacy_bin)
         self.env['PATH'] = str(legacy_bin) + os.pathsep + self.env['PATH']
         self.assertEqual(list((self.repo/'config/fsh').iterdir()),[self.repo/'config/fsh/README.md'])
+        def snapshot(root):
+            result = {}
+            for path in root.rglob('*'):
+                info = path.lstat()
+                content = ('link', os.readlink(path)) if path.is_symlink() else (
+                    ('directory',) if path.is_dir() else ('file', path.read_bytes()))
+                result[str(path.relative_to(root))] = (info.st_mode, content)
+            return result
+        originals = {}
+        if profile == 'termux':
+            originals = {
+                self.home/'.termux/colors.properties': b'# Original owned terminal colors\nbackground=#010203\n',
+                self.home/'.termux/preserved-note': b'Original owned terminal directory\n',
+                prefix/'share/figlet/dots.flf': b'Original owned Figlet font\n',
+                prefix/'share/figlet/dots-mixed.flf': b'Original owned mixed Figlet font\n',
+                prefix/'share/man/man1/dots.1': b'Original owned manual\n',
+            }
+            for path, data in originals.items():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+            before_home, before_prefix = snapshot(self.home), snapshot(prefix)
+            termux_source = self.repo/'profiles/termux/config/termux'
+            self.assertTrue(termux_source.is_dir())
+            self.assertFalse(os.path.lexists(termux_source/'colors.properties'))
+            self.assertFalse(os.path.lexists(termux_source/'shell'))
+            (termux_source/'colors.properties').write_bytes(b'# Owned source color baseline\nbackground=#040506\n')
+            before_source = snapshot(self.repo)
         def run(script,*args):
             preparation=['--offline'] if script == 'install.sh' else []
             result=subprocess.run(['sh',str(self.repo/script),*args,*preparation,'--json'],env=self.env,
                                   capture_output=True,text=True,timeout=600)
             self.assertEqual(result.returncode,0,result.stderr + result.stdout)
             self.assertNotIn('\x1b',result.stdout)
-            return json.loads(result.stdout)
+            doc = json.loads(result.stdout)
+            # Refuse a bad preview before any subsequent apply is launched.
+            for row in doc['items']:
+                if row.get('target'):
+                    target = Path(row['target'])
+                    self.assertTrue(target.is_absolute() and target.is_relative_to(self.base)
+                                    and target.resolve().is_relative_to(self.base), row)
+            return doc
         preview=run('install.sh','--dry-run')
-        self.assertEqual(preview['platform'],'wsl')
-        self.assertEqual(list(self.home.iterdir()),[])
+        self.assertEqual(preview['platform'],profile)
+        if profile == 'termux':
+            self.assertEqual(snapshot(self.home), before_home)
+            self.assertEqual(snapshot(prefix), before_prefix)
+            self.assertEqual(snapshot(self.repo), before_source)
+            mapping = next(r for r in preview['items'] if r['id']=='termux:file-config-termux')
+            self.assertEqual(Path(mapping['target']), self.home/'.termux')
+            self.assertEqual(set(preview['components']), {'core','files','themes','anodize','blastoff','pkgs'})
+        else:
+            self.assertEqual(list(self.home.iterdir()),[])
         fsh=next(row for row in preview['items'] if row['id']=='dots:fsh')
         self.assertEqual(fsh['status'],'create')
         # Go telemetry is controlled by a file, not a GOTELEMETRY env override.
@@ -640,6 +711,23 @@ p.apply('install')
         (telemetry/'mode').write_text('off\n', encoding='utf-8')
         result=run('install.sh','--yes')
         active=self.home/'.state/dots/current/theme'
+        first_receipt = self.receipt()
+        if profile == 'termux':
+            self.assertEqual((self.home/'.termux').resolve(), termux_source)
+            self.assertTrue((termux_source/'colors.properties').is_symlink())
+            self.assertEqual((self.home/'.termux/colors.properties').resolve(), (active/'termux.properties').resolve())
+            self.assertIn(str(termux_source/'colors.properties'), first_receipt['entries'])
+            self.assertNotIn(str(self.home/'.termux/colors.properties'), first_receipt['entries'])
+            for name in ('dots', 'dots-mixed'):
+                self.assertEqual((prefix/('share/figlet/'+name+'.flf')).resolve(),
+                                 self.repo/('config/figlet/'+name+'.flf'))
+            self.assertEqual((prefix/'share/man/man1/dots.1').resolve(), self.repo/'man/dots.1')
+            binary = self.repo/'plugins/anodize/engine/.build/anodize-engine'
+            self.assertTrue(binary.is_file())
+            self.assertTrue(os.access(binary, os.X_OK))
+            for target in first_receipt['entries']:
+                self.assertTrue(Path(target).is_relative_to(self.base)
+                                and Path(target).resolve().is_relative_to(self.base), target)
         self.assertTrue((self.home/'.config/fsh').is_symlink())
         self.assertTrue((self.home/'.config/fsh/dots.ini').is_file())
         for line in (self.repo/'lib/dots/themes/connectors.tsv').read_text().splitlines():
@@ -670,7 +758,22 @@ p.apply('install')
                 self.assertTrue(all(row['status'] == 'unchanged' for row in assets), assets)
         else:
             self.assertEqual(repeated['status'], 'unchanged', json.dumps(changes, indent=2))
+        if profile == 'termux':
+            self.assertEqual(self.receipt(), first_receipt)
+            for app in ('blastoff', 'pkgs'):
+                assets = [row for row in repeated['items'] if row['id'].startswith('dots:'+app+':')]
+                self.assertGreaterEqual(len(assets), 4)
+                self.assertTrue(all(row['status']=='unchanged' for row in assets), assets)
         run('uninstall.sh','--yes')
+        if profile == 'termux':
+            self.assertFalse(self.receipt()['entries'])
+            self.assertFalse((self.home/'.termux').is_symlink())
+            for path, data in originals.items():
+                self.assertFalse(path.is_symlink(), str(path))
+                self.assertEqual(path.read_bytes(), data)
+            self.assertEqual(snapshot(prefix), before_prefix)
+            self.assertEqual(snapshot(self.repo), before_source)
+            self.assertFalse(active.exists())
         self.assertFalse((self.home/'.config/fsh').is_symlink())
         self.assertFalse((self.repo/'config/fsh/dots.ini').is_symlink())
         self.assertTrue((self.repo/'config/fsh/README.md').is_file())
