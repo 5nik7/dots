@@ -38,18 +38,24 @@ foreach ($source in $WithSource) { $cli += @('--with-source', $source) }
 if ($Packages) { $cli += @('--packages', $Packages) }
 if ($Color) { $cli += "--color=$Color" }
 if ($Icons) { $cli += "--icons=$Icons" }
-try {
-    $setupPython = $null
-    $oldAutomatic, $oldLauncher = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL
+function Find-DotsInstallPython {
+    $oldAutomatic, $oldLauncher, $oldAlways = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL, $env:PYLAUNCHER_ALWAYS_INSTALL
     try {
-        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'; $env:PYLAUNCHER_ALLOW_INSTALL = '0'
+        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'
+        # Legacy launchers enable acquisition when either variable exists,
+        # including when its value is "0". Remove both only for this probe.
+        Remove-Item -LiteralPath Env:PYLAUNCHER_ALLOW_INSTALL, Env:PYLAUNCHER_ALWAYS_INSTALL -ErrorAction SilentlyContinue
         foreach ($candidate in @(Get-Command py, python3, python -CommandType Application -ErrorAction SilentlyContinue)) {
             if ($candidate.Source -like '*\WindowsApps\*' -and $candidate.Name -ne 'py.exe') { continue }
             $prefix = @(); if ($candidate.Name -in @('py','py.exe')) { $prefix = @('-3') }
             try { $found = & $candidate.Source @prefix -B -c 'import sys;sys.exit(1) if sys.version_info < (3,11) else print(sys.executable)' 2>$null } catch { continue }
-            if ($LASTEXITCODE -eq 0 -and $found -and (Test-Path -LiteralPath ([string]@($found)[-1]) -PathType Leaf)) { $setupPython = [string]@($found)[-1]; break }
+            if ($LASTEXITCODE -eq 0 -and $found -and (Test-Path -LiteralPath ([string]@($found)[-1]) -PathType Leaf)) { return [string]@($found)[-1] }
         }
-    } finally { $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $oldAutomatic; $env:PYLAUNCHER_ALLOW_INSTALL = $oldLauncher }
+    } finally { $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $oldAutomatic; $env:PYLAUNCHER_ALLOW_INSTALL = $oldLauncher; $env:PYLAUNCHER_ALWAYS_INSTALL = $oldAlways }
+    return $null
+}
+try {
+    $setupPython = Find-DotsInstallPython
     if ($Bootstrap -or -not $setupPython) {
         & (Join-Path $PSScriptRoot 'bootstrap.ps1') --destination $PSScriptRoot @($cli | Select-Object -Skip 1) @Arguments
         exit $LASTEXITCODE

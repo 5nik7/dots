@@ -15,6 +15,7 @@ Setup resolves catalog resources, previews changes and uses the file Store for i
 - Keep source updates, configuration installation and optional reloads explicit.
 - Never recursively initialize all submodules or request private credentials by default.
 - Do not install missing runtimes or packages silently.
+- Native Python discovery must remove both legacy launcher acquisition variables, not set them to `0`, and restore caller values afterward. Test probes with inert launchers; block real installer/download providers in bootstrap fixtures.
 - Never silently fall back from linking to copying.
 - Preserve backups and receipts for interrupted recovery and uninstall.
 - Do not translate Windows and WSL paths or share their state stores.

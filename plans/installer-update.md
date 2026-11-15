@@ -86,3 +86,7 @@ The agreed goal split was saved through Todo CLI with parent links and all accep
 - Wiki preview and retained build transaction `406c599d25674f778db0540dffe523ae` synchronized the affected canonical pages; the final wiki check is healthy. Existing unrelated source/wiki edits were preserved. No live installation, host package change, app reload, commit or push was performed.
 
 Logs, per-suite results, original goal snapshots and Todo mutation transaction IDs are retained at `/data/data/com.termux/files/usr/tmp/dots-installer-acceptance-rnr6tdhi`. The separate Leaf goal retains pinned build, real consumers, real-artifact reuse/publication/restoration and provenance requirements for a later isolated run.
+
+## Bounded Windows/WSL follow-up (2026-11-14)
+
+The [parity preflight](overkill-parity.md#bootstrap-and-installation-preflight--2026-11-14) records native PowerShell 5.1/7 bootstrap/adapters, owned Windows/WSL component/preparation and selected lifecycle evidence, plus a Windows installer Python-discovery repair. It preserves this earlier full-install report rather than treating the selected new methods as a rerun of all 29 installation cases. Full-checkout builds, real consumer/package effects and the new native Termux bootstrap gate remain separate. No Todo status was changed by this follow-up.

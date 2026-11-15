@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Native entry-point and presentation checks in disposable roots."""
+import base64
 import json
 import os
 from pathlib import Path
@@ -25,6 +26,8 @@ class Adapters(unittest.TestCase):
         self.repo=self.base/'repo'
         self.home.mkdir()
         self.repo.mkdir()
+        self.runtime = self.base/'runtime'
+        self.runtime.mkdir()
         # Copy the controller dependency closure; this fixture deliberately has
         # no theme publisher or application payloads to activate.
         shutil.copytree(ROOT/'lib/dots',self.repo/'lib/dots',
@@ -44,36 +47,126 @@ class Adapters(unittest.TestCase):
                       XDG_CACHE_HOME=str(self.home/'.cache'),XDG_DATA_HOME=str(self.home/'.data'),
                       APPDATA=str(self.home/'Roaming'),LOCALAPPDATA=str(self.home/'Local'),
                       CODEX_HOME=str(self.home/'.codex'),PI_CODING_AGENT_DIR=str(self.home/'.pi'),
+                      TEMP=str(self.runtime),TMP=str(self.runtime),TMPDIR=str(self.runtime),
+                      PSModulePath=str(self.runtime/'modules'),
+                      PSModuleAnalysisCachePath=str(self.runtime/'ModuleAnalysisCache'),
+                      POWERSHELL_TELEMETRY_OPTOUT='1',POWERSHELL_UPDATECHECK='Off',
+                      DOTNET_MultiCoreJitNoProfileGather='1',
+                      PYTHONUTF8='1',PYTHONIOENCODING='utf-8',PYTHONDONTWRITEBYTECODE='1',
                       DOTS_COLOR='never',DOTS_ICONS='never',TERM='xterm-256color')
         for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'DOTS_APP_LEAF_CONFIG'):
             self.env.pop(key, None)
 
     def run_command(self, argv, ok=True, **env):
         result=subprocess.run(list(map(str,argv)),env=dict(self.env,**env),stdin=subprocess.DEVNULL,
-                              capture_output=True,text=True,timeout=30)
+                              capture_output=True,text=True,timeout=30,cwd=self.home)
         if ok:self.assertEqual(result.returncode,0,result.stderr+'\n'+result.stdout)
         else:self.assertNotEqual(result.returncode,0)
         return result
 
     def native_home_baseline(self):
-        # These engines create their own StartupProfileData files even with
+        # The selected engine creates its own StartupProfileData files even with
         # -NoProfile. Establish that runtime baseline before Dots previews.
-        for engine in dict.fromkeys(filter(None, (PWSH, shutil.which('powershell'), shutil.which('pwsh')))):
-            self.run_command([engine,'-NoProfile','-NonInteractive','-Command',
-                              'Import-Module Microsoft.PowerShell.Management,Microsoft.PowerShell.Utility; exit 0'])
+        if not PWSH:
+            self.skipTest('PowerShell unavailable; native runtime baseline not verified')
+        self.run_command([PWSH,'-NoProfile','-NonInteractive','-Command',
+                          'Import-Module Microsoft.PowerShell.Management,Microsoft.PowerShell.Utility; exit 0'])
         return self.nonruntime_home_paths()
 
     def nonruntime_home_paths(self):
         # Both native engines may lazily create these files on module discovery,
         # including from the nested no-profile engine used to discover $PROFILE.
         # Do not exempt arbitrary AppData/config/state files from preview checks.
-        allowed = {'AppData', 'AppData/Local', 'AppData/Roaming', 'AppData/Local/Microsoft'}
-        for base in ('AppData/Local/Microsoft/PowerShell',
-                     'AppData/Local/Microsoft/Windows/PowerShell'):
-            allowed.update((base, base+'/StartupProfileData-NonInteractive', base+'/telemetry.uuid'))
-        allowed.add('AppData/Local/Microsoft/Windows')
-        return sorted(path for path in self.home.rglob('*')
-                      if path.relative_to(self.home).as_posix() not in allowed)
+        roots = [self.home/name for name in ('AppData/Local/Microsoft/PowerShell',
+                 'AppData/Local/Microsoft/Windows/PowerShell')]
+        allowed_dirs = {self.home/'AppData/Roaming'}
+        for root in roots:
+            allowed_dirs.update(path for path in (root, *root.parents)
+                                if path != self.home and self.home in path.parents)
+        result = {}
+        for path in self.home.rglob('*'):
+            info = path.lstat()
+            runtime_file = path.parent in roots and path.name == 'StartupProfileData-NonInteractive'
+            if path in allowed_dirs or runtime_file:
+                self.assertFalse(path.is_symlink(), str(path))
+                self.assertFalse(getattr(info, 'st_file_attributes', 0) & 0x400, str(path))
+                self.assertTrue(path.is_file() if runtime_file else path.is_dir(), str(path))
+                continue
+            content = ('link', os.readlink(path)) if path.is_symlink() else (
+                ('directory',) if path.is_dir() else ('file', path.read_bytes()))
+            result[str(path.relative_to(self.home))] = (info.st_mode, info.st_mtime_ns, content)
+        return result
+
+    def test_native_runtime_cache_allowance_rejects_other_writes_and_types(self):
+        root = self.home/'AppData/Local/Microsoft/Windows/PowerShell'
+        root.mkdir(parents=True)
+        profile = root/'StartupProfileData-NonInteractive'
+        profile.write_bytes(b'owned runtime fixture')
+        self.assertEqual(self.nonruntime_home_paths(), {})
+        unexpected = root/'unrelated-dots-cache'
+        unexpected.write_bytes(b'not a runtime profile')
+        self.assertIn(str(unexpected.relative_to(self.home)), self.nonruntime_home_paths())
+        unexpected.unlink()
+        profile.unlink()
+        profile.mkdir()
+        with self.assertRaises(AssertionError):
+            self.nonruntime_home_paths()
+
+    @unittest.skipUnless(PWSH, 'PowerShell unavailable; installer Python guard not verified')
+    def test_native_installer_python_probe_disables_acquisition_and_restores_environment(self):
+        quote = lambda value: "'" + str(value).replace("'", "''") + "'"
+        # Evaluate only the production discovery function, with Get-Command and
+        # its selected launcher replaced. Never execute installer entry logic.
+        script = r'''
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(SCRIPT, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors | Out-String) }
+$helper = $ast.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Find-DotsInstallPython' }, $true)
+if (-not $helper) { throw 'installer Python discovery helper is missing' }
+. ([scriptblock]::Create($helper.Extent.Text))
+function Get-Command { [pscustomobject]@{ Name = 'py.exe'; Source = 'Invoke-FixturePython' } }
+function Invoke-FixturePython {
+    $script:probed = $true
+    $script:guarded = ($env:PYTHON_MANAGER_AUTOMATIC_INSTALL -eq 'false' -and
+        -not (Test-Path Env:PYLAUNCHER_ALLOW_INSTALL) -and
+        -not (Test-Path Env:PYLAUNCHER_ALWAYS_INSTALL))
+    $script:prefix = $args[0]
+    if ($script:failure -eq 'throw') { throw 'fixture missing runtime' }
+    $global:LASTEXITCODE = if ($script:failure -eq 'exit') { 1 } else { 0 }
+    return PYTHON
+}
+$results = @(foreach ($initial in @($null, '0', '1')) {
+    foreach ($failure in @('none', 'throw', 'exit')) {
+        $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $initial
+        $env:PYLAUNCHER_ALLOW_INSTALL = $initial
+        $env:PYLAUNCHER_ALWAYS_INSTALL = $initial
+        $script:probed = $false; $script:guarded = $false; $script:failure = $failure
+        $script:prefix = $null
+        $found = Find-DotsInstallPython
+        [pscustomobject]@{
+            probed = $script:probed; guarded = $script:guarded; prefix = $script:prefix
+            found = $found; failure = $failure
+            restored = ($env:PYTHON_MANAGER_AUTOMATIC_INSTALL -ceq $initial -and
+                $env:PYLAUNCHER_ALLOW_INSTALL -ceq $initial -and
+                $env:PYLAUNCHER_ALWAYS_INSTALL -ceq $initial)
+        }
+    }
+})
+ConvertTo-Json -InputObject $results -Compress
+'''.replace('SCRIPT', quote(self.repo/'install.ps1')).replace('PYTHON\n', quote(sys.executable)+'\n')
+        encoded = base64.b64encode(script.encode('utf-16-le')).decode('ascii')
+        result = self.run_command([PWSH, '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded])
+        rows = json.loads(result.stdout)
+        self.assertEqual(len(rows), 9)
+        for row in rows:
+            self.assertTrue(row['probed'], row)
+            self.assertTrue(row['guarded'], row)
+            self.assertTrue(row['restored'], row)
+            self.assertEqual(row['prefix'], '-3', row)
+            self.assertEqual(row['found'], sys.executable if row['failure'] == 'none' else None, row)
 
     @unittest.skipIf(os.name=='nt','POSIX shell entry points')
     def test_shell_entry_points_and_setup_routing(self):
@@ -219,7 +312,7 @@ sys.exit(install.main(['install','--yes']))
                     chunks.append(block)
                 self.assertEqual(proc.wait(timeout=20),0)
                 output=b''.join(chunks).decode(errors='replace')
-                self.assertIn('Planning install',output)
+                self.assertIn('Plan install',output)
                 self.assertIn('\x1b[96m',output)
                 plain=re.sub(r'\x1b\[[0-9;]*m','',output)
                 self.assertIn('Dots install',plain)

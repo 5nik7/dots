@@ -51,6 +51,8 @@ sh bootstrap.sh
 On native Windows, use `./bootstrap.ps1 --dry-run`, then `./bootstrap.ps1`.
 Bootstrap requests approval before preparing prerequisites or managed changes;
 see [fresh-machine bootstrap](docs/installation.md#fresh-machine-bootstrap).
+Native Windows runtime discovery suppresses Python launcher auto-installation;
+missing prerequisites still require the explicit bootstrap preparation step.
 
 From an existing checkout, preview setup first:
 

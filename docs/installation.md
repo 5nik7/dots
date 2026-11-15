@@ -158,6 +158,13 @@ owned storage before managed publication. External package changes remain if
 later setup fails or is cancelled. `--offline` refuses network preparation;
 `--dry-run` acquires nothing. Missing Python can trigger bootstrap delegation.
 
+Both native `install.ps1` and `bootstrap.ps1` disable Python Manager automatic
+installation and temporarily remove `PYLAUNCHER_ALLOW_INSTALL` and
+`PYLAUNCHER_ALWAYS_INSTALL` while discovering an existing runtime. For legacy
+launchers, setting either variable to `0` still enables acquisition. Discovery
+restores all three caller values on success or failure; this guard does not
+change the separately approved prerequisite preparation step.
+
 Windows bootstrap probes link capability after approval. It can explicitly offer
 Developer Mode with the operating system's administrator prompt. `--yes` alone
 does not approve this setting: separate interactive approval or

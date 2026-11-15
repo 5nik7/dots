@@ -846,6 +846,12 @@ and defaults to bundled fixture configs rather than assuming a parent checkout.
 
 ## Checkout installation
 
+For the bounded bootstrap gate, run `python3 -B tools/test_bootstrap_entry.py Bootstrap -v` on POSIX. Its owned local-remotes fixture preserves the reviewed Termux loader/prefix, owns data/temp roots, excludes Git templates/hooks and refuses non-file transport. Its missing-runtime case uses an owned fake package provider. Native Windows runs `python -B tools/test_bootstrap_entry.py NativeBootstrap -v` separately with `DOTS_TEST_POWERSHELL` set to each required engine (`powershell`, then `pwsh`, or explicit executable paths). A missing explicitly requested engine is an error, not a skip. The native fixture executes production bootstrap under allowlisted Python/Git discovery and failing download, package, elevation and prompt substitutes; no real prerequisite installation is acceptance evidence.
+
+Pair these with `tools/test_installation_adapters.py Adapters -v` and the existing `tools/test_bootstrap_integration.py`, `tools/test_setup_components.py` and `tools/test_setup_stages.py` runners. Adapter regressions require the selected engine for the inert installer-discovery test and preserve all three caller acquisition settings across success, exceptions and nonzero exits. Preview baselines check file bytes/modes/mtimes and allow only exact regular non-reparse native startup-profile files and ordinary ancestors; unrelated cache files and wrong file types remain failures. All runners still require owned outer roots and a scrubbed native-tool environment. On Windows, provide Python's inspected installation directory or an equivalent complete runtime; linking only `python.exe` without its DLLs is not a valid interpreter fixture.
+
+Full-checkout installation cases remain a separate gate: they enumerate tracked source through Git and include the selected Anodize build. An archive without Git metadata, missing Go, or a simulated WSL fixture on Termux does not establish native full-install acceptance. See the bounded selectors, exact revisions and outstanding gates in the [parity plan](../plans/overkill-parity.md).
+
 Run `python3 -B tools/test_file_platform.py` (`python` on Windows) for native file
 durability before the lifecycle suites. It covers writable and read-only payloads,
 Unicode paths, flush-error propagation before replacement, permission-sensitive

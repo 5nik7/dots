@@ -789,6 +789,11 @@ Configuration key migration (`config migrate --keys`) is explicit and preview-fi
 
 Bootstrap prepares reviewed prerequisites and leaves managed configuration unpublished on preparation failure. External package effects remain. Acquisition cannot replace an occupied destination. Windows Developer Mode is a separate explicit offer; there is no silent copying or elevation.
 
+Native installer and bootstrap Python discovery disable manager auto-installation
+and remove both legacy launcher acquisition variables only for the probe,
+restoring the caller's environment afterward. A discovery query cannot serve as
+approval to acquire a runtime; see [bootstrap prerequisites](installation.md#fresh-machine-bootstrap).
+
 Preference layout migration/import preflights the complete destination set and guards source manifests/preferences alongside target files. Source appearance wins only inside the portable import allowlist; structural and native application files are excluded. Stale inputs refuse saving, failed writes roll back and successful saves retain ordinary file-transaction undo. These operations never publish themes or reload applications.
 
 ## Tmux widget refresh
