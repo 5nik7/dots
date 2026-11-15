@@ -37,6 +37,7 @@ class GitOperations(unittest.TestCase):
         self.env = {key: value for key, value in os.environ.items() if key.upper() in runtime}
         temporary = self.base / 'tmp'; temporary.mkdir()
         runtime_root = self.home / 'runtime'; runtime_root.mkdir(mode=0o700)
+        templates = self.base / 'git-templates'; templates.mkdir()
         self.env.update(
             HOME=str(self.home), XDG_CONFIG_HOME=str(self.home / ".config"),
             XDG_STATE_HOME=str(self.home / ".local/state"),
@@ -47,6 +48,7 @@ class GitOperations(unittest.TestCase):
             TMPDIR=str(temporary), TMP=str(temporary), TEMP=str(temporary),
             PYTHONDONTWRITEBYTECODE='1',
             GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+            GIT_TEMPLATE_DIR=str(templates),
             GIT_AUTHOR_NAME="Git It Test", GIT_COMMITTER_NAME="Git It Test",
             GIT_AUTHOR_EMAIL="test@example.invalid", GIT_COMMITTER_EMAIL="test@example.invalid",
             GIT_TERMINAL_PROMPT="0", GIT_CONFIG_COUNT="3", GIT_ALLOW_PROTOCOL='file',

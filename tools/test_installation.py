@@ -402,13 +402,34 @@ p.apply('install')
         (child/'.dots/files.json').write_text(json.dumps(dict(schema=1,repository='nvim',resources=[dict(id='optional',app='nvim',category='config',source='settings',target='${CONFIG}/optional',strategy='link',platforms=['termux','linux','wsl','windows'])])))
         self.git(child,'add','.')
         self.git(child,'commit','-m','Optional fixture')
+        nested=self.base/'nested source'
+        nested.mkdir()
+        self.git(nested,'init','--initial-branch=main')
+        self.git(nested,'config','user.email','fixture@example.invalid')
+        self.git(nested,'config','user.name','Fixture')
+        (nested/'sentinel').write_text('nested source must stay uninitialized')
+        self.git(nested,'add','.')
+        self.git(nested,'commit','-m','Nested fixture')
+        self.git(child,'-c','protocol.file.allow=always','submodule','add',str(nested),'nested')
+        self.git(child,'commit','-am','Record nested fixture')
         self.git(self.repo,'-c','protocol.file.allow=always','submodule','add',str(child),'optional')
         sources=json.loads((self.repo/'.dots/sources.json').read_text())
         sources['sources'].append(dict(id='nvim',path='optional',platforms=['termux','linux','wsl','windows'],roots=['.']))
         self.write('.dots/sources.json',sources)
         self.git(self.repo,'add','.')
         self.git(self.repo,'commit','-m','Record optional source')
-        self.git(self.repo,'submodule','deinit','-f','--','optional')
+        pin=self.git(self.repo,'rev-parse','HEAD:optional')
+        # A fresh clone has no cached optional checkout. Advancing its source
+        # proves acquisition uses the parent's pin rather than the remote tip.
+        fresh=self.base/'fresh checkout space 雪'
+        self.git(self.base,'clone',str(self.repo),str(fresh))
+        self.repo=fresh
+        self.env['DOTS']=str(fresh)
+        self.source=fresh/'config/example/settings'
+        self.assertFalse((fresh/'.git/modules/optional').exists())
+        (child/'settings').write_text('unrecorded upstream change')
+        self.git(child,'commit','-am','Advance optional upstream')
+        self.assertNotEqual(self.git(child,'rev-parse','HEAD'),pin)
         self.cli('install','--yes')
         self.assertFalse((self.repo/'optional/.git').exists())
         self.cli('install','--with-source','nvim','--dry-run')
@@ -417,6 +438,9 @@ p.apply('install')
         self.env['GIT_ALLOW_PROTOCOL']='file'
         self.cli('install','--with-source','nvim','--yes')
         self.assertEqual((self.home/'.config/optional').read_text(),'optional config')
+        self.assertEqual(self.git(self.repo/'optional','rev-parse','HEAD'),pin)
+        self.assertFalse((self.repo/'optional/nested/.git').exists())
+        self.assertFalse((self.repo/'optional/nested/sentinel').exists())
 
     def theme_fixture(self):
         for name in ('lib', 'themes', 'default'):

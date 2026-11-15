@@ -31,12 +31,16 @@ class GitFixture(unittest.TestCase):
             ambient = Path(directory)
             config = ambient/'ambient.gitconfig'
             config.write_text('[user]\nname = Ambient Git Identity\n[protocol "https"]\nallow = always\n')
+            templates = ambient/'templates'; templates.mkdir()
+            marker = 'ambient-template-marker'
+            (templates/marker).write_text('ambient template must not be inherited\n')
             (ambient/'sitecustomize.py').write_text(
                 'from pathlib import Path\nPath(__file__).with_name("python-override-ran").write_text("ran")\n')
             unwanted = dict(PYTHONPATH=str(ambient), PYTHONHOME=str(ambient/'missing-python'),
                             SSH_AUTH_SOCK=str(ambient/'agent'), SSH_AGENT_PID='123', SSH_ASKPASS=str(ambient/'askpass'),
                             BASH_ENV=str(ambient/'startup'), ENV=str(ambient/'startup'),
                             GIT_CONFIG_GLOBAL=str(config), GIT_CONFIG_SYSTEM=str(config),
+                            GIT_TEMPLATE_DIR=str(templates),
                             GIT_CONFIG_COUNT='1', GIT_CONFIG_KEY_0='user.name',
                             GIT_CONFIG_VALUE_0='Ambient Git Identity', GIT_EXEC_PATH=str(ambient),
                             GIT_SSH_COMMAND=str(ambient/'ssh'), GIT_ALLOW_PROTOCOL='https:ssh',
@@ -46,9 +50,15 @@ class GitFixture(unittest.TestCase):
                         'BASH_ENV','ENV','GIT_CONFIG_SYSTEM','GIT_EXEC_PATH','GIT_SSH_COMMAND','DOTS','DOTS_PROFILE'):
                 self.assertNotIn(key,fixture.env)
             roots = ('HOME','USERPROFILE','APPDATA','LOCALAPPDATA','TMPDIR','TMP','TEMP',
-                     'XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_CACHE_HOME','XDG_RUNTIME_DIR')
+                     'XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_CACHE_HOME','XDG_RUNTIME_DIR',
+                     'GIT_TEMPLATE_DIR')
             for key in roots:
                 self.assertTrue(Path(fixture.env[key]).is_relative_to(fixture.base),key)
+            owned_templates = Path(fixture.env['GIT_TEMPLATE_DIR'])
+            self.assertEqual(owned_templates, fixture.base/'git-templates')
+            self.assertTrue(owned_templates.is_dir())
+            self.assertFalse(owned_templates.is_symlink())
+            self.assertEqual(list(owned_templates.iterdir()), [])
             # Actual child observation, without isolated Python masking a leak.
             child = fixture.run_cmd([sys.executable,'-B','-c',
                 'import json,os; print(json.dumps({key:os.environ.get(key) for key in '+
@@ -60,6 +70,13 @@ class GitFixture(unittest.TestCase):
             self.assertFalse((ambient/'python-override-ran').exists())
             repo = fixture.base/'local repo'; repo.mkdir()
             fixture.run_cmd(['git','init','-b','main',str(repo)])
+            self.assertFalse((repo/'.git'/marker).exists())
+            # Prove the inert poison would be copied if template isolation broke.
+            control = fixture.base/'template control'
+            fixture.run_cmd(['git','init','-b','main',str(control)],
+                            env=dict(fixture.env, GIT_TEMPLATE_DIR=str(templates)))
+            self.assertEqual((control/'.git'/marker).read_bytes(), (templates/marker).read_bytes())
+            self.assertEqual(list(owned_templates.iterdir()), [])
             listing = fixture.run_cmd(['git','-C',str(repo),'config','--list','--show-origin']).stdout
             self.assertNotIn('Ambient Git Identity',listing)
             self.assertNotIn('protocol.https.allow',listing)
