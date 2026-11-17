@@ -87,3 +87,45 @@ Termux local verification completed with isolated roots and private tmux clients
 The full launcher suite ran 23 tests with two pre-existing failures: `test_action_map_uses_existing_safe_routes` and `test_navigation_preserves_queries_context_help_and_workflow_return` still expect the old Files menu without Install/Uninstall. Both failures reproduce using the saved pre-task `menu_cli.py`; the existing installer/package edits are preserved. The new Wiki tests pass, including leading-dash literal queries and source-reader CRLF normalization.
 
 The manual test discovers the installed artifact through an explicit test-owned MANPATH; it does not install a live manual or establish default viewer discovery on native Linux/WSL. Native PowerShell 5.1/7 interaction, native Linux/WSL manual discovery and hosted GitHub light/dark rendering remain named pending checks. No commits, pushes, live installation or activation occurred. All eight scoped Todo records are completed after verification; existing identities, aliases, titles, priorities, tags and relationships are retained.
+
+## Compact README policy follow-up (2026-11-17)
+
+**Status: Completed and locally verified.** This bounded documentation follow-up preserves the completed work and Todo records above.
+
+README assessment: **update**, because feature announcements, configuration details and acceptance notes had displaced its compact getting-started role. Preserve the exact light/dark logo, prominent wiki links, a short platform summary, safe clone/preview/install examples for Bash and native PowerShell, four first commands and contributor links. Link fresh-machine bootstrap and detailed installation choices to the wiki.
+
+The [root README policy](../agents/guides/documentation.md#root-readme-policy) is the authoritative content boundary. The agent contract, documentation/command/bootstrap/wiki guides, documentation and skill indexes, shared plan rules, documentation/wiki/command/Todo-planning skills and command-plan template route future changes through a reasoned update/no-change review. Older blanket README-update instructions are superseded; historical completion evidence is retained. Specialized READMEs keep their existing roles.
+
+### Current information destinations
+
+The pre-edit README and diffs are retained in a task-owned temporary directory for comparison. Existing topic coverage is reused; the literal Unicode checkout-path note is added to the shell startup guide.
+
+| Removed README detail | Canonical coverage |
+| --- | --- |
+| Project shells, native terminal schemes, utility adapters and platform acceptance | [Commands](../docs/commands.md), [themes](../docs/themes.md), [utilities](../docs/shell-utils.md), [platforms](../docs/platforms.md) and existing parity plans |
+| Retained tmux readings, Codex quota/separator and status styling, including uncommitted additions | [Tmux](../docs/tmux.md#retained-widget-readings) and [quota settings](../docs/tmux.md#codex-weekly-quota) |
+| Git headings, path colors, shared progress, mock gallery and help styling | [Git](../docs/git.md#output-views), [configuration](../docs/configuration.md), [presentation](../docs/presentation.md) and [debugging](../docs/debug.md#mock-output-gallery) |
+| Completion appearance, Unicode handling, file-style imports and once-per-shell activation | [Environment](../docs/shell-environment.md#completion-appearance), [presentation](../docs/presentation.md), [file colors](../docs/file-colors.md), [shell startup](../docs/shell-init.md) and [shared shells](../docs/shared-shells.md#interactive-startup) |
+| Cleanup, backups, correct-link idempotence and backup completion | [Cleanup](../docs/cleanup.md) and [backups](../docs/backups.md) |
+| Package output, pip wheels/errors, npm upgrades/script receipts, Termux APT and Ruby PATH, including uncommitted additions | [Packages](../docs/packages.md) and [environment](../docs/shell-environment.md#understand-environment-variables) |
+| Fonts/FIGlet, Keys/Weather menus, Config paths/fallbacks/import and Codex alert settings | [Fonts](../docs/fonts.md), [configuration](../docs/configuration.md), [tmux](../docs/tmux.md#component-preferences) and [debugging](../docs/debug.md#test-codex-alerts) |
+| Manual installation, Wiki preferences and clipboard commands/history | [Installation](../docs/installation.md#complete-command-manual), [Wiki](../docs/wiki.md#output-preferences), [utilities](../docs/shell-utils.md#system-clipboard-commands) and [clipboard](../docs/clipboard.md) |
+
+### Acceptance
+
+- [x] Review the compact README against the policy, preserve exact logo markup and validate wiki page IDs/anchors.
+- [x] Verify both shell examples against installer entry points without executing setup; check each removed topic's canonical coverage.
+- [x] Run documentation/skill relative-link checks, validate all five changed skills and discovery links, and run `git diff --check`.
+- [x] Audit current guidance/templates for unconditional README-update requirements.
+- [x] Preserve both dirty checkouts, preview/build the local wiki through its guarded workflow, and confirm freshness.
+
+This changes prose and maintenance instructions only. Command interfaces, metadata/completion, runtime behavior, configuration/menu controls, installer integration and Windows app destinations are unchanged. The presentation gate applies to readable Markdown and logo/link preservation; terminal 40/80/120-column tests are inapplicable. No runtime suite is needed for unchanged behavior. Native installation and hosted GitHub light/dark rendering are not established by source inspection; existing platform evidence limits remain. No live installation, activation, Todo mutation, commit or push is included.
+
+### Follow-up verification results
+
+- README reduced from 178 to 56 lines and 1,731 to 341 whitespace-delimited words. The logo markup is byte-for-byte unchanged and all image targets exist.
+- Repository documentation validation passes 1,472 relative links across 176 files. Separate README/skill validation passes 91 relative links and anchors, plus eight wiki links against canonical page mappings and headings.
+- All five modified skills pass the skill-creator validator; their relative discovery links resolve. The command-family ownership table is unchanged.
+- The current agent contract, guides, skill instructions and command-plan template contain no unconditional requirement to append user-visible changes to the README. Shared plan rules explicitly supersede historical blanket requirements.
+- Both repository whitespace checks pass. A hash comparison against the pre-edit snapshot finds no tracked changes outside the task's documentation/skill files; pre-existing edits in shared files remain intact.
+- Local wiki generation updated Shell-startup, Testing and the generated manifest through transaction `b8d8ac8bbe6a461c9389155b533b8a38`; `dots wiki check --json` reports healthy. Existing generated changes are preserved. This is local generation only.

@@ -44,7 +44,7 @@ Every new or changed command records **add**, **update**, or **no configuration 
 - [dots-plugin-maintenance](skills/dots-plugin-maintenance/SKILL.md) covers portable application ownership, installation assets and receipt-led migration. Use the application's family skill for its own behavior.
 - [dots-theme-template](skills/dots-theme-template/SKILL.md) covers generated application templates and consumer verification.
 - [dots-codex-attention](skills/dots-codex-attention/SKILL.md) preserves the [notification contract](../agents/guides/codex-notifications.md), focus handling and explicit acknowledgement.
-- [dots-documentation-maintenance](skills/dots-documentation-maintenance/SKILL.md) aligns canonical docs with implementation; [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) handles generated exports and associated Git workflows.
+- [dots-documentation-maintenance](skills/dots-documentation-maintenance/SKILL.md) aligns canonical docs with implementation and applies the [root README policy](../agents/guides/documentation.md#root-readme-policy); [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) handles generated exports and associated Git workflows.
 - [dots-todo](skills/dots-todo/SKILL.md) manages goals through the transactional CLI. [dots-todo-planning](skills/dots-todo-planning/SKILL.md) interviews in actual Plan Mode and saves/implements an agreed linked tree in execution mode. These are separate from Todo implementation maintenance; all three Todo skills retain their existing managed resources for cross-project use.
 
 ## Discovery and maintenance

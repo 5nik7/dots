@@ -6,12 +6,22 @@ Read this guide when changing project documentation or when implementation work 
 
 - `AGENTS.md` — concise project-wide rules and routing.
 - `agents/guides/` — task procedures: what to read and do when changing an area.
-- `docs/` — durable architecture and behavior reference for contributors.
+- `docs/` — canonical user guides and durable architecture/behavior references; mapped documents generate the wiki.
 - `plans/` — scoped sequencing, acceptance criteria, open questions, and status.
-- `README.md` — truthful user-facing overview and implemented quick start.
+- `README.md` — compact project introduction, essential setup, first commands and documentation navigation.
 - `.codex/README.md` — authoritative command-family skill ownership; `.codex/skills/` holds focused workflows discovered through `.agents/skills/` links.
 
 Do not turn `AGENTS.md` into an exhaustive design document. Link to the authoritative reference instead.
+
+## Root README Policy
+
+The main `README.md` is a compact getting-started page. Keep the existing light/dark logo, a short introduction and platform summary, a prominent wiki link, safe Bash and native PowerShell checkout/install examples, a few first commands and brief contributor links. Link fresh-machine bootstrap, detailed prerequisites, updates and uninstall to the installation guide. Aim for roughly 350–450 words; content relevance matters more than an exact count.
+
+Update the README only when those introductory claims, setup steps, first commands or navigation need to change. A new feature, setting, command, bug fix or user-visible behavior does not by itself require a README addition. Put detailed usage, options, appearance controls, platform caveats and troubleshooting in the appropriate canonical topic guide, and verification history or pending acceptance in the focused plan. Keep the README's links useful without duplicating the wiki's topic inventory.
+
+During documentation delivery, record **README update** or **no README change needed**, with a short reason in the focused plan or change notes. When shortening the README, confirm that useful details already exist in their topic guides and move any missing information before removing it. Preserve relevant uncommitted additions through that same check. Review additions against this policy instead of appending a feature announcement or change log.
+
+This policy applies to the root README. Application, directory, documentation-index and skill-index READMEs keep their specialized roles. Older plan/checklist wording that requires README updates for every user-facing change is superseded by this relevance review; completed records remain historical evidence.
 
 ## Status Language
 
@@ -32,7 +42,8 @@ Never place a proposed installation command in the README as if it is safe to ru
 | --- | --- |
 | Component or directory ownership | `docs/architecture.md` |
 | Product invariant or priority | `docs/principles.md`, plus a decision record when material |
-| Command, flag, help, output, or metadata | `docs/commands.md`, generated reference, README when user-facing; `docs/presentation.md` owns shared human output policy |
+| Command, flag, help, output, or metadata | `docs/commands.md`, affected topic guides and generated reference; apply the [root README policy](#root-readme-policy); `docs/presentation.md` owns shared human output policy |
+| Project introduction, essential setup, first commands or documentation navigation | Root README when affected, under the [root README policy](#root-readme-policy) |
 | Data schema, variable, or precedence | `docs/specification.md` |
 | Mutation, backup, rollback, force, package, or secret handling | `docs/safety.md` |
 | Platform paths, detection, capability, or limitation | `docs/platforms.md` |
@@ -71,6 +82,7 @@ Before finishing a documentation change:
 5. Confirm repeated lists have a named source of truth.
 6. Update the applicable plan status.
 7. For accompanying command changes, verify the recorded [configuration review](commands.md#configuration-integration-review), menu assessment and [family owner](../../.codex/README.md#command-family-owners). Use [dots-config](../../.codex/skills/dots-config/SKILL.md) for applicable integrations. Pure documentation changes need no new setting or assessment of unchanged commands.
+8. Record the README relevance decision under the [root README policy](#root-readme-policy). For a README edit, verify the logo assets, linked wiki page IDs/anchors and both shell examples; check that removed details remain in their canonical guides.
 
 For skill changes, validate each new/modified skill with the available skill-creator validator, check its references and relative discovery link, and compare family coverage with static command metadata including built-ins. Keep shared requirements in the task guide and link to them from skills; do not create competing configuration or subcommand inventories.
 

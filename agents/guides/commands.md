@@ -83,7 +83,7 @@ A command change normally requires all of the following:
 - Argument and error-path tests.
 - Completion data or generation tests.
 - `docs/commands.md`.
-- README examples if the command is user-facing and implemented.
+- A README update/no-change decision under the [root README policy](documentation.md#root-readme-policy); detailed command examples belong in topic guides.
 - Relevant focused plan status.
 - Recorded configuration and menu assessments, plus current family-to-skill ownership.
 
@@ -125,8 +125,10 @@ routes. Record each outcome in the focused plan and tracked Todo acceptance:
   and exact scalar/JSON/raw/completion contracts. Review existing Config controls.
 - Add or update a shared popup/menu when repeated selection, browsing or review
   benefits from it; otherwise record why the direct command is sufficient.
-- Update metadata/help, examples, README and relevant references, plans and
-  maintenance skills. Rebuild/check the available wiki from canonical sources.
+- Update metadata/help, examples, canonical topic guides, relevant references,
+  plans and maintenance skills. Record the README relevance decision under the
+  [root README policy](documentation.md#root-readme-policy); user-facing changes
+  do not automatically require README additions. Rebuild/check the available wiki.
 - Audit installer/bootstrap delivery: command wrappers, completion registration,
   settings/defaults and prerequisites must arrive through the existing component
   selection. Update integration where needed, or record why it already works.

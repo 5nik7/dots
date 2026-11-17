@@ -284,6 +284,7 @@ Documentation changes require:
 - Search for stale proposed/implemented status labels.
 - Search for renamed commands and paths.
 - Confirmation that README examples only show implemented safe behavior.
+- A README relevance review under the [root README policy](../agents/guides/documentation.md#root-readme-policy), including logo/link checks and retained canonical coverage when shortening it. This is a documentation review, not an automated word-count gate.
 
 Once command metadata generation exists, CI should regenerate output and fail on a dirty diff.
 

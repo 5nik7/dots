@@ -57,7 +57,8 @@ Do not maintain competing exhaustive lists.
 - Destructive-operation rules: `docs/safety.md`.
 - Platform support claims: `docs/platforms.md`.
 - Active scope and sequencing: focused plans indexed in `plans/README.md`.
-- End-user capabilities that actually exist: `README.md`.
+- User workflows and implemented capabilities: canonical topic guides in `docs/`, published through the generated wiki.
+- Project introduction and essential setup: `README.md`, under the [root README policy](agents/guides/documentation.md#root-readme-policy).
 
 When documents disagree, follow the latest explicit user direction, then this file, then the specialized guide, then the reference docs. Resolve the disagreement in the same change instead of choosing silently.
 
@@ -99,7 +100,7 @@ For the live Bash executable, follow [decision 0006](docs/decisions/0006-bash-co
 
 Do not add a new command or rename an existing route without updating `docs/commands.md`, completion behavior, command metadata tests, and user-facing documentation when applicable.
 
-New or changed user-facing commands and scripts must satisfy the [delivery checklist](agents/guides/commands.md#command-and-script-delivery): completions for supported shells and aliases, colors/formatting, useful popup integration, README/wiki updates, and an installer/bootstrap integration assessment. Record these outcomes in the focused plan and tracked goal acceptance; a no-change decision needs a reason.
+New or changed user-facing commands and scripts must satisfy the [delivery checklist](agents/guides/commands.md#command-and-script-delivery): completions for supported shells and aliases, colors/formatting, useful popup integration, canonical docs/wiki updates, README relevance review, and an installer/bootstrap integration assessment. Record these outcomes in the focused plan and tracked goal acceptance; a no-change decision needs a reason.
 
 Start new command families and subcommands with [command authoring](.codex/skills/dots-command-authoring/SKILL.md). It coordinates the family owner, presentation, configuration, menus and verification; recorded add/update integration decisions must be implemented before completion.
 
@@ -199,7 +200,7 @@ A behavior change without matching documentation is incomplete.
 - Platform detection, paths, link strategies, or support changed: update `docs/platforms.md`.
 - Test entry points or guarantees changed: update `docs/testing.md` and the relevant agent guide.
 - Milestone or scope changed: update the applicable file under `plans/`.
-- User-visible implemented behavior changed: update `README.md`.
+- User-visible implemented behavior changed: update its canonical topic guide and generated wiki. Update `README.md` only when its introduction, essential setup, first commands or navigation are affected; follow the [root README policy](agents/guides/documentation.md#root-readme-policy).
 
 Proposed behavior must be labeled **Proposed** or **Draft**. Implemented behavior must be labeled accurately. Remove stale labels as part of implementation.
 
@@ -232,7 +233,7 @@ A change is done only when:
 - Focused tests pass in isolated paths.
 - Cross-platform effects were considered and documented.
 - Performance-sensitive paths were measured when affected.
-- Help, metadata, completions, examples, README, reference docs, and plans are synchronized where applicable.
+- Help, metadata, completions, examples, canonical docs, wiki and plans are synchronized where applicable; the root README has a reasoned update/no-change decision under its policy.
 - Command changes have recorded configuration/menu assessments and current maintenance-skill ownership.
 
 Repository-local workflow skills are indexed in [.codex/README.md](.codex/README.md);

@@ -33,10 +33,10 @@ with Blastoff writers. Keep shell startup free of prerequisite acquisition.
 
 Use disposable homes, repositories, config, state and cache roots. Run `python3 -B tools/test_file_platform.py`, `python3 -B tools/test_installation.py` and `python3 -B tools/test_installation_adapters.py` (`python` on Windows). Cover first install, repeated install, update, pre-existing unrelated destinations, drift, interrupted operations, read-only source files, missing optional sources and paths containing spaces. Record actual native evidence separately from injected platform fixtures.
 
-Update `docs/installation.md`, `docs/platforms.md`, `docs/safety.md`, `docs/testing.md`, README and the focused plan when behavior changes.
+Update `docs/installation.md`, `docs/platforms.md`, `docs/safety.md`, `docs/testing.md` and the focused plan as affected by behavior changes. Review README relevance under the [root README policy](documentation.md#root-readme-policy); change its quick start only when essential setup or its links change.
 
 ## Selective setup
 
 Maintain the shared wizard and preparation coordinator together across root scripts, Files and init --setup. Keep dry-run pure, Save choices opt-in, separate preparation/final approval, stop-on-first-failure and receipt baselines. Test managed-directory child translation without relaxing general parent-link checks. Run the selective setup suites listed in [testing](../../docs/testing.md#selective-setup-and-winget); record unavailable real build/native acceptance explicitly.
 
-For each new command/script, audit bootstrap and core publication of its wrappers, completions and preference inputs. Core already exposes the checkout command directory and `lib/dots` adapters; do not add redundant acquisition steps for repository-local features. Record add/update/no-change reasoning in the focused plan and make fresh-machine setup discoverable in README.
+For each new command/script, audit bootstrap and core publication of its wrappers, completions and preference inputs. Core already exposes the checkout command directory and `lib/dots` adapters; do not add redundant acquisition steps for repository-local features. Record add/update/no-change reasoning in the focused plan. Keep fresh-machine setup discoverable through the README's installation/bootstrap link; detailed preparation behavior belongs in the installation guide.

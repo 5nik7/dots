@@ -36,9 +36,11 @@ Menu assessment: **{{add / update / no menu}}**, because {{REASON}}. Follow `dot
 
 Delivery matrix: {{Record Bash/Zsh/Fish/PowerShell/Nushell/Xonsh completion for
 routes, standalone names and aliases; human colors/icons/formatting; popup and
-Config decisions; README/wiki; installer/bootstrap add/update/no-change and why.
+Config decisions; canonical docs/wiki; installer/bootstrap add/update/no-change and why.
 Copy observable gates into tracked Todo acceptance. User-facing scripts follow
 the same contract even when they do not introduce a command family.}}
+
+README assessment: **{{update / no README change needed}}**, because {{REASON}}. Follow `agents/guides/documentation.md#root-readme-policy`: change the root README only when its introduction, essential setup, first commands or navigation are affected. Detailed behavior belongs in canonical topic guides and the generated wiki.
 
 
 {{List observable outcomes and dependencies. Add/update config and menu decisions are required implementation work; no-change decisions retain their reasons.}}

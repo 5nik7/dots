@@ -4,7 +4,7 @@
 
 [Clipboard history](clipboard-history.md) implements Todo `clipboard-history`: local text storage, shared command/popup controls, optional capture, editor widgets and isolated cross-platform verification.
 
-- [Documentation, topics and manual](docs-update.md) — implemented and locally verified: compact README, practical guides, offline topic discovery and generated dots(1).
+- [Documentation, topics and manual](docs-update.md) — compact README and its maintenance policy, practical guides, offline topic discovery and generated dots(1); implementation and verification records.
 - [Wiki output and configuration](wiki-output.md) — implemented and locally verified: human report and submenu preferences, typed controls and exact data contracts.
 
 Plans describe active, paused, proposed, or completed work. Durable architecture and behavior belong in `docs/`; plans link to those references rather than redefining them.
@@ -91,6 +91,7 @@ Before implementing a human view, name its renderer, human/data modes and repres
 - State whether a plan is proposed, active, paused, blocked, or completed. A pause describes scheduling, not the implementation status of completed work.
 - Define scope, non-goals, dependencies, risks, verification, and acceptance criteria.
 - For command changes, name the [primary maintenance skill](../.codex/README.md#command-family-owners) and record configuration and menu assessments under the [command guide](../agents/guides/commands.md#configuration-integration-review). A reasoned no-change configuration decision is valid; applicable work uses `dots-config` and consumer acceptance checks.
+- For documentation delivery, record **README update** or **no README change needed**, with a reason under the [root README policy](../agents/guides/documentation.md#root-readme-policy). Detailed behavior belongs in canonical topic guides and the wiki. This relevance review supersedes older blanket README-update requirements when plans are revisited; it does not rewrite completed evidence or reopen goals.
 - Keep task status current in the same change that completes or changes the task.
 - Move durable conclusions into the relevant file under `../docs/`.
 - Link decision records for choices that constrain future work.

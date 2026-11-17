@@ -37,9 +37,11 @@ Agents and contributors must begin with [`../AGENTS.md`](../AGENTS.md), then rea
 | --- | --- | --- |
 | `AGENTS.md` | Agents and contributors | Project-wide operating contract and guide routing |
 | `agents/guides/` | Agents and contributors | Procedures for a particular kind of change |
-| `docs/` | Contributors and maintainers | Durable architecture and behavior reference |
+| `docs/` | Users, contributors and maintainers | Canonical user guides and durable architecture/behavior references; mapped sources generate the wiki |
 | `plans/` | Contributors and maintainers | Active scope, sequence, acceptance criteria, and open questions |
-| `README.md` | Users and contributors | Truthful overview of capabilities that currently exist |
+| `README.md` | New users and contributors | Compact introduction, essential setup, first commands and documentation navigation |
+
+The [root README policy](../agents/guides/documentation.md#root-readme-policy) defines when that entry page needs an update. Detailed feature documentation belongs in the topic guides; a user-visible change does not automatically need a README addition.
 
 ## Status Labels
 
