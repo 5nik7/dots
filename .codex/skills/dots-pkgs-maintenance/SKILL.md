@@ -26,6 +26,12 @@ Do not automatically select `go-global-update` or reinstall current/newer builds
 Preserve source/skip guards, literal build flags and explicit replacement recipes;
 name the current tool in compact progress before native output arrives.
 
+Automatic unnamed global npm upgrades query eligible ordinary names with native
+outdated metadata and avoid reinstalling current versions. Query failures stay
+failures. Named/project operations and custom upgrade recipes retain their own
+semantics. Finalize confirmed script receipts after the whole successful review
+batch, rechecking metadata and capturing final nested dependency build outputs.
+
 Automatic Termux pip upgrades default to compatible wheels; named targets, native binary-format controls and replacement recipes retain source-build control. Automatic gem upgrades include protected native RubyGems self-update even with empty user inventory, configurable with apps.pkgs.upgrade.gem_system.
 
 Ordinary pip upgrades isolate each selected package recipe, continuing other

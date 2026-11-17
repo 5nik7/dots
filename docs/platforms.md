@@ -1,5 +1,9 @@
 # Platform Model
 
+## Termux package frontend
+
+Termux package operations use `pkg` with the active APT/pacman backend resolved from `TERMUX_APP_PACKAGE_MANAGER` and the official helper. Automatic APT upgrades force one mirror check and allow missing downloads to be held back; pacman keeps its native synchronized upgrade without APT flags. A conflicting bulk selection is refused before invoking pkg. Linux/WSL APT and Windows package routes/destinations are unchanged. See [package workflows](packages.md#upgrade-and-scope). Isolated Termux fixtures cover routing and output; live mirror rotation/package upgrades and native Linux/WSL/Windows acceptance are separate checks.
+
 ## Cleanup support
 
 `dots cleanup` uses shared platform detection/controller grammar on Bash and

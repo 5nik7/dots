@@ -680,6 +680,8 @@ retain confirmation. Policies are trusted executable argv sequences, with no
 implicit shell. Read/preview/export never execute hooks. Direct-target skips
 are not dependency holds. Formatting cannot infer success from output text.
 
+Termux automatic APT upgrades let `pkg --check-mirror` select from the user's configured mirrors and refresh indexes as part of the native upgrade; pkg owns any resulting repository-file changes and its mirror-selection opt-out remains effective. A conflicting bulk backend is refused before invoking pkg. The default `--fix-missing` may leave unavailable archives held back, with native status and verified version changes remaining authoritative. These native package/mirror effects have no Dots filesystem rollback. Named upgrades and replacement recipes retain their prior behavior; see [upgrade scope](packages.md#upgrade-and-scope).
+
 Compact uninstall output shows manager, scope and targets before the existing
 removal confirmation; installed-only guards and native prompts remain active.
 Installed/Removed summaries list requested targets only after all transaction
@@ -709,6 +711,8 @@ without automatically changing script approvals or terminating quiet transaction
 logging environment/CLI overrides remain effective; raw/redirected execution
 keeps the caller's logging environment.
 
+Automatic unnamed global npm upgrades query native candidate versions before installing ordinary targets, preserving already-current installed files. Read-only queries also run for dry-run and may refresh native metadata caches; query failures prevent default installation. Explicit targets, project operations and custom recipes retain their semantics. See [scope and recipe boundaries](packages.md#upgrade-and-scope).
+
 Compact global npm install/upgrade can offer separate default-no script approval
 after a successful native transaction reports blocked scripts. Only validated
 package/version identities are candidates; installed metadata is checked before
@@ -726,6 +730,7 @@ state. It only suppresses repeated review for an unchanged installed tree; it ne
 authorizes execution. Missing or stale receipts, version/reinstall drift and missing
 build artifacts require review again. Receipt failures cannot turn a failed script
 into success. Receipt storage does not modify npm allow policies.
+New receipts are finalized after the successful review/rebuild batch, with reviewed metadata rechecked and final nested build outputs fingerprinted. Declined targets never qualify; failed or interrupted batches save no new receipts. Metadata, fingerprint or storage failures leave the affected run without new evidence and emit a warning. Existing receipts are not migrated or refreshed merely because a package is present.
 
 Automatic Termux pip upgrades restrict native resolution to wheels; unsupported
 newer source builds can leave a compatible installed version unchanged. Explicit

@@ -26,6 +26,8 @@ requires preview, FZF selection and confirmation for eligible disabled pip sourc
 installs. `cleanup --dry-run`/`--json` inspect only; `--yes` cannot bypass review.
 See [package workflows](../../docs/packages.md) for scopes, queries and recipes.
 
+Termux APT bulk upgrades use `pkg --check-mirror upgrade --fix-missing -y`, combining forced mirror checking, index refresh and upgrade in one native invocation. Compact output summarizes mirror/repository progress; `--raw` retains details. Missing archives can remain held back. Termux pacman keeps its own pkg upgrade flags; named targets and replacement recipes retain their existing behavior. Forced mirror probes can add time and do not select mirrors by download speed.
+
 Requirements: Bash 4+, Python 3.9+, and an installed supported package manager.
 Interactive pickers also require fzf 0.48+. Native completions target Bash 4+,
 Zsh 5.8+, and Fish 3.6+.
@@ -174,6 +176,7 @@ one exact installed package/version at a time. Approval uses a temporary
 name-specific allow flag with an exact rebuild target; --yes never supplies it,
 and no npm policy is saved. Verified script runs are remembered only for unchanged
 installed trees; changed versions/files or reinstalls require review again.
+Receipts are saved after the full successful review/rebuild batch, so later nested dependency builds do not invalidate a parent's newly saved receipt.
 Unverified scripts without a terminal or declined approval remain blocked.
 Project/custom-scope and raw commands retain native instructions. See
 [script approval](../../docs/packages.md#blocked-npm-install-scripts).
@@ -184,6 +187,7 @@ Pip progress includes the package, native download bytes (pip 25.1+), build stag
 and elapsed silence after 15 seconds without output. Silence does not end a build.
 Global npm upgrades use targeted installs so unrelated platform-specific aliases
 do not block ordinary packages; project upgrades retain native update semantics.
+Automatic unnamed global upgrades query native wanted versions and skip already-current ordinary packages. Explicit targets and custom recipes retain their execution semantics; failed version queries stop default installation. See [upgrade scope](../../docs/packages.md#upgrade-and-scope).
 Compact npm progress shows metadata, fetched packages and install-script stages,
 plus elapsed silence. Native logging flags/environment override its info default;
 registry URLs and script commands stay out of the progress line.

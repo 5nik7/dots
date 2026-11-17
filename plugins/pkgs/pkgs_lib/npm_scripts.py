@@ -127,6 +127,7 @@ class Pending:
         from .upgrade_output import packages
         env = getattr(item.backend, 'operation_env', None)
         interactive=terminal()
+        completed = {}
         for spec in sorted(self.specs):
             if not interactive and not script_receipts.location(spec).is_file(): continue
             try:
@@ -162,16 +163,26 @@ class Pending:
                 if spec not in self.confirmed:
                     raise Error('npm did not confirm script execution for '+spec+'; inspect with --raw')
                 self.ran.append(spec)
-                if proof:
-                    try:
-                        # Script-generated outputs are part of the saved evidence.
-                        saved=evidence([spec],env)
-                        if saved==after: script_receipts.save(spec,script_receipts.fingerprint(saved.get(spec,[])))
-                    except (Error,OSError,ValueError,TypeError):
-                        output.line('npm warn Script receipt unavailable; review may be needed next time.','\n',sys.stderr)
+                if proof: completed[spec] = after[spec]
             except (Error, OSError, ValueError, TypeError) as error:
                 output.line('npm error Script approval: '+str(error), '\n', sys.stderr)
                 return 1
+        if completed:
+            # A later dependency rebuild can change an earlier parent's tree.
+            # Capture final outputs only after the whole successful review batch.
+            unavailable = False
+            try:
+                with workflows.progress('npm · Saving script receipts', cfg):
+                    saved = evidence(list(completed), env)
+                    for spec, reviewed in completed.items():
+                        try:
+                            proof = script_receipts.fingerprint(reviewed) if saved.get(spec) == reviewed else None
+                            if proof: script_receipts.save(spec, proof)
+                            else: unavailable = True
+                        except (Error, OSError, ValueError, TypeError): unavailable = True
+            except (Error, OSError, ValueError, TypeError): unavailable = True
+            if unavailable:
+                output.line('npm warn Script receipt unavailable; review may be needed next time.','\n',sys.stderr)
         return rc
 
     def result(self, cfg):

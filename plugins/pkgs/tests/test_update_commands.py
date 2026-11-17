@@ -141,8 +141,10 @@ else: sys.exit(99)
             item = workflows.plan(Backend('npm',True),action,['@openai/codex'],cfg)
             self.assertEqual(item.commands,[CODEX])
         with patch.object(scopes,'inventory',return_value=[(Package(n),'explicit','') for n in
-                ('@openai/codex','@openai/codex-linux-arm64','hello')]):
+                ('@openai/codex','@openai/codex-linux-arm64','hello')]), \
+             patch.object(outdated,'candidates',return_value=[dict(name='hello',current='1',candidate='2')]) as query:
             item = workflows.plan(Backend('npm',True),'upgrade',[],cfg,bulk=True)
+        self.assertEqual([p.name for p in query.call_args.args[1]],['hello'])
         self.assertEqual(item.commands,[['npm','install','--global','--','hello'],CODEX])
         self.assertEqual(item.skipped,[dict(package='@openai/codex-linux-arm64',reason='skipped by policy')])
 

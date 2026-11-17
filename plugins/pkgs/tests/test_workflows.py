@@ -44,6 +44,10 @@ from pathlib import Path
 args=sys.argv[1:];db=Path(os.environ['TEST_DB']);data=json.loads(db.read_text())
 with open(os.environ['TEST_CALLS'],'a') as f:f.write(json.dumps(args)+'\\n')
 if args[0]=='ls': print(json.dumps({'dependencies':{k:{'version':v} for k,v in data.items()}}))
+elif args[0]=='outdated':
+    targets=args[args.index('--')+1:]
+    updates={n:{'current':data[n],'wanted':'2.0'} for n in targets if n in data and data[n]!='2.0'}
+    print(json.dumps(updates));sys.exit(int(bool(updates)))
 elif args[0] in ('install','update'):
     if os.environ.get('TEST_FAIL'):sys.exit(42)
     targets=args[args.index('--')+1:] if '--' in args else []

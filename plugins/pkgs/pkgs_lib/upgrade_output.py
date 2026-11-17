@@ -103,6 +103,8 @@ class Output:
         self.command_active = False
         self.success_extra = 0
         self.native_done, self.native_total = 0, 0
+        self.pkg_apt = False
+        self.apt_phase = ''
 
     def begin_command(self):
         """Collect pip diagnostics until the command's real exit status is known."""
@@ -128,6 +130,9 @@ class Output:
 
     def begin(self, command=None):
         self.stage, self.package = self.default_stage, self.target
+        self.pkg_apt = bool(self.manager == 'apt' and self.action == 'upgrade' and command and
+                            re.split(r'[/\\]', command[0])[-1] == 'pkg')
+        self.apt_phase = 'repositories' if self.pkg_apt else ''
         if self.pending: self.pending.begin(command)
         self.transferred, self.total = 0, 0
         self.native_done, self.native_total = 0, 0
@@ -177,9 +182,28 @@ class Output:
         self.transferred, self.total = 0, 0
         return True
 
+    def apt_stage(self, text):
+        """Observe pkg's native phases without exposing its mirror probe list."""
+        if not self.pkg_apt: return False
+        if text in ('Checking availability of current mirror:', 'Testing the available mirrors:'):
+            self.apt_phase, self.stage = 'mirrors', 'Checking mirrors'
+        elif self.apt_phase == 'mirrors' and (
+                text.startswith(('Picking mirror: ', '[*] ')) or
+                text.startswith('No mirror or mirror group selected.')):
+            self.stage = 'Checking mirrors'
+        elif (re.match(r'^(?:[0-9]+ packages? can be upgraded\.|All packages are up to date\.)', text) or
+              text.startswith(('Calculating upgrade', 'The following packages', 'Upgrading:', 'Summary:'))):
+            self.apt_phase, self.stage = 'upgrade', 'Upgrading'
+        elif self.apt_phase in ('mirrors', 'repositories') and text.startswith(
+                ('Hit:', 'Get:', 'Ign:', 'Fetched ', 'Reading package lists')):
+            self.apt_phase, self.stage = 'repositories', 'Updating repositories'
+        else: return False
+        self.package = ''
+        return True
+
     def partial(self, text):
         text = streams.ESCAPES.sub('', text).strip()
-        if text and text != self.partial_seen and self.pip_stage(text):
+        if text and text != self.partial_seen and (self.apt_stage(text) or self.pip_stage(text)):
             self.partial_seen = text
             self.last_activity = time.monotonic()
             self.tick()
@@ -295,6 +319,9 @@ class Output:
             self.conflict_rows = False
         if self.manager == 'apt' and ('File has unexpected size' in text or 'Mirror sync in progress' in text):
             self.mirror_sync = True
+        if not PROMPT.search(text) and self.apt_stage(text):
+            self.tick()
+            return
         if not ending or PROMPT.search(text):
             self.prompt(text, stream, ending)
             return
@@ -315,7 +342,7 @@ class Output:
                 elif self.command_active: self.command_extra += 1
                 else: self.extra += 1
         elif self.progress is not None and not event:
-            if self.manager in ('pip', 'npm', 'go', 'winget'):
+            if self.manager in ('pip', 'npm', 'go', 'winget') or self.apt_phase in ('mirrors', 'repositories'):
                 self.tick(); return
             self.package = ''
             self.stage = ('Removing' if self.action == 'uninstall' else

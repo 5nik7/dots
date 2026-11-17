@@ -59,11 +59,19 @@ Bare `upgrade` authorizes supported user-wide updates without another pkgs promp
 
 Explicit `--manager` restricts the operation; named operands retain selected scope. Explicit npm defaults to the current project unless `--global` is used; explicit pip uses pkgs' interpreter and gem uses its active environment. The configured `upgrade.managers` list restricts automatic selection. System operations precede language operations, preserving order within each group.
 
+On Termux, `pkg` remains the native frontend for the backend selected by `TERMUX_APP_PACKAGE_MANAGER` and the official setup helper. Automatic APT upgrades use `pkg --check-mirror upgrade --fix-missing -y`: pkg checks the configured mirror group, selects an available mirror, refreshes indexes, then performs its native full upgrade. There is no additional standalone update pass. Forced checks can add time and do not benchmark the fastest mirror. `TERMUX_PKG_NO_MIRROR_SELECT` retains its native meaning. A bulk selection conflicting with pkg's active backend is refused before invocation.
+
+`--fix-missing` allows unavailable archives to be held back; it does not repair missing repository files or guarantee that dependency resolution succeeds. Native errors retain their status. This applies to bare `up` and unnamed `up --manager apt`, including automatic policy-selected targets. When policies split native commands, only the first forces mirror checking. Named upgrades, hooks and replacement recipes retain their existing behavior. Native flags can be overridden through existing recipe flags, for example `--no-fix-missing`. If pkg is absent, the existing direct APT fallback receives `--fix-missing` without claiming mirror selection. Linux/WSL APT is unchanged. Termux pacman retains `pkg upgrade --noconfirm`, without APT-only flags or a standalone database refresh.
+
+Compact Termux APT progress shows `Checking mirrors`, `Updating repositories`, then the normal upgrade/download/install stages as native events arrive. Routine mirror URLs, probe results and index chatter stay hidden; genuine prompts and bounded errors remain visible. `--raw` and ordinary redirected output retain native details, and dry-run only prints planned commands. Updated names still require an observed installed-version change.
+
 Selected global npm upgrades use `npm install --global -- NAME ...`. This updates
 the selected packages without `npm update --global` rechecking unrelated installed
 platform-specific aliases, such as Codex's Linux ARM64 companion on Android.
 Project-scoped upgrades still use `npm update`. Skip policies and replacement
 recipes keep their behavior; ordinary npm batches do not receive `--force`.
+
+Automatic unnamed global npm upgrades first query eligible ordinary targets with bounded `npm outdated --json --global -- NAME ...`, then install only packages whose native wanted version differs from the installed version. Already-current packages are not reinstalled, preserving their script receipts. This applies to bare `up` and unnamed `up --manager npm --global`, including dry-run's read-only checks. Failed queries stop that manager's default installation rather than becoming empty success. Explicit named upgrades and project operations retain their behavior. A nonempty manager upgrade recipe bypasses filtering; per-package recipes and pins stay outside the ordinary query and retain their configured execution.
 
 Native noninteractive flags are supplied where supported. sudo uses `-n` without a controlling terminal and never runs on Termux. Privilege and native package protections may still fail. Independent managers continue after a failure. Ordinary pip upgrades run one selected package at a time and continue after a failed package; the failure stops that package's remaining recipe. Manager before-hooks must succeed before any packages run, and manager after-hooks run only after full success. A manager-level replacement recipe remains one atomic command sequence, stopping at its first failure. Other managers retain their stop-on-failure recipe behavior. The final status is nonzero if any manager failed. Ctrl-C stops the run. Completed package effects remain; there is no Dots package rollback. Separate pip commands resolve dependencies separately; skip policies are direct-target exclusions, not dependency holds.
 
@@ -109,6 +117,7 @@ build outputs invalidate that evidence. Existing installations with no pkgs rece
 need one reviewed run; package presence alone does not prove scripts ran. Declined,
 failed or unconfirmed scripts are never remembered as successful. Large or unstable
 trees that cannot be checked within the bounded walk remain eligible for review.
+Receipts are finalized only after the whole review/rebuild loop succeeds, with reviewed metadata rechecked and final build outputs included. A later nested dependency rebuild therefore does not invalidate a parent receipt just saved in the same batch. Failed or interrupted batches save no new receipts; declining one package still allows receipts for confirmed successful runs. Metadata/fingerprint/storage failures leave the affected run without a new receipt and produce a short warning. Existing stale receipts may require one reviewed rebuild to establish current evidence.
 These receipts do not grant future script permission or change npm configuration.
 They live under `${XDG_STATE_HOME:-~/.local/state}/pkgs/npm-scripts` (LOCALAPPDATA on
 Windows); removing receipts causes review again.

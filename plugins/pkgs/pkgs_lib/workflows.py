@@ -105,6 +105,18 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
             names, blocked = policies.selected(cfg, backend.name, names, override=override, explicit=explicit)
             skipped += [dict(package=n, reason='skipped by policy') for n in blocked]
             if blocked and not names and not backend.update_system: return Plan(backend, action, skipped=skipped)
+        if (backend.name == 'npm' and backend.global_scope and backend.automatic_upgrade
+                and not policy.get('upgrade')):
+            # Installing an already-current global package replaces its files and
+            # invalidates completed-script receipts. Recipes own their semantics.
+            from . import outdated
+            custom = {n for n, rules in policy.get('packages', {}).items() if rules.get('upgrade')}
+            custom.update(getattr(backend, 'pins', {}))
+            native = [p for p, _, _ in rows if p.name in names and p.name not in custom]
+            with progress('Checking updates · npm', cfg):
+                newer = {p['name'] for p in outdated.candidates(backend, native)} if native else set()
+            names = [n for n in names if n in custom or n in newer]
+            if not names: return Plan(backend, action, skipped=skipped)
         if backend.name == 'go' and action == 'upgrade' and 'replace' not in policy.get(action, {}):
             # Reuse the read-only version comparison from upgrade --list.
             # Replacement recipes own their update/rebuild semantics.

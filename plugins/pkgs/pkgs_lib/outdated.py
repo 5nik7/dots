@@ -42,9 +42,11 @@ def candidates(backend, installed):
     elif manager == 'npm':
         # Explicit names avoid querying policy-skipped aliases as registry names.
         data = json.loads(fetch(['npm','outdated','--json', *(['--global'] if backend.global_scope else []),
-                                 '--', *current], allowed=(0, 1)))
+                                 '--', *current], allowed=(0, 1), env=getattr(backend,'operation_env',None)))
         if not isinstance(data, dict) or 'error' in data: raise Error('npm outdated failed: '+clean(data)[:600])
-        for name, item in data.items(): add(name, item['current'], item['wanted'])
+        for name, item in data.items():
+            if not isinstance(item, dict): raise Error('invalid npm update metadata')
+            add(name, item.get('current'), item.get('wanted'))
     elif manager == 'pip':
         data = json.loads(fetch([sys.executable,'-m','pip','list','--outdated','--format=json','--disable-pip-version-check']))
         for item in data: add(item['name'], item['version'], item['latest_version'])

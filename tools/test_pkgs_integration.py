@@ -55,6 +55,53 @@ else:raise SystemExit(9)
             path=self.repo/'profiles'/name;path.mkdir(parents=True)
             (path/'profile.json').write_text(json.dumps({'schema':1,'id':name,'settings':{},'files':{}}))
 
+    @unittest.skipIf(os.name=='nt','Termux pkg fixture; Windows retains its native managers')
+    def test_termux_bulk_upgrade_aliases_and_mirror_output_on_all_surfaces(self):
+        calls = self.home/'pkg-calls.jsonl'
+        self.env.update(TERMUX_VERSION='fixture', TERMUX_APP_PACKAGE_MANAGER='apt',
+                        PREFIX=str(self.home/'prefix'), TEST_PKG_CALLS=str(calls),
+                        DOTS_MENU_CAPTURE='1', TERMUX_PKG_NO_MIRROR_SELECT='')
+        config = Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json'
+        config.parent.mkdir(parents=True, exist_ok=True)
+        config.write_text(json.dumps({'upgrade': {'managers': ['apt']}}))
+        script = '#!'+sys.executable+'\n'+'''import json,os,sys
+from pathlib import Path
+if Path(sys.argv[0]).name=='dpkg-query': pass
+elif Path(sys.argv[0]).name=='pkg':
+    args=sys.argv[1:]
+    assert args==['--check-mirror','upgrade','--fix-missing','-y'], args
+    with open(os.environ['TEST_PKG_CALLS'],'a') as f: f.write(json.dumps(args)+'\\n')
+    print('Testing the available mirrors:')
+    print('[*] (1) https://fixture.invalid: ok')
+    print('Picking mirror: (0) /fixture/mirror')
+    print('Hit:1 https://fixture.invalid stable InRelease')
+    print('All packages are up to date.')
+else: raise SystemExit('unexpected manager invocation')
+'''
+        for name in ('pkg','apt','apt-cache','dpkg-query'):
+            path=self.repo/'bin'/name;path.write_text(script);path.chmod(0o755)
+        for alias in ('up','upgrade'):
+            results = [self.call(argv) for argv in self.surfaces('pkgs',[alias,'--dry-run'])]
+            self.assertTrue(all(result == results[0] for result in results))
+            self.assertIn(b'pkg --check-mirror upgrade --fix-missing -y', results[0][0])
+        self.assertFalse(calls.exists())
+        for width in (40,80,120):
+            self.env['COLUMNS']=str(width)
+            for alias in ('up','upgrade'):
+                results = [self.call(argv) for argv in self.surfaces('pkgs',[alias])]
+                self.assertTrue(all(result == results[0] for result in results))
+                out,err,_=results[0]
+                self.assertIn(b'complete',out)
+                self.assertNotIn(b'fixture.invalid',out+err)
+                self.assertNotIn(b'Picking mirror',out+err)
+        before = len(calls.read_text().splitlines())
+        self.assertEqual(before,18)
+        for mode in ('raw','redirect'):
+            if mode=='redirect': self.env.pop('DOTS_MENU_CAPTURE')
+            results = [self.call(argv) for argv in self.surfaces('pkgs',['up',*(['--raw'] if mode=='raw' else [])])]
+            self.assertTrue(all(result == results[0] for result in results))
+            self.assertIn(b'[*] (1) https://fixture.invalid: ok',results[0][0])
+
     def test_manifest_surfaces_and_static_completion(self):
         path=self.document(['hello'])
         outputs=[self.call(argv)[0] for argv in self.surfaces('pkgs',['manifest',str(path),'--json'])]
@@ -119,6 +166,45 @@ else:raise SystemExit(9)"""))
         names = out.split(b'Updated',1)[1]
         self.assertIn(b'hello', names)
         self.assertNotIn(b'current', names)
+
+    @unittest.skipIf(os.name=='nt','POSIX npm executable fixture; shared planner is platform independent')
+    def test_automatic_npm_upgrade_skips_current_on_all_entry_points(self):
+        db = self.fake_npm()
+        calls = self.home/'npm-calls.jsonl'
+        self.env.update(TEST_NPM_CALLS=str(calls), DOTS_MENU_CAPTURE='1')
+        fake = self.repo/'bin/npm'
+        fake.write_text(fake.read_text().replace("if a[0]=='ls':", """with open(os.environ['TEST_NPM_CALLS'],'a') as f:f.write(json.dumps(a)+'\\n')
+if a[0]=='outdated':
+    assert a==['outdated','--json','--global','--','hello','current'],a
+    if os.environ.get('TEST_QUERY_FAILURE'):raise SystemExit('fixture query failure')
+    print(json.dumps({n:{'current':data[n],'wanted':'1'} for n in a[a.index('--')+1:] if data[n]!='1'}))
+elif a[0]=='ls':"""))
+        config = Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json'
+        config.parent.mkdir(parents=True, exist_ok=True)
+        config.write_text(json.dumps({'upgrade': {'managers': ['npm']}, 'policies': {'npm': {'skip': ['held']}}}))
+        for width in (40,80,120):
+            self.env['COLUMNS'] = str(width)
+            for alias in ('up','upgrade'):
+                for argv in self.surfaces('pkgs',[alias]):
+                    db.write_text('{"hello":"0","current":"1","held":"0"}');calls.write_text('')
+                    preview=self.call([*argv,'--dry-run'])
+                    self.assertIn(b'npm install --global -- hello',preview[0])
+                    self.assertFalse(any(json.loads(line)[0]=='install' for line in calls.read_text().splitlines()))
+                    changed=self.call(argv);current=self.call(argv)
+                    self.assertIn(b'Updated',changed[0]);self.assertIn(b'hello',changed[0])
+                    self.assertIn(b'unchanged',current[0]);self.assertNotIn(b'Scripts',current[0]+current[1])
+                    installs=[json.loads(line) for line in calls.read_text().splitlines() if json.loads(line)[0]=='install']
+                    self.assertEqual(installs,[['install','--global','--','hello']])
+                    self.assertEqual(json.loads(db.read_text()),{'hello':'1','current':'1','held':'0'})
+        for mode in ('raw','redirect','failure'):
+            if mode=='redirect':self.env.pop('DOTS_MENU_CAPTURE')
+            if mode=='failure':self.env['TEST_QUERY_FAILURE']='1'
+            calls.write_text('')
+            for argv in self.surfaces('pkgs',['up',*(['--raw'] if mode=='raw' else [])]):
+                out,err,_=self.call(argv,1 if mode=='failure' else 0)
+                if mode=='failure':self.assertIn(b'fixture query failure',out+err)
+                else:self.assertIn(b'No package changes needed',out)
+            self.assertFalse(any(json.loads(line)[0]=='install' for line in calls.read_text().splitlines()))
 
     @unittest.skipIf(os.name=='nt','native Windows pkgs supports WinGet only')
     def test_pip_partial_upgrade_on_all_entry_points(self):

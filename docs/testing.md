@@ -1223,6 +1223,7 @@ Run `python3 -B tools/test_file_registration.py` after `tools/test_file_platform
 Run `python3 -B tools/test_bundled_app_cores.py pkgs` for the package core, including
 `plugins/pkgs/tests/test_workflows.py`, then
 `python3 -B tools/test_pkgs_integration.py` for Config/popup/menu/setup boundaries.
+`plugins/pkgs/tests/test_termux_upgrades.py` covers forced mirror checks once per native plan, APT/pacman routing and mismatch refusal, missing-download flags, policy/explicit-target boundaries, native failure/opt-out, changed-version summaries and fragmented compact progress in private 40/80/120-column terminals. Integration fixtures exercise both command forms and aliases with fake pkg; they never select live mirrors or upgrade host packages. The direct APT fallback, Linux/WSL argument behavior and raw output are fixture evidence, not native desktop acceptance.
 `python3 -B tools/test_pkgs_publish.py` exercises manifest updates in both Git
 frontends with fake managers and temporary local remotes. Wiki integration also
 covers manifest-before-source-before-wiki publication. Test profile defaults,
@@ -1292,6 +1293,7 @@ backend. RubyGems tests cover empty user inventory, native failure boundaries,
 configuration opt-out and truthful version summaries. Npm receipt tests cover
 verified repeats, reinstalls, missing artifacts, content drift during approval,
 corrupt receipts and noninteractive behavior.
+They also cover parent/dependency rebuild ordering, final metadata/fingerprint/storage failures and failed/interrupted batches. `test_npm_updates.py` covers automatic global candidate filtering, current-only plans, explicit/project/custom-recipe boundaries, policy/source exclusions and malformed/failed native queries. The integration suite exercises repeated automatic upgrades and dry-run on standalone/Dots/shared-controller aliases at 40/80/120 columns, retaining raw/redirected results and query failures.
 
 Pip output cases cover native byte counts, unknown totals, package/stage changes,
 partial build messages, elapsed silence without terminating the process, progress
@@ -1308,6 +1310,8 @@ version, leaving another package blocked and the user-config fixture unchanged.
 It checks native global inventory (including missing resolved URLs) and script
 completion events. These fixtures require POSIX and available npm/Node and
 otherwise skip.
+
+The install fixture also runs the real candidate query through automatic planning: after updating the selected target, a second plan has no install command and preserves its file identities. No approval or script execution occurs on that unchanged repeat.
 
 `plugins/pkgs/tests/test_pip_partial.py` verifies per-package upgrade continuation,
 target-specific errors, truthful partial update names, recipe hooks/replacements,

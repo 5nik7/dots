@@ -16,7 +16,8 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pkgs_lib.backends import Backend
-from pkgs_lib import streams, upgrade_output, npm_scripts
+from pkgs_lib import streams, upgrade_output, npm_scripts, workflows, outdated
+from pkgs_lib.common import Package
 
 NPM = shutil.which('npm')
 NODE = shutil.which('node')
@@ -34,6 +35,14 @@ class GlobalNpm(unittest.TestCase):
                           scripts={'postinstall':'node postinstall.cjs'})
                 (path/'package.json').write_text(json.dumps(data))
                 (path/'postinstall.cjs').write_text("require('fs').writeFileSync('script-ran', 'yes')")
+            parent=modules/'pkgs-fixture-approved'
+            child=parent/'node_modules/pkgs-fixture-child';child.mkdir(parents=True)
+            (child/'package.json').write_text(json.dumps(dict(name='pkgs-fixture-child',version='1.0.0',
+                scripts={'postinstall':'node postinstall.cjs'})))
+            (child/'postinstall.cjs').write_text("require('fs').writeFileSync('script-ran', 'yes')")
+            data=json.loads((parent/'package.json').read_text())
+            data['dependencies']={'pkgs-fixture-child':'1.0.0'}
+            (parent/'package.json').write_text(json.dumps(data))
             for name in ('user.npmrc','global.npmrc'):(root/name).write_text('')
             env={k:v for k,v in os.environ.items() if not k.lower().startswith('npm_') and k not in ('NODE_AUTH_TOKEN','NODE_OPTIONS')}
             env.update(HOME=str(root),XDG_CONFIG_HOME=str(root/'config'),XDG_STATE_HOME=str(root/'state'),
@@ -50,11 +59,19 @@ class GlobalNpm(unittest.TestCase):
             inventory=subprocess.run([*npm,'ls',*common,'--all','--long','--json'],cwd=root,env=env,capture_output=True,text=True,timeout=15)
             with patch.object(npm_scripts,'query',return_value=inventory):
                 self.assertIn('pkgs-fixture-approved@1.0.0',npm_scripts.evidence(['pkgs-fixture-approved@1.0.0']))
+            specs=['pkgs-fixture-approved@1.0.0','pkgs-fixture-child@1.0.0']
+            def query(argv,**kwargs):
+                return subprocess.run([*npm,'ls',*common,'--all','--long','--json','--',*argv[argv.index('--')+1:]],
+                                      cwd=root,env=env,capture_output=True,text=True,timeout=15)
+            with patch.object(npm_scripts,'query',side_effect=query):
+                batch=npm_scripts.evidence(specs)
+                for spec in specs:self.assertEqual(batch[spec],npm_scripts.evidence([spec])[spec])
             approved=subprocess.run([*npm,'rebuild',*common,'--loglevel=info','--allow-scripts=pkgs-fixture-approved',
                                      '--','pkgs-fixture-approved@1.0.0'],cwd=root,env=env,capture_output=True,text=True,timeout=30)
             self.assertEqual(approved.returncode,0,approved.stderr)
             self.assertTrue((modules/'pkgs-fixture-approved/script-ran').exists(), approved.stdout+approved.stderr+inventory.stdout)
             self.assertFalse((modules/'pkgs-fixture-blocked/script-ran').exists())
+            self.assertFalse((child/'script-ran').exists())
             self.assertIn('postinstall { code: 0, signal: null }',approved.stderr)
             self.assertEqual((root/'user.npmrc').read_text(),'')
 
@@ -102,7 +119,17 @@ class GlobalNpm(unittest.TestCase):
                 broken=subprocess.run([*npm,'update',*common,'--',target],cwd=root,env=env,capture_output=True,text=True,timeout=30)
                 self.assertNotEqual(broken.returncode,0,broken.stdout+broken.stderr)
                 self.assertIn('EBADPLATFORM',broken.stderr)
-                command=Backend('npm',True).transaction('upgrade',[target])
+                def plan():
+                    installed=json.loads((modules/target/'package.json').read_text())['version']
+                    def query(argv, **kwargs):
+                        self.assertEqual(argv,['npm','outdated','--json','--global','--',target])
+                        return subprocess.run([*npm,'outdated',*common,'--json','--',target],
+                                              cwd=root,env=env,capture_output=True,text=True,timeout=30)
+                    with patch.dict(os.environ,env,clear=True), \
+                         patch.object(workflows.scopes,'inventory',return_value=[(Package(target,installed),'global','')]), \
+                         patch.object(outdated,'query',side_effect=query):
+                        return workflows.plan(Backend('npm',True),'upgrade',[],{'output':'raw'})
+                command=plan().commands[0]
                 self.assertEqual(command,['npm','install','--global','--',target])
                 streams.npm_progress_environment(command,env)
                 fixed=subprocess.run([*npm,command[1],*common,*command[3:]],cwd=root,env=env,capture_output=True,text=True,timeout=30)
@@ -116,6 +143,16 @@ class GlobalNpm(unittest.TestCase):
                 self.assertEqual(quiet.returncode,0,quiet.stderr)
                 self.assertEqual(quiet.stderr,'')
                 self.assertEqual(json.loads((modules/target/'package.json').read_text())['version'],'2.0.0')
+                def identity():
+                    return [(p.stat().st_ino,p.stat().st_mtime_ns,p.stat().st_ctime_ns)
+                            for p in (modules/target,modules/target/'package.json')]
+                before=identity()
+                current=plan()
+                self.assertEqual(current.commands,[])
+                with patch.object(streams,'run') as install,patch.object(npm_scripts,'approve') as approve:
+                    self.assertEqual(workflows.apply(current,{'output':'raw'}),0)
+                install.assert_not_called();approve.assert_not_called()
+                self.assertEqual(identity(),before)
                 self.assertEqual((modules/foreign/'package.json').read_bytes(),foreign_before)
                 self.assertTrue(all(p in ('/'+target,tarball) for p in requests),requests)
             finally:server.shutdown();server.server_close();worker.join()

@@ -11,4 +11,6 @@ prepath "$HOME/.cargo/bin"
 prepath "$HOME/.local/bin"
 prepath "$HOME/bin"
 extpath "$HOME/.fzf/bin"
+# Ruby 4.0 user-installed gem executables.
+extpath "${XDG_DATA_HOME:-$HOME/.local/share}/gem/ruby/4.0.0/bin"
 true

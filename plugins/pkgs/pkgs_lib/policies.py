@@ -132,6 +132,7 @@ def commands(backend, action, names, cfg, yes=False):
     outer = policy.get(action, {})
     package_rules = {identity(k, backend.name): v.get(action, {}) for k, v in policy.get('packages', {}).items()}
     result = expand(outer.get('before', []), names)
+    mirror_check_planned = False
     if 'replace' in outer:
         result += expand(outer['replace'], names)
     else:
@@ -172,6 +173,11 @@ def commands(backend, action, names, cfg, yes=False):
                         command = backend.transaction(action, [], yes)
                         if excluded: command = add_flags(command, ['--ignore', ','.join(excluded)])
                     else: command = backend.transaction(action, targets, yes)
+                    # Force one mirror selection across native recipe groups. Custom
+                    # hooks/replacements retain their own argv and mirror policy.
+                    if command[:2] == ['pkg', '--check-mirror']:
+                        if mirror_check_planned: command = [command[0], *command[2:]]
+                        mirror_check_planned = True
                     if backend.name == 'pip' and any(f.split('=',1)[0] in ('--no-binary','--only-binary') for f in flags):
                         command = [arg for arg in command if arg != '--only-binary=:all:']
                     result.append(add_flags(command, flags))

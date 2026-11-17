@@ -7,7 +7,7 @@ import sys
 import urllib.parse
 import urllib.request
 from .common import Package, Error, run, which, clean, query, remaining, diagnostic
-from .detect import termux, SYSTEM
+from .detect import termux, default_manager, SYSTEM
 
 
 def paragraphs(text):
@@ -326,17 +326,27 @@ class Backend:
 
     def transaction(self, action, names, yes=False):
         n = self.name
+        automatic_termux_upgrade = (self.termux and action == 'upgrade' and
+                                    getattr(self, 'automatic_upgrade', False))
+        apt_flags = ['--fix-missing'] if automatic_termux_upgrade and n == 'apt' else []
         if action == 'refresh' and n in ('pacman', 'paru', 'yay'):
             raise Error('Use pkgs upgrade with pacman to synchronize and upgrade together.')
         if self.termux and n in ('apt', 'pacman') and which('pkg'):
-            args = ['pkg', 'install' if action == 'upgrade' and names else {'uninstall': 'uninstall', 'refresh': 'update'}.get(action, action)]
+            if automatic_termux_upgrade:
+                active = default_manager()
+                if n != active:
+                    raise Error(f'Termux pkg uses {active}, but this upgrade selected {n}; select {active} instead.')
+            args = ['pkg'] + (['--check-mirror'] if apt_flags else [])
+            args += ['install' if action == 'upgrade' and names else {'uninstall': 'uninstall', 'refresh': 'update'}.get(action, action)]
             if action == 'upgrade' and names and n == 'apt': args += ['--only-upgrade']
+            args += apt_flags
             if yes:
                 args += ['--noconfirm' if n == 'pacman' else '-y']
             args += names
         elif n == 'apt':
             args = [self.bin, 'install' if action == 'upgrade' and names else {'uninstall': 'remove', 'refresh': 'update'}.get(action, action)]
             if action == 'upgrade' and names: args += ['--only-upgrade']
+            args += apt_flags
             args += (['-y'] if yes else []) + ['--'] + names
         elif n in ('pacman', 'paru', 'yay'):
             args = [n, '-S' if action == 'upgrade' and names else {'install': '-S', 'uninstall': '-R', 'upgrade': '-Syu', 'refresh': '-Syy'}[action]] + (['--noconfirm'] if yes else []) + ['--'] + names

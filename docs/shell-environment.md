@@ -23,6 +23,8 @@ There are three distinct kinds of values: startup settings such as `DOTS_INIT_TH
 
 Use `dots debug path` for PATH diagnosis and `dots debug startup --shell zsh --isolated` for a safe startup trace. Live tracing and current-shell PATH recording require explicit invocation. See [configuration](configuration.md) for editing and [debugging](debug.md) for evidence and recording limits.
 
+Personal Bash/Zsh startup appends `${XDG_DATA_HOME:-$HOME/.local/share}/gem/ruby/4.0.0/bin` through the existing shared `extpath` helper. It adds only an existing directory, preserves earlier command precedence and avoids duplicates on reload. This explicit Ruby 4.0 path requires updating if Ruby changes its user-directory version; startup does not invoke Ruby to discover it. Open a new shell or use your normal reload command after editing the source. Other shell adapters and native Windows destinations are unchanged.
+
 ## Starship configuration
 
 Dots personal startup no longer sets `STARSHIP_CONFIG`. Starship discovers

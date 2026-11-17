@@ -377,6 +377,10 @@ For less style changes, run `python3 -B tools/test_less_style.py` and affected s
 
 For Blastoff/pkgs absorption, run `python3 -B tools/test_bundled_apps.py -v`, the metadata generator with `--check`, and the affected dispatcher/native/installation suites sequentially. Keep original application release/installer evidence separate from combined Dots lifecycle checks; see [bundled verification](../../docs/testing.md#bundled-applications).
 
+Termux pkgs upgrade changes also require the package-core mirror/flag fixtures and `tools/test_pkgs_integration.py`; follow [package workflow acceptance](../../docs/testing.md#package-workflow-acceptance). Use fake pkg/APT/pacman and private terminals for mirror stages, failures and raw output. Never rotate live mirrors or upgrade host packages as a test.
+
+For npm upgrade/receipt changes, run package-core `test_npm_updates`, `test_script_receipts`, `test_npm_scripts` and `test_npm_global`, then the integration and bundled checks. Use owned prefixes/config/state and the loopback registry for native evidence; verify unchanged repeats, nested rebuilds, recipe boundaries, query failure and approval drift without touching host packages or receipts.
+
 Application relocation and migration use `tools/test_bundled_apps.py` and `tools/test_app_migration.py`; synthetic legacy roots must never inherit the host Termux prefix. Keep core application checks and shared menu/native checks alongside them. See [application plugins](../../docs/plugins.md).
 
 For Codex attention hooks, queue or activation changes, follow the [notification maintenance guide](codex-notifications.md), run `python3 -B tools/test_codex_alerts.py -v` and the existing Codex/status regressions, and validate setup/undo with the file-platform checks. Mock Android calls, use private sockets and all-owned HOME/CODEX_HOME/XDG roots, and keep real hook trust/device acceptance separate.
