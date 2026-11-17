@@ -97,7 +97,7 @@ class GeneratedStatus(fixtures.TmuxStatus):
         # Shared native assertions use an explicit baseline, independent of
         # the owner's editable box padding, icon and indicator preferences.
         path=self.repo/'default/config.json';data=json.loads(path.read_text())
-        data['formatting']['apps']['tmux']['battery'].update(before='',after='')
+        data['formatting']['apps']['tmux']['battery'].update(before='',after='',width=4)
         for key,label in (('copy','COPY'),('prefix','PREFIX'),('zoom','ZOOM')):
             data['apps']['tmux']['indicators'][key]['text']=label
         path.write_text(json.dumps(data))

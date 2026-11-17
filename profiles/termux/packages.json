@@ -122,7 +122,7 @@
         },
         {
           "name": "automake",
-          "observed_version": "1.19",
+          "observed_version": "1.20",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -276,7 +276,7 @@
         },
         {
           "name": "chromium-host-tools",
-          "observed_version": "157.0.8103.50",
+          "observed_version": "157.0.8103.78",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -311,7 +311,7 @@
         },
         {
           "name": "command-not-found",
-          "observed_version": "3.5.0-19",
+          "observed_version": "3.5.0-20",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -346,7 +346,7 @@
         },
         {
           "name": "dbus",
-          "observed_version": "1.16.2-3",
+          "observed_version": "1.16.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -493,7 +493,7 @@
         },
         {
           "name": "exiftool",
-          "observed_version": "13.63",
+          "observed_version": "13.64",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -570,7 +570,7 @@
         },
         {
           "name": "flex",
-          "observed_version": "2.6.4-5",
+          "observed_version": "2.6.16",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -738,7 +738,7 @@
         },
         {
           "name": "golang",
-          "observed_version": "3:1.27.3",
+          "observed_version": "3:1.27.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -892,7 +892,7 @@
         },
         {
           "name": "imagemagick",
-          "observed_version": "7.1.2.35-1",
+          "observed_version": "7.1.2.36",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -906,7 +906,7 @@
         },
         {
           "name": "inkscape",
-          "observed_version": "1.4.4-4",
+          "observed_version": "1.4.4-5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -927,7 +927,7 @@
         },
         {
           "name": "jujutsu",
-          "observed_version": "0.46.0",
+          "observed_version": "0.47.1-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -948,7 +948,7 @@
         },
         {
           "name": "kf6-kiconthemes",
-          "observed_version": "6.31.0",
+          "observed_version": "6.32.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1053,7 +1053,7 @@
         },
         {
           "name": "libffi",
-          "observed_version": "3.8.0",
+          "observed_version": "3.8.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1396,7 +1396,7 @@
         },
         {
           "name": "mdcat",
-          "observed_version": "2.20.0",
+          "observed_version": "2.20.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1424,7 +1424,7 @@
         },
         {
           "name": "mise",
-          "observed_version": "2026.11.7",
+          "observed_version": "2026.11.9",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1529,7 +1529,7 @@
         },
         {
           "name": "nim",
-          "observed_version": "2.4.0",
+          "observed_version": "2.4.2-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1571,7 +1571,7 @@
         },
         {
           "name": "oh-my-posh",
-          "observed_version": "32.0.0",
+          "observed_version": "32.1.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1648,7 +1648,7 @@
         },
         {
           "name": "pandoc",
-          "observed_version": "3.13",
+          "observed_version": "3.14",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1746,7 +1746,7 @@
         },
         {
           "name": "poppler",
-          "observed_version": "26.10.0",
+          "observed_version": "26.11.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1844,7 +1844,7 @@
         },
         {
           "name": "python-cmake",
-          "observed_version": "4.4.4",
+          "observed_version": "4.4.5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1865,7 +1865,7 @@
         },
         {
           "name": "python-pip",
-          "observed_version": "26.3",
+          "observed_version": "26.3-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1991,28 +1991,28 @@
         },
         {
           "name": "rust",
-          "observed_version": "1.99.1",
+          "observed_version": "1.100.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "rust-analyzer",
-          "observed_version": "20261109",
+          "observed_version": "20261116",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "rust-nightly-docs",
-          "observed_version": "1.100.0-2026.08.24-nightly-0",
+          "observed_version": "1.100.0-2026.08.24-nightly-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "rustc-nightly",
-          "observed_version": "1.100.0-2026.08.24-nightly-0",
+          "observed_version": "1.100.0-2026.08.24-nightly-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2530,7 +2530,7 @@
         },
         {
           "name": "tur-repo",
-          "observed_version": "1.0.1",
+          "observed_version": "1.0.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2565,7 +2565,7 @@
         },
         {
           "name": "uv",
-          "observed_version": "0.13.8",
+          "observed_version": "0.13.9",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2579,7 +2579,7 @@
         },
         {
           "name": "vim",
-          "observed_version": "9.2.1300",
+          "observed_version": "9.2.1350",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2782,14 +2782,14 @@
         },
         {
           "name": "xwayland",
-          "observed_version": "24.1.15",
+          "observed_version": "24.1.15-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "xxd",
-          "observed_version": "9.2.1300",
+          "observed_version": "9.2.1350",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2894,7 +2894,7 @@
         },
         {
           "name": "python-numpy",
-          "observed_version": "2.5.4",
+          "observed_version": "2.5.5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2940,7 +2940,7 @@
       "packages": [
         {
           "name": "@biomejs/biome",
-          "observed_version": "2.6.7",
+          "observed_version": "2.6.8",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3017,7 +3017,7 @@
         },
         {
           "name": "context-mode",
-          "observed_version": "2.1.10",
+          "observed_version": "2.2.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3245,7 +3245,7 @@
         },
         {
           "name": "pylint",
-          "observed_version": "4.1.3",
+          "observed_version": "4.1.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3356,7 +3356,7 @@
         },
         {
           "name": "cmake",
-          "observed_version": "4.4.4",
+          "observed_version": "4.4.5",
           "pin": null,
           "selection": "explicit",
           "enabled": false,
@@ -3477,7 +3477,7 @@
         },
         {
           "name": "numpy",
-          "observed_version": "2.5.4",
+          "observed_version": "2.5.5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3507,7 +3507,7 @@
         },
         {
           "name": "platformdirs",
-          "observed_version": "4.14.5",
+          "observed_version": "4.14.7",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3551,7 +3551,7 @@
         },
         {
           "name": "pyee",
-          "observed_version": "16.0.2",
+          "observed_version": "16.1.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3682,7 +3682,7 @@
         },
         {
           "name": "soupsieve",
-          "observed_version": "4.1",
+          "observed_version": "4.1.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3827,7 +3827,7 @@
       "packages": [
         {
           "name": "rubygems-update",
-          "observed_version": "4.0.24",
+          "observed_version": "4.1.0",
           "pin": null,
           "selection": "inferred",
           "enabled": true

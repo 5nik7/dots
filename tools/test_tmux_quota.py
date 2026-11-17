@@ -150,7 +150,7 @@ class Quota(unittest.TestCase):
         fmt=json.loads((ROOT/'default/config.json').read_text())['formatting']['apps']['tmux']['battery']
         prefs={'formatting':{'battery':fmt},'icons':{'battery.normal':'B','battery.unknown':'B'}}
         from status_styles import cells
-        for percent,tail in ((1,'1%   '),(80,'80%  '),(100,'100% '),(None,'?%   ')):
+        for percent,tail in ((1,'1%  '),(80,'80% '),(100,'100% '),(None,'?%  ')):
             raw='' if percent is None else '\x1b[32mB '+str(percent)+'%\x1b[0m'
             fresh=battery.render(raw,['red','yellow','green','brightblack'],True,prefs)
             stale=battery.render(raw,['red','yellow','green','brightblack'],True,prefs,True)
