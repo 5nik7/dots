@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Native placement fragments on a private tmux server with owned adapters."""
 import json
+import re
 import shutil
 import unittest
 from pathlib import Path
@@ -43,15 +44,52 @@ class Layout(unittest.TestCase):
         self.publish(tmux)
         self.assertEqual(tmux('show-option','-gqv','status-position'),'bottom')
         row=tmux('show-option','-gqv','status-format[0]')
-        self.assertLess(row.index('#{W:'),row.index('E:status-left'))
+        self.assertLess(row.index('@dots-layout-main-left-windows'),row.index('@dots-layout-main-left-session'))
         self.assertIn('align=right',row)
-        self.assertIn('@dots-gitmux-content',row)
+        self.assertIn('@dots-gitmux-content',tmux('show-option','-gqv','@dots-layout-main-right-git'))
         self.assertNotIn('align=right',tmux('show-option','-gqv','@dots-gitmux-content'))
         for width in (40,48,80,120):
             tmux('set-option','-g','default-size',str(width)+'x24')
             self.assertNotIn('invalid',tmux('display-message','-p','#{E:status-format[0]}').lower())
         with self.assertRaises(ValueError):validate_layout(dict(rows=1,main_row=1),'termux')
         with self.assertRaises(ValueError):validate_layout(dict(rows=2,main_row=0,termux_row=0),'termux')
+
+    def test_saved_legacy_layout_keeps_git_right_without_quota_acquisition(self):
+        tmux,_=self.server('legacy-placement')
+        tmux('source-file',str(self.write_config(workspace_hooks=False)))
+        cfg=self.defaults['formatting']['apps']['tmux']
+        cfg.update(main_left=['session','windows','git'],main_right=['indicators'])
+        self.publish(tmux)
+        row=tmux('show-option','-gqv','status-format[1]')
+        self.assertIn('@dots-gitmux-segment',row)
+        self.assertIn('align=right',tmux('show-option','-gqv','@dots-gitmux-segment'))
+        self.assertEqual(tmux('show-option','-gqv','@dots-codex-usage'),'')
+        cfg.update(rows=1,main_left=['session'],main_right=['git'],termux_right=['codex_usage'])
+        self.publish(tmux)
+        self.assertEqual(tmux('show-option','-gqv','@dots-codex-usage'),'')
+
+    def test_custom_quota_and_git_hide_without_orphan_dividers(self):
+        tmux,_=self.server('optional-placement')
+        tmux('source-file',str(self.write_config(workspace_hooks=False)))
+        self.defaults['formatting']['apps']['tmux']['main_left']=['session']
+        self.publish(tmux)
+        tmux('set-option','-g','status-left','')
+        tmux('set-option','-g','status-right','')
+        for quota,git,expected in (('Q 72%','BRANCH','Q 72% · BRANCH'),
+                                   ('','BRANCH','BRANCH'),('Q 72%','','Q 72%'),('','','')):
+            tmux('set-option','-g','@dots-codex-usage',quota)
+            tmux('set-option','-g','@dots-gitmux',git)
+            text=tmux('display-message','-p','#{E:status-format[1]}')
+            text=re.sub(r'#\[[^]]*\]','',text)
+            self.assertEqual(text.strip(),expected)
+        fmt=self.defaults['formatting']['apps']['tmux']
+        fmt['codex_usage']['git_separator']=''
+        self.publish(tmux)
+        self.assertEqual(tmux('show-option','-gqv','@dots-codex-git-separator'),'')
+        fmt['codex_usage']['git_separator']=' ·'
+        fmt['main_right']=['git','codex_usage']
+        self.publish(tmux)
+        self.assertEqual(tmux('show-option','-gqv','@dots-codex-git-separator'),'')
 
 class GeneratedStatus(fixtures.TmuxStatus):
     def setUp(self):

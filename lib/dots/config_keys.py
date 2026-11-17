@@ -122,4 +122,4 @@ def description(key):
               'after':'literal text after the component','spacer':'space or separator between components',
               'bold':'bold text','dim':'dim text','underline':'underlined text','italic':'italic text',
               'reverse':'reverse foreground/background','strikethrough':'struck-through text'}
-    return app+' · '+'.'.join(tail[:-1])+' · '+meanings.get(field,field.replace('_',' '))
+    return ' · '.join(part for part in (app,'.'.join(tail[:-1]),meanings.get(field,field.replace('_',' '))) if part)

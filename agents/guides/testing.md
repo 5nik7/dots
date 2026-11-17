@@ -405,3 +405,5 @@ and copies of public plugins, never personal startup or a live shell reload.
 Verify selected colors, exact insertion, group/preview identity, plain modes,
 reload compatibility and unchanged-prompt subprocess counts. Keep native desktop
 and optional binary-plugin evidence separate; see [completion checks](../../docs/testing.md#shell-completion-colors).
+
+For the optional Codex quota widget, run `tools/test_tmux_quota.py` and the affected widget/Gitmux/status/Config suites sequentially. Use only synthetic aistat providers and owned credential metadata; follow [quota acceptance](../../docs/testing.md#codex-quota-widget).

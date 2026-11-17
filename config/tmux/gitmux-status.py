@@ -189,7 +189,7 @@ def cached_status(directory, token=None):
                 if name=='gitmux':value=literal_names(compact_fields(value))
                 elif value!=remote_icon(json.dumps({'remote':'origin','icon':value})):continue
                 rendered[name]=value
-                stale=stale or bool(value) and bool(field.get('failed') or row.get('failed') or elapsed>8)
+                if name=='gitmux':stale=bool(value) and bool(field.get('failed') or row.get('failed'))
         except (ValueError,KeyError,RecursionError):pass
     text=rendered.get('gitmux','#[fg=#{@dots-gitmux-muted}] ?#[default]')
     if stale:text='#[fg=#{@dots-gitmux-muted}]~#[default] '+text

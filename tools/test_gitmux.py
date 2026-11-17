@@ -255,7 +255,7 @@ class Gitmux(unittest.TestCase):
         self.view(workspace_hooks=False)
         self.inner('rename-session', 'dots')
         self.inner('rename-window', 'dots')
-        row = self.await_row(lambda row: bool(re.search(r'󰊤 dots +│ main',row)))
+        row = self.await_row(lambda row: bool(re.search(r'󰊤 dots +main',row)))
         self.assertEqual(self.fixture.colors_at(row, '󰊤'),
                          {'fg': (85, 255, 255), 'bg': (85, 102, 119)})
         self.assertTrue(self.fixture.bold_at(row, '󰊤'))
@@ -266,7 +266,7 @@ class Gitmux(unittest.TestCase):
         self.fixture.snapshot([tty, 'pts/99999'])
         other = self.inner('new-session', '-d', '-P', '-F', '#{session_id}', '-s', 'other', 'sleep 120')
         self.inner('set-option', '-t', 'dots', '@dots-session-number', '1')
-        row = self.await_row(lambda row: bool(re.search(r'1 󰊤 dots +│ main',row)))
+        row = self.await_row(lambda row: bool(re.search(r'1 󰊤 dots +main',row)))
         self.assertFalse(self.fixture.dim_at(row, '1 󰊤', 1))
         self.assertFalse(self.fixture.bold_at(row, '1 󰊤', 1))
         self.assertFalse(self.fixture.underline_at(row, '1 󰊤', 1))
@@ -275,25 +275,26 @@ class Gitmux(unittest.TestCase):
         self.assertFalse(self.fixture.underline_at(row, '1 󰊤'))
         self.assertFalse(self.fixture.underline_at(row, '󰊤'))
         self.assertFalse(self.fixture.underline_at(row, 'dots'))
-        self.assertEqual(self.fixture.colors_at(row, '│')['bg'], (34, 51, 68))
+        self.assertNotIn('│', self.fixture.plain(row))
+        self.assertEqual(self.fixture.colors_at(row, '', -1)['bg'], (17, 34, 51))
         for width in (40, 48, 80, 120):
             self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
             row = self.await_row(lambda row: '1 󰊤 ' in row and 'main' in row)
             # Measure the captured label, including padding. display-message's
             # asynchronous job cache is separate from the rendered status row.
-            label = self.fixture.plain(row).split('│', 1)[0].rstrip()+' '
+            label = self.fixture.plain(row).split('', 1)[0].rstrip()+' '
             self.inner('set-option', '-g', '@fixture-label', label)
             cells = self.inner('display-message', '-p', '#{w:@fixture-label}')
             self.assertLessEqual(int(cells), min(width // 4, 30))
             self.inner('set-option', '-g', '@dots-termux-default', '1')
-            row = self.await_row(lambda row: bool(re.search(r'1 󰊤 +│ main',row)))
+            row = self.await_row(lambda row: bool(re.search(r'1 󰊤 +main',row)))
             self.assertNotIn('dots', self.fixture.plain(row))
             self.inner('set-option', '-gu', '@dots-termux-default')
         self.fixture.snapshot([tty])
         self.inner('kill-session', '-t', other)
         self.inner('set-option', '-t', 'dots', '@dots-session-number', '')
         self.inner('set-option', '-g', '@dots-termux-default', '1')
-        self.await_row(lambda row: bool(re.search(r'󰊤 +│ main',row)) and '1 ' not in row)
+        self.await_row(lambda row: bool(re.search(r'󰊤 +main',row)) and '1 ' not in row)
         self.inner('set-option', '-gu', '@dots-termux-default')
         self.inner('new-window', '-n', 'name:colon', '-c', str(self.repo), 'sleep 120')
         row = self.await_row(lambda row: '1 name:colon' in row)
@@ -327,7 +328,7 @@ class Gitmux(unittest.TestCase):
         for width in (40, 48, 80, 120):
             with self.subTest(width=width):
                 self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
-                row = self.await_row(lambda row: bool(re.search(r'fixture +│ main',row)))
+                row = self.await_row(lambda row: bool(re.search(r'fixture +main',row)))
                 self.assertEqual(self.fixture.colors_at(row, 'main')['fg'], (187, 0, 187))
                 self.assertFalse(self.fixture.bold_at(row, 'main'))
                 self.assertNotIn('✔', self.fixture.plain(row))
@@ -345,7 +346,7 @@ class Gitmux(unittest.TestCase):
         self.inner('new-session', '-d', '-s', 'other', 'sleep 120')
         # Pin the formatting input; project-group numbering has its own suite.
         self.inner('set-option', '-t', 'fixture', '@dots-session-number', '1')
-        row = self.await_row(lambda row: bool(re.search(r' 1 +│ main',row)))
+        row = self.await_row(lambda row: bool(re.search(r' 1 +main',row)))
         # Long content clips by visible cells, never the bytes of its style directives.
         self.git('branch', '-m', 'very-long-feature-' + 'x' * 40)
         for width, bound in ((40, 20), (80, 40), (120, 48)):
@@ -380,6 +381,9 @@ class Gitmux(unittest.TestCase):
     def test_panes_failures_modes_and_reload(self):
         cfg = self.view(termux=False)
         self.inner('source-file', str(cfg))
+        # Reload restores the production five-second redraw interval. Keep the
+        # fixture's one-second polling so its deadline measures provider failure.
+        self.inner('set-option', '-g', 'status-interval', '1')
         self.inner('set-option', '-gw', 'automatic-rename', 'off')
         self.inner('rename-window', 'fixture')
         self.await_row(lambda row: row.count('main') == 1)
@@ -409,20 +413,23 @@ class Gitmux(unittest.TestCase):
         tty = self.inner('list-clients', '-F', '#{client_tty}').splitlines()[0]
         self.inner('switch-client', '-c', tty, '-T', 'prefix')
         row = self.await_row(lambda row: all(text in row for text in ('main', 'COPY', 'PREFIX', 'ZOOM')))
-        self.assertEqual(self.fixture.colors_at(row, 'PREFIX')['bg'], (34, 51, 68))
+        self.assertEqual(self.fixture.colors_at(row, 'PREFIX')['bg'], (171, 205, 239))
+        self.assertEqual(self.fixture.colors_at(row, 'PREFIX')['fg'], (1, 2, 3))
         for label in ('COPY', 'ZOOM'):
             self.assertEqual(self.fixture.colors_at(row, label)['bg'], (0, 255, 0))
         self.inner('switch-client', '-c', tty, '-T', 'root')
         self.inner('send-keys', '-X', '-t', original_pane, 'cancel')
-        # Slow Git retains a marked reading instead of erasing the repository.
-        git = self.fixture.tools / 'git'
-        git.write_text('#!' + status.BASH + '\nexec sleep 3\n')
-        git.chmod(0o700)
+        # Stall the actual provider; Gitmux need not invoke a PATH Git binary.
+        # Only a failed acquisition, not ordinary cache age, marks the reading.
+        self.binary.unlink()
+        self.binary.write_text('#!' + sys.executable + '\nimport time\ntime.sleep(10)\n')
+        self.binary.chmod(0o700)
         start = time.monotonic()
         self.await_row(lambda row: ('~' in row or ' ?' in row) and 'ZOOM' in row)
         self.assertLess(time.monotonic() - start, 10)
-        git.unlink()
-        self.await_row(lambda row: 'main' in row)
+        self.binary.unlink()
+        self.binary.symlink_to(Path(GITMUX).resolve())
+        self.await_row(lambda row: 'main' in row and '~' not in row)
         # Oversized or control-bearing consumer output is discarded, not rendered.
         self.binary.unlink()
         self.binary.write_text('#!' + sys.executable + '\nprint("x" * 17000)\n')

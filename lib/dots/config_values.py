@@ -142,6 +142,15 @@ def validate_value(defaults,path,value):
             if not isinstance(value,list) or len(value)>100 or any(not isinstance(v,str) or len(v)>512 or '\0' in v for v in value):raise ValueError('clipboard exclusions require up to 100 bounded glob patterns')
             return
     if path[:2]==('apps','tmux'):
+        if path[2:3]==('codex_usage',):
+            bounds={'refresh_seconds':(15,3600),'timeout_seconds':(1,60),
+                    'max_stale_seconds':(15,86400),'green_at':(0,100),
+                    'yellow_at':(0,100),'orange_at':(0,100)}
+            if path[-1] in bounds:
+                low,high=bounds[path[-1]]
+                if type(value) is not int or not low<=value<=high:
+                    raise ValueError('Codex quota '+path[-1]+' requires integer '+str(low)+'..'+str(high))
+                return
         bounds={'location_refresh_seconds':(3600,86400),'sun_times_max_stale_seconds':(86400,604800)}
         if path[2:3]==('clock',) and path[-1] in bounds:
             low,high=bounds[path[-1]]
@@ -216,7 +225,10 @@ def validate_value(defaults,path,value):
         if path[-1] in ('main_row','termux_row') and (type(value) is not int or value not in (0,1)):raise ValueError('tmux rows must be 0 or 1')
         if path[-1]=='rows' and (type(value) is not int or value not in (0,1,2)):raise ValueError('tmux rows must be auto (0), 1 or 2')
         if path[-1] in ('main_left','main_right','termux_left','termux_right'):
-            if not isinstance(value,list) or any(v not in ('session','windows','git','indicators','clock','tabs','battery') for v in value) or len(set(value))!=len(value):raise ValueError('tmux sections require unique named components')
+            if not isinstance(value,list) or any(v not in ('session','windows','git','indicators','clock','tabs','battery','codex_usage') for v in value) or len(set(value))!=len(value):raise ValueError('tmux sections require unique named components')
+    if path[:4]==('formatting','apps','tmux','codex_usage') and path[-1]=='width':
+        if type(value) is not int or not 0<=value<=20:raise ValueError('Codex quota width requires integer 0..20')
+        return
     if path[:3]==('apps','fzf','colors') and len(path)==4:
         from fzf_config import validate_color
         if path[-1]=='nth':
@@ -282,6 +294,16 @@ def constraints(defaults, key):
         bounds=(3600,86400) if key.endswith('location_refresh_seconds') else (86400,604800)
         return dict(type='integer',syntax='Seconds '+str(bounds[0])+'..'+str(bounds[1]))
     if key in ('apps.tmux.battery.critical','apps.tmux.battery.low'):return dict(type='integer',syntax='Integer 0..100; null retains provider threshold')
+    if key.startswith('apps.tmux.codex_usage.'):
+        bounds={'refresh_seconds':(15,3600),'timeout_seconds':(1,60),
+                'max_stale_seconds':(15,86400),'green_at':(0,100),
+                'yellow_at':(0,100),'orange_at':(0,100)}
+        field=key.rsplit('.',1)[-1]
+        if field in bounds:
+            low,high=bounds[field]
+            return dict(type='integer',syntax='Integer '+str(low)+'..'+str(high)+
+                        ('; percentage lower bound; orange < yellow < green' if field.endswith('_at') else ' seconds'))
+    if key=='formatting.apps.tmux.codex_usage.width':return dict(type='integer',syntax='Integer 0..20 cells; zero uses natural width')
     """Describe validated typed controls for explain, editing and completion."""
     path = parts(key)
     if not recognized(defaults, path): return {}
@@ -396,6 +418,11 @@ def validate_effective(values, defaults, styles, platform):
     battery=lookup(values,('apps','tmux','battery'),{})
     if battery.get('critical') is not None and battery.get('low') is not None and battery['critical']>=battery['low']:
         raise ValueError('critical battery threshold must be below low')
+    quota=lookup(values,('apps','tmux','codex_usage'),{})
+    if quota.get('max_stale_seconds',300)<quota.get('refresh_seconds',90):
+        raise ValueError('Codex quota maximum stale age must be at least its refresh interval')
+    if not quota.get('orange_at',10)<quota.get('yellow_at',25)<quota.get('green_at',50):
+        raise ValueError('Codex quota thresholds require orange_at < yellow_at < green_at')
 
 
 def leaves(doc,path=()):

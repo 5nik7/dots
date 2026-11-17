@@ -428,3 +428,24 @@ fg = "background"
 "colors.apps.menu.popup.preview.border.fg" = { inherit = true }
 "colors.apps.menu.popup.preview.fg" = { inherit = true }
 "colors.apps.menu.popup.preview.label.fg" = { inherit = true }
+
+[apps.tmux.codex_usage]
+bold = true
+
+[apps.tmux.codex_usage.good]
+fg = "green"
+
+[apps.tmux.codex_usage.medium]
+fg = "yellow"
+
+[apps.tmux.codex_usage.low]
+fg = "orange"
+
+[apps.tmux.codex_usage.critical]
+fg = "red"
+
+[apps.tmux.codex_usage.unknown]
+fg = "muted"
+
+[apps.tmux.codex_usage.git_separator]
+fg = "lighter_background"

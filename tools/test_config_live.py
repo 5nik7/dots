@@ -93,6 +93,39 @@ class ConfigLive(unittest.TestCase):
         updated=inline_color(updated,'tabs','active','bg','#654321')
         self.assertIn('fg = "#112233", bg = "#654321"',updated)
 
+    def test_quota_controls_publish_reset_and_preserve_palette(self):
+        from config_cli import ControlPlan
+        from config_values import Controls
+        from config_menu import Inventory
+        old=self.generation();palette=(old/'palette.json').read_bytes()
+        before=effective(self.root)
+        plan=ControlPlan(self.root,context(self.root))
+        plan.edit('apps.tmux.codex_usage.enabled',False)
+        plan.edit('apps.tmux.codex_usage.green_at',75)
+        plan.edit('formatting.apps.tmux.codex_usage.git_separator',' /')
+        plan.apply('set')
+        icons=StylePlan(self.root,context(self.root),'icons')
+        icons.edit('apps.tmux.codex_usage','Q');icons.apply('set')
+        colors=StylePlan(self.root,context(self.root),'colors')
+        colors.edit('apps.tmux.codex_usage.git_separator.fg','#123456');colors.apply('set')
+        result=after_save(self.root,before)
+        new=active(self.state);self.assertNotEqual(new,old)
+        self.assertEqual((new/'palette.json').read_bytes(),palette)
+        prefs=json.loads((new/'preferences.json').read_text())['apps']['tmux']
+        self.assertFalse(prefs['options']['codex_usage']['enabled'])
+        self.assertEqual(prefs['options']['codex_usage']['green_at'],75)
+        self.assertEqual(prefs['icons']['codex_usage'],'Q')
+        self.assertEqual(prefs['formatting']['codex_usage']['git_separator'],' /')
+        self.assertEqual(prefs['colors']['codex_usage.git_separator']['fg'],'#123456')
+        self.assertIn('fg=#123456',(new/'tmux-controls.conf').read_text())
+        self.assertIn("set -g @dots-codex-usage ''",(new/'tmux-controls.conf').read_text())
+        row=Inventory(self.root,self.platform).find('apps.tmux.codex_usage.timeout_seconds')
+        self.assertEqual(row.constraints['type'],'integer')
+        reset=ControlPlan(self.root,context(self.root));reset.edit('apps.tmux.codex_usage.enabled',unset=True);reset.apply('unset')
+        self.assertTrue(Controls(self.root).values['apps']['tmux']['codex_usage']['enabled'])
+        from config_keys import description
+        self.assertEqual(description('icons.apps.tmux.codex_usage'),'tmux · codex usage')
+
     def test_publish_preserves_palette_and_unrelated_bytes_and_undo(self):
         old=self.generation();palette=(old/'palette.json').read_bytes()
         self.icon.write_text('[applications]\ncodex="TEST"\n')

@@ -150,6 +150,15 @@
         "attention": {
           "text": null
         }
+      },
+      "codex_usage": {
+        "enabled": true,
+        "refresh_seconds": 90,
+        "timeout_seconds": 15,
+        "max_stale_seconds": 300,
+        "green_at": 50,
+        "yellow_at": 25,
+        "orange_at": 10
       }
     },
     "clipboard": {
@@ -215,10 +224,11 @@
         "termux_row": null,
         "main_left": [
           "session",
-          "windows",
-          "git"
+          "windows"
         ],
         "main_right": [
+          "codex_usage",
+          "git",
           "indicators"
         ],
         "termux_left": [
@@ -246,7 +256,7 @@
         },
         "battery": {
           "before": " ",
-          "after": " ",
+          "after": "",
           "spacer": " ",
           "width": 4
         },
@@ -325,6 +335,14 @@
             "after": "",
             "spacer": ""
           }
+        },
+        "codex_usage": {
+          "before": " ",
+          "after": "",
+          "spacer": " ",
+          "git_separator": " ·",
+          "width": 0,
+          "alignment": "right"
         }
       },
       "nvim": {

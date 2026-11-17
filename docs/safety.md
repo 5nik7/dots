@@ -804,3 +804,8 @@ Preference layout migration/import preflights the complete destination set and g
 ## Tmux widget refresh
 
 The documented tmux widgets may schedule bounded disposable-cache workers during status rendering. Cache snapshots use private atomic files and nonblocking locks. This is separate from managed installation transactions. The explicitly enabled Termux clock worker may call `termux-geo --json` while a client is attached; the helper owns Android acquisition, address-service limits and its private cache. Widget records do not copy coordinates or provider diagnostics. Ordinary weather cache-only/help/preview paths retain their read-only boundaries. Git workers disable optional locks and prompts and never fetch. Tests use owned roots, mocked providers and private tmux sockets. See [widget behavior](tmux.md#retained-widget-readings).
+
+
+## Optional tmux quota provider
+
+The Codex quota widget launches only the installed `aistat usage codex` executable, in a bounded detached worker while the visible window contains foreground Codex. It never installs the tool, switches accounts or parses credentials. aistat owns its existing account store, usage cache and any OAuth refresh/write-back it performs; those external provider operations are outside Dots managed-file transactions. Dots reads authentication-file metadata solely for cache invalidation and stores sanitized quota data in private disposable snapshots. Provider stdout is size-limited and parsed as data; stderr, emails, tokens and raw response bodies are not retained or shown. Tests replace the provider and own all home/config/cache/state paths. Config reads, help, completion and publication never fetch usage.

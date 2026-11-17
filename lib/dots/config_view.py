@@ -118,6 +118,9 @@ def icon_sample(styles,key,glyph,tmux_options=None,*,published=None,menu_formatt
             doc['bold']=True;state=''
         elif role.startswith('battery.'):
             roles=['ui.foreground',role,'battery.icon',role+'.icon']
+        elif role=='codex_usage':
+            roles=['codex_usage','codex_usage.good','codex_usage.icon']
+            doc['bold']=True;state='good quota'
         elif role=='window.default':
             roles=['ui.foreground','window.active','window.icon','window.active.icon'];state='active'
         elif role=='session.default' or role.startswith('hosts.') or role=='git.repository':

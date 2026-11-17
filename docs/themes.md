@@ -38,6 +38,8 @@ visible consumer evidence.
 
 ## Tmux
 
+The optional [Codex weekly quota](tmux.md#codex-weekly-quota) uses bold theme green/yellow/orange/red according to remaining percentage, with independent Config span overrides. It precedes right-aligned Gitmux with a configurable `·` in `lighter_background`, retaining the row background.
+
 The linked tmux configuration has two top rows on Termux (detected from `TERMUX_VERSION`): the clock followed by Termux tab numbers on the upper left, battery on the upper right, and the current tmux session followed by its windows below. Outside Termux only the tmux row appears. The main configuration owns layout and conditional formatting after the generated include; `default/themed/tmux.conf.tpl` supplies semantic colors. Theme refreshes preserve the layout.
 
 Termux tab numbers appear above only when more than one tab exists. The lower row numbers sessions only when their group has more than one session. Project groups follow the session picker and use canonical project folders; different folders with the same name stay separate. Non-project sessions group by their full case-sensitive logical label, including termux and multi. Attached and detached sessions count, with numbers assigned within each group in creation order. Only the current session appears: two Dots sessions show `1 dots` and `2 dots`, while a lone Battery session shows `battery`. Two tabs viewing the same tmux session have the same lower number. Window indexes independently depend on that session’s window count. Useful names remain when numbers disappear; matching singleton window names disappear. Full labels are compared case-sensitively before clipping. Managed labels hide immutable ID suffixes; project/multi names remain and the default termux label stays hidden. Manual names remain literal. Legacy `@dots-termux-default=1` sessions retain name hiding until adopted. Session labels and all windows without alerts have one outer space per side. Bracketed alerts have none; adjacent sections use one `│` without orphan dividers.
@@ -47,7 +49,7 @@ Termux tab numbers appear above only when more than one tab exists. The lower ro
 | Popup content | `background` | `foreground` |
 | Popup border | `background` | `lighter_background` |
 | COPY/ZOOM indicators (one space on each side) | `green` | Bold `darker_background` |
-| PREFIX indicator (one space on each side) | `dark_background` | Bold `accent` |
+| PREFIX indicator (one space on each side) | `accent` | Bold `darker_background` |
 | Upper row | `background` | `foreground` |
 | Clock | `dark_background` | Bold `yellow` by day, `blue` at night, `foreground` when unknown |
 | Current Termux tab number | `selection_background` | Bold `orange`, no underline |

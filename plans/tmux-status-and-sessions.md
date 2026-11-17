@@ -685,3 +685,8 @@ Documentation verification: 245 command definitions validate, the generated manu
 is current, 1288 relative Markdown links resolve, the Debug maintenance skill
 validates and whitespace checks pass. Local Wiki build
 48a02e04bebb4f47a073551895492416 checks healthy; no publication was performed.
+
+
+## Quota and spacing follow-up
+
+The current [quota and spacing plan](tmux-quota-and-spacing.md) supersedes the earlier PREFIX foreground/background choice: bold `darker_background` on `accent`. COPY/ZOOM remain on green. It also adds optional weekly Codex quota before right-aligned Gitmux, removes Gitmux’s leading divider and reduces internal battery padding by one cell. Historical activation evidence above remains revision-specific.

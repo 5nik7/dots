@@ -150,6 +150,13 @@ class Widgets(unittest.TestCase):
 
     def test_git_retention_independent_fields_and_expiry(self):
         repo=self.repo()
+        for git_failed,icon_failed,row_failed,marked in ((False,False,False,False),(False,True,False,False),(True,False,False,True),(False,False,True,True)):
+            row={'failed':row_failed,'value':{'gitmux':{'value':'branch','updated':time.time()-12,'failed':git_failed},'icon':{'value':'󰊤','updated':time.time()-12,'failed':icon_failed}}}
+            with patch.object(Cache,'schedule'),patch.object(Cache,'read',return_value=row):
+                self.assertEqual('~' in git.cached_status(repo),marked)
+        # An expired Git result is unknown, even when retained host metadata failed.
+        with patch.object(Cache,'schedule'),patch.object(Cache,'read',return_value={'value':{'gitmux':{'value':'old','updated':time.time()-31,'failed':True},'icon':{'value':'󰊤','updated':time.time(),'failed':True}}}):
+            self.assertNotIn('~',git.cached_status(repo))
         with patch.object(Cache,'schedule'),patch.object(Cache,'read',return_value={'value':{'gitmux':{'value':'branch#{unsafe}','updated':time.time()-10,'failed':True},'icon':{'value':'󰊤','updated':time.time()}}}):
             output=git.cached_status(repo);self.assertIn('󰊤|',output);self.assertIn('~',output);self.assertIn('branch##{unsafe}',output)
         with patch.object(Cache,'schedule'),patch.object(Cache,'read',return_value={'value':{'gitmux':{'value':'old','updated':time.time()-31}}}):

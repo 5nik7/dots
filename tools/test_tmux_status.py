@@ -502,7 +502,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.assertIn('fixture', tmux('display-message', '-p', '#{E:status-left}'))
         for accent in ['#abcdef', '#fedcba']:
             tmux('source-file', str(self.write_theme(accent)))
-            self.assertIn(f'#[fg={accent},bg=#223344,bold]', tmux('display-message', '-p', '#{E:status-right}'))
+            self.assertIn(f'#[fg=#010203,bg={accent},bold]', tmux('display-message', '-p', '#{E:status-right}'))
             self.assertEqual(tmux('show-option', '-g', 'status-format'), rows)
             self.assertIn('bg=#556677', tmux('display-message', '-p', '#{E:status-left}'))
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-current-bg'), '#556677')
@@ -536,7 +536,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         other, _ = self.server('nontermux', termux=False)
         other('source-file', str(config))
         self.assertEqual(other('show-option', '-gqv', 'status'), 'on')
-        self.assertIn('#[fg=#abcdef,bg=#223344,bold]', other('display-message', '-p', '#{E:status-right}'))
+        self.assertIn('#[fg=#010203,bg=#abcdef,bold]', other('display-message', '-p', '#{E:status-right}'))
         self.assertIn('bg=#556677', other('display-message', '-p', '#{E:window-status-current-format}'))
         other('set-option', '-gw', 'automatic-rename', 'off')
         other('rename-window', 'fixture')
@@ -1058,12 +1058,12 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 and long_name[:len(label)+1] not in rows[1])
             self.assertLessEqual(len(self.plain(lines[1])), width)
         inner('rename-session', '-t', long_name, 'fixture')
-        # COPY/ZOOM use green; PREFIX independently uses accent on dark_background.
+        # COPY/ZOOM use green; PREFIX uses darker_background on accent.
         original_right = inner('show-option', '-gqv', 'status-right')
         inner('set-option', '-g', 'status-right', original_right + 'DOTS_RESET')
         def assert_indicator(lines, label):
             self.assertNotIn(label, self.plain(lines[0]))
-            expected = ({'fg': (171, 205, 239), 'bg': (34, 51, 68)} if label == 'PREFIX'
+            expected = ({'fg': (1, 2, 3), 'bg': (171, 205, 239)} if label == 'PREFIX'
                         else {'fg': (1, 2, 3), 'bg': (0, 255, 0)})
             padded = ' ' + label + ' '
             self.assertIn(padded, self.plain(lines[1]))

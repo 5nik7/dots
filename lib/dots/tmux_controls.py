@@ -13,7 +13,8 @@ for component,states,spans in (('tabs',STATES,('number','icon','surround','space
     ROLES.update(component+'.'+state+suffix for state in states for suffix in ('',*('.'+part for part in spans)))
 ROLES.update('indicators.'+name+suffix for name in ('copy','prefix','zoom','working','waiting','attention') for suffix in ('','.surround','.spacer'))
 ROLES.update('hosts.'+host for host in ('github','gitlab','bitbucket'))
-ICONS={'clock.fixed','clock.day','clock.night','clock.unknown','session.default','window.default'}
+ROLES.update('codex_usage'+suffix for suffix in ('', '.good', '.medium', '.low', '.critical', '.unknown', '.icon', '.text', '.surround', '.spacer', '.git_separator'))
+ICONS={'codex_usage','clock.fixed','clock.day','clock.night','clock.unknown','session.default','window.default'}
 ICONS.update('battery.'+state for state in ('critical','low','normal','charging','unknown'))
 
 
@@ -174,9 +175,18 @@ def compile_options(root,selected,source,styles=None):
     options['status-left']=choice('#{E:@dots-session-visible}',sessionbase+surround('session','#{E:@dots-session-text}')+'#[default]#{?#{E:@dots-windows-visible},#{E:@dots-status-separator},}')
     if session.get('multiple',False):
         options['status-left']='#(python3 -B "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/session-status.py" --socket #{q:socket_path} --current #{q:session_id} --width #{q:@dots-session-width} 2>/dev/null || printf "\\n")'
+    quota_sides=['main_left','main_right']
+    if selected['facts']['platform']=='termux' and (fmt.get('rows',0) or 2)==2:
+        quota_sides+=['termux_left','termux_right']
+    quota_placed=any('codex_usage' in fmt.get(side,[]) for side in quota_sides)
+    options['@dots-codex-usage']=original.get('@dots-codex-usage','') if quota_placed and cfg.get('codex_usage',{}).get('enabled',True) else ''
+    adjacent=any(('codex_usage','git') in list(zip(fmt.get(side,[]),fmt.get(side,[])[1:])) for side in quota_sides)
+    separator=fmt.get('codex_usage',{}).get('git_separator',' ·')
+    options['@dots-codex-git-separator-text']=style(styles,'codex_usage.git_separator','#[default,nobold,nodim]')+lit(separator)+'#[default]'
+    options['@dots-codex-git-separator']=original.get('@dots-codex-git-separator','') if adjacent and separator else ''
     gitbase=style(styles,'git')
     content=surround('git','#{=/#{e|-:#{E:@dots-gitmux-width},1}/…:#{E:@dots-gitmux}}',base=gitbase or '#[default]')
-    options['@dots-gitmux-segment']='#[nolist align=right norange default]'+choice('#{!=:#{E:@dots-gitmux},}','#{?#{E:@dots-gitmux-preceded},#{E:@dots-status-separator},}'+gitbase+'#[push-default]'+content+'#[pop-default]#[default]')
+    options['@dots-gitmux-segment']='#[nolist align=right norange default]'+choice('#{!=:#{E:@dots-gitmux},}',gitbase+'#[push-default]'+content+'#[pop-default]#[default]')
     # Explicit custom row placement owns alignment; the default reserves right
     # space so tmux's scrolling window list cannot consume the Git segment.
     options['@dots-gitmux-content']=options['@dots-gitmux-segment'].replace(' align=right','',1)

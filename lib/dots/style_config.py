@@ -85,10 +85,12 @@ def encode(values):
 
 def validate(group, values):
     from config_keys import internal
+    from style_catalog import supported
     for key, value in values.items():
         key=internal(group+'.'+key).partition('.')[2]
         if not NAME.fullmatch(key): raise ValueError('invalid style option name')
-        if key.startswith('apps.') and (len(key.split('.')) < 4 or key.split('.')[1] not in APPS):
+        minimum = 3 if group == 'icons' and key.startswith('apps.') and supported(group, key) else 4
+        if key.startswith('apps.') and (len(key.split('.')) < minimum or key.split('.')[1] not in APPS):
             raise ValueError('unknown visual consumer: ' + key)
         if group == 'icons':
             if not isinstance(value, str) or len(value) > 64 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in value):

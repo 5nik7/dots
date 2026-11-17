@@ -648,3 +648,10 @@ The dispatcher scopes the private request to its trusted providers; an ambient
 environment flag cannot change ordinary or native-controller records. Semantic
 identity is captured before FZF-tab hides group headings, so heading visibility
 does not change the candidate's role.
+
+
+### Codex quota component preferences
+
+The `codex_usage` tmux component uses the existing `apps.tmux`, `formatting.apps.tmux`, `colors.apps.tmux` and `icons.apps.tmux` contracts; see the [complete control table](tmux.md#codex-weekly-quota). Timing values are bounded integers, the maximum stale age must be at least the refresh interval, and thresholds require `orange_at < yellow_at < green_at` within 0–100. Its percentage width is 0–20 cells. The literal `formatting.apps.tmux.codex_usage.git_separator` and corresponding color role control the separator before an adjacent visible Git component; empty hides it. Default placement is main right before Git and indicators; explicit component lists remain authoritative. The optional icon inherits `applications.codex` and accepts empty to hide. Config discovery, previews and completion do not invoke aistat. The existing schema-1 published preferences projection carries the settings; no new state-store schema is introduced.
+
+Quota snapshots use the existing private widget-cache envelope with only `remaining_percent` as provider value. The cache identity includes home, executable identity and metadata for aistat's `~/.codex/auth.json` owner. No credentials or account identifiers are retained. Only one active account and its exact `seven_day` limit are accepted; booleans, nonfinite numbers and values outside 0–100 are invalid. An identity change during acquisition discards the result. Successful reads never transfer across an observed authentication-file change.

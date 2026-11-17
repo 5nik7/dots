@@ -30,21 +30,47 @@ def layout(root,selected,styles=None):
     rows0=extract('status-format[0]');rows1=extract('status-format[1]')
     if len(rows0)<2 or not rows1:return '# No managed status layout source'
     termux=selected['facts']['platform']=='termux'
-    defaults={'main_left':['session','windows','git'],'main_right':['indicators'],
+    defaults={'main_left':['session','windows'],'main_right':['codex_usage','git','indicators'],
               'termux_left':['clock','tabs'],'termux_right':['battery']}
     main=rows1[0] if termux else rows0[0];upper=rows0[1]
-    if any(cfg.get(key,default)!=default for key,default in defaults.items()):
+    component_options=[]
+    # Earlier defaults listed Git on the left but rendered it on the right.
+    # Preserve explicitly saved copies of that layout without opting them into
+    # a component absent from their lists.
+    legacy=dict(defaults,main_left=['session','windows','git'],main_right=['indicators'])
+    native=any(all(cfg.get(key,defaults[key])==value for key,value in layout.items()) for layout in (defaults,legacy))
+    if not native:
         right=upper.split('#[default nobold align=right]',1)[1].removesuffix('#[pop-default]')
         components=dict(session='#{E:status-left}',indicators='#{E:status-right}',
             windows='#{?#{E:@dots-windows-visible},#[list=on]#{W:#[range=window|#{window_index}]#{E:window-status-format}#[norange],#[list=focus range=window|#{window_index}]#{E:window-status-current-format}#[norange list=on]}#[nolist],}',
             git='#{E:@dots-gitmux-content}',
+            codex_usage='#{E:@dots-codex-usage}',
             clock='#{E:@dots-config-clock}' if termux else '',
             tabs='#{E:@dots-termux-numbers}' if termux else '',battery=right if termux else '')
         def row(which,bg):
             result='#[fill='+bg+',bg='+bg+']#[push-default]'
             for side in ('left','right'):
                 result+='#[nolist align='+side+' norange default]'
-                result+='#{E:@dots-status-separator}'.join(components[name] for name in cfg.get(which+'_'+side,defaults[which+'_'+side]) if components[name])
+                previous=[]
+                previous_name=None
+                for name in cfg.get(which+'_'+side,defaults[which+'_'+side]):
+                    if not components[name]:continue
+                    key='@dots-layout-'+which+'-'+side+'-'+name
+                    component_options.append((key,components[name]))
+                    value='#{E:'+key+'}'
+                    visible='#{e|>:#{w:'+value+'},0}'
+                    # Quota/Git have their own conditional separator. Test rendered
+                    # width so optional empty components leave no gap.
+                    separator=''
+                    if name=='git' and previous_name=='codex_usage':
+                        separator='#{E:@dots-codex-git-separator}'
+                    elif previous and name not in ('git','codex_usage'):
+                        any_previous=previous[0]
+                        for predicate in previous[1:]:any_previous='#{||:'+any_previous+','+predicate+'}'
+                        separator='#{?'+any_previous+',#{E:@dots-status-separator},}'
+                    result+='#{?'+visible+','+separator+value+',}'
+                    previous.append(visible)
+                    previous_name=name
             return result+'#[pop-default]'
         main=row('main','#{@dots-termux-lower-bg}' if termux else 'default')
         upper=row('termux','#{@dots-termux-bg}')
@@ -57,6 +83,7 @@ def layout(root,selected,styles=None):
     result=['set -g @dots-config-status '+('on' if count==1 else str(count)),
             'set -g @dots-config-platform '+selected['facts']['platform'],
             'set -g @dots-config-position '+cfg.get('position','top')]
+    result+=['set -g '+key+' '+literal(value) for key,value in component_options]
     result+=['set -g @dots-config-row'+str(i)+' '+literal(rows[i] if i<len(rows) else '') for i in (0,1)]
     # Existing servers can apply the fragment without sourcing hooks/key bindings.
     result.append("if-shell -F '#{&&:#{!=:#{@dots-tmux-row},},#{||:#{!=:#{@dots-config-platform},termux},#{!=:#{TERMUX_VERSION},}}}' { set -gF status '#{@dots-config-status}' ; set -gF status-position '#{@dots-config-position}' ; set -gF status-format[0] '#{@dots-config-row0}' ; set -gF status-format[1] '#{@dots-config-row1}' }")

@@ -101,6 +101,9 @@ class Fallbacks:
                     code='0;'+(colors.sgr(value) or '39')
                 return Glyph(scalar(value),code,self._native[app])
         if value is not None:return value
+        if key=='icons.apps.tmux.codex_usage':
+            sample=icon_sample(self.styles,'apps.tmux.codex_usage',self.styles.icon('applications.codex',app='tmux'))
+            return Glyph(sample.text,sample.code,'icons.applications.codex (inherited quota icon)')
         if path[:3]==('formatting','apps','tmux') and path[-1] in ('main_row','termux_row'):
             from tmux_config import row_positions
             cfg=self.config.get('formatting',{}).get('apps',{}).get('tmux',{})
