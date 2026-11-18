@@ -9,8 +9,8 @@
 | Overview, list | Existing shared details lack a concise collection count and page-specific styles. Update human reports; retain ordinary redirected layout. |
 | Search, titles, topics | Preserve matching/ranking and data. Add styled page/section/snippet/URL spans and configurable human snippets/URLs. |
 | Check, build, init | Use semantic status, meaningful empty results, shared filesystem resources and wrapped journal/transaction details. Preserve preflight, approval and recovery. |
-| Show, browser reader | Share bounded rendering; configurable auto/plain reader. Raw/redirected document bytes remain exact. |
-| Browse pages, sections, topics | Reuse shared menu rows, icons, spacing and popup styling; preserve numeric selection, optional Gum/FZF/plain fallbacks and deferred exact-client reader. |
+| Show, browser reader | Share bounded rendering; shared Markdown viewer with compatible auto/plain Wiki override. Raw/redirected document bytes remain exact. |
+| Browse pages, sections, topics | Reuse shared menu rows, icons, spacing and popup styling; preserve numeric selection, shared FZF/numbered fallbacks and returning exact-client reader. |
 | Launcher Wiki submenu | Update Wiki icon binding; reuse existing generic entry styles and action identities. |
 | Path, open --print-url, completion, JSON | Intentional data interfaces; no decoration or display preference filtering. |
 | Open, edit | Preserve external browser/editor output and invocation; style owned diagnostics only. |
@@ -59,3 +59,5 @@ Both Bash and native PowerShell dispatch share the Python controller. Native Win
 | `test_native_cli.py` | 23 tests successful; 2 unavailable native PowerShell skips |
 
 Metadata validation passed for 244 external commands; manual freshness, Markdown links and whitespace checks pass. The local wiki already matched the canonical sources at the final preview/build, so the retained build workflow reported unchanged; the full wiki check is healthy. No commit, push, live preference edit, activation or installation was performed. The full launcher suite was not rerun: its previously documented unrelated Files-menu expectations remain outside these focused Wiki checks. Native PowerShell 5.1/7 terminal interactions, Linux/WSL visual checks and hosted GitHub rendering remain pending.
+
+The [menu/Markdown update](menu-markdown.md) records shared rendering and returning Wiki navigation acceptance.

@@ -1,7 +1,4 @@
 """Wiki human views on the shared renderer; data interfaces bypass this module."""
-import shutil
-import os
-
 from files.catalog import Presentation
 from config_values import value
 from style_config import current
@@ -120,13 +117,11 @@ def topics(ui, query, matches):
     if not matches: ui.detail('Results', 'No matching topics.')
 
 
-def document(data, ui):
+def document(data, ui, *, inline_notice=False):
     """Render only a human document; callers retain exact raw/redirected bytes."""
-    from themes.file_preview import run_renderer
-    bat = (shutil.which('bat') or shutil.which('batcat')) if preference('reader', 'auto') == 'auto' else None
-    rendered = run_renderer([bat, '--no-config', '--paging=never', '--style=plain', '--language=markdown',
-                             '--color=' + ('always' if ui.color else 'never')], data, os.environ) if bat else None
-    return rendered if rendered is not None else '\n'.join(ui.clean(line) for line in data.decode().replace('\r\n', '\n').split('\n')).encode()
+    from markdown_viewer import render
+    return render(data, ui, viewer='builtin' if preference('reader', 'auto') == 'plain' else None,
+                  inline_notice=inline_notice)
 
 
 def diagnostic(message, stream):

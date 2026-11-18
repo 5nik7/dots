@@ -15,6 +15,7 @@ from files.file_platform import state_root
 DISPLAY_KEYS = {
     'apps.completion.enabled',
     'apps.cli.logo_gradient',
+    'apps.cli.markdown_viewer',
     'apps.fonts.list_details', 'apps.fonts.provenance', 'apps.fonts.menu_descriptions',
     'apps.fonts.preview.enabled', 'apps.fonts.preview.sample',
     'apps.wiki.list_details', 'apps.wiki.search_snippets', 'apps.wiki.search_urls',

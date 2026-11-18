@@ -16,6 +16,13 @@ FZF_TAB=Path(os.environ.get('DOTS_TEST_FZF_TAB') or Path.home()/'.local/share/zi
 class Completion(unittest.TestCase):
     setUp=fixtures.Alignment.setUp
 
+    def test_markdown_viewer_choice_native_tab(self):
+        for shell in ('bash','zsh','fish'):
+            if not shutil.which(shell):continue
+            with self.subTest(shell=shell):
+                self.assertEqual(self.capture(shell,'dots config set apps.cli.markdown_viewer lea\t'),
+                                 'dots config set apps.cli.markdown_viewer leaf ')
+
     def capture(self,shell,text):
         import pty
         path=self.home/('buffer-'+shell)

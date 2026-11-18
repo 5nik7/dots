@@ -154,8 +154,14 @@ class Menus(MenuFixture):
             self.assertEqual(picker.fzf('Fixture', ['first'], False, preview, False, False, '',
                 environment={'TMUX_PANE': '', 'FZF_DEFAULT_OPTS': '--bind=start:abort', 'BASH_ENV': '/bad'}), [0])
         env = run.call_args.kwargs['env']
+        self.assertIn('--cycle', run.call_args.args[0])
         self.assertEqual(env['TMUX_PANE'], ''); self.assertEqual(env['FZF_DEFAULT_OPTS'], ''); self.assertEqual(env['BASH_ENV'], '')
         self.assertNotIn('TMUX_PANE', os.environ)
+        with patch('interaction.subprocess.run', return_value=result) as run, \
+             patch('fzf_config.picker_options', return_value=(['--no-cycle'], [])):
+            picker.fzf('Fixture', ['first'], False, None, False, False, '')
+            flags=run.call_args.args[0]
+            self.assertLess(flags.index('--cycle'),flags.index('--no-cycle'))
         for output in (b'99\0', b'-1\0', b'$(touch x)\0', b'01\0', b'0\0' + b'1\0'):
             with patch('interaction.subprocess.run', return_value=subprocess.CompletedProcess([], 0, output)), self.assertRaises(ValueError):
                 picker.fzf('Fixture', ['first'], False, None, False, False, '')
@@ -378,6 +384,24 @@ class NativeMenuFixture(MenuFixture):
                 os.waitpid(pid, 0)
 
 class NativeMenus(NativeMenuFixture):
+    def test_wrap_both_directions_and_filtered_single_choice(self):
+        code = '''import os
+from menus import Menu,Entry,choose
+from menu_tmux import TmuxContext
+c=TmuxContext.capture(client=os.environ['CLIENT'])
+r=choose(Menu('native','Wrap chooser',tuple(Entry(str(i),label) for i,label in enumerate(('One','Two','Three')))),mode='browse',context=c)
+print(r.id)
+'''
+        for keys, expected in ((b'\x1b[A\r', '2'), (b'\x1b[A\x1b[B\r', '0'), (b'Two\x1b[A\r', '1')):
+            self.drain(self.first[1]); self.drain(self.second[1])
+            worker = self.worker(code)
+            self.receive(self.first[1], b'Wrap chooser')
+            os.write(self.first[1], keys)
+            out, err = worker.communicate(timeout=15)
+            self.assertEqual(worker.returncode, 0, err)
+            self.assertEqual(out.strip(), expected)
+            self.assertNotIn(b'Wrap chooser', self.drain(self.second[1]))
+
     def test_native_popup_targets_exact_client_and_returns_selection(self):
         import time
         code = '''import os

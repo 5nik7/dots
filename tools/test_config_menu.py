@@ -561,7 +561,7 @@ with request_file(dict(schema=1,context=asdict(context))) as path:
     code=subprocess.call([*cmd,'config','set','colors.todo.field.acceptance.value.fg','--no-refresh'],env=dict(os.environ,DOTS_MENU_CONTEXT=str(path)))
 Path(sys.argv[2]).write_text(str(code))
 ''')
-        destination=self.root/'profiles'/self.platform/'colors.toml'
+        destination=self.root/'default/colors.toml'
         for width,frontend in ((40,'bash'),(80,'native'),(120,'bash')):
             (theme/'palette.json').write_text(json.dumps(dict(palette={'fixture_extra':'#abcdef'},colors={'accent':'#123456',
                 'foreground':'#202020' if width==120 else '#cdd6f4','background':'#fafafa' if width==120 else '#181825'})))

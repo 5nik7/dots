@@ -22,6 +22,7 @@
       }
     },
     "cli": {
+      "markdown_viewer": "auto",
       "progress": "both",
       "logo_gradient": "installer",
       "tagline": "Manage your dotfiles and more..."

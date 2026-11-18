@@ -80,7 +80,7 @@ class WikiViews(WikiFixture):
         self.assertIn(b'Literal \\n text\n',output);self.assertNotIn(b'\x1b',output)
         self.settings(apps={'wiki':{'reader':'auto'}})
         with patch('shutil.which',return_value='bat'),patch('themes.file_preview.run_renderer',return_value=b'highlighted') as render:
-            self.assertEqual(document(text,ui),b'highlighted');self.assertIn('--color=never',render.call_args.args[0])
+            self.assertEqual(document(text,ui),b'highlighted');self.assertIn('plain:' + str(ui.width), render.call_args.args[0])
 
     def test_menu_settings_and_literal_selection_all_backends(self):
         from wiki_browser import pick,choice,browse
@@ -92,13 +92,10 @@ class WikiViews(WikiFixture):
         self.assertEqual(entry.description,'')
         with patch.dict(os.environ,DOTS_COLOR='always',DOTS_ICONS='never'):
             ui=WikiPresentation(io.StringIO(),terminal=True)
-            with patch('shutil.which',return_value=None),patch('interaction.rich_fzf_available',return_value=True),patch('interaction.RichSelector.fzf',return_value=(0,)) as picker:
+            with patch('menus.terminal',return_value=True),patch('shutil.which',return_value='fixture'),patch('interaction.rich_fzf_available',return_value=True),patch('interaction.RichSelector.fzf',return_value=(0,)) as picker:
                 self.assertEqual(pick('Wiki',[entry],ui),0)
                 self.assertIn('38;2;18;52;86',picker.call_args.args[1][0])
-                self.assertIn('$(no-execute)',picker.call_args.args[1][0]);self.assertTrue(picker.call_args.kwargs['wrap'])
-            with patch('shutil.which',return_value='fixture'),patch.dict(os.environ,TERM='xterm-256color'),patch('interaction.Selector.pick',side_effect=lambda kind,title,labels:labels[0]) as gum:
-                self.assertEqual(pick('Wiki',[entry],ui),0)
-                self.assertNotIn('\x1b',gum.call_args.args[2][0])
+                self.assertIn('$(no-execute)',picker.call_args.args[1][0]);self.assertIn('navigation', picker.call_args.kwargs)
             with patch('shutil.which',return_value=None),patch('interaction.rich_fzf_available',return_value=False),patch('builtins.input',return_value='1'):
                 self.assertEqual(pick('Wiki',[entry],ui),0)
                 self.assertIn('$(no-execute)',ui.stream.getvalue())
@@ -170,7 +167,7 @@ class WikiConfig(unittest.TestCase):
             self.assertEqual(after_save(self.root,before)['consumers'],[dict(app='wiki',status='next invocation or popup')])
         self.assertEqual(self.run_config('get','apps.wiki.reader',native=True,DOTS_COLOR='always').stdout,'plain\n')
         explanation=json.loads(self.run_config('explain','apps.wiki.reader','--json').stdout)
-        self.assertIn('next Wiki',explanation['activation']);self.assertEqual(explanation['source'],str(self.path))
+        self.assertIn('next Wiki',explanation['activation']);self.assertEqual(explanation['source'],str(self.path.parent/'config.json'))
         for key,bad in [('apps.wiki.reader','shell'),('apps.wiki.list_details','all'),('apps.wiki.search_urls','42'),('formatting.apps.wiki.row_gap','5')]:
             self.run_config('set',key,bad,'--no-refresh',code=1)
         self.run_config('unset','apps.wiki.reader','--no-refresh')

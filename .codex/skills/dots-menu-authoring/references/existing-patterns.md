@@ -195,3 +195,11 @@ remains `SelectionEnded(130)`. `todo_input` retains the original import entry po
 The config browser keeps its transaction plan across input and review, uses numeric
 preview snapshots and default-Cancel Save, then applies the original guarded plan.
 It never rebuilds a plan after approval or adds approval flags to file handoffs.
+
+Shared selectors cycle by default; explicit `apps.fzf.default_opts` overrides
+still apply. `choose(..., focus_index=N)` restores a validated row with its query.
+Wiki is a cooperating `kind='popup'` browser: consume `TmuxContext.from_environment()`,
+close selection before `page_text(..., context=context)`, then reopen the saved
+navigation frame. Reserve `kind='document'` and deferred readers for one-shot
+controllers. Markdown consumers use `markdown_viewer.render` or `page`; raw exports
+and clipboard/handoff text bypass rendering.

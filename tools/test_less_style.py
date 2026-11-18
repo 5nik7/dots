@@ -326,9 +326,30 @@ class LessStyle(MenuFixture):
                             os.write(master,b'/needle\n')
                             search=read_until(prompt)
                             self.assertIn(start.encode()+b'needle',search)
+                            if backend == 'popup':
+                                # Terminal escape sequences must still navigate;
+                                # even a sequence split across reads is not Esc.
+                                os.write(master,b'\x1b[6~')
+                                self.assertIn(b'line 30',read_until(prompt))
+                                os.write(master,b'\x1b')
+                                time.sleep(.02)
+                                os.write(master,b'OA')
+                                read_until(prompt)
+                                os.write(master,b'\x1b[<65;2;2M')
+                                read_until(prompt)
+                                os.write(master,b'\x1bOH')
+                                self.assertIn(b'needle',read_until(prompt))
                             os.write(master,b'G')
                             self.assertIn(b'line 99',read_until(prompt))
-                            os.write(master,b'q')
+                            if backend == 'popup' and colors == LIGHT:
+                                # q is still ordinary text while entering a
+                                # search, and Escape can close that view too.
+                                os.write(master,b'/q')
+                                self.assertIn(b'/',read_until(b'q'))
+                                self.assertEqual(os.waitpid(pid,os.WNOHANG),(0,0))
+                                os.write(master,b'\x1b')
+                            else:
+                                os.write(master,b'q')
                             deadline=time.monotonic()+5
                             while time.monotonic()<deadline:
                                 done,status=os.waitpid(pid,os.WNOHANG)

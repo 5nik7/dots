@@ -65,17 +65,17 @@ class Topics(WikiFixture):
         ui=Presentation(io.StringIO())
         # Source browsing is independent of a generated export.
         shutil.rmtree(self.target)
-        with patch('wiki_browser.pick',return_value=0), patch('shutil.which',return_value='fixture'), patch('themes.file_preview.run_renderer',return_value=None), patch('menu_pager.page_text') as page:
+        with patch('wiki_browser.pick',side_effect=[0,None]), patch('shutil.which',return_value='fixture'), patch('themes.file_preview.run_renderer',return_value=None), patch('menu_pager.page_text') as page:
             self.assertEqual(browse(self.root,'hello',ui),0)
             content=page.call_args.args[0].decode()
             self.assertIn('Hello world',content)
             self.assertIn('A guide',content)
-            self.assertTrue(page.call_args.kwargs['defer'])
-        with patch('wiki_browser.pick',side_effect=[1,None,1,0]), patch('shutil.which',return_value='fixture'), patch('themes.file_preview.run_renderer',return_value=None), patch('menu_pager.page_text') as page:
+            self.assertIsNone(page.call_args.kwargs['context'])
+        with patch('wiki_browser.pick',side_effect=[1,None,1,0,None,None]), patch('shutil.which',return_value='fixture'), patch('themes.file_preview.run_renderer',return_value=None), patch('menu_pager.page_text') as page:
             self.assertEqual(browse(self.root,None,ui),0)
             self.assertEqual(page.call_args.args[0],(self.root/'docs/guide.md').read_bytes())
         (self.root/'docs/guide.md').write_bytes(b'# Guide\r\n\r\n## Hello world\r\n\r\nText.\r\n')
-        with patch('wiki_browser.pick',side_effect=[1,0]), patch('shutil.which',return_value='fixture'), patch('themes.file_preview.run_renderer',return_value=None), patch('menu_pager.page_text') as page:
+        with patch('wiki_browser.pick',side_effect=[1,0,None,None]), patch('shutil.which',return_value='fixture'), patch('themes.file_preview.run_renderer',return_value=None), patch('menu_pager.page_text') as page:
             browse(self.root,None,ui)
             self.assertEqual(page.call_args.args[0],b'# Guide\n\n## Hello world\n\nText.\n')
         with patch('shutil.which',return_value=None), patch('interaction.rich_fzf_available',return_value=False), patch('builtins.input',return_value='2'):

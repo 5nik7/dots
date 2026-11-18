@@ -22,6 +22,29 @@ from menu_tmux import TmuxContext
 
 
 class ProjectHandoff(MenuFixture):
+    def test_native_windows_home_path_boundaries(self):
+        import ntpath
+        from files.catalog import Presentation
+        ui=Presentation(io.StringIO())
+        with patch.dict(os.environ, HOME=r'C:\Users\Example'), patch('files.catalog.os.path', ntpath), \
+             patch('files.catalog.os.sep', '\\'):
+            self.assertEqual(ui.path(r'C:\Users\Example'), '~')
+            self.assertEqual(ui.path(r'C:\Users\Example\dots ü'), r'~\dots ü')
+            self.assertEqual(ui.path(r'C:\Users\Example-other\dots'), r'C:\Users\Example-other\dots')
+
+    def test_home_paths_are_only_shortened_for_human_displays(self):
+        import menu_project_cli as subject
+        roots = [self.home, self.home/'dots ü - project', self.home.parent/(self.home.name+'-sibling')]
+        inventory = tuple(projects.Project(root, root.name) for root in roots)
+        for tty, mode, expected in ((True, '--browse', ['~', '~/dots ü - project', str(roots[2])]),
+                                    (False, '--print', list(map(str, roots))),
+                                    (True, '--json', list(map(str, roots)))):
+            with patch.object(subject, 'discover', return_value=inventory), \
+                 patch.object(subject.sys.stdout, 'isatty', return_value=tty), \
+                 patch.object(subject, 'choose', return_value=None) as choose:
+                self.assertEqual(subject.main([mode]), 0)
+                self.assertEqual([e.description for e in choose.call_args.args[0].entries], expected)
+
     def test_data_listing_is_inert_and_paths_remain_literal(self):
         import menu_project_cli as subject
         root = self.home/'-project ü ; literal'; root.mkdir()

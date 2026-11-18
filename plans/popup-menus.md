@@ -1,5 +1,11 @@
 # Dots popup menus
 
+Current shared navigation and Wiki browsing changes are recorded in
+[Menu navigation and Markdown viewing](menu-markdown.md). That update adds cyclic
+selectors and returning Wiki submenus; earlier one-shot Wiki handoff verification
+below remains historical evidence.
+
+
 ## Value discovery and popup sizing (2026-10-31)
 
 Status: implemented and verified on Termux; native desktop visual acceptance remains pending. The existing config explain/browser/value-completion surfaces show finite choices and size syntax from the same constraints used by validation. No new command route or settings store. Scalar get and ordinary JSON values remain exact. Menu assessment: Config editing offers finite choices and size presets before custom input, preserving reviewed Save and cancellation.

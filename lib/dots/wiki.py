@@ -376,7 +376,7 @@ def main(argv=None):
         if os.name=='nt':command=[part[1:-1] if len(part)>1 and part[0]==part[-1] and part[0] in ('\"',"'") else part for part in command]
         return subprocess.call([*command,str(root/row['source'])])
     elif action == 'browse':
-        if not sys.stdin.isatty() or not sys.stdout.isatty():
+        if not (os.environ.get('DOTS_MENU_CONTEXT') or (sys.stdin.isatty() and sys.stdout.isatty())):
             raise ValueError('browse requires a terminal; use dots wiki search QUERY --topics or show PAGE --source')
         from wiki_browser import browse
         return browse(root, args.query, ui)

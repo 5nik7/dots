@@ -1,5 +1,42 @@
 # Configuration: inspect, change and explain
 
+## Markdown viewer
+
+`apps.cli.markdown_viewer` selects the renderer for Dots CLI Markdown displays:
+Wiki terminal `show` and `browse`, and Todo document/brief readers. Dots retains
+its scrollable reader and popup controls; native application previews such as
+Yazi use their own settings. Raw/redirected documents, Markdown exports, copied
+briefs and Codex handoffs retain their original bytes.
+
+The shared default is `auto`, which tries installed, usable renderers in order:
+**leaf > mdcat > glow > rich-cli > mdterm > bat > builtin**. The Termux profile
+explicitly selects `leaf`. Choices are `auto`, `leaf`, `mdcat`, `glow`, `rich-cli`,
+`mdterm`, `bat`, `cat`, and `builtin`. `rich-cli` uses the `rich` executable;
+Bat accepts `bat` or `batcat`. `cat` is an explicit plain-source choice and is
+not in the automatic hierarchy. `builtin` uses Dots' sanitized plain Markdown
+without an external renderer. No program is installed automatically.
+
+An unavailable or failed explicit renderer reports a short notice and falls
+through the automatic hierarchy without retrying that renderer. Automatic mode
+skips unavailable programs and falls through failures. Rendering uses captured
+stdin/stdout, bounded execution and the reader's content width. Color-disabled
+views retain readable plain text. Wiki's existing `apps.wiki.reader=plain`
+override still forces plain text; `auto` delegates to this shared preference.
+
+```sh
+dots config set apps.cli.markdown_viewer
+dots config set apps.cli.markdown_viewer leaf --profile termux
+dots config set apps.cli.markdown_viewer auto --profile termux
+dots config unset apps.cli.markdown_viewer --profile termux
+dots config explain apps.cli.markdown_viewer
+```
+
+The key-only form opens the normal Config editor. The Wiki submenu also provides
+**Markdown viewer**. Config details show installed choices; completion always
+offers the portable finite choices. Profile overrides inherit from their parent
+and shared defaults. Reset removes the selected profile override; saved changes
+apply to the next document view without a theme publication or application reload.
+
 ## Git views and shared progress
 
 `apps.git.view` accepts `default` (initial value), `short` and `verbose` for terminal/menu Git reports. `apps.cli.progress` accepts `none`, `spinner`, `bar` and `both` (initial value) for existing shared progress consumers. Both use the ordinary profile/parent/shared-default precedence, Config browser, completion and reset behavior. Changes take effect at the next invocation or popup; they do not publish a theme or reload applications.

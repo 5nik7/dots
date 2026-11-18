@@ -1,6 +1,9 @@
 {
   "schema": 1,
   "apps": {
+    "cli": {
+      "markdown_viewer": "leaf"
+    },
     "tmux": {
       "clock": {
         "auto_location": true

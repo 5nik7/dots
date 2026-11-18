@@ -151,7 +151,8 @@ def listing(menu, entries, ui):
 
 
 def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
-           compact=False, navigation=None, prompt=None, header=None, preserve_row_styles=False):
+           compact=False, navigation=None, prompt=None, header=None, preserve_row_styles=False,
+           focus_index=None):
     """Return one Entry or None after listing; selection never invokes an action."""
     if mode not in ('auto', 'browse', 'print', 'json'):
         raise ValueError('invalid menu output mode')
@@ -218,6 +219,7 @@ def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
         selected = RichSelector(backend='fzf').fzf(prompt, labels, False, preview,
             ui.color, ui.icons, colors, popup=f'center,{width},{height}' if context else False,
             height=height, query=query, header=header, environment=environment, popup_resolved=context is not None,
+            **({'focus_index': focus_index} if focus_index is not None else {}),
             **({'navigation': navigation} if navigation is not None else {}))
     entry = menu.entries[selected[0]]
     if not entry.available and navigation is None:

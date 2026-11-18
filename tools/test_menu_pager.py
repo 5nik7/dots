@@ -31,11 +31,16 @@ class Pager(MenuFixture):
 
     @unittest.skipIf(os.name == 'nt', 'native POSIX terminal')
     def test_short_report_stays_open_outside_tmux_without_private_path(self):
+        for key in (b'q', b'\x1b', b'\x03'):
+            with self.subTest(key=key):
+                self.short_report(key)
+
+    def short_report(self, key):
         import pty, select, signal, time
         if not shutil.which('less'): self.skipTest('less unavailable')
         report = 'SHORT REPORT\n\uf00c current\n\U000f0001 icon\n\U00100000 icon\ncontrol: \x01'
         child = 'print(' + repr(report) + ');raise SystemExit(7)'
-        code = "import sys;from menu_pager import run_output;sys.exit(run_output([sys.executable,'-c'," + repr(child) + "]))"
+        code = "import sys,termios;from menu_pager import run_report;before=termios.tcgetattr(2);result=run_report([sys.executable,'-c'," + repr(child) + "]);assert termios.tcgetattr(2)==before;assert result.reviewed==" + repr(key != b'\x03') + ";sys.exit(result.code)"
         pid, master = pty.fork()
         if pid == 0:
             os.execve(sys.executable, [sys.executable,'-B','-c',code], dict(self.env, LESSCHARSET='ascii', LESSUTFCHARDEF='E000-F8FF:b'))
@@ -51,13 +56,21 @@ class Pager(MenuFixture):
             os.write(master,b'=');time.sleep(.1)
             while select.select([master],[],[],.05)[0]: data += os.read(master,65536)
             self.assertNotIn(b'dots-output-',data)
-            os.write(master,b'q');deadline=time.monotonic()+10
+            os.write(master,key);deadline=time.monotonic()+10
             while time.monotonic()<deadline:
                 done,status=os.waitpid(pid,os.WNOHANG)
                 if done:
                     alive=False;self.assertEqual(os.waitstatus_to_exitcode(status),7);break
                 time.sleep(.05)
             self.assertFalse(alive);self.assertFalse(list(self.base.glob('dots-output-*')))
+            while select.select([master],[],[],.05)[0]:
+                try:
+                    chunk=os.read(master,65536)
+                except OSError:
+                    break
+                if not chunk:break
+                data+=chunk
+            self.assertIn(b'\x1b[?1049l',data)  # less restored the main screen
         finally:
             if alive: os.kill(pid,signal.SIGKILL);os.waitpid(pid,0)
             os.close(master)
@@ -78,6 +91,55 @@ class Pager(MenuFixture):
         self.assertEqual(marker.read_text(),'x');self.assertFalse(paths[0].exists());self.assertFalse(paths[0].parent.exists())
         self.assertFalse((cwd/'sentinel').exists())
 
+    @unittest.skipIf(os.name == 'nt', 'POSIX PTY resize adapter')
+    def test_input_adapter_forwards_keys_and_terminal_resize(self):
+        import fcntl, pty, select, signal, struct, termios, time
+        probe=self.base/'probe.py'
+        probe.write_text('''import os, signal, tty
+fd=os.open('/dev/tty',os.O_RDWR)
+tty.setraw(fd)
+def size(*args):
+    columns,lines=os.get_terminal_size(fd)
+    os.write(fd,f'SIZE {columns} {lines}\\n'.encode())
+signal.signal(signal.SIGWINCH,size)
+size()
+while True:
+    data=os.read(fd,4096)
+    os.write(fd,('KEY '+data.hex()+'\\n').encode())
+    if data==b'q':break
+''')
+        report=self.base/'report';report.write_text('inert input')
+        code="import sys;from less_input import run;sys.exit(run([sys.executable,"+repr(str(probe))+"],stdin=open("+repr(str(report))+",'rb'),env=dict(__import__('os').environ)))"
+        pid,master=pty.fork()
+        if pid==0:
+            fcntl.ioctl(1,termios.TIOCSWINSZ,struct.pack('HHHH',24,80,0,0))
+            os.execve(sys.executable,[sys.executable,'-B','-c',code],self.env)
+        alive=True
+        def receive(marker):
+            data=b'';deadline=time.monotonic()+5
+            while marker not in data and time.monotonic()<deadline:
+                if select.select([master],[],[],.1)[0]:data+=os.read(master,65536)
+            self.assertIn(marker,data)
+        try:
+            receive(b'SIZE 80 24')
+            fcntl.ioctl(master,termios.TIOCSWINSZ,struct.pack('HHHH',12,40,0,0))
+            receive(b'SIZE 40 12')
+            for keys in (b'\x1bOB',b'\x1b[6~',b'\x1b[<65;2;2M'):
+                os.write(master,keys);receive(b'KEY '+keys.hex().encode())
+            os.write(master,b'\x1b');time.sleep(.02);os.write(master,b'OA')
+            receive(b'KEY 1b4f41')
+            os.write(master,b'q');receive(b'KEY 71')
+            deadline=time.monotonic()+5
+            while time.monotonic()<deadline:
+                done,status=os.waitpid(pid,os.WNOHANG)
+                if done:
+                    alive=False;self.assertEqual(os.waitstatus_to_exitcode(status),0);break
+                time.sleep(.05)
+            self.assertFalse(alive)
+        finally:
+            if alive:os.kill(pid,signal.SIGKILL);os.waitpid(pid,0)
+            os.close(master)
+
     def test_empty_and_missing_command_status(self):
         contents=[]
         with patch('menu_pager.reader',side_effect=lambda p:contents.append(p.read_text())):
@@ -87,7 +149,7 @@ class Pager(MenuFixture):
 
     def test_reader_clears_hooks_history_and_uses_fzf_without_actions(self):
         path=self.base/'literal ü $(touch x)';path.write_bytes(b'first\nlast\0literal\n')
-        with patch.dict(os.environ,LESS='-F',LESSOPEN='bad',LESSHISTFILE='/bad',FZF_DEFAULT_OPTS='--bind=start:execute(bad)'), patch('menu_pager.shutil.which',side_effect=lambda name, **kwargs:'/tools/'+name), patch('menu_pager.subprocess.call',return_value=1) as less, patch('menu_pager.subprocess.run',return_value=subprocess.CompletedProcess([],130)) as fzf:
+        with patch.dict(os.environ,LESS='-F',LESSOPEN='bad',LESSHISTFILE='/bad',FZF_DEFAULT_OPTS='--bind=start:execute(bad)'), patch('menu_pager.shutil.which',side_effect=lambda name, **kwargs:'/tools/'+name), patch('less_input.run',return_value=1) as less, patch('menu_pager.subprocess.run',return_value=subprocess.CompletedProcess([],130)) as fzf:
             menu_pager.reader(path)
         self.assertNotIn(str(path),less.call_args.args[0])
         self.assertEqual(less.call_args.kwargs['stdin'].name,str(path))
@@ -99,6 +161,24 @@ class Pager(MenuFixture):
         self.assertEqual(fzf.call_args.kwargs['stdout'],subprocess.DEVNULL)
         with patch('menu_pager.shutil.which',return_value=None),self.assertRaisesRegex(ValueError,'install less or FZF'):
             menu_pager.reader(path)
+
+    def test_native_windows_owns_only_its_temporary_key_source(self):
+        path=self.base/'report';path.write_text('report')
+        keyfiles=[]
+        def read(argv, *, stdin, env):
+            keys=Path(env['LESSKEYIN']);keyfiles.append(keys)
+            self.assertEqual(keys.read_bytes(),b'#command\n\\e quit\nq quit\n')
+            self.assertEqual(env['LESSSECURE'],'1')
+            self.assertEqual(env['LESSSECURE_ALLOW'],'lesskey')
+            for name in ('LESSOPEN','LESSCLOSE','LESSKEY_CONTENT','LESSKEY_CONTENT_SYSTEM','LESSNOCONFIG'):
+                self.assertEqual(env[name],'')
+            self.assertEqual(env['LESSKEYIN_SYSTEM'],os.devnull)
+            self.assertNotIn(str(path),argv)
+            return 0
+        with patch('menu_pager.sys.platform','win32'),patch('menu_pager.shutil.which',return_value='less'),patch('less_input.run',side_effect=read):
+            self.assertTrue(menu_pager.reader(path,backend='less',environment=dict(self.env,
+                LESSKEY_CONTENT='q shell touch bad',LESSSECURE_ALLOW='shell,edit',LESSNOCONFIG='-')))
+        self.assertFalse(keyfiles[0].exists())
 
     def test_passed_presentation_environment_survives_capture(self):
         command=self.command('import os,json;print(json.dumps([os.environ[k] for k in ("DOTS_COLOR","DOTS_ICONS","DOTS_PROGRESS")]))')
@@ -136,7 +216,7 @@ class NativePager(NativeMenuFixture):
                 self.assertEqual(json.loads(record.read_text()),[width*9//10-2,expected-2])
                 self.assertNotIn(b'Back q',self.drain(self.second[1]))
                 if expected==21:os.write(self.first[1],b'G');self.receive(self.first[1],b'LAST')
-                os.write(self.first[1],b'q');_,err=p.communicate(timeout=15)
+                os.write(self.first[1],b'\x1b' if expected==21 else b'q');_,err=p.communicate(timeout=15)
                 self.assertEqual(p.returncode,0,err)
         self.assertEqual(marker.read_text(),'xxxxxxxxx')
         self.assertFalse(list(self.base.glob('dots-menu-*')))

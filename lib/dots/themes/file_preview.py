@@ -83,7 +83,7 @@ def run_renderer(command, data, env, timeout=RENDER_TIMEOUT, limit=RENDER_LIMIT)
         if proc.poll() is None: stop(); proc.wait()
         for thread in threads: thread.join(timeout=1)
         if any(thread.is_alive() for thread in threads): failed.set()
-        # Renderer is bat with paging/config disabled, not an arbitrary shell pipeline.
+        # Callers select fixed inline renderer arguments, never a shell pipeline.
         if not any(thread.is_alive() for thread in threads):
             proc.stdin.close(); proc.stdout.close()
     return bytes(output) if not failed.is_set() and proc.returncode == 0 else None

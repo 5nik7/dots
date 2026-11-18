@@ -44,7 +44,7 @@ class OutputResult:
     reviewed: bool = False
 
 
-def action_page(text, *, title, actions, frame, context=None, notice=''):
+def action_page(text, *, title, actions, frame, context=None, notice='', markdown=False):
     """Opt-in FZF document actions; return an action, never a selected text line.
 
     Existing read-only less/FZF readers retain their own keys and return contract.
@@ -56,6 +56,9 @@ def action_page(text, *, title, actions, frame, context=None, notice=''):
     from progress import permanent_output
     if not rich_fzf_available():
         raise ValueError('Brief actions require FZF; use todo brief ID to print the brief')
+    if markdown:
+        from markdown_viewer import render, reader_ui
+        text = render(text, reader_ui(context, gutters=6), inline_notice=True).decode('utf-8')
     labels = text.splitlines() or ['']
     ui = Presentation(terminal=True, detail_indent=2)
     wrapped = 'fzf-wrap' in tuple(backends())
@@ -166,6 +169,7 @@ def reader(path, *, backend=None, environment=None):
     environment.update(LESS='', LESSOPEN='', LESSCLOSE='', LESSSECURE='1',
                        LESSSECURE_ALLOW='', LESSHISTFILE='-', LESSKEYIN=os.devnull,
                        LESSKEYIN_SYSTEM=os.devnull, LESSKEY='', LESSKEY_SYSTEM='',
+                       LESSKEY_CONTENT='', LESSKEY_CONTENT_SYSTEM='', LESSNOCONFIG='',
                        LESSCHARSET='utf-8',
                        LESSUTFCHARDEF='E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p')
     if backend == 'less':
@@ -174,10 +178,19 @@ def reader(path, *, backend=None, environment=None):
         less = shutil.which('less', path=environment.get('PATH'))
         if not less:
             raise ValueError('less unavailable')
+        from less_input import run
         # An open input file keeps private filenames out of less's status view.
-        with path.open('rb') as content:
-            result = subprocess.call([less, '-R', '--mouse', '-P',
-                'PgUp/Dn scroll | / find | Back q'], stdin=content, env=environment)
+        # Windows console keys do not share the POSIX Escape prefix. Allow only
+        # this private key source; hooks, history, shells and editors stay off.
+        with output_directory() if sys.platform == 'win32' else nullcontext(None) as keys:
+            if keys is not None:
+                keyfile = keys / 'lesskey'
+                with private_file(keyfile) as stream:
+                    stream.write(b'#command\n\\e quit\nq quit\n')
+                environment.update(LESSKEYIN=str(keyfile), LESSSECURE_ALLOW='lesskey')
+            with path.open('rb') as content:
+                result = run([less, '-R', '--mouse', '-P',
+                    'PgUp/Dn | / find | Back q/Esc'], stdin=content, env=environment)
         if result not in (0, 130, -2):
             raise ValueError('less failed')
         return result == 0

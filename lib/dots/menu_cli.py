@@ -155,9 +155,10 @@ FAMILIES = {
     ),
     'profile': (*leaves('profile', 'show list paths layers files commands env check'),
                 Action('check-all', 'check all', ('profile','check'), ('--all',))),
-    'wiki': (Action('browse', 'browse', ('wiki', 'browse'), kind='document', icon='󰈙'),
+    'wiki': (Action('browse', 'browse', ('wiki', 'browse'), kind='popup', icon='󰈙'),
              Action('search', 'search topics', ('wiki', 'browse'), kind='wiki-search', icon='󰈙'),
              *leaves('wiki', 'list check'),
+             Action('markdown-viewer', 'markdown viewer', ('config', 'set'), ('apps.cli.markdown_viewer',), kind='popup'),
              Action('configuration', 'wiki configuration', ('config', 'browse'), ('--query','wiki'), kind='popup')),
 }
 
@@ -231,7 +232,7 @@ def invoke(root, action, context):
         query = prompt('', 'Search documentation topics', context, back=True)
         if not query or not query.strip(): return False
         run_action(dots_argv(['wiki', 'browse', '--query=' + query], root=root),
-                   kind='document', context=context, title='Wiki topics')
+                   kind='popup', context=context, title='Wiki topics')
         return False
     if kind == 'package':
         from menu_input import prompt

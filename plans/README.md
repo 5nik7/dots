@@ -1,5 +1,8 @@
 # Implementation Plans
 
+- [Menu navigation and Markdown viewing](menu-markdown.md): cyclic selectors,
+  home-relative project labels, shared Wiki browsing and CLI renderer preferences.
+
 - [Shell completion colors](shell-completion-colors.md): semantic Zsh/FZF-tab display, preferences, literal insertion and performance evidence.
 
 [Clipboard history](clipboard-history.md) implements Todo `clipboard-history`: local text storage, shared command/popup controls, optional capture, editor widgets and isolated cross-platform verification.

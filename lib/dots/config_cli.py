@@ -396,7 +396,9 @@ def main(argv=None):
     guided = args.value is None and (args.action == 'set' or args.action == 'get' and args.key is None)
     if guided:
         from interaction import terminal
-        guided = not (args.json or args.dry_run or args.json_value or args.apply or args.yes) and terminal() and os.environ.get('TERM') != 'dumb'
+        guided = (not (args.json or args.dry_run or args.json_value or args.apply or args.yes)
+                  and (terminal() or os.name != 'nt' and os.environ.get('DOTS_MENU_CONTEXT'))
+                  and os.environ.get('TERM') != 'dumb')
     if (args.query is not None or args.client) and not (automatic or args.action == 'browse'):
         parser.error('--query and --client require browse')
     if args.dry_run and args.action == 'browse': parser.error('--dry-run requires an explicit config edit')
@@ -496,6 +498,10 @@ def main(argv=None):
             result['activation'] = 'next setup invocation'
         if args.key == 'apps.cli' or args.key.startswith('apps.cli.'):
             result['activation'] = 'next invocation'
+        if args.key == 'apps.cli.markdown_viewer':
+            from markdown_viewer import availability
+            result['activation'] = 'next document view; no theme publication or reload'
+            result['available_viewers'] = availability()
         if args.key.startswith('formatting.apps.cli.'):
             result['activation'] = 'next invocation'
         if args.key.startswith('formatting.apps.menu.'):
@@ -512,6 +518,7 @@ def main(argv=None):
             ui.detail('Source',resolved['source'] or 'Not configured')
             for label, value in constraint_details(result['constraints']): ui.detail(label, value)
             if result.get('activation'):ui.detail('Activation',result['activation'])
+            if result.get('available_viewers'):ui.detail('Available viewers',result['available_viewers'])
             for ignored in result.get('picker_ignored',[]):ui.detail('Picker-owned',ignored)
         return 0
     if args.action == 'explain':

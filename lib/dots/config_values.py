@@ -163,6 +163,11 @@ def validate_value(defaults,path,value):
         if path[2:3]==('battery',) and path[-1] in ('critical','low'):
             if type(value) is not int or not 0<=value<=100:raise ValueError('battery threshold requires integer 0..100')
             return
+    if path == ('apps','cli','markdown_viewer'):
+        from markdown_viewer import CHOICES
+        if not isinstance(value,str) or value not in CHOICES:
+            raise ValueError('invalid Markdown viewer; allowed: ' + ', '.join(CHOICES))
+        return
     if path in (('apps','wiki','list_details'), ('apps','wiki','reader')):
         allowed = ('summary','full') if path[-1]=='list_details' else ('auto','plain')
         if not isinstance(value,str) or value not in allowed:raise ValueError('invalid wiki '+path[-1]+'; allowed: '+', '.join(allowed))
@@ -282,6 +287,10 @@ def validate_groups(root,data,defaults=None):
 def constraints(defaults, key):
     from config_keys import internal
     key=internal(key)
+    if key == 'apps.cli.markdown_viewer':
+        from markdown_viewer import CHOICES, PRIORITY
+        return dict(type='string', choices=list(CHOICES),
+                    syntax='Auto: ' + ' > '.join(PRIORITY) + '; next document view; no theme publication or reload')
     if key in ('apps.cli.progress', 'apps.git.view'):
         from cli_preferences import PROGRESS_MODES, VIEWS
         return dict(type='string',choices=list(PROGRESS_MODES if key.endswith('progress') else VIEWS),

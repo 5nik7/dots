@@ -37,7 +37,7 @@ def brief_actions(store, goal, context):
     frame, notice = {}, ''
     content = brief(store, goal)
     while True:
-        action = action_page(content, title='todo·agent brief', context=context, frame=frame, notice=notice,
+        action = action_page(content, title='todo·agent brief', context=context, frame=frame, notice=notice, markdown=True,
             actions={'alt-c': ('plan', 'Codex'), 'alt-o': ('print-brief', 'print'), 'alt-y': ('copy-brief', 'copy')})
         if action == 'actions':
             action = select('Brief', [('plan', 'Plan in Codex'), ('print-brief', 'Print brief'),
@@ -269,7 +269,8 @@ def browse(selected, args, *, context=None):
                 frame['selected'] = result['goals'][0]['id']
             elif action == 'show':
                 content = markdown(selected, [goal, *store.descendants(goal['id'])])
-                page_text(content, title='Goal ' + goal['id'][:8], context=context)
+                from markdown_viewer import page
+                page(content, title='Goal ' + goal['id'][:8], context=context)
             elif action == 'edit':
                 changes = edit_fields(goal, context)
                 if changes is not None: apply(store, 'edit', goal['id'], **changes)

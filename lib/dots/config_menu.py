@@ -101,11 +101,13 @@ class Inventory:
         from preference_files import appearance_file
         destination_root=self.root/'default' if self.defaults else Path(self.selected['layers'][-1]['root'])
         destination=str(destination_root/'config.json')
+        from markdown_viewer import availability
         for key in self.controls.keys():
             if key in ('formatting','apps'):continue
             resolved=self.controls.resolve(key)
             destination=str(destination_root/appearance_file(key))
             self.rows.append(Row(key,resolved['value'],resolved['source'] or 'Not configured',destination,
+                                 'Markdown renderer; next document view; available: ' + availability() if key=='apps.cli.markdown_viewer' else
                                  'Root usage logo gradient; next invocation, no theme refresh' if key=='apps.cli.logo_gradient' else
                                  'Root help tagline; empty hides the line; next invocation, no theme refresh' if key=='apps.cli.tagline' else
                                  'Shared terminal progress mode; next invocation, no theme refresh' if key=='apps.cli.progress' else

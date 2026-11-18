@@ -15,6 +15,10 @@ todo brief GOAL_ID
 
 `--project` selects an existing directory explicitly, including a non-Git project. Project registrations use `dots/projects.json` under the native configuration root, with the existing `schema: 1`, `roots` and `projects` arrays. The `projects` entries define explicit project boundaries; `roots` remains a discovery setting for the session browser. Git worktrees and nested repositories have separate goal files. Scope overrides belong to standalone `todo`; `dots todo` always selects Dots.
 
+The document and brief readers use the shared [CLI Markdown viewer](configuration.md#markdown-viewer)
+inside Dots' existing scrollable interfaces. This affects only display; copied and
+printed briefs, Markdown exports and Codex submissions keep their complete original text.
+
 ## Commands and fields
 
 Bare invocation opens the popup when terminal streams are interactive and the terminal is usable; redirected output lists active goals. `browse` requests the popup explicitly, while `--print`, `--json` and `--markdown` bypass it. Help does not resolve a project or inspect goal data.

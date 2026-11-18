@@ -45,7 +45,11 @@ def main(argv=None):
     try:
         projects = discover()
         rows = {str(index): project for index, project in enumerate(projects, 1)}
-        menu = Menu('projects', 'Projects', tuple(Entry(key, p.label, str(p.root)) for key, p in rows.items()))
+        from files.catalog import Presentation
+        ui = Presentation()
+        display_paths = args.menu_mode != 'json' and sys.stdout.isatty()
+        menu = Menu('projects', 'Projects', tuple(Entry(key, p.label, ui.path(p.root) if display_paths else str(p.root))
+                                                for key, p in rows.items()))
         selected = choose(menu, mode=args.menu_mode, query=args.query,
                           header='Enter: open native shell  Esc: cancel')
         return handoff(rows[selected.id]) if selected else 0

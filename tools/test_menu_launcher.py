@@ -54,7 +54,7 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual((code, err), (0, '')); self.assertIn('keys', out)
             doc = json.loads(self.invoke('--json')[1])
             self.assertEqual((doc['schema'], doc['menu'], doc['title']), (1, 'dots', 'Dots menu'))
-            self.assertEqual([r['id'] for r in doc['items']], 'wttr todo bak config clipboard cleanup fonts keys tmux files git theme anodize blastoff pkgs debug profile wiki env'.split())
+            self.assertEqual([r['id'] for r in doc['items']], 'projects wttr todo bak config clipboard cleanup fonts keys tmux files git theme anodize blastoff pkgs debug profile wiki env'.split())
             for item in doc['items']:
                 self.assertEqual(set(item), {'id','label','description','available','reason'})
             self.assertEqual([r['id'] for r in json.loads(self.invoke('--json','--query','anodize')[1])['items']], ['anodize'])
@@ -121,7 +121,7 @@ class LauncherContracts(MenuFixture):
                 ('sample-help' if n=='help' else n,'debug demo',n+' --static','output') for n in ('pkgs','git','files','messages','help','all')]+[
                 (n+'-static','debug demo',n+' --static','output') for n in ('progress','spinner')],
             'profile': [(n,'profile '+n,'','output') for n in ('show','list','paths','layers','files','commands','env','check')]+[('check-all','profile check','--all','output')],
-            'wiki': [('browse','wiki browse','','document'),('search','wiki browse','','wiki-search'),('list','wiki list','','output'),('check','wiki check','','output'),('configuration','config browse','--query wiki','popup')],
+            'wiki': [('browse','wiki browse','','popup'),('search','wiki browse','','wiki-search'),('list','wiki list','','output'),('check','wiki check','','output'),('markdown-viewer','config set','apps.cli.markdown_viewer','popup'),('configuration','config browse','--query wiki','popup')],
         }
         expected['blastoff'] = [('pick','blastoff pick','','terminal'),('current','blastoff current','','output'),
             ('list','blastoff theme list','','output'),('edit','blastoff theme edit','','terminal'),
@@ -153,7 +153,7 @@ class LauncherContracts(MenuFixture):
         with patch('menu_input.prompt',return_value=query), patch('menu_cli.run_action') as run:
             self.assertFalse(menu_cli.invoke(self.root,action,None))
         self.assertEqual(run.call_args.args[0][-3:],['wiki','browse','--query='+query])
-        self.assertEqual(run.call_args.kwargs['kind'],'document')
+        self.assertEqual(run.call_args.kwargs['kind'],'popup')
         with patch('menu_input.prompt',return_value=None), patch('menu_cli.run_action') as run:
             self.assertFalse(menu_cli.invoke(self.root,action,None));run.assert_not_called()
 
@@ -165,7 +165,7 @@ class LauncherContracts(MenuFixture):
             self.assertEqual(kwargs['prompt'], 'dots·files' if menu.id=='dots:files' else 'dots')
             if menu.id == 'dots':
                 self.assertEqual([e.label for e in menu.entries],
-                     'anodize backups blastoff cleanup clipboard config debug env files fonts git keys pkgs profile theme tmux todo weather wiki'.split())
+                     'anodize backups blastoff cleanup clipboard config debug env files fonts git keys pkgs profile projects theme tmux todo weather wiki'.split())
             else:
                 self.assertEqual([e.id for e in menu.entries], ['browse', 'install', 'backups', 'uninstall', 'add', 'list', 'history', 'sources', 'help'])
             step=len(visits)
@@ -254,7 +254,7 @@ class LauncherContracts(MenuFixture):
                 p=subprocess.run([*front,*args],env=env,capture_output=True,text=True,timeout=20)
                 self.assertEqual(p.returncode,0,p.stderr);return p.stdout
             self.assertIn('--client',call('menu','--help'))
-            self.assertEqual(len(json.loads(call('menu','--json'))['items']),19)
+            self.assertEqual(len(json.loads(call('menu','--json'))['items']),20)
             complete=['__complete','bash','2','--','dots'] if len(front)==1 else ['__complete']
             self.assertIn('--query',call(*complete,'menu','--q'))
             self.assertIn('menu tmux sessions',call('help','menu'))
@@ -445,7 +445,10 @@ class NativeLauncher(NativeMenuFixture):
         os.write(self.first[1],b'\x03');_,err=p.communicate(timeout=15);self.assertEqual(p.returncode,130,err)
 
     def test_wiki_fzf_reader_40_80_120_without_gum(self):
-        binaries=self.base/'wiki-fzf-bin';binaries.mkdir()
+        import tempfile
+        directory=tempfile.TemporaryDirectory(prefix='dots-wiki-bin-')
+        self.addCleanup(directory.cleanup)
+        binaries=Path(directory.name)
         for name in ('bash','python3','fzf','less','bat','batcat','tmux','git'):
             path=shutil.which(name)
             if path:(binaries/name).symlink_to(path)
@@ -464,7 +467,7 @@ class NativeLauncher(NativeMenuFixture):
                   source_branch='main',pages=[dict(id='Home',title='Fixture guide',section='Start here',source='docs/home.md')])
         (self.root/'.dots/wiki.json').write_text(json.dumps(spec))
         (self.root/'docs/home.md').write_text('# Guide\n\n## Needle topic\n\nMATCHED SECTION\n\n## Other\n\nNOT SELECTED\n')
-        code="import os;from pathlib import Path;from menus import run_action,dots_argv;from menu_tmux import TmuxContext;run_action(dots_argv(['wiki','browse','--query','needle'],root=Path(os.environ['DOTS'])),kind='document',context=TmuxContext.capture(client=os.environ['CLIENT']),title='Topics')"
+        code="import os;from pathlib import Path;from menus import run_action,dots_argv;from menu_tmux import TmuxContext;run_action(dots_argv(['wiki','browse','--query','needle'],root=Path(os.environ['DOTS'])),kind='popup',context=TmuxContext.capture(client=os.environ['CLIENT']),title='Topics')"
         for width in (40,80,120):
             self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',24,width,0,0))
             context=TmuxContext.capture(client=self.first[2]);deadline=time.monotonic()+3
@@ -472,15 +475,58 @@ class NativeLauncher(NativeMenuFixture):
             self.assertEqual(context.verify(),(width,24))
             self.drain(self.first[1]);self.drain(self.second[1])
             p=self.worker(code)
-            self.receive(self.first[1],b'Wiki topics')
+            self.receive(self.first[1],'wiki·topics'.encode())
             os.write(self.first[1],b'\r')
             data=self.receive(self.first[1],b'Back q')
             self.assertIn(b'MATCHED SECTION',data)
             self.assertNotIn(b'NOT SELECTED',data)
             self.assertNotIn(b'MATCHED SECTION',self.drain(self.second[1]))
             os.write(self.first[1],b'q')
+            self.receive(self.first[1],'wiki·topics'.encode())
+            os.write(self.first[1],b'\x1b')
             out,err=p.communicate(timeout=15);self.assertEqual(p.returncode,0,err)
         self.assertFalse((self.home/'absent-wiki').exists())
+
+    def test_wiki_sections_restore_query_focus_and_back_at_three_widths(self):
+        from menu_tmux import TmuxContext
+        (self.root/'.dots').mkdir(); (self.root/'docs').mkdir()
+        spec=dict(schema=1,checkout='${HOME}/absent-wiki',clone_url='https://github.com/example/docs.wiki.git',
+                  web_url='https://github.com/example/docs/wiki',source_url='https://github.com/example/docs',
+                  source_branch='main',pages=[dict(id='Home',title='Fixture guide',section='Start here',source='docs/home.md')])
+        (self.root/'.dots/wiki.json').write_text(json.dumps(spec))
+        (self.root/'docs/home.md').write_text('# Guide\n\n## Needle topic\n\nMATCHED SECTION\n\n## Other\n\nNOT SELECTED\n')
+        code="import os,sys;from pathlib import Path;from menus import run_action,dots_argv;from menu_tmux import TmuxContext;sys.exit(run_action(dots_argv(['wiki','browse'],root=Path(os.environ['DOTS'])),kind='popup',context=TmuxContext.capture(client=os.environ['CLIENT'])))"
+        for width in (40,80,120):
+            self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',24,width,0,0))
+            context=TmuxContext.capture(client=self.first[2]);deadline=time.monotonic()+3
+            while context.verify()!=(width,24) and time.monotonic()<deadline:time.sleep(.05)
+            self.drain(self.first[1]);self.drain(self.second[1])
+            p=self.worker(code)
+            self.receive(self.first[1],'wiki·pages'.encode());os.write(self.first[1],b'\r')
+            self.receive(self.first[1],b'fixture guide');self.choose('needle')
+            for repeat in range(2):
+                data=self.receive(self.first[1],b'Back q')
+                self.assertIn(b'MATCHED SECTION',data);self.assertNotIn(b'NOT SELECTED',data)
+                self.assertNotIn(b'MATCHED SECTION',self.drain(self.second[1]))
+                os.write(self.first[1],b'q' if repeat==0 else b'\x1b');self.receive(self.first[1],b'needle')
+                if repeat==0:os.write(self.first[1],b'\r')
+            os.write(self.first[1],b'\x1b');self.receive(self.first[1],'wiki·pages'.encode())
+            os.write(self.first[1],b'\x1b')
+            out,err=p.communicate(timeout=15);self.assertEqual(p.returncode,0,err)
+
+    def test_wiki_markdown_editor_uses_inherited_client_and_cancel_is_read_only(self):
+        shutil.copytree(ROOT/'default',self.root/'default')
+        for name in ('linux','termux','wsl','windows'):
+            directory=self.root/'profiles'/name;directory.mkdir(parents=True)
+            (directory/'profile.json').write_text(json.dumps(dict(schema=1,id=name,settings={},files={})))
+        before=(self.root/'default/config.json').read_bytes()
+        code="import os,sys;from pathlib import Path;from menus import run_action,dots_argv;from menu_tmux import TmuxContext;sys.exit(run_action(dots_argv(['config','set','apps.cli.markdown_viewer'],root=Path(os.environ['DOTS'])),kind='popup',context=TmuxContext.capture(client=os.environ['CLIENT'])))"
+        p=self.worker(code)
+        self.receive(self.first[1],b'leaf')
+        self.assertNotIn(b'markdown_viewer',self.drain(self.second[1]))
+        os.write(self.first[1],b'\x03')
+        out,err=p.communicate(timeout=15);self.assertEqual(p.returncode,130,err)
+        self.assertEqual((self.root/'default/config.json').read_bytes(),before)
 
     def test_launcher_fits_40_80_120_column_clients(self):
         from menu_tmux import TmuxContext

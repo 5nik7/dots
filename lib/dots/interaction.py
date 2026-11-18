@@ -180,7 +180,7 @@ class RichSelector:
         appearance = menu_popup.preferences()
         size = menu_popup.viewport(environment)
         preferences,_=picker_options(value('apps.fzf',{}))
-        flags = ['fzf', '--layout=reverse', *preferences, '--read0', '--print0', '--ansi', '--delimiter=\t',
+        flags = ['fzf', '--layout=reverse', '--cycle', *preferences, '--read0', '--print0', '--ansi', '--delimiter=\t',
                  '--with-nth=2..', '--no-height',
                  '--multi' if multi else '--no-multi', '--prompt=' + title + ': ',
                  '--bind=esc:abort,ctrl-c:abort', '--header=Enter: review  Esc: cancel']

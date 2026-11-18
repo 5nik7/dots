@@ -331,7 +331,7 @@ def invocation_visuals_only(before, after):
                     colors={k:v for k,v in cli.get('colors',{}).items()
                             if not k.startswith(('progress.', 'help.', 'pkgs.'))},
                     icons={k:v for k,v in cli.get('icons',{}).items() if not k.startswith(('progress.bar.', 'git.status.'))},
-                    options={k:v for k,v in cli.get('options',{}).items() if k not in ('tagline','progress')})
+                    options={k:v for k,v in cli.get('options',{}).items() if k not in ('tagline','progress','markdown_viewer')})
     return affected(before, after) == ['cli'] and remaining(before) == remaining(after)
 
 
@@ -350,7 +350,7 @@ def after_save(root, before):
             return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         def without_help(doc):
             return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('help.')},
-                        options={k:v for k,v in doc.get('options',{}).items() if k not in ('tagline','progress')})
+                        options={k:v for k,v in doc.get('options',{}).items() if k not in ('tagline','progress','markdown_viewer')})
         if changed==['cli'] and without_help(old_cli)==without_help(new_cli):
             return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         def without_pkgs_styles(doc):
@@ -417,7 +417,7 @@ def preview_save(root, plan):
             return dict(schema=1,status='preview',consumers=changes,reason='Next Zsh prompt and completion; no theme publication or reload')
         if before['config'].get('apps',{}).get('git') != after['config'].get('apps',{}).get('git'):
             changes.append('git')
-        if plan.items and all(item.get('key') in ('apps.cli.progress','apps.git.view') for item in plan.items):
+        if plan.items and all(item.get('key') in ('apps.cli.progress','apps.cli.markdown_viewer','apps.git.view') for item in plan.items):
             return dict(schema=1,status='preview',consumers=changes,reason='Next invocation or popup; no theme publication or reload')
         if before['config'].get('apps',{}).get('clipboard') != after['config'].get('apps',{}).get('clipboard'):
             changes.append('clipboard')
