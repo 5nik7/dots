@@ -180,8 +180,6 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
         # Current activity is already visible in the lower row; attention must
         # still be visible there and here under conservative focus handling.
         marker = marker if not current or active else ''
-        if active and not marker and override is None:
-            marker = glyph('navigation.codex','')
         label = str(i) + (' ' + marker if marker else '')
         text = '[' + label + ']' if active else ' ' + label + ' '
         bg, fg = colors[2:] if current else colors[:2]

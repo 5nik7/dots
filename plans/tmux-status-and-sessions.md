@@ -1,5 +1,13 @@
 # Tmux battery status and named sessions
 
+## Numeric completion alerts on Termux tabs (2026-11-18)
+
+**Status: Implemented.** Remove the automatic Codex glyph from idle completion alerts on the upper Termux tab strip: `[1 󱙺]` becomes `[1]`. Preserve red/bold brackets, working/waiting markers, explicit attention-text overrides, the separate undisplayed-session badge and the configured Codex icon used by the quota widget. The directory-linked helper is read on each status invocation, so no theme publication or tmux configuration reload is needed.
+
+Owner: `dots-codex-attention`. No configuration integration change needed: retain the existing icon keys and quota inheritance. No menu, command metadata/completion or installer change needed: this only removes a rendering fallback. No README change needed: setup, first commands and navigation are unaffected. Bash and PowerShell routes are unchanged; the modified adapter is Termux-only, with no native Windows tmux consumer or Windows destination change.
+
+Verification: isolated rendering produces exactly `[1]` at 3/40/80/120 cells with the configured Codex icon still present in quota and undisplayed-session badge output. All 10 quota tests and the private tmux attention test at 40/80/120 columns pass. The attention suite passes 6 of 8 cases; its two existing style assertions also fail with the unchanged HEAD adapter. Canonical tmux/theme docs are synchronized; native Linux/WSL visuals and real device notification delivery are outside this display-only change.
+
 ## Truncated Codex title identity repair (2026-10-29)
 
 **Status: Implemented, activated and verified with a real question on Termux.** Live Codex 0.165.0 clients publish the final `thread-id` field as the first 29 UUID characters followed by `...`. The previous bridge required all 36 characters, leaving real queued input/completion events unmatched and preventing both warning labels and Termux delivery. Saved setup already matches the repository; reconnecting alone does not address this title format.

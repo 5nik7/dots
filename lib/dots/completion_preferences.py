@@ -17,7 +17,9 @@ def rows(root=None, selected=None, *, styles=None, controls=None):
     controls = controls or Controls(styles.root, styles.selected)
     yield '__completion.enabled', '1' if controls.values.get('apps', {}).get('completion', {}).get('enabled', True) else '0', 'literal'
     for role in ROLES:
-        yield '__completion.color.'+role, styles.sgr(role, dict(fg=DEFAULTS[role]), app='completion'), 'style'
+        fallback = dict(fg=DEFAULTS[role])
+        if role == 'heading': fallback['bold'] = True
+        yield '__completion.color.'+role, styles.sgr(role, fallback, app='completion'), 'style'
     # Watch exact inputs and parent directories: creating an absent override
     # must invalidate the in-memory projection too. No directory enumeration.
     paths = {*styles.paths, *controls.paths, Path(__file__)}

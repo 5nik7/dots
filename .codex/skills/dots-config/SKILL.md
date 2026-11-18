@@ -37,3 +37,7 @@ Zsh's display while provider records stay plain. Completion-only saves and
 previews report next-prompt activation without publication. Keep shared/profile
 reset, absent-palette startup guards and failed-read retention covered by
 `tools/test_completion_colors.py`.
+The heading role styles the switched group (cyan and bold by default); inactive
+headings reuse candidate type styles. The enabled setting controls decoration;
+name-only matching remains active. Verify ownership boundaries against native
+Git/foreign providers rather than extending these controls globally.

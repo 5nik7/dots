@@ -1433,6 +1433,7 @@ Run `python3 -B tools/test_project_completion_menus.py -v` for real FZF-tab menu
 from available battery, git-it, gitsub, paint, leaf and codex-termux completion
 sources. `DOTS_TEST_REPOS_ROOT` selects the checkout directory. It extracts literal
 embedded completion scripts into owned roots without executing project actions.
+It verifies native insertion and exclusion from Dots display/search overrides.
 Missing source checkouts are reported; absent checkouts are not native evidence.
 For bundled standalone names, also run pkgs' `tests/test_completion_types.py`,
 Blastoff's `tests/test_completions.py`, and Anodize's typed-provider case in
@@ -1476,14 +1477,21 @@ PATH and verifies `grep` is unavailable before invoking completion. Its separate
 insecure-directory case covers this boundary; the completion provider must still
 work without external tools.
 
-Acceptance covers 40/80/120-column Git/Dots menus, independent semantic and
-description colors, exact editor insertion, group cycling, multi-selection,
+Acceptance covers 40/80/120-column Git/Dots menus, unchanged native Git/foreign
+provider rendering before and after Dots completion, name-only matching with
+visible descriptions, independent semantic and description colors, exact editor
+insertion, group cycling, multi-selection,
 cancellation, control-bearing words, spaces/Unicode/leading-dash files, symlinks,
 plain/disabled modes, native Zsh fallback, adapter reload and incompatible-plugin
 fallback. Config checks include literal typed records, preference reset,
 next-prompt activation without publication and last-good refresh. Visible
-headings and brief/hidden headings must preserve the same types; delegated
-providers and standalone names must obey the same shared color preferences.
+headings and brief/hidden headings must preserve the same types; first-party
+delegated providers and standalone names must obey the same shared color
+preferences. Test initial type-colored headings, the switched group's bold cyan
+heading, restoration of the previous style, and distinct native identities when
+groups share a semantic color. Registered aliases/shortcuts share scope; replaced
+registrations and unrelated providers must retain their own styles. Name-only
+search continues in plain modes and when completion decoration is disabled.
 Unchanged prompt guards must invoke no completion subprocess. Compare sequential startup
 and completion timings using test-owned roots and record the baseline and limits
 in the [focused plan](../plans/shell-completion-colors.md).

@@ -42,6 +42,13 @@ Use `tools/test_project_completion_menus.py` for available associated checkouts
 and `tools/check_project_completions.py --repos-root PATH --check` for ownership
 discovery. Reuse `apps.completion`/`colors.apps.completion` preferences; never
 hard-code a provider palette or add startup repository scans.
+Scope styling to registered first-party providers and their aliases/shortcuts;
+native tags alone do not authorize recoloring Git or associated projects. Keep
+descriptions visible but outside the candidate search field, including plain
+modes. Inactive headings use type styles; the switched group uses the configured
+heading style (bold cyan by default). Preserve native identity markers and
+delegate group filtering to the installed plugin through the guarded owned
+wrapper. Compare unrelated menus against their native baseline after Dots use.
 
 Distinguish completion-list colors from command-line syntax highlighting. Dots
 route words use the native FSH `subcommand` role through `themes/fsh-dots.zsh`;

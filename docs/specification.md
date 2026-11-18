@@ -635,6 +635,11 @@ profile `config.json`. `colors.apps.completion.*` lives in the corresponding
 fields. It follows normal preference inheritance, with no separate store or
 published completion artifact. The ten roles and activation contract are listed
 under [completion appearance](shell-environment.md#completion-appearance).
+The boolean controls decoration, independently of name-only FZF-tab matching.
+`heading` defaults to cyan foreground and bold text and styles the group selected
+by group switching; inactive headings reuse their semantic candidate style.
+Scope follows first-party completion registrations, including aliases, rather
+than all providers emitting native command/option/value tags.
 
 Startup compilation includes validated literal `__completion.enabled`,
 `__completion.color.ROLE` and repeated `__completion.watch` rows (a `.hex`
@@ -648,6 +653,12 @@ The dispatcher scopes the private request to its trusted providers; an ambient
 environment flag cannot change ordinary or native-controller records. Semantic
 identity is captured before FZF-tab hides group headings, so heading visibility
 does not change the candidate's role.
+FZF-tab's private three-field display transport retains its original middle
+lookup field. The first field contains the visible candidate and is the only
+search field; the last contains its suffix and description. Selection and
+preview lookup remain literal. Native group markers stay distinct even when
+semantic styles coincide. The owned reload helper changes header styles only
+after the installed plugin selects and filters the group.
 
 
 ### Codex quota component preferences

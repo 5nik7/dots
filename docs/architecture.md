@@ -521,6 +521,11 @@ Zsh list styles, bounded prompt invalidation and the guarded FZF-tab adapter.
 The personal Zsh completion/plugin loaders connect that adapter after plugins
 load. Command providers supply optional literal types, while the display layer
 owns ANSI, escaped labels and inert lookup IDs for control-bearing labels.
+The existing Zsh registration table supplies the first-party scope; a native
+pre-completion hook updates only owned context styles when registrations change.
+The FZF-tab adapter limits search to the candidate display field and keeps
+descriptions outside it. `lib/dots/completion/switch-group.zsh` delegates group
+filtering/state to the installed plugin and styles the selected header afterward.
 Insertion metadata stays with Zsh/FZF-tab. Installed plugin files remain
 untouched. See [completion appearance](shell-environment.md#completion-appearance).
 

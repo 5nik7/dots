@@ -570,7 +570,7 @@
         },
         {
           "name": "flex",
-          "observed_version": "2.6.16",
+          "observed_version": "2.6.17",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -633,7 +633,7 @@
         },
         {
           "name": "gh",
-          "observed_version": "2.104.0",
+          "observed_version": "2.105.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1571,7 +1571,7 @@
         },
         {
           "name": "oh-my-posh",
-          "observed_version": "32.1.0",
+          "observed_version": "33.0.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1599,7 +1599,7 @@
         },
         {
           "name": "openjdk-21",
-          "observed_version": "21.0.13-2",
+          "observed_version": "21.0.13.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2961,14 +2961,14 @@
         },
         {
           "name": "@openai/codex",
-          "observed_version": "0.169.0",
+          "observed_version": "0.170.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "@openai/codex-linux-arm64",
-          "observed_version": "0.169.0-linux-arm64",
+          "observed_version": "0.170.0-linux-arm64",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3045,7 +3045,7 @@
         },
         {
           "name": "n",
-          "observed_version": "11.0.0",
+          "observed_version": "12.0.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3059,7 +3059,7 @@
         },
         {
           "name": "npm",
-          "observed_version": "12.2.2",
+          "observed_version": "12.2.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3274,7 +3274,7 @@
         },
         {
           "name": "typer",
-          "observed_version": "0.29.1",
+          "observed_version": "0.29.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3767,7 +3767,7 @@
         },
         {
           "name": "annotated-doc",
-          "observed_version": "0.0.6",
+          "observed_version": "0.0.7",
           "pin": null,
           "selection": "explicit",
           "enabled": true

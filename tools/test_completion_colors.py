@@ -49,6 +49,8 @@ class CompletionColors(unittest.TestCase):
     def test_config_roundtrip_and_next_prompt_activation_without_publication(self):
         for native in (False, True):
             self.assertEqual(self.run_config('get', 'apps.completion.enabled', native=native).stdout, 'true\n')
+            self.assertEqual(self.run_config('get', 'colors.apps.completion.heading.fg', native=native).stdout, 'cyan\n')
+            self.assertEqual(self.run_config('get', 'colors.apps.completion.heading.bold', native=native).stdout, 'true\n')
             result = json.loads(self.run_config('set', 'colors.apps.completion.command.fg', '#123456', '--json', native=native).stdout)
             self.assertNotEqual(result.get('refresh', {}).get('status'), 'failed', result)
             self.assertEqual(self.run_config('get', 'colors.apps.completion.command.fg', native=native).stdout, '#123456\n')
@@ -75,6 +77,37 @@ class CompletionColors(unittest.TestCase):
         self.run_config('set','colors.apps.completion.command.bold','true')
         styled=self.zsh('print -r -- ${_DOTS_COMPLETION_STYLES[command]}').stdout
         self.assertIn(b'48;2;35;69;103',styled);self.assertTrue(styled.startswith(b'1;'),styled)
+
+    def test_native_style_scope_tracks_registered_providers_and_preserves_user_styles(self):
+        result=self.zsh(r'''
+typeset -gA _comps=(dots _dots shortcut _dots anodize _anodize git _git foreign _foreign)
+zstyle ':completion:*' list-colors 'di=35' 'fi=31'
+zstyle ':completion:*:descriptions' format 'Native %d'
+zstyle ':completion:*' group-name native
+_dots_completion_native_styles
+zstyle -a ':completion::complete:git:options' list-colors result
+print -r -- "GIT:${(j:,:)result}"
+zstyle -s ':completion::complete:foreign:descriptions' format result
+print -r -- "FORMAT:$result"
+zstyle -s ':completion::complete:foreign:options' group-name result
+print -r -- "GROUP:$result"
+zstyle -a ':completion::complete:shortcut:commands' list-colors result
+print -r -- "OWNED:${(j:,:)result}"
+_comps[shortcut]=_foreign
+_dots_completion_native_styles
+zstyle -a ':completion::complete:shortcut:commands' list-colors result
+print -r -- "REPLACED:${(j:,:)result}"
+repeat 3 { _dots_completion_native_styles; }
+local -a hooks=("${(@M)compprefuncs:#_dots_completion_native_styles}")
+print -r -- "HOOKS:${#hooks}"
+''')
+        self.assertIn(b'GIT:di=35,fi=31',result.stdout)
+        self.assertIn(b'FORMAT:Native %d',result.stdout)
+        self.assertIn(b'GROUP:native',result.stdout)
+        self.assertRegex(result.stdout,rb'OWNED:[^\n]*\(commands')
+        self.assertIn(b'REPLACED:di=35,fi=31',result.stdout)
+        self.assertIn(b'HOOKS:1',result.stdout)
+        self.assertEqual(result.stderr,b'')
 
     def test_refresh_failure_recovery_and_no_warm_subprocess(self):
         code = r'''
@@ -286,6 +319,29 @@ original=$functions[_dots_completion_original_capture]
 _dots_completion_install_fzf; disable-fzf-tab; enable-fzf-tab; _dots_completion_install_fzf
 [[ $original == $functions[_dots_completion_original_capture] ]] || exit 9
 [[ $functions[compadd] == *'_dots_completion_original_capture'* ]] || exit 8
+# Simulate the previous adapter's saved native copies and global styles.
+functions[-ftb-fzf]=$functions[_dots_completion_original_fzf]
+unfunction _dots_completion_original_fzf _dots_completion_scoped_fzf
+zstyle -d "$_DOTS_COMPLETION_NATIVE_PATTERN"
+zstyle -d "${_DOTS_COMPLETION_NATIVE_PATTERN}descriptions"
+unset _DOTS_COMPLETION_NATIVE_PATTERN
+zstyle -e ':completion:*' list-colors '_dots_completion_list_colors'
+zstyle -e ':completion:*:descriptions' format '_dots_completion_heading'
+zstyle ':completion:*' group-name ''
+source "$DOTS/lib/dots/completion/styles.zsh"
+[[ $original == $functions[_dots_completion_original_capture] ]] || exit 7
+[[ $functions[-ftb-fzf] == $functions[_dots_completion_ftb_fzf] ]] || exit 6
+[[ $functions[_dots_completion_scoped_fzf] == *'$_dots_completion_group_helper'* ]] || exit 5
+zstyle -g previous ':completion:*' list-colors
+[[ $previous != _dots_completion_list_colors ]] || exit 4
+zstyle -g previous ':completion:*:descriptions' format
+[[ $previous != _dots_completion_heading ]] || exit 3
+! zstyle -s ':completion:*' group-name value || exit 2
+zstyle ':completion:*' group-name ''
+source "$DOTS/lib/dots/completion/styles.zsh"
+[[ $original == $functions[_dots_completion_original_capture] ]] || exit 1
+zstyle -s ':completion:*' group-name value || exit 10
+[[ -z $value ]] || exit 11
 ''',plugin=True)
         self.assertIn(b'INSTALLED:1',result.stdout)
 
@@ -374,7 +430,7 @@ done
         for compatible in (False,True):
             for name,body in (('-ftb-generate-complist',': _ftb_complist'),
                               ('-ftb-generate-header',':'),
-                              ('-ftb-fzf',": --delimiter='\\x00'" if compatible else ': unsupported')):
+                              ('-ftb-fzf',": --delimiter='\\x00' $FZF_TAB_HOME/lib/ftb-switch-group $normalized_active_group_style" if compatible else ': unsupported')):
                 (library/name).write_text(body+'\nprint executed > "$HOME/helper-executed"\n')
             result=self.zsh(r'''
 FZF_TAB_HOME="$HOME/plugin"
@@ -394,7 +450,7 @@ fi
 ''')
             self.assertIn(b'INSTALLED:'+str(int(compatible)).encode(),result.stdout)
 
-    def terminal(self, width=80, *, native=False, **env):
+    def terminal(self, width=80, *, native=False, adapter=True, **env):
         from bash_dots_pty import Terminal
         import fcntl, termios, struct
         plugin=self.home/'fzf-tab'
@@ -403,9 +459,11 @@ fi
         fcntl.ioctl(terminal.master,termios.TIOCSWINSZ,struct.pack('HHHH',30,width,0,0))
         setup='autoload -Uz compinit; compinit -D; '
         if not native:setup+='source '+shlex.quote(str(plugin/'fzf-tab.plugin.zsh'))+'; '
-        setup+='source "$DOTS/lib/dots/completion/styles.zsh"; source "$DOTS/lib/dots/completion/zsh"; '
+        setup+=r'''zstyle ':completion:*:descriptions' format '%d'; zstyle -e ':completion:*' list-colors 'reply=("${(@s.:.)LS_COLORS}")'; '''
+        if adapter:setup+='source "$DOTS/lib/dots/completion/styles.zsh"; '
+        setup+='source "$DOTS/lib/dots/completion/zsh"; '
         setup+=r'''zstyle ':completion:*' menu no; zstyle ':fzf-tab:*' use-fzf-default-opts no; zstyle ':fzf-tab:*' switch-group '<' '>'; '''
-        setup+=r'''capture_fzf() { command cat > "$HOME/menu-data"; printf '%s\0' "$@" > "$HOME/menu-args"; command fzf "$@" < "$HOME/menu-data"; }; zstyle ':fzf-tab:*' fzf-command capture_fzf; '''
+        setup+=r'''capture_fzf() { command cat > "$HOME/menu-data"; printf '%s\0' "$@" > "$HOME/menu-args"; print -r -- "$reload_command" > "$HOME/group-command"; command fzf "$@" < "$HOME/menu-data"; }; zstyle ':fzf-tab:*' fzf-command capture_fzf; '''
         setup+=r'''PROMPT='READY> '; cap() { print -rn -- "$BUFFER" > "$HOME/buffer"; }; zle -N cap; bindkey '^X' cap; print -r -- INIT""IALIZED'''
         terminal.send(setup+'\r');terminal.wait(b'INITIALIZED\r\n')
         return terminal
@@ -442,6 +500,91 @@ fi
         terminal.send(code+'; print -r -- CASE_""READY\r');terminal.wait(b'CASE_READY\r\n')
         self.drain(terminal,.1)
 
+    def filtered_menu(self, query):
+        args=(self.home/'menu-args').read_bytes().split(b'\0')
+        fields=[a.decode() for a in args if a.startswith((b'--nth=',b'--with-nth=',b'--header-lines='))]
+        return subprocess.run(['fzf','--ansi','--delimiter=\\x00',*fields,'--filter='+query],
+                              input=(self.home/'menu-data').read_bytes(),capture_output=True,
+                              env=dict(self.env,FZF_DEFAULT_OPTS='',FZF_DEFAULT_OPTS_FILE=os.devnull),timeout=10)
+
+    @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
+    def test_name_only_search_retains_descriptions_and_plain_mode_insertion(self):
+        terminal=self.terminal()
+        try:
+            for mode in ('DOTS_COLOR=always', 'DOTS_COLOR=never', 'DOTS_COLOR=always; _DOTS_COMPLETION_ENABLED=0'):
+                self.command(terminal,mode)
+                terminal.send('dots \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
+                self.assertIn(b'Starship themes',(self.home/'menu-data').read_bytes())
+                result=self.filtered_menu('theme')
+                keys=[row.split(b'\0')[1] for row in result.stdout.splitlines()]
+                self.assertTrue(keys)
+                self.assertTrue(keys[0].startswith(b'theme '),keys)
+                self.assertFalse(any(key.startswith(b'blastoff ') for key in keys),keys)
+                self.assertEqual(self.filtered_menu('Starship').returncode,1)
+                self.finish(terminal,'theme','dots theme ')
+                terminal.send('\x03');self.drain(terminal)
+            self.command(terminal,'_DOTS_COMPLETION_ENABLED=1; alias dd=dots')
+            terminal.send('dd \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
+            self.assertIn(b'--nth=1\0',(self.home/'menu-args').read_bytes())
+            self.finish(terminal,'theme','dd theme ')
+        finally:terminal.close()
+
+    @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
+    def test_unrelated_menus_match_native_before_and_after_owned_completion(self):
+        baseline={}
+        for adapter in (False,True):
+            terminal=self.terminal(adapter=adapter)
+            try:
+                self.command(terminal,r'''_foreign() { local -a names=('alpha:description-only-needle' 'beta:other text') vals=('one:first value' 'two:second value'); _describe -t commands Command names; _describe -t values Value vals; }; compdef _foreign foreign; zstyle ':fzf-tab:*' group-colors $'\e[91m' $'\e[95m' $'\e[96m' ''')
+                for phase in range(2):
+                    for command in ('git','foreign'):
+                        terminal.send(command+' \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
+                        data=(self.home/'menu-data').read_bytes()
+                        args=(self.home/'menu-args').read_bytes().split(b'\0')
+                        flags=[a for a in args if a.startswith((b'--nth=',b'--with-nth=',b'--color='))]
+                        if not adapter:baseline[command]=(data,flags)
+                        else:self.assertEqual((data,flags),baseline[command],(command,phase))
+                        if command=='foreign':self.assertEqual(self.filtered_menu('description-only-needle').returncode,0)
+                        self.finish(terminal,None,command+' ')
+                        terminal.send('\x03');self.drain(terminal)
+                    if phase==0:
+                        terminal.send('dots \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
+                        self.finish(terminal,None,'dots ')
+                        terminal.send('\x03');self.drain(terminal)
+            finally:terminal.close()
+
+    @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
+    def test_group_heading_types_active_style_and_native_switch_identity(self):
+        for width in (40,80,120):
+            terminal=self.terminal(width)
+            try:
+                self.command(terminal,r'''_dots() { local -a names=('alpha:alpha description' 'beta:beta description') vals=('one:first value' 'two:second value'); _describe -t commands Command names; _describe -t values Value vals; }; compdef _dots sample''')
+                for shared_color in (False,True):
+                    if shared_color:self.command(terminal,'_DOTS_COMPLETION_STYLES[value]=34')
+                    terminal.send('sample \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
+                    data=(self.home/'menu-data').read_bytes()
+                    self.assertIn(b'\x1b[0;34mCommand',data)
+                    self.assertIn(b'\x1b[0;'+(b'34' if shared_color else b'32')+b'mValue',data)
+                    self.assertNotIn(b'\x1b[0;1;36m',data)
+                    reload=(self.home/'group-command').read_text().strip()
+                    self.assertIn('switch-group.zsh',reload)
+                    # Execute the same command bound to >/< while its private
+                    # native files exist. It owns group state and filtering.
+                    for offset,label,word in ((1,b'Value',b'one'),(-1,b'Command',b'alpha')):
+                        switched=subprocess.run(['zsh','-dfc',reload+' '+str(offset)],env=self.env,cwd=self.home,capture_output=True,timeout=10)
+                        self.assertEqual(switched.returncode,0,switched.stderr)
+                        self.assertIn(b'\x1b[0;1;36m'+label,switched.stdout)
+                        other=b'Command' if label==b'Value' else b'Value'
+                        self.assertNotIn(b'\x1b[0;1;36m'+other,switched.stdout)
+                        rows=[row for row in switched.stdout.splitlines() if b'\0' in row]
+                        self.assertTrue(any(b'\0'+word in row for row in rows),rows)
+                    # Actual key delivery still traverses the same helper and
+                    # selects the literal value from the second group.
+                    terminal.send('>');self.drain(terminal,.3)
+                    self.finish(terminal,'one','sample one ')
+                    terminal.send('\x03');self.drain(terminal)
+            finally:terminal.close()
+
     @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
     def test_real_git_and_dots_menu_spans_and_literal_selection(self):
         for width in (40,80,120):
@@ -449,9 +592,8 @@ fi
             try:
                 terminal.send('git \t');terminal.wait(b'\x1b[?1000h')
                 data=(self.home/'menu-data').read_bytes()
-                self.assertIn(b'\x1b[0;34m',data)
-                self.assertIn(b'\x1b[0;90m',data)
-                self.assertIn(b'--with-nth=1,3',(self.home/'menu-args').read_bytes())
+                self.assertNotIn(b'\x1b[0;34m',data)
+                self.assertNotIn(b'--with-nth=1,3',(self.home/'menu-args').read_bytes())
                 self.finish(terminal,"'status",'git status ')
                 terminal.send('\x03');time.sleep(.1)
                 terminal.send('dots --\t');terminal.wait(b'\x1b[?1000h')
@@ -465,7 +607,7 @@ fi
     def test_groups_files_literal_controls_plain_and_disabled(self):
         terminal=self.terminal()
         try:
-            self.command(terminal,r'''_sample() { local -a names=('alpha:alpha description' 'beta:beta description') vals=('one:first value' 'two:second value'); _describe -t commands Command names; _describe -t values Value vals; }; compdef _sample sample''')
+            self.command(terminal,r'''_dots() { local -a names=('alpha:alpha description' 'beta:beta description') vals=('one:first value' 'two:second value'); _describe -t commands Command names; _describe -t values Value vals; }; compdef _dots sample''')
             terminal.send('sample \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
             rows=(self.home/'menu-data').read_bytes().splitlines()
             commands=[r for r in rows if b'\0alpha' in r or b'\0beta' in r]
@@ -483,7 +625,7 @@ fi
             target=self.await_buffer(terminal)
             self.assertIn(target.read_text(),('sample alpha beta ','sample beta alpha '));target.unlink()
             terminal.send('\x03');self.drain(terminal)
-            self.command(terminal,r'''_literal() { local -a raw=($'evil\e[31mword' 'evil literal') labels=($'evil\e[31mword' 'evil literal'); compadd -d labels -a raw; }; compdef _literal literal''')
+            self.command(terminal,r'''_anodize() { local -a raw=($'evil\e[31mword' 'evil literal') labels=($'evil\e[31mword' 'evil literal'); compadd -d labels -a raw; }; compdef _anodize literal''')
             terminal.send('literal evil\t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
             data=(self.home/'menu-data').read_bytes()
             self.assertIn(b'evil\\e[31mword',data)
@@ -495,7 +637,7 @@ fi
             for name in ('a space ü','-dash','script.sh'):(directory/name).write_text('')
             (directory/'folder').mkdir();(directory/'link').symlink_to('a space ü');(directory/'broken').symlink_to('missing')
             (directory/'script.sh').chmod(0o755)
-            self.command(terminal,'cd '+shlex.quote(str(directory))+r'''; LS_COLORS='di=34:ln=36:or=31:ex=32:fi=35'; _sample_files() { _files; }; compdef _sample_files paths''')
+            self.command(terminal,'cd '+shlex.quote(str(directory))+r'''; LS_COLORS='di=34:ln=36:or=31:ex=32:fi=35'; _pkgs() { _files; }; compdef _pkgs paths''')
             terminal.send('paths \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
             data=(self.home/'menu-data').read_bytes()
             self.assertIn(b'a space',data);self.assertIn(b'\x1b[',data)
@@ -510,28 +652,42 @@ fi
             terminal.send('\x03');self.drain(terminal)
             self.command(terminal,'DOTS_COLOR=always; _DOTS_COMPLETION_ENABLED=0')
             terminal.send('sample \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
-            self.assertNotIn(b'--with-nth=1,3',(self.home/'menu-args').read_bytes())
+            self.assertIn(b'--nth=1\0',(self.home/'menu-args').read_bytes())
+            self.assertNotIn(b'--color=',(self.home/'menu-args').read_bytes())
+            self.assertNotIn(b'\x1b[0;34m',(self.home/'menu-data').read_bytes())
             self.finish(terminal,None,'sample ')
+            terminal.send('\x03');self.drain(terminal)
+            terminal.send('paths \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
+            self.assertIn(b'\x1b[34mfolder',(self.home/'menu-data').read_bytes())
+            self.assertIn(b'\x1b[36mlink',(self.home/'menu-data').read_bytes())
+            self.finish(terminal,"'a space",'paths a\\ space\\ ü ')
         finally:terminal.close()
 
     @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
     def test_tab_observes_external_save_without_another_prompt(self):
         terminal=self.terminal()
         try:
+            self.command(terminal,r'''_dots() { local -a names=('alpha:alpha description' 'beta:beta description') vals=('one:first value' 'two:second value'); _describe -t commands Command names; _describe -t values Value vals; }; compdef _dots sample''')
             self.drain(terminal,.2)
             # Save from outside the waiting editor, without executing a shell command.
             colors=self.root/'profiles'/self.platform/'colors.toml'
-            colors.write_text('[apps.completion.command]\nfg = "#123456"\n')
-            terminal.send('git \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
+            colors.write_text('[apps.completion.command]\nfg = "#123456"\n'
+                              '[apps.completion.heading]\nfg = "#abcdef"\nbold = false\nitalic = true\n')
+            terminal.send('sample \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
             self.assertIn(b'\x1b[0;38;2;18;52;86m',(self.home/'menu-data').read_bytes())
-            self.finish(terminal,"'status",'git status ')
+            reload=(self.home/'group-command').read_text().strip()
+            switched=subprocess.run(['zsh','-dfc',reload+' 1'],env=self.env,cwd=self.home,capture_output=True,timeout=10)
+            self.assertEqual(switched.returncode,0,switched.stderr)
+            self.assertIn(b'\x1b[0;3;38;2;171;205;239mValue',switched.stdout)
+            self.finish(terminal,'alpha','sample alpha ')
+            self.assertFalse((Path(self.env['XDG_STATE_HOME'])/'dots/current/theme').exists())
         finally:terminal.close()
 
     @unittest.skipUnless(shutil.which('zsh'), 'Zsh unavailable')
     def test_native_zsh_list_colors_and_insertion(self):
         terminal=self.terminal(native=True)
         try:
-            self.command(terminal,r'''_sample() { local -a names=('alpha:alpha description' 'beta:beta description'); _describe -t commands Command names; }; compdef _sample sample''')
+            self.command(terminal,r'''_dots() { local -a names=('alpha:alpha description' 'beta:beta description'); _describe -t commands Command names; }; compdef _dots sample''')
             start=len(terminal.output)
             terminal.send('sample \t\t');terminal.wait(b'alpha');self.drain(terminal,.2)
             shown=terminal.output[start:]
@@ -552,13 +708,15 @@ fi
             self.command(terminal,'cd '+shlex.quote(str(directory))+r'''; zstyle ':fzf-tab:*' fzf-preview 'print -r -- "$word" > "$HOME/preview-result"' ''')
             terminal.send('git checkout \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal,.5)
             data=(self.home/'menu-data').read_bytes()
-            self.assertRegex(data,rb'\x1b\[0;35m[^\n]*demo-branch')
-            self.assertRegex(data,rb'\x1b\[0;36m[^\n]*demo-tag')
+            self.assertIn(b'demo-branch',data)
+            self.assertIn(b'demo-tag',data)
+            self.assertNotIn(b'--with-nth=1,3',(self.home/'menu-args').read_bytes())
             self.finish(terminal,"'demo-branch",'git checkout demo-branch ')
             self.assertEqual((self.home/'preview-result').read_text().strip(),'demo-branch')
             terminal.send('\x03');self.drain(terminal)
             terminal.send('git push \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
-            self.assertRegex((self.home/'menu-data').read_bytes(),rb'\x1b\[0;34m[^\n]*demo-remote')
+            self.assertIn(b'demo-remote',(self.home/'menu-data').read_bytes())
+            self.assertNotIn(b'--with-nth=1,3',(self.home/'menu-args').read_bytes())
             self.finish(terminal,"'demo-remote",'git push demo-remote ')
         finally:terminal.close()
 
@@ -574,26 +732,64 @@ fi
         tmux('set-option','-g','status','off')
         pid,master=pty.fork()
         if pid==0:os.execvpe('tmux',['tmux','-S',str(socket),'attach-session','-t','colors'],env)
-        def screen_until(expected,exact=False):
+        def screen_until(expected,exact=False,check=None):
             end=time.monotonic()+8;screen=''
             while time.monotonic()<end:
                 if select.select([master],[],[],.05)[0]:os.read(master,65536)
                 screen=tmux('capture-pane','-ep','-t','colors:0.0')
-                if any((SGR.sub(b'',line.encode()).decode().strip()==expected if exact else expected in line and 'alpha:alpha' not in line) for line in screen.splitlines()):return screen
+                if any((SGR.sub(b'',line.encode()).decode().strip()==expected if exact else expected in line and 'alpha:alpha' not in line) for line in screen.splitlines()):
+                    try:
+                        if check is None or check(screen):return screen
+                    except (StopIteration,ValueError):pass
             self.fail(screen)
         def pump(seconds):
             end=time.monotonic()+seconds
             while time.monotonic()<end:
                 if select.select([master],[],[],.02)[0]:os.read(master,65536)
+        def heading_style(screen,label):
+            line=next(line for line in screen.splitlines()
+                      if all(word in SGR.sub(b'',line.encode()).decode() for word in ('Command','Value'))
+                      and '_describe' not in line)
+            visible='';cells=[];bold=False;fg=None
+            for part in re.split(r'(\x1b\[[0-9;]*m)',line):
+                if part.startswith('\x1b['):
+                    values=[int(n or 0) for n in part[2:-1].split(';')];i=0
+                    while i<len(values):
+                        n=values[i]
+                        if n==0:bold=False;fg=None
+                        elif n==1:bold=True
+                        elif n==22:bold=False
+                        elif 30<=n<=37 or 90<=n<=97:fg=n
+                        elif n==39:fg=None
+                        elif n in (38,48) and i+1<len(values):
+                            count=4 if values[i+1]==2 else 2
+                            if n==38:fg=tuple(values[i+1:i+count+1])
+                            i+=count
+                        i+=1
+                else:
+                    visible+=part;cells.extend([(fg,bold)]*len(part))
+            start=visible.index(label)
+            self.assertEqual(len(set(cells[start:start+len(label)])),1,line)
+            return cells[start]
         try:
             setup='autoload -Uz compinit; compinit -D; source '+shlex.quote(str(FZF_TAB/'fzf-tab.plugin.zsh'))+'; source "$DOTS/lib/dots/completion/styles.zsh"; '
-            setup+=r'''zstyle ':fzf-tab:*' use-fzf-default-opts yes; _sample() { local -a a=('alpha:alpha description' 'beta:beta description'); _describe -t commands Command a; }; compdef _sample sample; PROMPT='COLOR_READY> ' '''
-            tmux('send-keys','-t','colors:0.0','-l',setup);tmux('send-keys','-t','colors:0.0','Enter');screen_until('COLOR_READY>')
+            setup+=r'''zstyle ':fzf-tab:*' use-fzf-default-opts yes; zstyle ':fzf-tab:*' switch-group '<' '>'; _dots() { local -a a=('alpha:alpha description' 'beta:beta description') v=('one:first value' 'two:second value'); _describe -t commands Command a; _describe -t values Value v; }; compdef _dots sample; clear; PROMPT='COLOR_READY> '; print -r -- COLOR_""READY'''
+            tmux('send-keys','-t','colors:0.0','-l',setup);tmux('send-keys','-t','colors:0.0','Enter');screen_until('COLOR_READY',exact=True)
             tmux('send-keys','-t','colors:0.0','-l','sample ');tmux('send-keys','-t','colors:0.0','Tab')
             screen=screen_until('alpha description')
             line=next(line for line in screen.splitlines() if 'alpha description' in line and 'alpha:alpha' not in line)
             self.assertRegex(line,r'\x1b\[[0-9;]*34[0-9;]*malpha')
             self.assertRegex(line,r'\x1b\[[0-9;]*90[0-9;]*m.*alpha description')
+            self.assertEqual(heading_style(screen,'Command'),(34,False))
+            self.assertEqual(heading_style(screen,'Value'),(32,False))
+            tmux('send-keys','-t','colors:0.0','-l','>')
+            screen=screen_until('first value',check=lambda value:heading_style(value,'Value')==(36,True))
+            self.assertEqual(heading_style(screen,'Value'),(36,True))
+            self.assertEqual(heading_style(screen,'Command'),(34,False))
+            tmux('send-keys','-t','colors:0.0','-l','<')
+            screen=screen_until('alpha description',check=lambda value:heading_style(value,'Command')==(36,True))
+            self.assertEqual(heading_style(screen,'Command'),(36,True))
+            self.assertEqual(heading_style(screen,'Value'),(32,False))
             for background,command,description in (('#111111','38;2;137;180;250','38;2;166;173;200'),('#eeeeee','38;2;30;80;180','38;2;80;85;100')):
                 tmux('send-keys','-t','colors:0.0','Escape');pump(.4)
                 tmux('send-keys','-t','colors:0.0','C-c');pump(.2)

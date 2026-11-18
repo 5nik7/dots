@@ -1,5 +1,38 @@
 # Interactive display only. Completion records and inserted words stay literal.
 # Input checks and warm refresh use Zsh builtins; no style query per candidate.
+typeset -g _DOTS_COMPLETION_PROVIDERS='(_dots|_anodize|_blastoff|_pkgs|_wttr)'
+
+_dots_completion_owned_context() {
+  local name=${service:-${words[1]:-}}
+  [[ -n $name && ${_comps[$name]:-} == ${~_DOTS_COMPLETION_PROVIDERS} ]]
+}
+
+_dots_completion_native_styles() {
+  # compinit/compdef own the command inventory, including aliases and generated
+  # theme shortcuts. Inspect only that in-memory registry, once per completion.
+  # Requeue this one-shot native hook; it also observes replaced registrations.
+  (( ${compprefuncs[(Ie)_dots_completion_native_styles]} )) || compprefuncs+=(_dots_completion_native_styles)
+  local name pattern
+  local -a names=("${(@k)_comps[(R)${~_DOTS_COMPLETION_PROVIDERS}]}") safe
+  for name in "${names[@]}"; do
+    [[ -n $name && $name != *[[:cntrl:]:]* ]] && safe+=("${(b)name}")
+  done
+  safe=("${(@o)safe}")
+  (( ${#safe} )) && pattern=":completion:*:*:(${(j:|:)safe}):*"
+  if (( ${+_DOTS_COMPLETION_NATIVE_PATTERN} )) && [[ $pattern == $_DOTS_COMPLETION_NATIVE_PATTERN ]]; then
+    return 0
+  fi
+  if [[ -n ${_DOTS_COMPLETION_NATIVE_PATTERN:-} ]]; then
+    zstyle -d "$_DOTS_COMPLETION_NATIVE_PATTERN" list-colors group-name
+    zstyle -d "${_DOTS_COMPLETION_NATIVE_PATTERN}descriptions" format
+  fi
+  typeset -g _DOTS_COMPLETION_NATIVE_PATTERN=$pattern
+  [[ -n $pattern ]] || return 0
+  zstyle -e "$pattern" list-colors '_dots_completion_list_colors'
+  zstyle -e "${pattern}descriptions" format '_dots_completion_heading'
+  zstyle "$pattern" group-name ''
+}
+
 _dots_completion_fingerprint() {
   local item
   local -A info
@@ -99,9 +132,11 @@ _dots_completion_list_colors() {
 }
 
 _dots_completion_heading() {
+  local REPLY
   reply=('%d')
   if [[ ${_DOTS_COMPLETION_ENABLED:-1} == 1 ]] && ! (( ${IN_FZF_TAB:-0} )) && _dots_completion_use_color; then
-    reply=($'\e[0;'${_DOTS_COMPLETION_STYLES[heading]:-36}$'m%d\e[0m')
+    _dots_completion_role "${curtag:-}"
+    reply=($'\e[0;'${_DOTS_COMPLETION_STYLES[$REPLY]:-39}$'m%d\e[0m')
   fi
 }
 
@@ -143,11 +178,12 @@ _dots_completion_label() {
   done
   _dots_completion_safe_text "$name"; name=$REPLY
   _dots_completion_safe_text "$description"; description=$REPLY
+  _dots_completion_label_tail=$separator$description
   if (( color )); then
     [[ $file == 1 ]] || name=$'\e[0;'${_DOTS_COMPLETION_STYLES[$role]:-39}m$name
-    [[ -z $separator ]] || name+=$'\e[0;'${_DOTS_COMPLETION_STYLES[separator]:-90}m$separator$'\e[0;'${_DOTS_COMPLETION_STYLES[description]:-90}m$description
+    [[ -z $separator ]] || _dots_completion_label_tail=$'\e[0;'${_DOTS_COMPLETION_STYLES[separator]:-90}m$separator$'\e[0;'${_DOTS_COMPLETION_STYLES[description]:-90}m$description$'\e[0m'
     REPLY=$name$'\e[0m'
-  else REPLY=$name$separator$description
+  else REPLY=$name
   fi
   # REPLY in the caller, without exporting or evaluating display data.
   _dots_completion_label_result=$REPLY
@@ -156,7 +192,8 @@ _dots_completion_label() {
 _dots_completion_ftb_capture() {
   local -a expl
   local REPLY tag=${_DOTS_COMPLETION_TYPE:-${curtag:-}}
-  if (( ${IN_FZF_TAB:-0} )) && (( ${+_dots_completion_groups} )); then
+  if (( ${IN_FZF_TAB:-0} )) && (( ${+_dots_completion_groups} )) && _dots_completion_owned_context; then
+    _dots_completion_owned=1
     zparseopts -E X+:=expl
     if [[ -n ${expl[2]:-} ]]; then
       _dots_completion_role "$tag"
@@ -172,18 +209,19 @@ _dots_completion_ftb_capture() {
 _dots_completion_ftb_complete() {
   _dots_completion_refresh
   local -A _dots_completion_groups
-  local _dots_completion_display=0
+  local _dots_completion_display=0 _dots_completion_owned=0
   _dots_completion_original_complete "$@"
 }
 
 _dots_completion_ftb_generate() {
-  if [[ ${_DOTS_COMPLETION_ENABLED:-1} != 1 ]]; then
+  if [[ ${_dots_completion_owned:-0} != 1 ]]; then
     _dots_completion_original_generate "$@"
     return
   fi
-  local row key metadata prefix suffix role file REPLY _dots_completion_label_result
-  local -i color=0 index=0
-  _dots_completion_use_color && color=1
+  local row key metadata prefix suffix role file REPLY _dots_completion_label_result _dots_completion_label_tail
+  local -i color=0 color_policy=0 index=0
+  _dots_completion_use_color && color_policy=1
+  [[ ${_DOTS_COMPLETION_ENABLED:-1} == 1 ]] && color=$color_policy
   local -A descriptions captured_words files v labels
   # fzf-tab replaces labels with __hide__ markers for brief/hidden headings.
   # Keep semantic identity before generation; visibility must not change types.
@@ -222,13 +260,15 @@ _dots_completion_ftb_generate() {
     [[ -n ${captured_words[$key]+present} ]] || return 0
     role=${descriptions[$key]:-candidate}; file=${files[$key]:-0}
     _dots_completion_label "${labels[$key]-$key}" "${captured_words[$key]}" "$role" "$file" "$color"
-    if (( ! color )); then
+    if (( ! color_policy )); then
       # Retain the leading group marker for fzf-tab group switching; reset
       # before any visible glyph. Strip file-style escapes from the suffix.
       prefix=${(M)prefix##$'\e['[0-9\;]#m}$'\e[0m'
       suffix=${suffix//$'\e['[0-9\;]#m/}
     fi
-    rendered+=("$prefix$_dots_completion_label_result"$'\0'"$key"$'\0'"$suffix")
+    # Keep fzf-tab's middle lookup field intact. Only the first display field
+    # is searchable; suffixes and descriptions stay visible in the last field.
+    rendered+=("$prefix$_dots_completion_label_result"$'\0'"$key"$'\0'"$suffix$_dots_completion_label_tail")
   done
   _ftb_complist=("${rendered[@]}")
   _dots_completion_display=1
@@ -239,11 +279,18 @@ _dots_completion_ftb_style() {
   local result=$?
   if [[ ${_dots_completion_display:-0} == 1 && $1 == -a && $2 == fzf-flags ]]; then
     local -a flags=("${(@P)3}")
-    flags+=(--with-nth=1,3 --nth=..)
-    if _dots_completion_use_color; then flags+=(--color=fg+:-1:regular)
+    flags+=(--with-nth=1,3 --nth=1)
+    if _dots_completion_use_color; then
+      [[ ${_DOTS_COMPLETION_ENABLED:-1} != 1 ]] || flags+=(--color=fg+:-1:regular)
     else flags+=(--color=bw)
     fi
     set -A "$3" "${flags[@]}"
+    return 0
+  fi
+  if [[ ${_dots_completion_display:-0} == 1 && ${_DOTS_COMPLETION_ENABLED:-1} == 1 && $1 == -a && $2 == active-group-style ]]; then
+    # The scoped reload wrapper supplies the complete style after the type
+    # color. Native bold before that color would be cleared by its reset.
+    set -A "$3" none
     return 0
   fi
   return $result
@@ -251,22 +298,69 @@ _dots_completion_ftb_style() {
 
 _dots_completion_ftb_header() {
   _dots_completion_original_header "$@" || return
-  [[ ${_dots_completion_display:-0} == 1 ]] || return 0
-  local code=$'\e['${_DOTS_COMPLETION_STYLES[heading]:-36}m marker
+  [[ ${_dots_completion_display:-0} == 1 && ${_DOTS_COMPLETION_ENABLED:-1} == 1 ]] || return 0
+  local code marker role
+  local -i i color=0
   local -a group_colors
-  _dots_completion_use_color || code=$'\e[0m'
+  [[ ${_DOTS_COMPLETION_ENABLED:-1} == 1 ]] && _dots_completion_use_color && color=1
   -ftb-zstyle -a group-colors group_colors || group_colors=("${_ftb_group_colors[@]}")
-  for marker in "${group_colors[@]}"; do
+  for (( i=1; i<=${#_ftb_groups}; i++ )); do
+    marker=${group_colors[i]}
     [[ -n $marker ]] || continue
+    role=${_dots_completion_groups[${_ftb_groups[i]}]:-candidate}
+    code=$'\e[0m'
+    (( ! color )) || code=$'\e[0;'${_DOTS_COMPLETION_STYLES[$role]:-39}m
     _ftb_headers=("${(@)_ftb_headers//$marker/$marker$code}")
   done
+}
+
+_dots_completion_ftb_fzf() {
+  if [[ ${_dots_completion_display:-0} != 1 || ${_DOTS_COMPLETION_ENABLED:-1} != 1 ]]; then
+    _dots_completion_original_fzf "$@"
+    return
+  fi
+  local helper="$DOTS/lib/dots/completion/switch-group.zsh"
+  local upstream="$FZF_TAB_HOME/lib/ftb-switch-group" heading=''
+  if [[ ${_DOTS_COMPLETION_ENABLED:-1} == 1 ]] && _dots_completion_use_color; then
+    heading=${_DOTS_COMPLETION_STYLES[heading]:-1;36}
+  fi
+  # fzf executes reload as shell code. Quote each trusted path/style argument;
+  # no candidate, description or provider text is part of this command.
+  local _dots_completion_group_helper="${(q)helper} ${(q)upstream} ${(q)heading}"
+  _dots_completion_scoped_fzf "$@"
+}
+
+_dots_completion_bind_fzf() {
+  functions[-ftb-compadd]=$functions[_dots_completion_ftb_capture]
+  functions[-ftb-complete]=$functions[_dots_completion_ftb_complete]
+  functions[-ftb-generate-complist]=$functions[_dots_completion_ftb_generate]
+  functions[-ftb-generate-header]=$functions[_dots_completion_ftb_header]
+  functions[-ftb-zstyle]=$functions[_dots_completion_ftb_style]
+  functions[-ftb-fzf]=$functions[_dots_completion_ftb_fzf]
+  (( ! ${+_ftb_orig_widget} )) || functions[compadd]=$functions[-ftb-compadd]
 }
 
 _dots_completion_install_fzf() {
   emulate -L zsh -o extendedglob
   (( ${+functions[-ftb-compadd]} && ${+functions[-ftb-complete]} )) || return 0
-  [[ ${functions[-ftb-complete]} != *'_dots_completion_original_complete'* ]] || return 0
-  local fn
+  if [[ ${functions[-ftb-complete]} == *'_dots_completion_original_complete'* ]]; then
+    if (( ${+functions[_dots_completion_original_fzf]} )); then
+      # Function assignments copy bodies. Rebind after source reload without
+      # replacing the saved native implementations with our old wrappers.
+      _dots_completion_bind_fzf
+      return 0
+    fi
+    # Upgrade the earlier global adapter, which did not wrap -ftb-fzf. Recover
+    # its known native copies before checking/installing the new interface.
+    functions[-ftb-compadd]=$functions[_dots_completion_original_capture]
+    functions[-ftb-complete]=$functions[_dots_completion_original_complete]
+    functions[-ftb-generate-complist]=$functions[_dots_completion_original_generate]
+    functions[-ftb-generate-header]=$functions[_dots_completion_original_header]
+    functions[-ftb-zstyle]=$functions[_dots_completion_original_style]
+    (( ! ${+_ftb_orig_widget} )) || functions[compadd]=$functions[-ftb-compadd]
+  fi
+  local fn original_reload='$FZF_TAB_HOME/lib/ftb-switch-group' scoped_reload='$_dots_completion_group_helper'
+  local -i load_failed=0
   local -A lazy
   local -a helpers=(-ftb-generate-complist -ftb-generate-header -ftb-fzf)
   local -a fpath=("${fpath[@]}")
@@ -284,10 +378,18 @@ _dots_completion_install_fzf() {
   done
   # Recognize the fields we preserve, not a plugin version string. Unknown
   # interfaces keep the plugin's native renderer and completion behavior.
-  if ! builtin autoload +X -Uz -- "${helpers[@]}" 2>/dev/null ||
-     ! [[ ${functions[-ftb-compadd]} == *'_ftb_compcap'* &&
+  # +X returns failure for an already materialized ordinary function (including
+  # a restored native copy during upgrade). Only load actual autoload stubs.
+  for fn in "${helpers[@]}"; do
+    if [[ -z ${functions[$fn]:-} || ${functions[$fn]} == *'builtin autoload -X'* ]]; then
+      builtin autoload +X -Uz -- "$fn" 2>/dev/null || load_failed=1
+    fi
+  done
+  if (( load_failed )) || ! [[ ${functions[-ftb-compadd]} == *'_ftb_compcap'* &&
      ${functions[-ftb-complete]} == *'_ftb_complist'* &&
      ${functions[-ftb-fzf]} == *"--delimiter='\x00'"* &&
+     ${functions[-ftb-fzf]} == *'$FZF_TAB_HOME/lib/ftb-switch-group'* &&
+     ${functions[-ftb-fzf]} == *'normalized_active_group_style'* &&
      ${functions[-ftb-generate-complist]} == *'_ftb_complist'* ]]; then
     for fn in "${(@k)lazy}"; do functions[$fn]=$lazy[$fn]; done
     return 0
@@ -297,18 +399,35 @@ _dots_completion_install_fzf() {
   functions[_dots_completion_original_generate]=$functions[-ftb-generate-complist]
   functions[_dots_completion_original_header]=$functions[-ftb-generate-header]
   functions[_dots_completion_original_style]=$functions[-ftb-zstyle]
-  functions[-ftb-compadd]=$functions[_dots_completion_ftb_capture]
-  functions[-ftb-complete]=$functions[_dots_completion_ftb_complete]
-  functions[-ftb-generate-complist]=$functions[_dots_completion_ftb_generate]
-  functions[-ftb-generate-header]=$functions[_dots_completion_ftb_header]
-  functions[-ftb-zstyle]=$functions[_dots_completion_ftb_style]
-  (( ! ${+_ftb_orig_widget} )) || functions[compadd]=$functions[-ftb-compadd]
+  functions[_dots_completion_original_fzf]=$functions[-ftb-fzf]
+  functions[_dots_completion_scoped_fzf]=${functions[-ftb-fzf]//$original_reload/$scoped_reload}
+  _dots_completion_bind_fzf
 }
 
 if [[ -o interactive ]]; then
   zmodload zsh/stat
+  if (( ${+functions[_dots_completion_original_capture]} && ! ${+functions[_dots_completion_original_fzf]} && ! ${+_DOTS_COMPLETION_NATIVE_PATTERN} )); then
+    # Retire only the previous adapter's recognizable global styles on reload.
+    # The personal loader may already have restored its baseline; keep that and
+    # any differently configured user styles intact.
+    local -a _dots_old_style
+    if zstyle -g _dots_old_style ':completion:*' list-colors &&
+        [[ ${#_dots_old_style} == 1 && $_dots_old_style[1] == _dots_completion_list_colors ]]; then
+      zstyle -e ':completion:*' list-colors 'reply=("${(@s.:.)LS_COLORS}")'
+    fi
+    if zstyle -g _dots_old_style ':completion:*:descriptions' format &&
+        [[ ${#_dots_old_style} == 1 && $_dots_old_style[1] == _dots_completion_heading ]]; then
+      zstyle ':completion:*:descriptions' format '%d'
+    fi
+    if zstyle -g _dots_old_style ':completion:*' group-name &&
+        [[ ${#_dots_old_style} == 1 && -z $_dots_old_style[1] ]]; then
+      zstyle -d ':completion:*' group-name
+    fi
+    unset _dots_old_style
+  fi
   # Extended patterns are scoped to helper functions, not the user's editor.
-  for _dots_completion_fn in _dots_completion_preferences _dots_completion_list_colors \
+  for _dots_completion_fn in _dots_completion_native_styles _dots_completion_owned_context \
+      _dots_completion_preferences _dots_completion_list_colors \
       _dots_completion_label _dots_completion_ftb_generate; do
     functions[$_dots_completion_fn]=$'emulate -L zsh -o extendedglob\n'${functions[$_dots_completion_fn]}
   done
@@ -321,8 +440,6 @@ if [[ -o interactive ]]; then
     _DOTS_COMPLETION_STAMP=''
     _dots_completion_refresh
   fi
-  zstyle -e ':completion:*' list-colors '_dots_completion_list_colors'
-  zstyle -e ':completion:*:descriptions' format '_dots_completion_heading'
-  zstyle ':completion:*' group-name ''
+  _dots_completion_native_styles
   _dots_completion_install_fzf
 fi

@@ -190,7 +190,7 @@ class NativeQuota(GeneratedStatus):
             rows=self.await_screen(outer,'view',lambda rows:len(rows)>1 and 'Q 72%' in self.plain(rows[1]) and 'BRANCH' in rows[1] and self.plain(rows[1]).index('BRANCH')>=width-10 and len(self.plain(rows[1]))<=width)
             line=self.plain(rows[1]);self.assertLess(line.index('Q 72%'),line.index('BRANCH'))
             self.assertIn('Q 72% · BRANCH',line)
-            self.assertEqual(self.colors_at(rows[1],'·')['fg'],(68,85,102))
+            self.assertEqual(self.colors_at(rows[1],'·')['fg'],(136,136,136))
             self.assertEqual(self.colors_at(rows[1],'·')['bg'],self.colors_at(rows[1],'BRANCH')['bg'])
             self.assertFalse(self.bold_at(rows[1],'·'))
             self.assertGreaterEqual(line.index('BRANCH'),width-10)

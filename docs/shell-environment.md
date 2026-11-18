@@ -69,18 +69,29 @@ may still require a new shell.
 
 ## Completion appearance
 
-Repository Zsh startup colors interactive completion labels by type: commands,
-options, values and Git branches/tags/remotes. Descriptions, separators and group
-headings have separate styles; unknown types use neutral text. File candidates
-retain `LS_COLORS`. FZF-tab keeps these colors on the selected row, while native
-Zsh uses group-aware list colors when FZF-tab is absent or disabled.
+Repository Zsh startup colors Dots completion labels by type: commands, options
+and values. Descriptions and separators have separate styles; unknown types use
+neutral text. File candidates retain `LS_COLORS`. FZF-tab keeps these colors on
+the selected row, while native Zsh uses group-aware list colors when FZF-tab is
+absent or disabled.
 
-This includes Dots subcommands and delegated providers, plus standalone bundled
-Anodize, Blastoff and pkgs completions. Associated project providers use native
-Zsh command/option/value tags; ordinary `_arguments` finite choices also use the
-value style. Hidden or brief FZF-tab group headings retain candidate colors.
-Source updates to a separately installed project require its normal completion
-delivery and a new shell before they affect that installation.
+Styling applies to `dots`, its subcommands/delegated providers and its first-party
+standalone completions: Anodize, Blastoff, pkgs, wttr and names registered through
+the Dots provider, including aliases and generated theme shortcuts. Git and
+unrelated commands retain their native completion colors and search behavior.
+Ownership comes from Zsh's existing completion registrations; ordinary native
+tags alone do not opt another project into Dots styling.
+
+Inside these Dots FZF-tab menus, typing searches candidate names only: commands,
+flags, values and filenames. Descriptions remain visible but do not match the
+query. For example, searching `theme` at `dots <Tab>` selects `theme` rather than
+`blastoff` through its description. This also applies when coloring is disabled.
+
+Initially, group headings use their group's semantic style. `<` and `>` switch
+groups: the selected group's heading becomes bold cyan, and other headings keep
+their type colors. Moving between rows does not change the active group heading.
+Unknown/mixed groups use neutral text. Hidden or brief headings retain candidate
+types and group identity.
 
 The command line has a separate owner: Fast Syntax Highlighting (FSH). Dots
 registers known literal route words such as `git` and `status` in `dots git status`
@@ -98,9 +109,12 @@ from the FSH theme, while the preferences below control completion lists.
 `apps.completion.enabled` defaults to `true`. The existing Config browser exposes
 `colors.apps.completion.{candidate,command,option,value,branch,tag,remote,description,heading,separator}`
 with foreground, background and text attributes. Command/option/value defaults
-are blue/yellow/green; branch/tag/remote defaults are magenta/cyan/blue. Other
-roles reference the shared foreground, muted and heading styles. Shared/profile
-precedence and `unset` work like other appearance preferences.
+are blue/yellow/green. `heading` controls the active group (cyan and bold by
+default); inactive headings reuse their candidate type style. Branch/tag/remote
+roles remain available for those semantic types inside owned completions; they
+do not override standalone Git. Other roles reference the shared foreground and
+muted styles. Shared/profile precedence and `unset` work like other appearance
+preferences.
 
 ```sh
 dots config browse --query apps.completion
@@ -120,15 +134,17 @@ inputs resolve once, and failed preference reads retain the last good styles
 until another input change. Missing palette snapshots use terminal color names.
 
 Automatic color honors `NO_COLOR`, `TERM=dumb` and the terminal destination.
-`DOTS_COLOR=always` forces color and `DOTS_COLOR=never` disables it. The feature
-switch restores the plugin's ordinary renderer. Display controls are escaped;
-accepting a result still uses the original literal word and native quoting.
+`DOTS_COLOR=always` forces color and `DOTS_COLOR=never` disables it.
+`apps.completion.enabled=false` restores native decoration, including file colors;
+name-only searching continues. Display controls are escaped; accepting a result
+still uses the original literal word and native quoting.
 
-The Dots-owned adapter checks FZF-tab's capture/list interface before wrapping it;
+The Dots-owned adapter checks FZF-tab's capture/list/reload interface before wrapping it;
 unknown interfaces retain native plugin behavior. It does not edit the installed
 plugin. Known Zinit lazy-loading wrappers are materialized without executing
-their helpers before checking that interface. Group switching, selection and
-preview identities remain with FZF-tab.
+their helpers before checking that interface. A Dots-owned reload wrapper styles
+the active heading after native group filtering. Group switching, selection,
+temporary-file ownership and preview identities remain with FZF-tab.
 Other shells keep their existing completion interfaces and display behavior;
 native Windows has no new display consumer or application destination. See
 [verification and platform limits](testing.md#shell-completion-colors).
@@ -138,7 +154,7 @@ enumerate the Dots command catalog and inventory associated projects under
 `~/repos`. These are explicit checks, never shell startup scans. New routes use
 their existing metadata; new CLI projects require an identified completion owner
 and verification command. The shared preferences above remain the single place
-to choose colors for all supported providers.
+to choose colors for Dots-owned providers.
 
 ## Variables and diagnostics
 

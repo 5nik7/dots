@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Real project Zsh menus using source-only completions and owned PTYs.
+"""Native project Zsh menus remain outside Dots styling, in owned PTYs.
 
 No project executable, installer, battery API or backend is invoked. Embedded
 completion text is extracted from its known literal here-document source.
@@ -62,28 +62,30 @@ class ProjectMenus(unittest.TestCase):
                     setup += 'source '+shlex.quote(str(target/('_'+name)))+'; '
                 else:
                     setup += 'autoload -Uz _'+name+'; compdef _'+name+' '+name+'; '
-            self.command(terminal,setup.rstrip('; '))
+            setup += "_DOTS_COMPLETION_STYLES[command]='38;2;1;2;3'; _DOTS_COMPLETION_STYLES[option]='38;2;1;2;3'; _DOTS_COMPLETION_STYLES[value]='38;2;1;2;3'"
+            self.command(terminal,setup)
             cases = [
-                ('battery --',"'--backend",'battery --backend=',b'33'),
-                ('battery --backend ',"'wrapper",'battery --backend wrapper ',b'32'),
-                ('git-it ',"'publish",'git-it publish ',b'34'),
-                ('git-it --color ',"'always",'git-it --color always ',b'32'),
-                ('gitsub --',"'--quiet",'gitsub --quiet ',b'33'),
-                ('gitsub --completion ',"'zsh",'gitsub --completion zsh ',b'32'),
-                ('leaf --',"'--watch",'leaf --watch ',b'33'),
-                ('leaf --inline ',"'plain",'leaf --inline plain ',b'32'),
-                ('paint --',"'--ansi",'paint --ansi ',b'33'),
-                ('paint --color ',"'always",'paint --color always ',b'32'),
-                ('paint bright ',"'red",'paint bright red ',b'32'),
-                ('codex-termux ',"'manage",'codex-termux manage ',b'34'),
-                ('codex-termux manage server ',"'status",'codex-termux manage server status ',b'34'),
-                ('codex-termux --',"'--help",'codex-termux --help ',b'33'),
+                ('battery --',"'--backend",'battery --backend='),
+                ('battery --backend ',"'wrapper",'battery --backend wrapper '),
+                ('git-it ',"'publish",'git-it publish '),
+                ('git-it --color ',"'always",'git-it --color always '),
+                ('gitsub --',"'--quiet",'gitsub --quiet '),
+                ('gitsub --completion ',"'zsh",'gitsub --completion zsh '),
+                ('leaf --',"'--watch",'leaf --watch '),
+                ('leaf --inline ',"'plain",'leaf --inline plain '),
+                ('paint --',"'--ansi",'paint --ansi '),
+                ('paint --color ',"'always",'paint --color always '),
+                ('paint bright ',"'red",'paint bright red '),
+                ('codex-termux ',"'manage",'codex-termux manage '),
+                ('codex-termux manage server ',"'status",'codex-termux manage server status '),
+                ('codex-termux --',"'--help",'codex-termux --help '),
             ]
-            for typed, query, expected, sgr in cases:
+            for typed, query, expected in cases:
                 if typed.split()[0] not in loaded: continue
                 terminal.send(typed+'\t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)
                 data=(self.home/'menu-data').read_bytes()
-                self.assertIn(b'\x1b[0;'+sgr+b'm',data,typed)
+                self.assertNotIn(b'\x1b[0;38;2;1;2;3m',data,typed)
+                self.assertNotIn(b'--with-nth=1,3',(self.home/'menu-args').read_bytes(),typed)
                 self.finish(terminal,query,expected)
                 terminal.send('\x03');self.drain(terminal)
         finally:terminal.close()

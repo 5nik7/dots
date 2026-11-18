@@ -517,6 +517,10 @@ rather than guessing. Undeclared arguments do not get inferred file candidates.
 Descriptions are supplied where supported. Zsh menu labels show `value -- description`, padding names to a shared column
 (including FZF-tab); accepting a match inserts only its value. Hidden routes are omitted from normal
 suggestions, but explicit use remains possible.
+With repository Zsh integration, Dots and its first-party standalone FZF-tab
+menus search candidate names only, keeping descriptions visible. Group headings
+use type colors, with the group selected by `<`/`>` bold cyan by default. Git and
+unrelated completion providers retain their native display and search behavior.
 
 Repository Bash startup sources its adapter; Zsh and Fish use their existing
 completion directories. Zsh does not run another compinit. Fresh shells load the

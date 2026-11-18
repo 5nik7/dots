@@ -1,5 +1,87 @@
 # Shell completion colors
 
+## Approved correction: scope, matching and group headings
+
+**Status: Implemented; isolated Termux acceptance verified (2026-11-18).** Supersedes the original
+global coloring scope below. Apply semantic completion display only to Dots and
+its first-party standalone providers, including registered aliases and generated
+theme shortcuts. Git and unrelated completions retain native behavior. Match
+candidate names only, keeping descriptions visible and literal insertion intact,
+including when coloring is disabled. All headings initially use their group
+type; `<`/`>` selects a bold cyan heading and restores the previous type style.
+
+Keep the existing three-field FZF-tab transport and native identity markers.
+Extend the guarded adapter with an owned group-switch display wrapper; never
+edit installed plugins. Reuse `colors.apps.completion.heading` for the active
+heading (cyan, bold by default), with normal overrides and next-prompt refresh.
+
+Acceptance: isolated 40/80/120-column menus; Dots root `theme` search, nested
+routes/flags/values/standalones/aliases; unrelated-provider baseline equality
+before and after Dots menus; group switching/hidden headings/shared type colors;
+exact insertion, files, previews, cancellation, multiselection and plain modes;
+public Zinit startup/reload, incompatibility fallback and unchanged-prompt cost.
+Run affected completion/config/shell checks sequentially, docs links and diff
+checks; synchronize available Wiki output. Record actual evidence below.
+
+Delivery: shell-integration owner; configuration **update** of existing heading
+defaults/semantics; menu **update** of Tab only. No README change needed because
+introductory setup/navigation is unaffected. Existing shell assets deliver this
+without installer changes. Preserve all six-shell provider protocols; the new
+display remains Zsh-specific, with no Windows app destinations. Native desktop
+Linux/WSL, PowerShell 5.1/7 and optional FZF-tab module acceptance are separate
+pending environments. Preserve unrelated work; no live reload/publication,
+commit or push is included.
+
+### Correction verification
+
+- The 25 completion scenarios pass across the full run and focused reruns after
+  fixes. Coverage includes actual public Zinit startup, upgrading the previous
+  global adapter, repeated reload without removing user styles, owned aliases,
+  native Git/foreign baseline equality, name-only search, exact insertion and
+  previews. Private PTYs cover 40/80/120 columns; private tmux verifies the
+  rendered active heading's cyan foreground and bold attribute, and restoration
+  of inactive type styles. External preference saves reach the next Tab,
+  including heading foreground/italic/bold overrides without publication.
+- Earlier failures exposed an incorrect Zsh array join, a literal substitution,
+  an obsolete test expecting Git recoloring, and test readiness assumptions.
+  Upgrade checks also caught `autoload +X` returning failure for already loaded
+  ordinary functions; only actual autoload stubs now require loading. Corrected
+  selectors pass. No outstanding completion failure remains.
+- Native project menus pass for battery, codex-termux, git-it, gitsub, leaf and
+  paint (14 contexts), retaining native colors/search and literal insertion.
+  Style configuration (9), shell environment (11), focused live Config (4) and
+  Zsh suggestion/reload (2) tests pass sequentially. Provider grammar and all
+  six-shell record/registration sources remain unchanged.
+- Python parsing, both changed Zsh sources, relative Markdown links (1,474 in
+  176 files) and `git diff --check` pass. Canonical documentation and maintenance
+  guidance describe the corrected scope and matching behavior.
+- The local Wiki dry run identified only its manifest and the five affected
+  topic pages. Build transaction `473f16854e39443eaff13ae96c4702fa` completed;
+  `dots wiki check --json` reports healthy, and the Wiki diff check passes.
+  No commits, pushes or live shell reloads were performed.
+
+Matched owned startup fixtures compare the pre-change HEAD sources with this
+implementation. Five warm startup pairs were interleaved; picker measurements
+use five warm samples per version and wait for actual FZF initialization.
+
+| Measurement | Before | After |
+| --- | ---: | ---: |
+| Warm interactive startup median | 4.992 s | 4.795 s |
+| Warm `dots <Tab>` opening median | 3.142 s | 2.969 s |
+| Warm `git <Tab>` opening median | 1.238 s | 1.173 s |
+| Adapter reload, mean of 100 warm calls | 7.262 ms | 9.384 ms |
+
+The added reload work is about 2.1 ms. A first three-pair startup sample showed
+5.596/6.761 s; its apparent slowdown was not reproduced in the larger sample.
+The first menu harness stopped before reliable picker readiness and supplied no
+accepted menu measurements. Device variance is substantial (one final Dots
+sample was 5.767 s), so these results establish no general speedup. Unchanged
+prompt/config guards still pass the no-subprocess check. Local tools: Zsh 5.9.2,
+FZF 0.75 (devel), unmodified FZF-tab `24105b1`; native desktop/Windows and explicit
+compiled-plugin acceptance remain pending.
+
+## Original implementation and historical evidence
+
 **Status: Implemented; local acceptance verified.** Selected Todo goal: `17884af1fdce49cea103b7546b5d64f8`.
 
 ## Agreed behavior

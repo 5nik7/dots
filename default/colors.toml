@@ -23,7 +23,8 @@ fg = "blue"
 fg = "colors.ui.muted.fg"
 
 [apps.completion.heading]
-fg = "colors.ui.heading.fg"
+fg = "cyan"
+bold = true
 
 [apps.completion.separator]
 fg = "colors.ui.muted.fg"
@@ -448,4 +449,4 @@ fg = "red"
 fg = "muted"
 
 [apps.tmux.codex_usage.git_separator]
-fg = "lighter_background"
+fg = "muted"
