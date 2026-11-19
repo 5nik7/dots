@@ -23,12 +23,13 @@ _jv-usage() {
 	    -v    show only the values of the variables
 	    -h    show this message and exit
 	EOF
-	echo "$usage"
+	printf '%s\n' "$usage"
 }
 
 # validate strings that bash supports (no nul support)
 _jv-validate-utf8() {
 	local s=$1
+	local chunk_size=${_jv_chunk_size:-1024}
 
 	# 0xxxxxxx                            1 byte,  7 bits
 	# 110xxxxx 10xxxxxx                   2 bytes, 11 bits
@@ -39,11 +40,18 @@ _jv-validate-utf8() {
 	local len=${#s}
 
 	local i=0
+	local offset=-$chunk_size
+	local chunk
+	local cp b1 b2 b3 b4 n cur
 	while ((i < len)); do
-		local cp b1 b2 b3 b4 n
+		if (( (i / chunk_size) != (offset / chunk_size) )); then
+			offset=$i
+			chunk=${s:i:chunk_size+4}
+		fi
+		cur=${chunk:i-offset:4}
 
 		# grab first byte
-		printf -v b1 '%d' "'${s:i:1}"
+		printf -v b1 '%d' "'${cur:0:1}"
 
 		# check: b is 0xxxxxxx (1 octet)
 		if (( (b1 & 2#10000000) == 0 )); then
@@ -60,7 +68,7 @@ _jv-validate-utf8() {
 
 			(( i + 1 < len )) || return 1
 
-			printf -v b2 '%d' "'${s:i+1:1}"
+			printf -v b2 '%d' "'${cur:1:1}"
 
 			(( (b2 & 2#11000000) == 2#10000000 )) || return 1
 
@@ -77,8 +85,8 @@ _jv-validate-utf8() {
 
 			(( i + 2 < len )) || return 1
 
-			printf -v b2 '%d' "'${s:i+1:1}"
-			printf -v b3 '%d' "'${s:i+2:1}"
+			printf -v b2 '%d' "'${cur:1:1}"
+			printf -v b3 '%d' "'${cur:2:1}"
 
 			(( (b2 & 2#11000000) == 2#10000000 )) || return 1
 			(( (b3 & 2#11000000) == 2#10000000 )) || return 1
@@ -97,9 +105,9 @@ _jv-validate-utf8() {
 
 			(( i + 3 < len )) || return 1
 
-			printf -v b2 '%d' "'${s:i+1:1}"
-			printf -v b3 '%d' "'${s:i+2:1}"
-			printf -v b4 '%d' "'${s:i+3:1}"
+			printf -v b2 '%d' "'${cur:1:1}"
+			printf -v b3 '%d' "'${cur:2:1}"
+			printf -v b4 '%d' "'${cur:3:1}"
 
 			(( (b2 & 2#11000000) == 2#10000000 )) || return 1
 			(( (b3 & 2#11000000) == 2#10000000 )) || return 1
@@ -110,7 +118,7 @@ _jv-validate-utf8() {
 				((b1 & 2#00000111) << 18) |
 				((b2 & 2#00111111) << 12) |
 				((b3 & 2#00111111) << 6) |
-				 (b4 & 2#00111111)
+				(b4 & 2#00111111)
 			))
 		else
 			return 1
@@ -171,10 +179,14 @@ _jv-json-encode-string() {
 	# serialize the string
 	local out=''
 	local len=${#s}
-	local c
+	local c chunk
 	for ((i = 0; i < len; i++)); do
-		c=${s:i:1}
-		esc=${table[$c]}
+		if (( (i % _jv_chunk_size) == 0 )); then
+			chunk=${s:i:_jv_chunk_size}
+		fi
+		c=${chunk:i%_jv_chunk_size:1}
+
+		esc=${table[$c]-}
 
 		if [[ -n $esc ]]; then
 			# lookup table matched for this byte
@@ -192,6 +204,9 @@ _jv-json-encode-string() {
 _jv-json-encode-number() {
 	local num=$1
 	local re='^-?([0-9]+)$'
+
+	# don't touch the caller's BASH_REMATCH
+	local BASH_REMATCH
 
 	# make sure it walks like a duck
 	if ! [[ $num =~ $re ]]; then
@@ -219,13 +234,19 @@ _jv-encode-variable() {
 	local _jv_attrs
 	IFS=' ' read -r _ _jv_attrs _ < <(declare -p -- "$_jv_name")
 
+	# declared but never set
+	if [[ $_jv_attrs != *[aAn]* && ! -v _jv_ref ]]; then
+		printf 'null'
+		return
+	fi
+
 	case "$_jv_attrs" in
 		*n*) # process namerefs
 			# todo maybe warn?
-			echo -n 'null'
+			printf 'null'
 			;;
 		*a*) # process indexed array
-			echo -n '['
+			printf '['
 			local _jv_value _jv_i=0
 			for _jv_value in "${_jv_ref[@]}"; do
 				((_jv_i++))
@@ -238,61 +259,76 @@ _jv-encode-variable() {
 				fi
 
 				if ((_jv_i < ${#_jv_ref[@]})); then
-					echo -n ', '
+					printf ', '
 				fi
 			done
-			echo -n ']'
+			printf ']'
 			;;
 		*A*) # process associative array
-			echo -n '{'
-			local _jv_key _jv_value _jv_i=0
+			printf '{'
+			local _jv_key _jv_value _jv_sep=''
 			for _jv_key in "${!_jv_ref[@]}"; do
-				((_jv_i++))
+				# keys must be strings
+				if ! _jv-validate-utf8 "$_jv_key"; then
+					continue
+				fi
+
+				printf '%s' "$_jv_sep"
+				_jv_sep=', '
 
 				_jv_value=${_jv_ref[$_jv_key]}
 
 				_jv-json-encode-string "$_jv_key"
-				echo -n ': '
+				printf ': '
 
 				if [[ $_jv_attrs == *i* ]]; then
 					_jv-json-encode-number "$_jv_value"
 				else
 					_jv-json-encode-string "$_jv_value"
 				fi
-
-				if ((_jv_i < ${#_jv_ref[@]})); then
-					echo -n ', '
-				fi
 			done
-			echo -n '}'
+			printf '}'
 			;;
 		*i*) # process integer
-			_jv-json-encode-number "$_jv_ref"
+			_jv-json-encode-number "${_jv_ref-}"
 			;;
 		*) # anything else, it's probably a string lol
-			_jv-json-encode-string "$_jv_ref"
+			_jv-json-encode-string "${_jv_ref-}"
 			;;
 	esac
 
 }
 
-jsonvar() {
+_jv-jsonvar() {
+	local _jv_chunk_size=1024
 	local _jv_all='false'
 	local _jv_exported='false'
 	local _jv_value='false'
 
 	# get arguments from user
-	local OPTIND OPTARG _jv_opt
-	while getopts 'aevh' _jv_opt; do
-		case "$_jv_opt" in
-			a) _jv_all='true';;
-			e) _jv_exported='true';;
-			v) _jv_value='true';;
-			h) _jv-usage; return 0;;
-			*) _jv-usage >&2; return 2;;
-		esac
+	local _jv_opts
+	while [[ ${1-} == -?* ]]; do
+		if [[ $1 == -- ]]; then
+			shift
+			break
+		fi
+		_jv_opts=${1#-}
+		while [[ -n $_jv_opts ]]; do
+			case "${_jv_opts:0:1}" in
+				a) _jv_all='true';;
+				e) _jv_exported='true';;
+				v) _jv_value='true';;
+				h) _jv-usage; return 0;;
+				*)
+					echo "illegal option -- ${_jv_opts:0:1}" >&2
+					_jv-usage >&2
+					return 2
+					;;
+			esac
+			_jv_opts=${_jv_opts:1}
+		done
+		shift
 	done
-	shift "$((OPTIND - 1))"
 
 	local _jv_key
 
@@ -307,7 +343,7 @@ jsonvar() {
 
 		# ensure the user gave us *something*
 		if (( ${#_jv_variables[@]} == 0 )); then
-			echo 'variable name or flag required' >&2
+			printf '%s\n' 'variable name or flag required' >&2
 			_jv-usage >&2
 			return 2
 		fi
@@ -317,13 +353,13 @@ jsonvar() {
 		for _jv_key in "${_jv_variables[@]}"; do
 			# warn the user if they gave us an internal name
 			if [[ $_jv_key == _jv_* ]]; then
-				echo "[error] invalid internal variable '$_jv_key'" >&2
+				printf '%s\n' "[error] invalid internal variable '$_jv_key'" >&2
 				_jv_error='true'
 			fi
 
 			# check to make sure the variable is defined
 			if ! declare -p -- "$_jv_key" &>/dev/null; then
-				echo "[error] variable '$_jv_key' not defined" >&2
+				printf '%s\n' "[error] variable '$_jv_key' not defined" >&2
 				_jv_error='true'
 			fi
 		done
@@ -335,6 +371,7 @@ jsonvar() {
 
 	# loop the variables first to filter out hidden / internal var names
 	local _jv_i
+	local -A _jv_seen=()
 	local _jv_len=${#_jv_variables[@]}
 	for ((_jv_i = 0; _jv_i < _jv_len; _jv_i++)); do
 		_jv_key=${_jv_variables[_jv_i]}
@@ -345,22 +382,27 @@ jsonvar() {
 			continue
 		fi
 
-		# variable name was good, do nothing
+		# filter out duplicate names
+		if [[ -n ${_jv_seen[$_jv_key]-} ]]; then
+			unset '_jv_variables[_jv_i]'
+			continue
+		fi
+		_jv_seen[$_jv_key]=1
 	done
 
 	# loop the remaining variables and format them
-	$_jv_value || echo '{'
+	$_jv_value || printf '{\n'
 	_jv_i=0
 	for _jv_key in "${_jv_variables[@]}"; do
 		((_jv_i++))
 
 		if ! $_jv_value; then
 			# indent
-			echo -n '    '
+			printf '    '
 
 			# print the key
 			_jv-json-encode-string "$_jv_key"
-			echo -n ': '
+			printf ': '
 		fi
 
 		# print the value
@@ -368,12 +410,21 @@ jsonvar() {
 
 		# optionally print the comma
 		if ! $_jv_value && ((_jv_i < ${#_jv_variables[@]})); then
-			echo -n ','
+			printf ','
 		fi
-		echo
+		printf '\n'
 	done
-	$_jv_value || echo '}'
+	$_jv_value || printf '}\n'
 }
+
+jsonvar() (
+	shopt -u nocasematch
+	set +e
+	set +u
+	set +o posix
+
+	_jv-jsonvar "$@"
+)
 
 _jv-complete() {
 	COMPREPLY=(
