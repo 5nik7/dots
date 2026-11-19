@@ -111,16 +111,19 @@ class Markdown(MenuFixture):
 
 class Configuration(MenuFixture):
     def setUp(self):
+        runtime = {key: os.environ[key] for key in ('TERMUX__PREFIX', 'TERMUX_VERSION') if key in os.environ}
         super().setUp()
+        # Retain the outer fixture's owned loader prefix and platform identity.
+        self.env.update(runtime)
+        os.environ.update(runtime)
         self.root = Path(self.env['DOTS'])
         shutil.copytree(ROOT/'default', self.root/'default')
-        for name in ('linux', 'termux'):
+        # Unqualified saves resolve the execution platform, not DOTS_PROFILE.
+        for name in ('linux', 'wsl', 'windows', 'termux'):
             directory = self.root/'profiles'/name
             directory.mkdir(parents=True)
             (directory/'profile.json').write_text(json.dumps(dict(schema=1, id=name, files={}, settings={})))
         shutil.copy2(ROOT/'profiles/termux/config.json', self.root/'profiles/termux/config.json')
-        os.environ['DOTS_PROFILE'] = 'linux'
-        self.env['DOTS_PROFILE'] = 'linux'
 
     def test_defaults_override_reset_validation_and_completion(self):
         from config_values import Controls, constraints, validate_value, candidates
@@ -156,6 +159,7 @@ class Configuration(MenuFixture):
         current.cache_clear(); styles.cache_clear()
         self.addCleanup(current.cache_clear); self.addCleanup(styles.cache_clear)
         selected = context(self.root)
+        self.assertEqual(selected['layers'][-1]['id'], selected['facts']['platform'])
         plan = ControlPlan(self.root, selected)
         plan.edit('apps.cli.markdown_viewer', 'cat')
         self.assertIn('no theme publication', preview_save(self.root, plan)['reason'])
@@ -165,6 +169,38 @@ class Configuration(MenuFixture):
         with patch('config_refresh.refresh', side_effect=AssertionError('renderer save published')):
             result = after_save(self.root, before)
         self.assertEqual(result['consumers'], [dict(app='cli',status='next invocation')])
+
+    def test_fresh_controller_preview_is_next_invocation_without_writes(self):
+        self.check_preview([sys.executable, '-B', str(ROOT/'lib/dots/config_cli.py')])
+
+    @unittest.skipUnless(shutil.which('bash'), 'Bash unavailable; frontend not verified')
+    def test_bash_preview_is_next_invocation_without_writes(self):
+        shutil.copytree(ROOT/'lib', self.root/'lib', symlinks=True,
+                        ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        shutil.copytree(ROOT/'bin', self.root/'bin', symlinks=True)
+        self.check_preview([shutil.which('bash'), str(self.root/'bin/dots'), 'config'])
+
+    def check_preview(self, command):
+        from files.transactions import digest
+        from profile_config import context
+        selected = context(self.root)['current']
+        before = digest(self.base)
+        env = dict(self.env)
+        env.pop('PYTHONPATH', None)
+        result = subprocess.run([
+            *command,
+            'set', 'apps.cli.markdown_viewer', 'cat', '--profile', selected,
+            '--dry-run', '--json',
+        ], env=env, cwd=self.home, capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stderr, b'')
+        self.assertNotIn(b'\x1b', result.stdout)
+        preview = json.loads(result.stdout)
+        self.assertEqual(preview['status'], 'preview')
+        self.assertEqual(preview['refresh']['reason'],
+                         'Next invocation or popup; no theme publication or reload')
+        self.assertIn('cli', preview['refresh']['consumers'])
+        self.assertEqual(digest(self.base), before)
 
 
 if __name__ == '__main__': unittest.main()

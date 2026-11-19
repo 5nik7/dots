@@ -1516,3 +1516,5 @@ with the Wiki topic/presentation, shared menu/launcher/project/pager, Todo menu 
 Config suites for consumer changes. Private tmux tests cover cyclic selectors and
 Wiki return to the previous submenu at 40/80/120 columns on the originating client.
 Native Windows PowerShell and Linux/WSL acceptance is separate from Termux fixtures.
+
+The configuration fixture creates all four platform profiles and resolves the actual execution platform; `DOTS_PROFILE` is generated output, not a selection override. Fresh-interpreter and Bash frontend cases verify next-invocation dry-run reporting without `PYTHONPATH`, ANSI output or writes to the owned tree. The Bash case explicitly skips when Bash is unavailable. Keep these process checks: importing `config_cli.ControlPlan` directly cannot detect the duplicate class identity created when that controller runs as `__main__`. Preview classification uses its canonical `preference_files.PreferencePlan` base; style plans retain their separate branch. Native PowerShell 5.1/7 lifecycle evidence and the pending phone gate are recorded in the [Overkill plan](../plans/overkill-parity.md#termux-updates-windows-refresh--2026-11-19-utc).

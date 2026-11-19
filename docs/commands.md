@@ -830,6 +830,7 @@ preferences while preserving the current theme. It also retries failed consumer
 notification. Visual `config set` and `config unset` refresh affected active
 consumers automatically; `--no-refresh` saves only. Existing scalar and get/list
 JSON contracts are unchanged; mutation JSON adds a `refresh` result when used.
+Typed-control dry-runs use the same preference classification as the Config editor, including next-invocation activation for Markdown rendering; neither frontend publishes during a preview.
 Attempted publication or consumer failures return nonzero after preserving the
 saved setting. Missing optional consumers and absent theme publication are
 reported explicitly. The existing Config browser adds effective Details and a

@@ -697,6 +697,38 @@ Evidence is retained outside the checkout at `C:\Users\njen\dots-review-evidence
 
 Each rehearsal verified no-write preview, exactly five publication operations, the matching proposed JSON bytes, unchanged second apply without a new journal, explicit drift refusal, successful reverse undo through the native CLI, removal of the dedicated directory via its own transaction, and unchanged owned consumer settings. Both owned native process groups completed without timeout, termination or survivors; source snapshots were unchanged. These are two executions of one rehearsal case plus two existing methods, not four independent product suites. Independent review confirmed the publication/undo scope and added the explicit live-child runtime-cache conditions above; those controls were already present in the successful PowerShell 7 rehearsal. Earlier broad or Termux suites were not rerun. No runtime repair is indicated; this Windows-only activation review requires no phone source update/test. Preserve the accepted Termux records and direct `termux-clipboard-set` instruction for any later phone handoff. Relative-link validation passed (1,475 links in 175 files), source-only wiki validation is healthy, and `git diff --check` passed. Wiki export synchronization remains pending while its checkout is absent.
 
+### Termux updates: Windows refresh — 2026-11-19 UTC
+
+Windows `main` fast-forwarded from `1957d25e2709752995c521e10acfd218856e0579` to the reviewed Termux update `7b6858f82603e8daa0a9731042f1ec2af9d75355`, preserving the unrelated `config/git/config` edit and both attachment images. No submodules or WSL checkout were updated. Evidence is retained at `C:\Users\njen\dots-review-evidence\windows-refresh-20261118` (directory date is local Pacific time). Public inputs came from that revision's LF archive, excluding external links and optional/private Gitlink contents. Only the two reviewed source/test repairs below were overlaid for final checks.
+
+Two reproduced issues were repaired:
+
+- The Markdown configuration fixture created only Linux/Termux profiles, so its native Windows save case failed with an empty-profile `IndexError`. It now supplies all four profiles and verifies the selected execution platform.
+- Fresh CLI processes loaded `config_cli` as `__main__`, while `preview_save` compared against a separately imported `config_cli.ControlPlan`. Markdown dry-runs consequently reported `No active visual change`. Testing the canonical `PreferencePlan` base restores typed-control preview classification. The new fresh-process regression failed against the original source and passes with the repair. No renderer, preference precedence, default, startup, dependency, publication or save/undo behavior changed.
+
+Final bounded Windows evidence (method executions; repeated diagnostic runs excluded):
+
+| Check | Passed / collected | Skips / limits |
+| --- | --- | --- |
+| File-platform prerequisite | 9 / 10 | POSIX umask method skipped; native executable durability/rollback exercised |
+| Markdown viewer suite | 10 / 11 | Bash frontend unavailable in the Windows allowlist; native Bat exercised at 40/80/120 columns in color/plain modes; other installed-renderer backends not enrolled |
+| Pager controller suite | 7 / 9 | POSIX PTY resize and native POSIX terminal methods skipped |
+| Config guard/undo/popup selection | 1 / 1 | Shared Python controller |
+| Profile style inventory/inheritance selections | 2 / 2 | Shared Python controller and generated text, not shell execution |
+| Terminal connector policy/additive scheme selections | 2 / 2 | Owned native destinations; no desktop |
+| Markdown preference lifecycle, PowerShell 5.1 / 7.6.9 | 1 / 1 each | Actual native frontends; preview, invalid-value refusal, explicit Windows save/reset, unchanged shared/Termux inputs and no theme publication |
+| Packet 4A rehearsal, PowerShell 5.1 / 7.6.9 | 1 / 1 each | Actual native publication/undo in owned roots; 16.513 / 11.424 seconds wall time |
+
+The Markdown lifecycle also exercised a style-preview positive control, exact plain/JSON output and untouched publication pointers. Its engine executions briefly overlapped in separate owned roots; timings are not startup benchmarks. The shared suite's original Windows error, the native/direct-process preview failures and their raw streams remain retained. Two external-harness mistakes are separate: its first miniature checkout omitted route metadata, then an empty legacy `settings` field triggered expected migration and invalidated its byte-preservation assumption. The corrected harness includes public `bin` metadata and starts with structural-only profile manifests. No product assertion or deadline was weakened.
+
+All final jobs used fresh owned consumer/runtime roots, Python plus explicitly enrolled Bat/Vivid, per-child deadlines and the inspected Windows Job Object backstop. Each recorded zero surviving owned processes, no timeout/termination and an unchanged source snapshot during execution. Current source snapshot identities include the explicit repair overlay; these are not clean-baseline suite claims. No broad historical batch was repeated.
+
+Packet 4A remains **proposed and awaiting live approval**. Both updated rehearsals preserve the exact five-operation publication, inert `Dots` fragment SHA-256 `361bcbde9e98c1362bc161d8faadcd740d0e85bd03e9e350ed6103da5e76fd87`, unchanged repeat, drift refusal and publication-before-directory undo. Read-only live checks retain both settings hashes from the preceding review, absent fragment directory and absent theme pointers. The earlier exact target/recovery procedure still applies; packet 4B scheme selection and visible Preview acceptance remain separate. No live application or theme was activated.
+
+Config maintenance owns the shared repair; menu maintenance owns the unchanged Markdown consumer. **No configuration integration change needed:** the existing finite control and precedence remain authoritative. **No menu/completion change needed:** the existing editor, Wiki entry and choices already expose it; only preview classification was incorrect. Existing installation delivery includes the shared module. **No README change needed:** this repairs a documented preview contract without changing introductory setup or navigation. Canonical configuration, command and testing docs carry the correction. Source rollback restores this bounded patch and needs no live undo; the checkout update itself is separate history.
+
+**Pending Termux gate:** run the two new fresh-controller/Bash preview cases, then the full Markdown viewer suite from owned roots at the published repair SHA. Report actual inner platform/loader inputs, native renderer enrollment and any skips; retain all earlier accepted batches. This is a shared preview fix useful to Termux, with no opt-in activation, default import or shell reload required. No WSL or phone acceptance is inferred from Windows. Continue direct `termux-clipboard-set` delivery with literal stdin and normal native runtime. Relative-link validation passed (1,482 links in 177 files), source-only wiki validation is healthy and `git diff --check` passed. Wiki export synchronization remains pending while its separate checkout is absent.
+
 ### Packet 3 refreshed review — 2026-11-14
 
 **Historical review; subsequently approved and applied below.** Native Windows read-only inventory at `358b939f`

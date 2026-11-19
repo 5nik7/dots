@@ -36,6 +36,8 @@ The key-only form opens the normal Config editor. The Wiki submenu also provides
 offers the portable finite choices. Profile overrides inherit from their parent
 and shared defaults. Reset removes the selected profile override; saved changes
 apply to the next document view without a theme publication or application reload.
+The same activation is reported by `config set`/`unset --dry-run --json` through
+both Bash and native PowerShell; previews leave preferences and publication state unchanged.
 
 ## Git views and shared progress
 

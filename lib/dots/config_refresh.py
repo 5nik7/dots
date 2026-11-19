@@ -406,8 +406,9 @@ def after_save(root, before):
 
 def preview_save(root, plan):
     style = Styles(root)
-    from config_cli import ControlPlan
-    if isinstance(plan,ControlPlan):
+    # CLI entry points can load config_cli as __main__; use its stable base.
+    from preference_files import PreferencePlan
+    if isinstance(plan,PreferencePlan):
         from config_values import Controls
         values=Controls(root,replacements=plan.replacements).values
         before=snapshot(None,root,styles=style)
