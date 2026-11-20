@@ -51,13 +51,13 @@ The Dots launcher has **Debug → Output demos**. Static package, Git, file, mes
 
 ```sh
 dots debug alert
-dots debug alert --json
+dots debug alert --type finished --json
 ```
 
 This explicit device test sends `Dots Codex alert test: toast and vibration` with
-the configured `apps.codex.toast` appearance (including background opacity) and
-`apps.codex.vibrate` duration,
-force and count. It is not part of `debug check` or the curated `debug test`
+the selected `apps.codex.alerts.TYPE.toast` appearance (including background opacity) and
+`apps.codex.alerts.TYPE.vibrate` duration,
+force and count. `--type regular|finished` defaults to regular. JSON adds `alert_type` and preserves the selected `settings.toast`/`settings.vibrate` shape. It is not part of `debug check` or the curated `debug test`
 suites, and it is not in the read-only Debug launcher. `--json` changes output
 only: it still sends the test. The command does not require a running Codex or
 tmux session, queue an event, change attention, restart workers or read messages.

@@ -2,19 +2,19 @@
 import re
 
 ATTRS={'bold':'bold','dim':'dim','italic':'italics','underline':'underscore','reverse':'reverse','strikethrough':'strikethrough'}
-STATES=('active','inactive','alert')
+STATES=('active','inactive','alert','finished')
 SPANS=('number','icon','name','surround','spacer')
 ROLES={'session','session.repository','clock.icon','clock.text','clock.surround','clock.spacer','git.surround'}
 ROLES.update('battery.'+part for part in ('icon','text','surround','spacer'))
 ROLES.update('battery.'+state+'.'+part for state in ('critical','low','normal','charging','unknown') for part in ('icon','text'))
 for component,states,spans in (('tabs',STATES,('number','icon','surround','spacer')),
-                               ('session',STATES,SPANS),('window',('active','inactive','attention'),SPANS)):
+                               ('session',STATES,SPANS),('window',('active','inactive','attention','finished'),SPANS)):
     ROLES.update(component+'.'+part for part in spans)
     ROLES.update(component+'.'+state+suffix for state in states for suffix in ('',*('.'+part for part in spans)))
-ROLES.update('indicators.'+name+suffix for name in ('copy','prefix','zoom','working','waiting','attention') for suffix in ('','.surround','.spacer'))
+ROLES.update('indicators.'+name+suffix for name in ('copy','prefix','zoom','open','working','waiting','question','attention','finished') for suffix in ('','.surround','.spacer'))
 ROLES.update('hosts.'+host for host in ('github','gitlab','bitbucket'))
 ROLES.update('codex_usage'+suffix for suffix in ('', '.good', '.medium', '.low', '.critical', '.unknown', '.icon', '.text', '.surround', '.spacer', '.git_separator'))
-ICONS={'codex_usage','clock.fixed','clock.day','clock.night','clock.unknown','session.default','window.default'}
+ICONS={'codex_usage','clock.fixed','clock.day','clock.night','clock.unknown','session.default','window.default','status.open','status.question'}
 ICONS.update('battery.'+state for state in ('critical','low','normal','charging','unknown'))
 
 
@@ -51,6 +51,13 @@ def compile_options(root,selected,source,styles=None):
     fmt=values.get('formatting',{}).get('apps',{}).get('tmux',{})
     original={m[1]:m[2] for line in source.splitlines() if (m:=re.fullmatch(r"\s*set -g ([^ ]+) '(.*)'",line))}
     options={}
+    # These source-owned predicates also need visual-only refresh on existing
+    # servers, without sourcing bindings, hooks or starting workers.
+    for key in ('@dots-session-multi','@dots-window-name','@dots-windows-visible',
+                '@dots-window-codex-question','@dots-window-native-alert','@dots-window-codex-finished','@dots-window-alert-style'):
+        options[key]=original.get(key,'')
+    options['@dots-icon-status-open']=literal(styles.icon('status.open','',app='tmux'))
+    options['@dots-icon-status-question']=literal(styles.icon('status.question','',app='tmux'))
     def stored(text):
         key='@dots-config-fragment-'+str(sum(k.startswith('@dots-config-fragment-') for k in options))
         options[key]=text
@@ -67,8 +74,8 @@ def compile_options(root,selected,source,styles=None):
         generic=style(styles,role,base)
         if role.startswith('window.') and role.split('.')[1] in SPANS:
             part=role.split('.')[1]
-            variants=[style(styles,'window.'+state+'.'+part,generic) for state in ('attention','active','inactive')]
-            if variants!=[generic]*3:return choice('#{E:@dots-window-alert}',variants[0],choice('window_active',variants[1],variants[2]))
+            variants=[style(styles,'window.'+state+'.'+part,generic) for state in ('attention','active','inactive','finished')]
+            if variants!=[generic]*4:return choice('#{E:@dots-window-codex-finished}',variants[3],choice('#{E:@dots-window-alert}',variants[0],choice('window_active',variants[1],variants[2])))
         if role.startswith('session.') and role.split('.')[1] in SPANS:
             return style(styles,'session.active.'+role.split('.')[1],generic)
         return generic
@@ -87,23 +94,33 @@ def compile_options(root,selected,source,styles=None):
         return span(role,lit(data.get('before',''))+text+lit(data.get('after','')),base)
     def color(role,default):return tmux_color(styles,styles.style(role,app='tmux').get('fg',default))
     def indicator(name,text,base,restore='#[default]'):
-        data=fmt.get('indicators',{}).get(name,{})
+        data=fmt.get('indicators',{}).get('attention' if name=='finished' else name,{})
         base=style(styles,'indicators.'+name,base)
         return (base+span('indicators.'+name+'.surround',lit(data.get('before','')),base)+text+
                 span('indicators.'+name+'.surround',lit(data.get('after','')),base)+
                 span('indicators.'+name+'.spacer',lit(data.get('spacer','')),base)+restore)
-    for state in ('working','waiting','attention'):
+    for state in ('open','working','waiting','question','attention'):
         base=style(styles,'status.'+state) if state!='attention' else ''
         base=style(styles,'icons.status.'+state,base) if state!='attention' else base
         text=cfg.get('indicators',{}).get(state,{}).get('text')
         glyph=lit(text) if text is not None else '#{@dots-icon-status-'+state+'}' if state!='attention' else ''
-        options['@dots-marker-'+state]=(choice('#{E:@dots-window-alert}',
-            indicator('attention',glyph,'#{E:@dots-window-alert-style}','#{E:@dots-window-style}'),
-            indicator(state,glyph,base,'#{E:@dots-window-style}')) if glyph else '')
-    marker='#{?#{E:@dots-window-codex-working},#{E:@dots-marker-working},#{?#{E:@dots-window-codex-waiting},#{E:@dots-marker-waiting},}}'
+        if state=='question':
+            options['@dots-marker-'+state]=indicator(state,glyph,'#{E:@dots-window-style}'+base,'#{E:@dots-window-style}')
+        else:
+            options['@dots-marker-'+state]=(choice('#{E:@dots-window-alert}',
+                choice('#{E:@dots-window-codex-finished}',
+                       indicator('finished',glyph,'#{E:@dots-window-alert-style}','#{E:@dots-window-style}'),
+                       indicator('attention',glyph,'#{E:@dots-window-alert-style}','#{E:@dots-window-style}')),
+                indicator(state,glyph,base,'#{E:@dots-window-style}')) if glyph else '')
+    marker='#{?#{E:@dots-window-codex-working},#{E:@dots-marker-working},#{?#{E:@dots-window-codex-waiting},#{E:@dots-marker-waiting},#{?#{E:@dots-window-codex},#{E:@dots-marker-open},}}}'
+    # An empty configured glyph/text suppresses its formatting and the label gap.
+    for state in ('open','working','waiting','question'):
+        text=cfg.get('indicators',{}).get(state,{}).get('text')
+        if (text if text is not None else styles.icon('status.'+state,app='tmux'))=='':
+            options['@dots-marker-'+state]=''
     if cfg.get('indicators',{}).get('attention',{}).get('text') is not None:
         marker='#{?#{E:@dots-window-codex-attention},#{E:@dots-marker-attention},'+marker+'}'
-    options['@dots-window-marker']=marker
+    options['@dots-window-marker']='#{?#{E:@dots-window-codex-question},#{E:@dots-marker-question},'+marker+'}'
     clock=cfg.get('clock',{});mode=clock.get('icon_mode','none');icon=''
     if mode=='fixed':icon=lit(styles.icon('clock.fixed','',app='tmux'))
     elif mode=='daylight':
@@ -121,13 +138,14 @@ def compile_options(root,selected,source,styles=None):
         body=indicator(name,lit(cfg.get('indicators',{}).get(name,{}).get('text',name.upper())),base)
         indicators.append(choice(predicate,body))
     options['status-right']=''.join(indicators)
-    for state,option in (('active','selected'),('inactive','idle'),('attention','alert')):
+    for state,option in (('active','selected'),('inactive','idle'),('attention','regular')):
         key='@dots-window-'+option+'-style'
         # The theme template already binds state fg/bg to native options. Keep
         # its working/Codex contrast conditions; add nullable attributes here.
         options[key]=style(styles,'window.'+state,original.get(key,''),fields=ATTRS)
+    options['@dots-window-finished-style']=style(styles,'window.finished','#{E:@dots-window-regular-style}')
     for partname,option in (('number','@dots-window-number-style'),('name','@dots-window-name-style')):
-        options[option]=state_style('window.'+partname,original.get(option,''))
+        options[option]=state_style('window.'+partname,choice('#{E:@dots-window-alert}','#{E:@dots-window-alert-style}',original.get(option,'')))
     windowbase='#{E:@dots-window-style}'
     options['@dots-window-styled-prefix']=original.get('@dots-window-styled-prefix','').replace('#{E:@dots-window-number-style}#{E:@dots-window-number}','#{E:@dots-window-number-style}'+part('windows','number','#{E:@dots-window-number}',windowbase))
     label=original.get('@dots-window-styled-label','').replace('#{E:@dots-window-name}#{E:@dots-window-style}',part('windows','name','#{E:@dots-window-name}',windowbase)+windowbase)
@@ -140,7 +158,7 @@ def compile_options(root,selected,source,styles=None):
     options['@dots-window-styled-label']=label
     alertlabel='#{?#{!=:#{E:@dots-window-label},},#{E:@dots-window-styled-label},#{q/h:window_name}}'
     # Preserve the uniform attention label until a span is explicitly customized.
-    if not any(styles.style('window.'+state+'.'+part,app='tmux') or styles.style('window.'+part,app='tmux') for state in ('attention',) for part in SPANS) and not window_icon:
+    if not any(styles.style('window.'+state+'.'+part,app='tmux') or styles.style('window.'+part,app='tmux') for state in ('attention','finished') for part in SPANS) and not window_icon:
         alertlabel='#{?#{!=:#{E:@dots-window-label},},#{?#{E:@dots-window-codex-attention},#{E:@dots-window-label},#{E:@dots-window-styled-label}},#{q/h:window_name}}'
     options['@dots-window-format']=choice('#{E:@dots-windows-visible}',windowbase+choice('#{E:@dots-window-alert}',surround('windows',alertlabel,'alert'),surround('windows','#{E:@dots-window-styled-label}'))+'#[default]')
     options['window-status-separator']=state_style('window.spacer','#[fg=#{@dots-separator-fg},bg=#{@dots-separator-bg},nobold,nounderscore,noreverse,nodim]')+lit(fmt.get('windows',{}).get('separator','│'))+'#[default]'
@@ -174,7 +192,7 @@ def compile_options(root,selected,source,styles=None):
     options['@dots-session-text']=text
     options['status-left']=choice('#{E:@dots-session-visible}',sessionbase+surround('session','#{E:@dots-session-text}')+'#[default]#{?#{E:@dots-windows-visible},#{E:@dots-status-separator},}')
     if session.get('multiple',False):
-        options['status-left']='#(python3 -B "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/session-status.py" --socket #{q:socket_path} --current #{q:session_id} --width #{q:@dots-session-width} 2>/dev/null || printf "\\n")'
+        options['status-left']=choice('#{E:@dots-session-multi}','', '#(python3 -B "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/session-status.py" --socket #{q:socket_path} --current #{q:session_id} --width #{q:@dots-session-width} 2>/dev/null || printf "\\n")')
     quota_sides=['main_left','main_right']
     if selected['facts']['platform']=='termux' and (fmt.get('rows',0) or 2)==2:
         quota_sides+=['termux_left','termux_right']

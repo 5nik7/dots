@@ -13,6 +13,10 @@ Distinguish terminal focus, a client's selected pane, and the Android tab the pe
 
 Map current client TTYs to validated live tab leaders and start times. Never infer a tab from server ancestry or workspace origin. Keep socket identity, session creation time, pane/thread identity and expiring snapshots separate; linked windows and multiple clients must not duplicate device delivery. Activity can be displayed without a thread ID, but an event cannot be associated without one.
 
+Keep one window marker with question > working > waiting > open precedence, and use foreground detection for open. With zero/one validated Termux app tab, hide the entire upper alert strip without changing pending events or delivery. Automatic multi-project sessions hide their component while retaining their real names; use cached project count rather than the label.
+
+Question presence survives unread acknowledgement until resolved or no longer waiting. Finished is a green alert type; regular/question takes priority in mixed groups. Keep per-type native toast/vibration settings independent, legacy aliases for regular, and snapshot compatibility.
+
 Use the isolated suites in the guide, including multi-server topology, stale identities, full-label styling and narrow panes. Confirm the final title identity is a full UUID or the supported truncated form and resolves unambiguously to a full event ID, without printing unrelated title text. Private PTYs and Android stand-ins do not prove real device delivery or hook trust.
 
 For authorized activation, retain source/runtime recovery and change only owned settings and workers. Do not restart a shared Codex server or bypass `/hooks`. Follow the existing documentation/wiki workflow. Use the shell integration skill for changes to startup timing.

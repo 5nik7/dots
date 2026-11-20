@@ -123,6 +123,21 @@ class Discovery(unittest.TestCase):
         self.assertIsInstance(draft.plan,ControlPlan)
         self.assertEqual(draft.proposed,'accent')
 
+    def test_open_indicator_browser_and_completion_controls(self):
+        from config_menu import Inventory,Draft
+        inventory=Inventory(self.root,self.platform,no_refresh=True)
+        for key in ('icons.apps.tmux.status.open','icons.apps.tmux.status.working',
+                    'icons.apps.tmux.status.waiting','colors.apps.tmux.indicators.open.fg',
+                    'colors.apps.tmux.indicators.open.bg','colors.apps.tmux.indicators.open.bold',
+                    'apps.tmux.indicators.open.text','formatting.apps.tmux.indicators.open.before',
+                    'formatting.apps.tmux.indicators.open.after','formatting.apps.tmux.indicators.open.spacer'):
+            with self.subTest(key=key):
+                self.assertIsNotNone(inventory.find(key))
+                self.assertIn(key,{k for k,_ in key_candidates(self.root,key.rsplit('.',1)[0]+'.')})
+        draft=Draft(inventory,inventory.find('colors.apps.tmux.indicators.open.fg')).prepare('accent')
+        self.assertEqual(draft.proposed,'accent')
+        self.assertEqual(Controls(self.root).resolve('apps.tmux.indicators.open.text')['value'],None)
+
     def test_tmux_compiler_literal_controls(self):
         from tmux_controls import compile_options
         data=json.loads(self.path.read_text());data['apps']={'tmux':{'indicators':{'prefix':{'text':'#(touch /tmp/escape)'}}}}
@@ -182,6 +197,16 @@ class Discovery(unittest.TestCase):
             out=sessions.render(rows,'$7',width,{'options':{'session':{}}})
             self.assertLessEqual(cells(out),width)
             self.assertIn('7' if width>1 else '$',out)
+        metadata={'auto':True,'projects':['/a','/b'],'repository':{'host':'github'}}
+        multi=('$0','multi-123','multi','7','',json.dumps(metadata))
+        single=('$1','multi-456','multi','','',json.dumps(dict(metadata,projects=['/multi'])))
+        prefs={'options':{'session':{}},'icons':{'hosts.github':'HOST'}}
+        self.assertEqual(sessions.render([multi,single],'$0',120,prefs),'')
+        self.assertIn('HOST',sessions.render([multi,single],'$1',120,prefs))
+        self.assertNotIn('multi-123',sessions.render([multi,single],'$1',120,prefs))
+        unknown=('$2','manual','manual','','',json.dumps({'repository':{'host':'github'}}))
+        self.assertNotIn('HOST',sessions.render([unknown],'$2',120,prefs))
+        self.assertIn('manual',sessions.render([unknown],'$2',120,prefs))
         prefs={'colors':{'battery.low':{'fg':'#112233'},'battery.low.icon':{'fg':'#445566'},'battery.low.text':{'fg':'#778899'}},'icons':{'battery.low':'L'}}
         text=battery.render('\x1b[33mX 20%\x1b[0m',('red','yellow','green','brightblack'),True,prefs)
         self.assertIn('#[fg=#445566]L',text);self.assertIn('#[fg=#778899]20%',text)

@@ -150,6 +150,12 @@
         },
         "attention": {
           "text": null
+        },
+        "open": {
+          "text": null
+        },
+        "question": {
+          "text": null
         }
       },
       "codex_usage": {
@@ -332,6 +338,16 @@
             "spacer": ""
           },
           "attention": {
+            "before": "",
+            "after": "",
+            "spacer": ""
+          },
+          "open": {
+            "before": "",
+            "after": "",
+            "spacer": ""
+          },
+          "question": {
             "before": "",
             "after": "",
             "spacer": ""

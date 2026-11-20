@@ -167,9 +167,11 @@ targets alongside verified Updated names. Package recipes stop on their own
 failure; manager hooks and replacement recipes retain their boundaries. Failed
 commands' errors take priority over earlier successful-command diagnostics. Native
 dependency-conflict blocks become one notice to run `python -m pip check`;
-installed dependencies are not repaired automatically. Automatic Termux upgrades
-use compatible wheels, while explicit native format controls/targets can request
-source builds. Automatic gem upgrades include RubyGems self-update unless
+installed dependencies are not repaired automatically. Automatic Termux pip and uv-tool upgrades
+use compatible wheels (`--only-binary=:all:` and `--no-build` respectively), while
+explicit native build/binary controls, targets and recipes retain native behavior.
+uv keeps its saved tool settings; unavailable compatible resolutions remain failures.
+See [upgrade scope and overrides](../../docs/packages.md#upgrade-and-scope). Automatic gem upgrades include RubyGems self-update unless
 `apps.pkgs.upgrade.gem_system` is false.
 Compact global npm installs/upgrades offer default-no approval for blocked scripts,
 one exact installed package/version at a time. Approval uses a temporary

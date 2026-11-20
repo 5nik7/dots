@@ -114,6 +114,51 @@ else: raise SystemExit('unexpected manager invocation')
             if os.name!='nt':
                 self.assertIn(expected.encode(),self.call([self.repo/'bin/dots','__complete','bash',str(len(words)),'--','dots',*words])[0])
 
+    @unittest.skipIf(os.name=='nt','Termux uv fixture; native Windows keeps its existing build policy')
+    def test_termux_uv_wheel_policy_on_all_surfaces(self):
+        calls=self.home/'uv-calls.jsonl'
+        self.env={k:v for k,v in self.env.items() if not k.upper().startswith('UV_')}
+        self.env.update(TERMUX_VERSION='fixture',PREFIX=str(self.home/'prefix'),
+                        TEST_UV_CALLS=str(calls),DOTS_MENU_CAPTURE='1')
+        config=Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json'
+        config.parent.mkdir(parents=True,exist_ok=True)
+        config.write_text(json.dumps({'upgrade':{'managers':['uv-tool']}}))
+        fake=self.repo/'bin/uv'
+        fake.write_text('#!'+sys.executable+'\n'+'''import json,os,sys
+a=sys.argv[1:]
+if a==['tool','list']: print('typer v0.29.2\\n- typer')
+elif a[:2]==['tool','upgrade']:
+    with open(os.environ['TEST_UV_CALLS'],'a') as f:f.write(json.dumps(a)+'\\n')
+    if os.environ.get('TEST_UV_FAIL'):
+        print('error: Failed to upgrade typer',file=sys.stderr);sys.exit(1)
+    print('No changes')
+else: raise SystemExit('unexpected uv invocation')
+''');fake.chmod(0o755)
+        for alias in ('up','upgrade'):
+            for argv in self.surfaces('pkgs',[alias,'--dry-run']):
+                out,_,_=self.call(argv)
+                self.assertIn(b'uv tool upgrade typer --no-build',out)
+        self.assertFalse(calls.exists())
+        for width in (40,80,120):
+            self.env['COLUMNS']=str(width)
+            results=[self.call(argv) for argv in self.surfaces('pkgs',['up'])]
+            self.assertTrue(all(result==results[0] for result in results))
+            self.assertIn(b'complete',results[0][0])
+            self.assertIn(b'none',results[0][0])
+        self.assertTrue(all(json.loads(line)==['tool','upgrade','typer','--no-build']
+                            for line in calls.read_text().splitlines()))
+        self.env['TEST_UV_FAIL']='1'
+        for argv in self.surfaces('pkgs',['up','--manager','uv-tool']):
+            out,err,_=self.call(argv,code=1)
+            self.assertIn(b'failed',out)
+        self.env.pop('TEST_UV_FAIL')
+        for mode in ('raw','redirect'):
+            if mode=='redirect': self.env.pop('DOTS_MENU_CAPTURE')
+            for argv in self.surfaces('pkgs',['up',*(['--raw'] if mode=='raw' else [])]):
+                self.assertIn(b'No changes',self.call(argv)[0])
+        for argv in self.surfaces('pkgs',['up','--manager','uv-tool','typer']): self.call(argv)
+        self.assertEqual(json.loads(calls.read_text().splitlines()[-1]),['tool','upgrade','typer'])
+
     @unittest.skipIf(os.name=='nt','POSIX npm fixture; WinGet uses package-core fixtures')
     def test_compact_install_alias_on_all_entry_points(self):
         db = self.fake_npm()

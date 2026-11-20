@@ -9,6 +9,7 @@ from interaction import RichSelector, SelectionEvent, rich_fzf_available, termin
 from menu_tmux import read_request, request_file
 from picker_style import fit, picker_colors, styles, named_styles
 from resources import clean, cells
+from codex_attention import alert_type
 from menu_pager import ANSI
 
 
@@ -94,9 +95,9 @@ def preview_text(row, ui, codes):
         current = ui.paint(' · current', '1;' + codes['bright_green']) if session.current else ''
         lines.append('  ' + name + windows + ui.paint(' · ', muted) + clients + current)
         if session.attention:
-            lines.append(ui.paint(f'  Codex: {session.attention} unread', '1;' + codes['bright_red']))
+            lines.append(ui.paint(f'  Codex: {session.attention} unread', codes.get('alert_'+str(session.alert_type),'1;' + codes['bright_green' if session.alert_type=='finished' else 'bright_red'])))
             for pane in session.attention_panes:
-                lines.append(ui.paint('    ' + pane['window'] + ' / ' + pane['pane'] + ' · ' + pane['state'], codes['bright_red']))
+                lines.append(ui.paint('    ' + pane['window'] + ' / ' + pane['pane'] + ' · ' + ('question' if pane.get('question') else pane['state']), codes.get('alert_'+str(session.alert_type),codes['bright_green' if session.alert_type=='finished' else 'bright_red'])))
     return '\n'.join(lines) + '\n'
 
 
@@ -109,6 +110,11 @@ def preview_height(previews, lines):
 
 def render(rows, ui, width):
     codes = named_styles(ui)
+    from style_config import current
+    preferences=current()
+    if preferences:
+        for kind,role,color in (('regular','alert','bright_red'),('finished','finished','bright_green')):
+            codes['alert_'+kind]=preferences.sgr('session.'+role,dict(fg=color,bold=True),app='tmux')
     muted, emphasis = codes['muted'], codes['emphasis']
     name_width = max(8, min(26, width // 2 - 3, max((cells(clean(row.label)) for row in rows), default=8)))
     labels, previews = [], []
@@ -125,6 +131,7 @@ def render(rows, ui, width):
             detail = f'[{count}]' if row.project else f'{row.sessions[0].windows}w'
         count_text = detail
         alert_count = sum(s.attention for s in row.sessions)
+        kind=alert_type((s.alert_type for s in row.sessions if s.attention),question=any(s.question for s in row.sessions))
         alert_text = (' · ' + ((ui.icon('navigation.codex', '') + ' ') if ui.icons else 'Codex ') + str(alert_count)) if alert_count else ''
         current_text = ' · ' + ((ui.icon('status.success', '') + ' ') if ui.icons else '') + 'current' if current else ''
         if current:
@@ -145,7 +152,7 @@ def render(rows, ui, width):
                 styled_detail += ui.paint(detail[marker_end:], muted)
         else:
             styled_detail = ui.paint(detail, muted)
-        labels.append(name + ui.paint(' · ', muted) + styled_detail + ui.paint(alert_text, '1;' + codes['bright_red']))
+        labels.append(name + ui.paint(' · ', muted) + styled_detail + ui.paint(alert_text, codes.get('alert_'+str(kind),'1;' + codes['bright_green' if kind=='finished' else 'bright_red'])))
         previews.append(preview_text(row, ui, codes))
     return labels, previews
 

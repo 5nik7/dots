@@ -109,8 +109,28 @@ class Attention(unittest.TestCase):
             self.assertIn('fg=#ff0000,bold,nounderscore,noreverse,nodim][2 ]#[default]', result)
         one = dict(count=1, sessions=[dict(pid=10, tty='pts/1')])
         result = tabs.render_attention_tabs(one, 'pts/1', colors, 22, '#555555', '#111111', {}, 1, 'brightred', 'black')
-        self.assertEqual(re.sub(r'#\[[^]]*\]', '', result), '[ 1]')
+        self.assertEqual(result, '')
         self.assertEqual(tabs.render_attention_tabs(one, 'pts/1', colors, 22, '#555555', '#111111', {}, 0, 'brightred', 'black'), '')
+
+    def test_single_tab_hides_all_attention_without_changing_pending_state(self):
+        colors = ['#111111', '#aaaaaa', '#222222', '#ff8800']
+        states = {(10, 100, 'pts/1'): dict(state='waiting', attention=True)}
+        before = copy.deepcopy(states)
+        for count in (0, 1):
+            snapshot = dict(count=count, sessions=[dict(pid=10, tty='pts/1')] if count else [])
+            for width in (1, 3, 40, 80, 120):
+                for undisplayed in (0, 1, 10):
+                    result = tabs.render_attention_tabs(snapshot, 'pts/1', colors, width,
+                                                        '#555555', '#111111', states,
+                                                        undisplayed, '#ff0000', '#101010')
+                    self.assertEqual(result, '')
+        self.assertEqual(states, before)
+        snapshot = dict(count=2, sessions=[dict(pid=10, tty='pts/1'), dict(pid=20, tty='pts/2')])
+        result = tabs.render_attention_tabs(snapshot, 'pts/1', colors, 80, '#555555', '#111111',
+                                            states, 1, '#ff0000', '#101010')
+        plain = re.sub(r'#\[[^]]*\]', '', result)
+        self.assertIn('[1 ]', plain)
+        self.assertIn('[ 1]', plain)
 
     def test_menu_overlay_preserves_data_and_names(self):
         self.publish()

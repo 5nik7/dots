@@ -377,6 +377,10 @@ class Backend:
             args = ['uv', 'tool', action] + names
             if action == 'upgrade' and not names:
                 args += ['--all']
+            if (action == 'upgrade' and self.termux and getattr(self, 'automatic_upgrade', False) and
+                    not any(k.upper() in ('UV_NO_BUILD', 'UV_NO_BUILD_PACKAGE',
+                                          'UV_NO_BINARY', 'UV_NO_BINARY_PACKAGE') for k in os.environ)):
+                args += ['--no-build']
         elif n == 'pip':
             if action == 'refresh':
                 raise Error('pip has no local search catalog to refresh.')

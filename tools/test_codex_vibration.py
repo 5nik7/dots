@@ -214,6 +214,25 @@ class Vibration(unittest.TestCase):
         result=json.loads(self.debug('alert','--json',TERMUX_VERSION='fixture').stdout)
         self.assertEqual(result['results']['toast']['status'],'skipped');self.assertEqual(len(self.calls()),count)
 
+    def test_finished_debug_frontends_and_type_completion(self):
+        for field,value in (('toast.fg','#00ff00'),('toast.bg','#010203'),('toast.short','true'),('vibrate.duration','10'),('vibrate.force','true'),('vibrate.count','1')):
+            self.cli('set','apps.codex.alerts.finished.'+field,value,'--json')
+        for native in (False,True):
+            data=json.loads(self.debug('alert','--type','finished','--json',native=native,TERMUX_VERSION='fixture').stdout)
+            self.assertEqual(data['alert_type'],'finished')
+            self.assertEqual(data['settings']['toast']['fg'],'#00ff00')
+            self.assertEqual(data['results']['toast']['status'],'sent')
+        self.assertEqual([r[1] for r in self.calls() if r[0]=='termux-vibrate'],[['-d','10','-f']]*2)
+        self.assertTrue(all(row[1][row[1].index('-c')+1]=='#00ff00' for row in self.calls() if row[0]=='termux-toast'))
+        self.assertFalse((state_root()/'codex-alerts').exists())
+        for shell in ('bash','zsh','fish','native'):
+            words=['debug','alert','--type','']
+            cmd=([sys.executable,'-B',str(self.root/'lib/dots/cli.py'),'__complete',*words] if shell=='native' else
+                 [str(self.root/'bin/dots'),'__complete',shell,str(len(words)),'--','dots',*words])
+            p=subprocess.run(cmd,env=self.env,capture_output=True,text=True,timeout=10)
+            self.assertEqual(p.returncode,0,p.stderr)
+            self.assertIn('regular',p.stdout);self.assertIn('finished',p.stdout)
+
     def test_help_completion_and_curated_tests_never_send(self):
         for native in (False,True):
             self.debug('--help',native=native)

@@ -129,7 +129,7 @@ def icon_sample(styles,key,glyph,tmux_options=None,*,published=None,menu_formatt
                 roles+=['session.repository']
                 if role.startswith('hosts.'):roles.append(role)
             roles+=['session.icon','session.active.icon']
-        elif role in ('status.working','status.waiting'):
+        elif role in ('status.open','status.working','status.waiting','status.question'):
             roles=['ui.foreground',role,'icons.'+role,'indicators.'+role.split('.')[1]]
             state='tmux indicator'
         elif role=='git.stashed':
@@ -165,8 +165,20 @@ def icon_sample(styles,key,glyph,tmux_options=None,*,published=None,menu_formatt
 
 
 def icon_tree(values,styles,path=(),tmux_options=None,**kwargs):
-    return {key:icon_tree(value,styles,(*path,key),tmux_options,**kwargs) if isinstance(value,dict) else
-            icon_sample(styles,'.'.join((*path,key)),value,tmux_options,**kwargs) for key,value in values.items()}
+    result={}
+    for key,value in values.items():
+        name='.'.join((*path,key))
+        if isinstance(value,dict):result[key]=icon_tree(value,styles,(*path,key),tmux_options,**kwargs)
+        else:
+            sample=icon_sample(styles,name,value,tmux_options,**kwargs)
+            if name in ('apps.tmux.status.open','apps.tmux.status.working','apps.tmux.status.waiting','apps.tmux.status.question'):
+                resolved=styles.resolve('icons',name)
+                if resolved['declarations']:
+                    source=resolved['declarations'][-1]['key']
+                    origin=('inherited from ' if source!='icons.'+name else '')+source
+                    sample=Glyph(sample.text,sample.code,'; '.join(filter(None,(sample.annotation,origin))))
+            result[key]=sample
+    return result
 
 
 def weather_icons(weather,styles):
@@ -231,12 +243,21 @@ def listing(ui,result):
 
 def _listing(ui,result):
     config=copy.deepcopy(result['config'])
+    codex=config.get('apps',{}).get('codex',{})
+    if 'alerts' in codex:
+        codex.pop('toast',None);codex.pop('vibrate',None)
     from config_values import current
     controls=current()
     from style_config import Styles
     from profile_config import context
     defaults=result['profile']=='defaults'
     styles=Styles(controls.root,context(controls.root,None if defaults else result['profile']),defaults=defaults)
+    # Expose the supported per-tmux activity controls without materializing
+    # overrides or expanding the declared-value JSON/redirected interfaces.
+    if 'icons' in config:
+        activity=config['icons'].setdefault('apps',{}).setdefault('tmux',{}).setdefault('status',{})
+        for state in ('open','working','waiting','question'):
+            activity[state]=styles.icon('status.'+state,app='tmux')
     from config_fallbacks import Fallbacks
     fallbacks=Fallbacks(styles,config)
     try:columns=controls.resolve('formatting.apps.cli.label_width')

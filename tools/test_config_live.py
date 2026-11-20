@@ -93,6 +93,64 @@ class ConfigLive(unittest.TestCase):
         updated=inline_color(updated,'tabs','active','bg','#654321')
         self.assertIn('fg = "#112233", bg = "#654321"',updated)
 
+    def test_open_indicator_publish_override_reset_and_refresh(self):
+        from config_cli import ControlPlan
+        old=self.generation();palette=(old/'palette.json').read_bytes()
+        before=effective(self.root)
+        icon=StylePlan(self.root,context(self.root),'icons')
+        icon.edit('apps.tmux.status.open','O');icon.apply('set')
+        color=StylePlan(self.root,context(self.root),'colors')
+        color.edit('apps.tmux.indicators.open.fg','#123456');color.apply('set')
+        result=after_save(self.root,before)
+        self.assertEqual(result['status'],'complete')
+        new=active(self.state)
+        self.assertEqual((new/'palette.json').read_bytes(),palette)
+        prefs=json.loads((new/'preferences.json').read_text())['apps']['tmux']
+        self.assertEqual(prefs['icons']['status.open'],'O')
+        self.assertEqual(prefs['colors']['indicators.open']['fg'],'#123456')
+        fragment=(new/'tmux.visual.conf').read_text()
+        for text in ('@dots-marker-open','@dots-session-multi','@dots-workspace-project-count','fg=#123456'):
+            self.assertIn(text,fragment)
+        before=effective(self.root)
+        reset=StylePlan(self.root,context(self.root),'icons');reset.edit('apps.tmux.status.open',None,unset=True);reset.apply('unset')
+        reset=StylePlan(self.root,context(self.root),'colors');reset.edit('apps.tmux.indicators.open.fg',None,unset=True);reset.apply('unset')
+        after_save(self.root,before)
+        prefs=json.loads((active(self.state)/'preferences.json').read_text())['apps']['tmux']
+        self.assertEqual(prefs['icons']['status.open'],'')
+        self.assertEqual(prefs['colors']['indicators.open']['fg'],'#aabbcc')
+        self.assertFalse(prefs['colors']['indicators.open']['bold'])
+        self.assertFalse(prefs['colors']['indicators.open']['dim'])
+        self.assertEqual((active(self.state)/'palette.json').read_bytes(),palette)
+
+    def test_question_and_finished_preferences_publish_with_sources(self):
+        from config_cli import ControlPlan
+        from config_completion import value_spec
+        old=self.generation();palette=(old/'palette.json').read_bytes()
+        before=effective(self.root)
+        for group,key,value in (('icons','apps.tmux.status.question','?'),
+                                ('colors','apps.tmux.indicators.question.fg','#ff1234'),
+                                ('colors','apps.tmux.windows.finished.fg','#12ff34'),
+                                ('colors','apps.tmux.tabs.finished.bold',False),
+                                ('colors','apps.tmux.session.finished.bg','#123456'),
+                                ('colors','apps.tmux.indicators.finished.dim',False)):
+            plan=StylePlan(self.root,context(self.root),group);plan.edit(key,value);plan.apply('set')
+            self.assertTrue(explain(group+'.'+key,self.root)['consumers'][0]['supported'])
+            self.assertIn(group+'.'+key,keys(self.root))
+        for key,value in (('apps.tmux.indicators.question.text','Q'),('formatting.apps.tmux.indicators.question.before','(')):
+            plan=ControlPlan(self.root,context(self.root));plan.edit(key,value);plan.apply('set')
+            self.assertTrue(value_spec(self.root,key))
+        result=after_save(self.root,before);self.assertEqual(result['status'],'complete')
+        new=active(self.state);self.assertEqual((new/'palette.json').read_bytes(),palette)
+        prefs=json.loads((new/'preferences.json').read_text())['apps']['tmux']
+        self.assertEqual(prefs['icons']['status.question'],'?')
+        self.assertEqual(prefs['options']['indicators']['question']['text'],'Q')
+        self.assertEqual(prefs['colors']['window.finished']['fg'],'#12ff34')
+        self.assertEqual(prefs['colors']['session.finished']['bg'],'#123456')
+        self.assertFalse(prefs['colors']['tabs.finished']['bold'])
+        fragment=(new/'tmux.visual.conf').read_text()
+        for text in ('@dots-marker-question','@dots-window-regular-style','@dots-window-finished-style','@dots-window-codex-question','fg=#ff1234','fg=#12ff34'):
+            self.assertIn(text,fragment)
+
     def test_quota_controls_publish_reset_and_preserve_palette(self):
         from config_cli import ControlPlan
         from config_values import Controls

@@ -947,7 +947,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         # into a private tmux terminal; procfs identity has separate fixtures.
         module = self.repo / 'lib/dots/codex_attention.py'
         with module.open('a') as stream:
-            stream.write('\ndef tab_states(servers):\n'
+            stream.write('\ndef tab_states(servers, **kwargs):\n'
                          '    if (Path.home()/"attention-off").exists(): return {}, 0\n'
                          '    return {(901,100,"pts/9999"):dict(state="waiting",attention=True)}, 1\n')
         for width in (40, 80, 120):
@@ -958,6 +958,14 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                     self.assertEqual(self.colors_at(lines[0], label, offset), {'fg': (255,85,85), 'bg': (1,2,3)})
                     self.assertTrue(self.bold_at(lines[0], label, offset))
             self.assertIn('80%', self.plain(lines[0]))
+        # Pending undisplayed attention remains, but the entire strip follows
+        # the live app-tab count, independently of tmux session/window counts.
+        for width in (40, 80, 120):
+            outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
+            self.snapshot([tty])
+            self.await_screen(outer, 'view', lambda rows: rows and '80%' in rows[0] and '[' not in rows[0] and '' not in rows[0])
+            self.snapshot([tty, 'pts/9999'])
+            self.await_screen(outer, 'view', lambda rows: rows and '[2 ]' in rows[0] and '[ 1]' in rows[0])
         (self.home / 'attention-off').touch()
         lines = self.await_screen(outer, 'view', lambda rows: rows and '[2' not in rows[0] and '' not in rows[0] and ' 2 ' in rows[0])
         self.assertNotEqual(self.colors_at(lines[0], ' 2 ')['fg'], (255,85,85))

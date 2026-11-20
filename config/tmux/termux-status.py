@@ -155,9 +155,15 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
     """Whole numeric labels, a reserved orphan badge, and alerted overflow."""
     # Keep all legacy discovery/color validation and plain-strip behavior.
     ordinary = render_tabs(snapshot, tty, colors, width, separator_fg, separator_bg)
+    # A singleton strip is hidden even when the worker has pending attention.
+    # This affects presentation only, never delivery or acknowledgement.
+    if snapshot['count'] <= 1:
+        return ''
     from status_styles import preferences as published,style,span,format_for,cells
     preferences=published() if preferences is None else preferences
     settings=format_for('tabs',preferences)
+    badge_type=undisplayed.get('alert_type') if isinstance(undisplayed,dict) else 'regular'
+    undisplayed=undisplayed.get('count',0) if isinstance(undisplayed,dict) else undisplayed
     customized=any(k.startswith('tabs.') for k in preferences.get('colors',{})) or any(settings.get(k,v)!=v for k,v in {'before':' ','after':' ','separator':'│','spacer':' ','alert':{'before':'[','after':']'}}.items())
     if not states and not undisplayed and not customized:
         return ordinary
@@ -165,6 +171,11 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
         raise ValueError('invalid attention colors')
     tty = tty.removeprefix('/dev/')
     alert = f'#[bg={alert_bg},fg={alert_fg},bold,nounderscore,noreverse,nodim]'
+    def alert_style(kind):
+        return style('tabs.finished',alert+'#[fg=brightgreen]',preferences) if kind=='finished' else style('tabs.alert',alert,preferences)
+    def group_style(entries):
+        kind=codex_attention.alert_type(e[2] for e in entries)
+        return alert_style(kind) if kind else '#[default]'
     divider = span('tabs.spacer',settings.get('separator','│'),f'#[bg={separator_bg},fg={separator_fg},nobold,nounderscore,noreverse,nodim]',preferences)
     divider_width=cells(divider)
     entries = []
@@ -173,9 +184,12 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
                       if pid == tab['pid'] and terminal == tab['tty']), {})
         current = tab['tty'] == tty
         active = value.get('attention', False)
-        marker_state='attention' if active else value.get('state')
-        marker = {'working': glyph('status.working',''), 'waiting': glyph('status.waiting','')}.get(value.get('state'), '')
-        override=preferences.get('options',{}).get('indicators',{}).get(marker_state,{}).get('text')
+        kind=codex_attention.alert_type([value.get('alert_type') or 'regular'] if active else [],question=value.get('question',False))
+        activity=codex_attention.display_state(value)
+        marker_state='question' if activity=='question' else ('finished' if kind=='finished' else 'attention') if active else activity
+        marker = {'working': glyph('status.working',''), 'waiting': glyph('status.waiting',''), 'question': glyph('status.question','')}.get(activity, '')
+        text_state='attention' if marker_state=='finished' else marker_state
+        override=preferences.get('options',{}).get('indicators',{}).get(text_state,{}).get('text')
         if override is not None:marker=override.replace('#','##')
         # Current activity is already visible in the lower row; attention must
         # still be visible there and here under conservative focus handling.
@@ -183,8 +197,8 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
         label = str(i) + (' ' + marker if marker else '')
         text = '[' + label + ']' if active else ' ' + label + ' '
         bg, fg = colors[2:] if current else colors[:2]
-        base = alert if active else f'#[bg={bg},fg={fg},bold,nounderscore,noreverse,nodim]'
-        state='alert' if active else 'active' if current else 'inactive'
+        base = alert_style(kind) if active else f'#[bg={bg},fg={fg},bold,nounderscore,noreverse,nodim]'
+        state=('finished' if kind=='finished' else 'alert') if active else 'active' if current else 'inactive'
         base=style('tabs.'+state,base,preferences)
         fmt=dict(settings,**settings.get('alert',{})) if active else settings
         before=fmt.get('before','[' if active else ' ');after=fmt.get('after',']' if active else ' ')
@@ -193,14 +207,14 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
         if marker:
             markerbase=style('indicators.'+str(marker_state),base,preferences)
             markerbase=style('tabs.'+state+'.icon',style('tabs.icon',markerbase,preferences),preferences)
-            markerfmt=format_for('indicators',preferences).get(marker_state,{})
+            markerfmt=format_for('indicators',preferences).get(text_state,{})
             text+=span('tabs.'+state+'.spacer',settings.get('spacer',' '),style('tabs.spacer',base,preferences),preferences)
             text+=span('indicators.'+str(marker_state)+'.surround',markerfmt.get('before',''),markerbase,preferences)
             text+=span('tabs.'+state+'.icon',marker.replace('##','#'),markerbase,preferences)
             text+=span('indicators.'+str(marker_state)+'.surround',markerfmt.get('after',''),markerbase,preferences)
             text+=span('indicators.'+str(marker_state)+'.spacer',markerfmt.get('spacer',''),markerbase,preferences)+base
         text+=span('tabs.'+state+'.surround',after,style('tabs.surround',base,preferences),preferences)+'#[default]'
-        entries.append((text, cells(text), active))
+        entries.append((text, cells(text), kind))
     if len(entries) == 1 and not entries[0][2]:
         entries = []
     badge = '[' + glyph('navigation.codex','') + f' {undisplayed}]' if undisplayed else ''
@@ -208,14 +222,14 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
     if width <= 0:
         return ''
     if badge and len(badge) > width:
-        return alert + ('!' if width < 3 else '[!]') + '#[default]'
+        return alert_style(badge_type) + ('!' if width < 3 else '[!]') + '#[default]'
     budget = width - (cells(badge) + divider_width*bool(entries) if badge else 0)
     selected = next((i for i, tab in enumerate(snapshot['sessions']) if tab['tty'] == tty), 0)
     if not entries or entries[selected][1] > budget:
         # Keep a visible attention signal even when the tab label cannot fit.
-        parts = [alert + badge + '#[default]'] if badge else []
+        parts = [alert_style(badge_type) + badge + '#[default]'] if badge else []
         if not parts and any(e[2] for e in entries):
-            parts = [alert + ('[!]' if width >= 3 else '!') + '#[default]']
+            parts = [group_style(entries) + ('[!]' if width >= 3 else '!') + '#[default]']
         return ''.join(parts)
     left, right = selected, selected + 1
     def used(a, b):
@@ -229,12 +243,12 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
     parts = [e[0] for e in entries[left:right]]
     spare = budget - sum(e[1] for e in entries[left:right]) - divider_width*(len(parts) - 1)
     if left and spare >= divider_width+1:
-        parts.insert(0, (alert if any(e[2] for e in entries[:left]) else '#[default]') + '<#[default]')
+        parts.insert(0, group_style(entries[:left]) + '<#[default]')
         spare -= divider_width+1
     if right < len(entries) and spare >= divider_width+1:
-        parts.append((alert if any(e[2] for e in entries[right:]) else '#[default]') + '>#[default]')
+        parts.append(group_style(entries[right:]) + '>#[default]')
     if badge:
-        parts.append(alert + badge + '#[default]')
+        parts.append(alert_style(badge_type) + badge + '#[default]')
     return divider.join(parts)
 
 
@@ -279,7 +293,7 @@ def main(argv=None):
         if tabs:
             if split_current or split_badge or compact_badge:
                 raise ValueError('conflicting tab rendering modes')
-            states, undisplayed = codex_attention.tab_states(codex_attention.load())
+            states, undisplayed = codex_attention.tab_states(codex_attention.load(), typed=True)
             output = render_attention_tabs(json.loads(result.stdout), args[0][6:], args[1:], width,
                                  separator_colors.get('--separator-fg'), separator_colors.get('--separator-bg'),
                                  states, undisplayed, separator_colors.get('--alert-fg', 'brightred'),

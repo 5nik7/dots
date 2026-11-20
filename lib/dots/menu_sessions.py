@@ -48,6 +48,8 @@ class Session:
     created: int
     attention: int = 0
     attention_panes: tuple = ()
+    alert_type: str = "regular"
+    question: bool = False
 
     def entry(self):
         unit = 'window' if self.windows == 1 else 'windows'
@@ -385,25 +387,25 @@ def browse(context=None, query=''):
 
 
 def with_attention(server, items):
-    from codex_attention import load, sessions, socket_key
+    from codex_attention import load, sessions, socket_key, display_state
     try:
         key = socket_key(server.socket)
     except OSError:
         return items
-    records = {r['id']: r for r in sessions(load()) if r['key'] == key and r['attention']}
-    return tuple(replace(s, attention=records[s.id]['attention'],
+    records = {r['id']: r for r in sessions(load()) if r['key'] == key and (r['attention'] or r['question'])}
+    return tuple(replace(s, attention=records[s.id]['attention'], alert_type=records[s.id]['alert_type'], question=records[s.id]['question'],
                          attention_panes=tuple(p for p in records[s.id]['panes'] if p['attention']))
                  if s.id in records and s.created == records[s.id]['created'] else s for s in items)
 
 
 def browse_attention(context=None):
     """Read-only overview; each explicit action pins and rechecks its target."""
-    from codex_attention import load, sessions, socket_key
+    from codex_attention import load, sessions, socket_key, display_state
     from menu_session_host import is_termux, launch_termux, termux_transport
     while True:
         records = [(s, p) for s in sessions(load()) for p in s['panes'] if p['attention']]
         entries = tuple(Entry(str(i), f"{Path(s['socket']).name} ({s['key'][:6]}) · {s['id']} / {p['window']} / {p['pane']}",
-                              p['state'] + ' · unread Codex alert', icon=style_icon('navigation.codex', ''))
+                              display_state(p) + ' · unread Codex ' + (p.get('alert_type') or 'regular') + ' alert', icon=style_icon('navigation.codex', ''))
                         for i, (s, p) in enumerate(records))
         try:
             chosen = choose(Menu('codex-alerts', 'Codex alerts', entries), mode='browse', context=context,

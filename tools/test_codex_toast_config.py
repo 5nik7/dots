@@ -95,9 +95,9 @@ class ToastConfig(unittest.TestCase):
 
     def test_popup_toast_keys_colors_scope_and_widths(self):
         inventory=Inventory(self.root,self.platform)
-        rows={row.key:row for row in inventory.rows if row.key.startswith('apps.codex.toast.')}
-        self.assertEqual(set(rows),set(KEYS))
-        draft=Draft(inventory,rows[KEYS[3]]).prepare('true')
+        rows={row.key:row for row in inventory.rows if row.key.startswith('apps.codex.alerts.regular.toast.')}
+        self.assertEqual(set(rows),{key.replace('apps.codex.','apps.codex.alerts.regular.') for key in KEYS})
+        draft=Draft(inventory,inventory.find(KEYS[3])).prepare('true')
         self.assertTrue(draft.proposed);self.assertIn('five seconds',draft.review())
         self.assertEqual(Native(self.root).values['toast'],DEFAULTS)
         self.assertFalse(any(r.key.startswith('apps.codex.') for r in Inventory(self.root,'defaults').rows))

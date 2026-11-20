@@ -128,13 +128,15 @@ class WorkspacesTest(unittest.TestCase):
                 outer('resize-window', '-t', 'view' + str(index), '-x', str(width), '-y', '24')
             for index in range(2):
                 self.fx.await_screen(outer, 'view' + str(index), lambda rows:
-                    len(rows) > 1 and f' {index + 1} ' in rows[0] and 'main' in rows[1])
+                    len(rows) > 1 and f' {index + 1} ' in rows[0] and '80%' in rows[0] and 'main' in rows[1])
             for sample in range(45):
                 for index in range(2):
                     rows = frame(index)
                     self.assertGreater(len(rows), 1)
                     self.assertIn('80%', rows[0])
-                    self.assertIn('main', rows[1])
+                    if 'main' not in rows[1]:
+                        self.fail(repr(rows[1])+'; '+self.inner('display-message','-p','-c',terminals[index],
+                            '#{client_width}|#{E:@dots-git-snapshot}|#{E:@dots-gitmux-segment}|#{E:@dots-gitmux-width}'))
                     self.assertTrue(rows[1].startswith(' 󰊤 ' + ('alpha', 'beta')[index] + ' '), repr(rows[1]))
                     self.assertNotIn(self.w.metadata((first, second)[index])['id'], rows[1])
                 time.sleep(.04)
@@ -263,21 +265,28 @@ class WorkspacesTest(unittest.TestCase):
         data = self.w.metadata(ident); suffix = data['id']
         pane = self.pane(ident)
         self.assertEqual(self.w.name(ident), 'termux-' + suffix)
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '0')
         self.cd(pane, self.alpha)
         self.assertEqual(self.w.name(ident), 'alpha-' + suffix)
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '1')
         other = self.inner('split-window', '-d', '-P', '-F', '#{pane_id}', '-t', pane,
                            '-c', str(self.fx.home), shlex.join([BASH, '--noprofile', '--norc']))
         self.w.reconcile(other)
         self.assertEqual(self.w.name(ident), 'alpha-' + suffix)
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '1')
         self.cd(other, self.beta)
         self.assertEqual(self.w.name(ident), 'multi-' + suffix)
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '2')
         self.cd(pane, self.fx.home)
         self.assertEqual(self.w.name(ident), 'beta-' + suffix)
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '1')
         self.cd(other, self.fx.home)
         self.assertEqual(self.w.name(ident), 'termux-' + suffix)
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '0')
         self.cd(pane, self.beta)
         self.cd(pane, self.alpha)
         self.assertEqual(self.w.name(ident), 'alpha-' + suffix)
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '1')
         self.inner('rename-session', '-t', ident, 'my-manual-workspace')
         self.w.reconcile()
         self.cd(pane, self.beta)
@@ -315,6 +324,9 @@ class WorkspacesTest(unittest.TestCase):
         self.cd(self.pane(ident), self.alpha)
         self.cd(self.pane(ident), root)
         self.assertEqual(self.w.name(ident), root.name + '-' + suffix)
+        self.inner('set-option', '-u', '-t', ident, '@dots-workspace-project-count')
+        self.w.reconcile()
+        self.assertEqual(self.w.option(ident, '@dots-workspace-project-count'), '1')
         with patch.object(self.w, 'store', side_effect=AssertionError('no-op wrote metadata')):
             self.w.reconcile()
         before = self.w.metadata(ident)

@@ -4,19 +4,10 @@ from pathlib import Path
 import stat
 import tomllib
 
-import codex_toast
-import codex_vibration
 from codex_toast import ACTIVATION
 from config_values import parts, lookup
 from profile_config import context
-
-GROUPS={'toast':codex_toast,'vibrate':codex_vibration}
-KEYS=tuple(key for schema in GROUPS.values() for key in schema.KEYS)
-
-
-def constraints(key):
-    path=parts(key)
-    return GROUPS[path[2]].constraints(key) if len(path)>2 and path[2] in GROUPS else {}
+from codex_notifications import GROUPS, KEYS, LEGACY_KEYS, TYPES, canonical, split, values, constraints
 
 
 class Native:
@@ -36,22 +27,27 @@ class Native:
         self.declared=tomllib.loads(self.text)
         if self.declared.get('schema')!=1 or not isinstance(self.declared.get('termux'),dict):
             raise ValueError('invalid Codex preferences')
-        self.values={group:schema.values(self.declared['termux']) for group,schema in GROUPS.items()}
+        self.values=values(self.declared['termux'])
         if guarded and digest(self.path)!=self.guards[str(self.path)]:
             raise ValueError('Codex preferences changed while reading')
 
     def keys(self): return list(KEYS)
 
     def resolve(self, key):
-        if key not in (*KEYS,'apps.codex',*('apps.codex.'+group for group in GROUPS)):
+        branches=('apps.codex','apps.codex.alerts',*('apps.codex.'+group for group in GROUPS),
+                  *('apps.codex.alerts.'+kind for kind in TYPES),
+                  *('apps.codex.alerts.'+kind+'.'+group for kind in TYPES for group in GROUPS))
+        if key not in (*KEYS,*LEGACY_KEYS,*branches):
             raise ValueError('unknown Codex alert configuration key: '+key)
         source=self.path
-        if key in KEYS:
-            _,_,group,field=parts(key);schema=GROUPS[group]
-            if schema.FIELDS[field] not in self.declared['termux']:
+        if key in (*KEYS,*LEGACY_KEYS):
+            kind,group,field=split(key);schema=GROUPS[group]
+            table=self.declared['termux'] if kind=='regular' else self.declared['termux'].get('finished',{})
+            if schema.FIELDS[field] not in table:
                 source=self.root/'lib/dots'/(schema.__name__+'.py')
+                if kind=='finished' and group=='toast' and field=='fg':source=self.root/'lib/dots/codex_notifications.py'
         return dict(value=lookup(self.values,parts(key)[2:]), source=str(source),
-                    declarations=[], activation=ACTIVATION)
+                    declarations=[], activation=ACTIVATION,canonical_key=canonical(key))
 
 
 class NativePlan:
@@ -64,14 +60,14 @@ class NativePlan:
         self.items=[];self.operations=[]
 
     def edit(self, key, value=None, unset=False, json_value=False):
-        if key not in KEYS: raise ValueError('edit an individual Codex alert field')
+        if key not in (*KEYS,*LEGACY_KEYS): raise ValueError('edit an individual Codex alert field')
         try: import tomlkit
         except ImportError: raise ValueError('native TOML editing requires tomlkit; see tools/requirements-config.txt') from None
         if not unset and isinstance(value,str):
             try: value=json.loads(value)
             except ValueError:
                 if json_value: raise ValueError('value must be valid JSON') from None
-        _,_,group,field=parts(key);schema=GROUPS[group]
+        kind,group,field=split(key);schema=GROUPS[group]
         reset=unset or value is None
         if not reset:
             schema.validate(field,value)
@@ -79,11 +75,15 @@ class NativePlan:
                 from style_config import Styles
                 Styles(self.native.root).color(value)  # Reject unresolved global references.
         document=tomlkit.parse(self.native.text)
-        if reset: document['termux'].pop(schema.FIELDS[field],None)
-        else: document['termux'][schema.FIELDS[field]]=value
+        table=document['termux']
+        if kind=='finished':
+            if 'finished' not in table and not reset:table['finished']=tomlkit.table()
+            table=table.get('finished',{})
+        if reset: table.pop(schema.FIELDS[field],None)
+        else: table[schema.FIELDS[field]]=value
         text=tomlkit.dumps(document)
         self.data=tomllib.loads(text)
-        self.effective={group:schema.values(self.data['termux']) for group,schema in GROUPS.items()}
+        self.effective=values(self.data['termux'])
         self.items=[dict(action='unset' if reset else 'set',key=key)]
         self.operations=[dict(path=str(self.path),text=text)] if text!=self.native.text else []
 

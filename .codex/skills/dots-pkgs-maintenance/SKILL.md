@@ -32,7 +32,7 @@ failures. Named/project operations and custom upgrade recipes retain their own
 semantics. Finalize confirmed script receipts after the whole successful review
 batch, rechecking metadata and capturing final nested dependency build outputs.
 
-Automatic Termux pip upgrades default to compatible wheels; named targets, native binary-format controls and replacement recipes retain source-build control. Automatic gem upgrades include protected native RubyGems self-update even with empty user inventory, configurable with apps.pkgs.upgrade.gem_system.
+Automatic Termux pip and uv-tool upgrades default to compatible wheels (`--only-binary=:all:` and `--no-build`); named targets, native build/binary controls and replacement recipes retain their behavior. Preserve uv receipt settings and local wheel sources; unavailable compatible resolutions stay failures. Verify uv with owned local wheel/source fixtures and no network or host tool mutations. Automatic gem upgrades include protected native RubyGems self-update even with empty user inventory, configurable with apps.pkgs.upgrade.gem_system.
 
 Ordinary pip upgrades isolate each selected package recipe, continuing other
 targets after failure while retaining nonzero status and explicit Failed names.

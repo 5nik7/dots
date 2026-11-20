@@ -108,10 +108,7 @@ def value_spec(root,key):
         from config_pkgs import constraints as native_constraints
         return native_constraints(key)
     if key.startswith('apps.codex.'):
-        if key.startswith('apps.codex.vibrate.'):
-            from codex_vibration import constraints as native_constraints
-        else:
-            from codex_toast import constraints as native_constraints
+        from codex_notifications import constraints as native_constraints
         return native_constraints(key)
     if key.startswith('apps.wttr.'):
         # Import only the data validator; never the native editor/transaction path.
@@ -129,7 +126,7 @@ def value_candidates(root,key,current='',profile=None):
     icon=key.startswith('icons.') or key.startswith('apps.nvim.icons.') or key.startswith(('apps.wttr.icons[','apps.wttr.icons.','apps.wttr.night_icons['))
     if color:
         rows=color_candidates(root,profile)
-        if key.startswith('apps.codex.toast.'):
+        if key.startswith('apps.codex.') and '.toast.' in key:
             from codex_toast import validate
             accepted=[]
             for value,label in rows:

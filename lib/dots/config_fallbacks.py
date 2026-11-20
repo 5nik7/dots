@@ -74,17 +74,17 @@ class Fallbacks:
             return Glyph('inherited','0;39','FZF default / caller color' if self.active else 'No active-profile fallback in this scope')
         if self.active and path[:2]==('apps','codex'):
             from codex_toast import color
-            from config_codex import GROUPS
+            from codex_notifications import GROUPS, split
             if 'codex' not in self._native:
                 from config_codex import Native
                 self._native['codex']=Native(self.styles.root,self.styles.selected)
             native=self._native['codex'];source=native.resolve(key)['source']
-            field=path[-1];code='0;39'
+            kind,group,field=split(key);code='0;39'
             if field in ('fg','bg'):
                 palette=dict(colors=self.styles.palette,palette=self.styles.native_palette)
                 shade=color(value,palette,self.styles.root,'#000000' if field=='bg' else '#ffff00')
                 code='0;'+self.styles.sgr_color(shade,field=='bg')
-            return Glyph(scalar(value),code,source+(' · termux.'+GROUPS[path[2]].FIELDS[field] if source==str(native.path) else ' (default)'))
+            return Glyph(scalar(value),code,source+(' · termux.'+('finished.' if kind=='finished' else '')+GROUPS[group].FIELDS[field] if source==str(native.path) else ' (default)'))
         if self.active and path[:2] in (('apps','wttr'),('apps','pkgs')):
             app=path[1]
             if app not in self._native:
@@ -109,13 +109,13 @@ class Fallbacks:
             cfg=self.config.get('formatting',{}).get('apps',{}).get('tmux',{})
             _,main,upper=row_positions(cfg,self.styles.selected['facts']['platform'])
             return Glyph(str(main if path[-1]=='main_row' else upper),'0;39','lib/dots/tmux_config.py (automatic row)')
-        if key in ('apps.tmux.indicators.working.text','apps.tmux.indicators.waiting.text'):
+        if key in ('apps.tmux.indicators.open.text','apps.tmux.indicators.working.text','apps.tmux.indicators.waiting.text','apps.tmux.indicators.question.text'):
             state=path[-2];resolved=self.styles.resolve('icons','status.'+state,'tmux')
             sample=icon_sample(self.styles,'apps.tmux.status.'+state,self.styles.icon('status.'+state,app='tmux'))
             source=resolved['declarations'][-1]['key'] if resolved['declarations'] else 'lib/dots/tmux_controls.py'
             return Glyph(sample.text,sample.code,source+' (fallback text)')
         if key=='apps.tmux.indicators.attention.text':
-            return Glyph('working/waiting icon','0;39','lib/dots/tmux_controls.py (inherits activity text)')
+            return Glyph('activity icon','0;39','lib/dots/tmux_controls.py (inherits activity text)')
         if path[:3]==('apps','tmux','battery') and path[-1] in ('critical','low'):
             if not self.active:
                 return Glyph('inherited','0;39','Battery provider (not inspected in this scope)')

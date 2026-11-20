@@ -54,6 +54,46 @@ class Layout(unittest.TestCase):
         with self.assertRaises(ValueError):validate_layout(dict(rows=1,main_row=1),'termux')
         with self.assertRaises(ValueError):validate_layout(dict(rows=2,main_row=0,termux_row=0),'termux')
 
+    def test_multi_project_visibility_survives_custom_layout_and_refresh(self):
+        tmux,_=self.server('multi-placement')
+        tmux('source-file',str(self.write_config(workspace_hooks=False)))
+        tmux('set-option','-g','@dots-workspace-data','{"schema":1}')
+        tmux('set-option','-g','@dots-workspace-auto','1')
+        tmux('set-option','-g','@dots-workspace-label','multi')
+        tmux('set-option','-g','@dots-workspace-project-count','2')
+        tmux('set-option','-g','@dots-session-number','9')
+        tmux('set-option','-g','@dots-git-snapshot','HOST|')
+        tmux('rename-window','multi')
+        tmux('set-option','-g','@dots-codex-snapshot','|@0:idle|')
+        for multiple in (False,True):
+            self.defaults['apps']['tmux']['session']['multiple']=multiple
+            for left in (['session','windows'],['windows','session']):
+                self.defaults['formatting']['apps']['tmux']['main_left']=left
+                # A visual refresh must replace an older server's predicates.
+                tmux('set-option','-g','@dots-session-multi','0')
+                tmux('set-option','-g','@dots-window-name','')
+                tmux('set-option','-g','@dots-windows-visible','0')
+                self.publish(tmux)
+                self.assertEqual(tmux('display-message','-p','#{E:status-left}'),'')
+                self.assertEqual(tmux('display-message','-p','#{E:@dots-session-visible}'),'0')
+                self.assertEqual(tmux('display-message','-p','#{E:@dots-windows-visible}'),'1')
+                window=tmux('display-message','-p','#{E:@dots-window-format}')
+                self.assertEqual(re.sub(r'#\[[^]]*\]','',window),' multi  ')
+                self.assertNotIn('HOST',window)
+        self.defaults['apps']['tmux']['session']['multiple']=False
+        self.publish(tmux)
+        # The literal project name multi is not evidence of multiple roots.
+        tmux('set-option','-g','@dots-workspace-project-count','1')
+        text=tmux('display-message','-p','#{E:status-left}')
+        self.assertIn('HOST',text);self.assertIn('multi',text)
+        self.assertEqual(tmux('display-message','-p','#{E:@dots-windows-visible}'),'0')
+        for count in ('0','', '2'):
+            tmux('set-option','-g','@dots-workspace-project-count',count)
+            tmux('set-option','-g','@dots-workspace-auto','0')
+            text=tmux('display-message','-p','#{E:status-left}')
+            self.assertNotIn('HOST',text)
+            self.assertIn('fixture',text)
+
     def test_saved_legacy_layout_keeps_git_right_without_quota_acquisition(self):
         tmux,_=self.server('legacy-placement')
         tmux('source-file',str(self.write_config(workspace_hooks=False)))
@@ -127,6 +167,95 @@ class GeneratedStatus(fixtures.TmuxStatus):
             (generation/'preferences.json').write_text(json.dumps(snapshot(palette,styles=styles)))
         return path
 
+    def test_open_marker_colors_widths_empty_override_and_attention(self):
+        import shlex
+        inner,base=self.server('open-inner')
+        self.write_theme()
+        inner('source-file',str(self.write_config(workspace_hooks=False)))
+        inner('set-option','-g','@dots-termux-default','1')
+        inner('set-option','-gw','automatic-rename','off')
+        inner('rename-window','shell')
+        pane=inner('new-window','-d','-P','-F','#{pane_id}','-n','agent','sleep 120')
+        window=inner('display-message','-p','-t',pane,'#{window_id}')
+        inner('set-option','-g','@dots-codex-snapshot','|'+window+':idle|')
+        inner('set-option','-g','@dots-codex-usage','')
+        outer,_=self.server('open-view',termux=False)
+        outer('set-option','-g','status','off')
+        outer('set-option','-g','default-terminal','tmux-256color')
+        attach=shlex.join(['env','-u','TMUX','-u','TMUX_PANE',*base,'attach-session','-t','fixture'])
+        outer('new-session','-d','-s','view','-x','80','-y','24',attach)
+        for background,dark_background in (('#112233','#223344'),('#ffffff','#ddeeff')):
+            self.write_theme(background=background,dark_background=dark_background)
+            generation=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme'
+            inner('source-file',str(self.tmux_config/'dots-theme.conf'))
+            inner('source-file',str(generation/'tmux-controls.conf'))
+            inner('set-option','-g','@dots-codex-usage','')
+            for width in (40,80,120):
+                outer('resize-window','-t','view','-x',str(width),'-y','24')
+                for selected in (':0',pane):
+                    inner('select-window','-t',selected)
+                    rows=self.await_screen(outer,'view',lambda rows:'agent ' in rows[1])
+                    row=rows[1]
+                    self.assertEqual(self.plain(row).count(''),1)
+                    self.assertEqual(self.colors_at(row,'')['fg'],(136,136,136))
+                    self.assertEqual(self.colors_at(row,'')['bg'],self.colors_at(row,'agent')['bg'])
+                    self.assertFalse(self.bold_at(row,''));self.assertFalse(self.dim_at(row,''))
+                inner('set-option','-w','-t',pane,'@dots-window-alert','1')
+                rows=self.await_screen(outer,'view',lambda rows:'[1 agent ]' in rows[1])
+                self.assertEqual(self.colors_at(rows[1],'')['fg'],(255,85,85))
+                self.assertTrue(self.bold_at(rows[1],''))
+                inner('set-option','-uw','-t',pane,'@dots-window-alert')
+        with (self.repo/'profiles/termux/icons.toml').open('a') as stream:
+            stream.write('\n[apps.tmux.status]\nopen=""\n')
+        self.write_theme()
+        inner('source-file',str(generation/'tmux-controls.conf'))
+        inner('set-option','-g','@dots-codex-usage','')
+        rows=self.await_screen(outer,'view',lambda rows:rows[1].rstrip()==' 0 shell │ 1 agent')
+        self.assertNotIn('',rows[1])
+        self.assertEqual(inner('display-message','-p','-t',pane,'#{E:@dots-window-marker}'),'')
+
+    def test_question_finished_one_marker_two_clients_and_themes(self):
+        import shlex
+        inner,base=self.server('types-inner')
+        self.write_theme()
+        inner('source-file',str(self.write_config(workspace_hooks=False)))
+        inner('set-option','-g','@dots-termux-default','1')
+        inner('set-option','-gw','automatic-rename','off')
+        inner('rename-window','shell')
+        pane=inner('new-window','-d','-P','-F','#{pane_id}','-n','agent','sleep 120')
+        window=inner('display-message','-p','-t',pane,'#{window_id}')
+        outer,_=self.server('types-view',termux=False)
+        outer('set-option','-g','status','off')
+        outer('set-option','-g','default-terminal','tmux-256color')
+        attach=shlex.join(['env','-u','TMUX','-u','TMUX_PANE',*base,'attach-session','-t','fixture'])
+        for name in ('view','view2'):outer('new-session','-d','-s',name,'-x','80','-y','24',attach)
+        for background,dark in (('#112233','#223344'),('#ffffff','#ddeeff')):
+            self.write_theme(background=background,dark_background=dark)
+            generation=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme'
+            inner('source-file',str(self.tmux_config/'dots-theme.conf'))
+            inner('source-file',str(generation/'tmux-controls.conf'))
+            inner('set-option','-g','@dots-codex-usage','')
+            for width in (40,80,120):
+                for name in ('view','view2'):outer('resize-window','-t',name,'-x',str(width),'-y','24')
+                for tokens,glyph,color,alert in (
+                    (('idle',),'',(136,136,136),False),
+                    (('working',),'',(171,205,239),False),
+                    (('waiting',),'',(171,205,239),False),
+                    (('working','waiting','question'),'',(255,85,85),False),
+                    (('working','question','attention'),'',(255,85,85),True),
+                    (('idle','attention','finished'),'',(85,255,85),True)):
+                    inner('set-option','-g','@dots-codex-snapshot','|'+''.join(window+':'+t+'|' for t in tokens))
+                    expected=('[1 agent '+glyph+']') if alert else '1 agent '+glyph
+                    for name in ('view','view2'):
+                        rows=self.await_screen(outer,name,lambda rows: expected in self.plain(rows[1]) and self.colors_at(rows[1],glyph)['fg']==color,styled=True)
+                        row=rows[1];plain=self.plain(row)
+                        self.assertEqual(sum(plain.count(g) for g in ('','','')),1)
+                        if alert:
+                            for part in ('[','agent',glyph,']'):
+                                self.assertEqual(self.colors_at(row,part)['fg'],color)
+                                self.assertTrue(self.bold_at(row,part))
+                        if glyph=='':self.assertTrue(self.bold_at(row,glyph))
+
     def test_component_span_attributes_do_not_leak(self):
         import shlex
         profile=self.repo/'profiles/termux'
@@ -171,7 +300,9 @@ def load_tests(loader,tests,pattern):
         GeneratedStatus('test_native_compact_badges_names_and_padding'),
         GeneratedStatus('test_native_singletons_and_alerts'),
         GeneratedStatus('test_native_termux_attention_cells_widths_and_clearing'),
-        GeneratedStatus('test_component_span_attributes_do_not_leak')])
+        GeneratedStatus('test_component_span_attributes_do_not_leak'),
+        GeneratedStatus('test_open_marker_colors_widths_empty_override_and_attention'),
+        GeneratedStatus('test_question_finished_one_marker_two_clients_and_themes')])
 
 
 if __name__=='__main__':unittest.main()

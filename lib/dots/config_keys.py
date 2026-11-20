@@ -28,6 +28,9 @@ def under(key, prefix):
 
 
 def canonical(key):
+    for group in ("toast", "vibrate"):
+        prefix="apps.codex."+group
+        if under(key,prefix):return "apps.codex.alerts.regular."+group+key[len(prefix):]
     for old, new in MOVES:
         if under(key, old): return new+key[len(old):]
     for feature in FEATURES:

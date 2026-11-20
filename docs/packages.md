@@ -84,6 +84,8 @@ recipe flags and `PIP_NO_BINARY`/`PIP_ONLY_BINARY` retain deliberate native beha
 Other resolution/network failures remain failures. `upls` lists registry candidates,
 which may be newer than the compatible version selected during installation.
 
+Automatic unnamed Termux uv tool upgrades similarly add `--no-build`. uv can retain a compatible installed dependency set when newer native dependencies have no usable wheel, while still accepting compatible newer releases. This covers bare `up` and unnamed `up --manager uv-tool`. Named targets, replacement recipes, explicit build/binary recipe flags and `UV_NO_BUILD`/`UV_NO_BUILD_PACKAGE`/`UV_NO_BINARY`/`UV_NO_BINARY_PACKAGE` override this default. uv retains native tool settings, including local wheel locations and build policy, in each tool receipt; a named pkgs operation does not erase settings already saved by uv. Cached built wheels remain usable. Impossible resolutions and network failures remain nonzero; pkgs does not retry a failed source build or pretend it upgraded. Linux, WSL and native Windows arguments are unchanged. See [uv build policy](https://docs.astral.sh/uv/reference/settings/#no-build) and [saved tool settings](https://docs.astral.sh/uv/concepts/tools/#upgrading-tools).
+
 Automatic gem upgrades also run `gem update --system --no-document`, including
 when there are no ordinary user gems. RubyGems version changes appear as `RubyGems`
 in the same Updated field. Native distribution/permission protections still apply;

@@ -1,6 +1,6 @@
 # User preferences: preserve these when maintaining Codex/tmux integration.
 # Brackets cover the whole label; tmux's shared alert style supplies bold
-# bright_red on darker_background. There is no separate hard-coded palette.
+# regular bright_red / finished bright_green on darker_background.
 schema = 1
 enabled = true
 poll_seconds = 5
@@ -17,11 +17,11 @@ enabled = true
 # Stock Termux does not send DECSET 1004 focus changes. Never treat the
 # attached client's default "focused" flag as proof that its pane was viewed.
 focus_policy = "conservative"
-# Exposed as apps.codex.vibrate.{duration,force,count}; count=0 disables vibration.
+# Exposed as apps.codex.alerts.regular.vibrate.{duration,force,count}; count=0 disables vibration.
 vibration_ms = 500
 force_vibration = true
 vibration_count = 1
-# Exposed by dots config as apps.codex.toast.{bg,fg,position,short,bg_opacity}.
+# Exposed by dots config as apps.codex.alerts.regular.toast.{bg,fg,position,short,bg_opacity}.
 # bg_opacity is 0..100 percent (100 by default), converted to Android #AARRGGBB.
 # Palette roles, palette.NAME/global color references or #RRGGBB colors.
 # short=true adds -s: shorter display duration, unchanged polling interval.
@@ -30,3 +30,14 @@ toast_foreground = "bright_red"
 toast_gravity = "middle"
 toast_short = true
 excerpt_chars = 240
+
+# Independent completed-turn delivery, exposed as apps.codex.alerts.finished.*.
+[termux.finished]
+vibration_ms = 500
+force_vibration = true
+vibration_count = 1
+toast_background = "dark_background"
+toast_foreground = "bright_green"
+toast_gravity = "middle"
+toast_short = true
+toast_background_opacity = 100

@@ -58,10 +58,9 @@ def preferences(document=None):
             doc = tomllib.load(stream)
     else:
         doc=copy.deepcopy(document)
-    from codex_toast import FIELDS, values
-    doc['termux'].update({FIELDS[key]:value for key,value in values(doc['termux']).items()})
-    from codex_vibration import FIELDS, values
-    doc['termux'].update({FIELDS[key]:value for key,value in values(doc['termux']).items()})
+    from codex_notifications import options
+    doc['termux'] = options(doc['termux'])
+    options(doc['termux'], 'finished')  # Validate both independent schemas.
     if doc['schema'] != 1 or doc['poll_seconds'] != 5:
         raise ValueError('unsupported preferences')
     for value in (doc['enabled'], doc['unfocused_only'], doc['clear_on_view'],
@@ -266,10 +265,12 @@ def record(payload, prefs):
             current = db.execute('SELECT turn FROM turns WHERE thread=?', (thread,)).fetchone()
             if current is None or current['turn'] != turn:
                 acknowledge(db, 'thread=?', (thread,))
+                db.execute('UPDATE events SET resolved=1 WHERE thread=?', (thread,))
             db.execute('INSERT OR REPLACE INTO turns VALUES (?,?,0)', (thread, turn))
         elif kind in ('end', 'interrupt'):
             acknowledge(db, 'thread=?' + (' AND turn=?' if turn else ''), (thread, turn) if turn else (thread,))
             db.execute('INSERT OR REPLACE INTO turns VALUES (?,?,1)', (thread, turn))
+            db.execute('UPDATE events SET resolved=1 WHERE thread=?', (thread,))
         elif kind in ('answered', 'resolved'):
             acknowledge(db, 'thread=? AND request=?', (thread, event['request']))
             db.execute('UPDATE events SET resolved=1 WHERE thread=? AND request=?', (thread, event['request']))
@@ -277,7 +278,13 @@ def record(payload, prefs):
             current = db.execute('SELECT * FROM turns WHERE thread=?', (thread,)).fetchone()
             if current and (current['stopped'] or (current['turn'] and current['turn'] != turn)):
                 return  # Late notification from a superseded or interrupted turn.
+            if kind in ('choice','approval') and db.execute(
+                    "SELECT 1 FROM events WHERE thread=? AND turn=? AND kind='complete'", (thread,turn)).fetchone():
+                return  # A delayed question cannot reopen a completed turn.
             now = time.time()
+            if kind == 'complete':
+                acknowledge(db, "thread=? AND turn=? AND kind IN ('choice','approval')", (thread, turn))
+                db.execute("UPDATE events SET resolved=1 WHERE thread=? AND turn=? AND kind IN ('choice','approval')", (thread, turn))
             if kind == 'approval':
                 previous = db.execute("SELECT id,resolved FROM events WHERE thread=? AND turn=? AND request=? "
                                       "AND kind='approval' ORDER BY created DESC", (thread, turn, event['request'])).fetchall()
@@ -436,8 +443,9 @@ def termux_tabs():
         return []
 
 
-def atomic_snapshot(key, windows, now):
-    atomic_document(key, dict(time=now, windows=sorted(windows)))
+def atomic_snapshot(key, windows, now, *, alert_types=None, questions=()):
+    atomic_document(key, dict(time=now, windows=sorted(windows),
+                              alert_types=alert_types or {}, questions=sorted(questions)))
 
 
 def atomic_document(key, document):
@@ -451,7 +459,7 @@ def atomic_document(key, document):
         Path(name).unlink(missing_ok=True)
 
 
-def reconcile(db, prefs, now, deliver=True):
+def reconcile(db, prefs, now, deliver=True, *, typed=False):
     """All claims and acknowledgements serialize across server workers."""
     db.execute('DELETE FROM panes WHERE socket IN (SELECT id FROM sockets WHERE updated<?)', (now - 15,))
     db.execute('DELETE FROM sockets WHERE updated<?', (now - 15,))
@@ -459,6 +467,20 @@ def reconcile(db, prefs, now, deliver=True):
     views = list(db.execute('SELECT * FROM panes'))
     topology = {r['socket']: json.loads(r['payload']) for r in db.execute('SELECT * FROM topology')}
     notifications = []
+    # seen=2 records a confirmed waiting request, independently of unread phase.
+    # Once waiting ends, it cannot reappear during a later request in this turn.
+    questions = set()
+    for request in db.execute("SELECT * FROM events WHERE kind IN ('choice','approval') AND resolved=0").fetchall():
+        matches = [v for v in views if v['thread'] == request['thread']]
+        waiting = any(v['state'] == 'waiting' for v in matches)
+        if (not prefs['enabled'] or (request['seen'] == 2 and not waiting)
+                or (request['seen'] and not matches)
+                or (request['seen'] != 2 and now - request['created'] > EXPIRE)):
+            db.execute('UPDATE events SET resolved=1 WHERE id=?', (request['id'],))
+            acknowledge(db, 'id=?', (request['id'],))
+        elif waiting:
+            db.execute('UPDATE events SET seen=2 WHERE id=?', (request['id'],))
+            questions.add(request['thread'])
     for event in db.execute("SELECT * FROM events WHERE phase!='ack' ORDER BY created,id").fetchall():
         matches = [v for v in views if v['thread'] == event['thread']]
         focused = not conservative(prefs) and any(v['focused'] for v in matches)
@@ -470,7 +492,7 @@ def reconcile(db, prefs, now, deliver=True):
                 or not prefs['enabled']):
             acknowledge(db, 'id=?', (event['id'],))
         elif matches and event['phase'] == 'candidate' and deliver and (event['kind'] == 'complete' or waiting):
-            db.execute("UPDATE events SET phase='alert',message='',seen=1 WHERE id=?", (event['id'],))
+            db.execute("UPDATE events SET phase='alert',message='',seen=max(seen,1) WHERE id=?", (event['id'],))
             location = ''
             for match in matches:
                 graph = topology.get(match['socket'], {})
@@ -485,25 +507,36 @@ def reconcile(db, prefs, now, deliver=True):
                     break
             message = (location + ' · ' if location else '') + event['message']
             limit = prefs['termux']['excerpt_chars']
-            notifications.append(message if len(message) <= limit else message[:limit - 1].rstrip() + '…')
+            message = message if len(message) <= limit else message[:limit - 1].rstrip() + '…'
+            notifications.append(dict(message=message,kind='finished' if event['kind']=='complete' else 'regular') if typed else message)
         elif matches:
-            db.execute('UPDATE events SET seen=1 WHERE id=?', (event['id'],))
-    alerted = {row['thread'] for row in db.execute("SELECT thread FROM events WHERE phase='alert'")}
+            db.execute('UPDATE events SET seen=max(seen,1) WHERE id=?', (event['id'],))
+    alerted = {}
+    for row in db.execute("SELECT thread,kind FROM events WHERE phase='alert'"):
+        kind = 'finished' if row['kind'] == 'complete' else 'regular'
+        alerted[row['thread']] = attention.alert_type((alerted.get(row['thread']), kind))
     changed, servers = [], []
     for server in db.execute('SELECT * FROM sockets ORDER BY id'):
-        windows = {v['window'] for v in views if v['socket'] == server['id'] and v['thread'] in alerted}
+        local = [v for v in views if v['socket'] == server['id']]
+        windows = {v['window'] for v in local if v['thread'] in alerted}
+        question_windows = {v['window'] for v in local if v['thread'] in questions and v['state']=='waiting'}
+        types = {window: attention.alert_type([alerted.get(v['thread']) for v in local if v['window']==window],
+                                             question=window in question_windows) for window in windows}
         path = status.alert_root() / (server['id'] + '.json')
         try:
-            previous = json.loads(path.read_text())['windows']
+            previous = json.loads(path.read_text())
         except (OSError, ValueError, KeyError):
-            previous = []
-        atomic_snapshot(server['id'], windows, now)
-        if set(previous) != windows:
+            previous = {}
+        atomic_snapshot(server['id'], windows, now, alert_types=types, questions=question_windows)
+        if (set(previous.get('windows', [])) != windows or previous.get('alert_types') != types
+                or set(previous.get('questions', [])) != question_windows):
             changed.append(server['path'])
         graph = topology.get(server['id'])
         if graph is not None:
             for pane in graph['panes']:
                 pane['attention'] = pane['thread'] in alerted
+                pane['question'] = pane['thread'] in questions and pane['state']=='waiting'
+                pane['alert_type'] = alerted.get(pane['thread'])
             servers.append(dict(graph, key=server['id'], socket=server['path'], updated=server['updated']))
     # The aggregate's per-server timestamps prevent another worker from keeping
     # stale observations alive. No excerpts are published to renderers.
@@ -521,7 +554,7 @@ def reconcile(db, prefs, now, deliver=True):
     return notifications, changed
 
 
-def colors(prefs):
+def colors(prefs, kind='regular'):
     try:
         path = status.alert_root().parent / 'current/theme/palette.json'
         with path.open('rb') as stream:
@@ -532,28 +565,30 @@ def colors(prefs):
     except (OSError, ValueError, KeyError, TypeError):
         palette = {}
     from codex_toast import color, background
-    options = prefs['termux']
+    from codex_notifications import options as notification_options
+    options = notification_options(prefs['termux'], kind)
     return (background(color(options['toast_background'], palette, HERE.parents[1], '#000000'),options.get('toast_background_opacity',100)),
-            color(options['toast_foreground'], palette, HERE.parents[1], '#ffff00'))
+            color(options['toast_foreground'], palette, HERE.parents[1], '#00ff00' if kind=='finished' else '#ffff00'))
 
 
 def reap_vibrations():
     VIBRATIONS[:]=[process for process in VIBRATIONS if process.poll() is None]
 
 
-def notify_device(message, prefs, *, wait=False):
+def notify_device(message, prefs, *, wait=False, kind='regular'):
     """Deliver independently; Debug can wait for and report the complete pattern."""
     from codex_vibration import values, run
     from concurrent.futures import ThreadPoolExecutor
     import threading
-    options = prefs['termux']
+    from codex_notifications import options as notification_options
+    options = notification_options(prefs['termux'], kind)
     if os.name=='nt' or not os.environ.get('TERMUX_VERSION'):
         return {name:dict(status='unavailable',reason='Termux is required') for name in ('toast','vibrate')}
     if not options['enabled']:
         return {name:dict(status='skipped',reason='Termux alerts are disabled') for name in ('toast','vibrate')}
     settings=values(options)
     reap_vibrations()
-    background, foreground = colors(prefs)
+    background, foreground = colors(prefs, kind)
     toast=['termux-toast','-b',background,'-c',foreground,'-g',options['toast_gravity']]+(
         ['-s'] if options['toast_short'] else [])+['--',message]
     cancel=threading.Event()
@@ -599,7 +634,7 @@ def tick(socket, prefs, deliver=True):
         db.execute('INSERT OR REPLACE INTO topology VALUES (?,?)', (key, json.dumps(graph)))
         db.executemany('INSERT INTO panes VALUES (?,?,?,?,?,?)',
                        [(key, p['pane'], p['window'], p['thread'], p['state'], int(p['focused'])) for p in panes])
-        notifications, changed = reconcile(db, prefs, now, deliver)
+        notifications, changed = reconcile(db, prefs, now, deliver, typed=True)
     for server in changed:
         try:
             # Request redraws only; tmux still owns client selection and scrolling.
@@ -608,8 +643,8 @@ def tick(socket, prefs, deliver=True):
                 bounded(['tmux', '-S', server, 'refresh-client', '-S', '-t', client])
         except (OSError, ValueError, subprocess.SubprocessError):
             pass
-    for message in notifications:
-        notify_device(message, prefs)
+    for notification in notifications:
+        notify_device(notification['message'], prefs, kind=notification['kind'])
 
 
 def acknowledge_pane(socket, pane, client=None, thread=None):

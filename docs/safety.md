@@ -616,11 +616,13 @@ The new vibration count is bounded to ten pulses; a pulse is at most ten seconds
 and its API call has a five-second deadline. Failures stop the sequence without
 retries. Repeats run in finite helper processes, independent of worker polling;
 the existing event claim prevents replay. Completed helpers are reaped on ticks.
-`dots debug alert` explicitly sends a fixed local test message and configured
+`dots debug alert [--type regular|finished]` explicitly sends a fixed local test message and configured
 vibration, even with `--json`, but creates no Codex event/attention or persistent
 test state. It never runs through generic diagnostics, help, completion or
 curated self-tests. Ctrl-C stops remaining test pulses after any bounded active
 request; already issued Android effects cannot be rolled back.
+
+Regular and finished device settings are independent native TOML fields. Config edits and discovery never send a device test. Question state survives acknowledgement only while the confirmed request remains waiting; it contains identifiers and booleans, never question text in renderer snapshots. Worker replacement retains event IDs and queue state, so activation must not replay acknowledged or delivered events.
 
 The [Codex attention integration](themes.md#codex-attention-notifications) is explicitly installed through the existing Store: complete preflight, retained backups, reverse-order rollback and drift-checked undo cover the three personal configuration files. Preview creates no state and prints paths only, never configuration bodies or prior notification arguments. Existing hook handlers and downstream notify commands are preserved; linked personal configurations require source-owner maintenance. Setup never trusts hooks, changes approval policy, restarts Codex or installs Android packages.
 
@@ -732,9 +734,11 @@ build artifacts require review again. Receipt failures cannot turn a failed scri
 into success. Receipt storage does not modify npm allow policies.
 New receipts are finalized after the successful review/rebuild batch, with reviewed metadata rechecked and final nested build outputs fingerprinted. Declined targets never qualify; failed or interrupted batches save no new receipts. Metadata, fingerprint or storage failures leave the affected run without new evidence and emit a warning. Existing receipts are not migrated or refreshed merely because a package is present.
 
-Automatic Termux pip upgrades restrict native resolution to wheels; unsupported
-newer source builds can leave a compatible installed version unchanged. Explicit
-format controls/targets and replacement recipes preserve native behavior. Automatic
+Automatic Termux pip and uv-tool upgrades restrict native resolution to wheels; unsupported
+newer source builds can leave a compatible installed version unchanged. uv uses
+`--no-build`, permits cached built wheels and retains native tool settings. Explicit
+build/binary controls, named targets and replacement recipes preserve native behavior.
+Impossible resolutions remain failures; there is no automatic source-build retry. Automatic
 gem self-update uses native `gem update --system --no-document` with no force or
 privilege bypass; distribution protections remain authoritative. It is configurable
 through `apps.pkgs.upgrade.gem_system`, and appears in dry-run commands.

@@ -202,6 +202,7 @@ class Workspaces:
     def store(self, session, data, label=None, rename=None):
         commands = [['set-option', '-t', session + ':', PREFIX + 'data', json.dumps(data, ensure_ascii=True)],
                     ['set-option', '-t', session + ':', PREFIX + 'auto', '1' if data['auto'] else '0'],
+                    ['set-option', '-t', session + ':', PREFIX + 'project-count', str(len(data['projects']))],
                     ['set-option', '-t', session + ':', PREFIX + 'expected', data['expected']]]
         repository=data.get('repository',{})
         commands.extend(['set-option','-t',session+':',PREFIX+'repository-'+key,repository.get(key,'')] for key in ('name','host'))
@@ -273,7 +274,9 @@ class Workspaces:
         projects = sorted(projects)
         label = '' if not projects else display_name(projects[0]) if len(projects) == 1 else 'multi'
         expected = name_prefix(label or 'termux') + '-' + data['id'] if data['auto'] else actual
-        if projects == data.get('projects') and 'repository' in data and expected == actual and self.option(session, PREFIX + 'label') == label:
+        if (projects == data.get('projects') and 'repository' in data and expected == actual
+                and self.option(session, PREFIX + 'label') == label
+                and self.option(session, PREFIX + 'project-count') == str(len(projects))):
             return renamed
         # A collision with an unrelated manual name must never merge workspaces.
         if expected != actual and any(self.name(other) == expected for other in self.sessions() if other != session):

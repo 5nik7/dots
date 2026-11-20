@@ -400,10 +400,7 @@ def activation(key):
 
 def candidates(root, key):
     if key.startswith('apps.codex.'):
-        if key.startswith('apps.codex.vibrate.'):
-            from codex_vibration import constraints as native_constraints
-        else:
-            from codex_toast import constraints as native_constraints
+        from codex_notifications import constraints as native_constraints
         spec=native_constraints(key)
         return [str(v) if isinstance(v,str) else json.dumps(v) for v in [*spec.get('choices', []), *spec.get('examples', [])]]
     if key.startswith('apps.pkgs.'):

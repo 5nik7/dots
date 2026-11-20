@@ -180,6 +180,10 @@ def commands(backend, action, names, cfg, yes=False):
                         mirror_check_planned = True
                     if backend.name == 'pip' and any(f.split('=',1)[0] in ('--no-binary','--only-binary') for f in flags):
                         command = [arg for arg in command if arg != '--only-binary=:all:']
+                    if backend.name == 'uv-tool' and any(f.split('=',1)[0] in (
+                            '--build', '--build-package', '--no-build', '--no-build-package',
+                            '--no-binary', '--no-binary-package') for f in flags):
+                        command = [arg for arg in command if arg != '--no-build']
                     result.append(add_flags(command, flags))
             result += expand(inner.get('after', []), group)
         if getattr(backend, 'update_system', False):

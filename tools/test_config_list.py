@@ -76,6 +76,37 @@ class ConfigList(unittest.TestCase):
         self.assertEqual(fzf_values((generation/'fzf.sh').read_text()),{})
         self.assertFalse((self.root/'NEVER').exists())
 
+    def test_tmux_activity_icons_are_discoverable_without_saved_overrides(self):
+        run=lambda *args,**kwargs:profile_fixtures.ProfileConfig.run_config(self,*args,**kwargs)
+        raw=json.loads(run('list','icons','--json').stdout)
+        original=copy.deepcopy(raw)
+        status_icons=raw['config']['icons']['apps']['tmux']['status']
+        self.assertEqual(status_icons,{'open':''})
+        from config_view import icon_tree
+        styles=Styles(self.root)
+        for width in (40,80,120):
+            ui=Presentation(io.StringIO(),terminal=True);ui.width=width;ui.color=False
+            listing(ui,raw)
+            plain=re.sub(r'\x1b\[[0-9;]*m','',ui.stream.getvalue())
+            self.assertIn('open',plain);self.assertIn('working',plain);self.assertIn('waiting',plain)
+            self.assertIn('inheritedfromicons.status.working',''.join(plain.split()))
+            self.assertTrue(all(cells(line)<=width for line in plain.splitlines()),plain)
+        self.assertEqual(raw,original)
+        icons=icon_tree({'open':'','working':'','waiting':''},styles,('apps','tmux','status'))
+        self.assertIn('colors.apps.tmux.indicators.open.fg',icons['open'].annotation)
+        self.assertIn('inherited from icons.status.waiting',icons['waiting'].annotation)
+        for native in (False,True):
+            for state,glyph in (('open',''),('working',''),('waiting','')):
+                key='icons.apps.tmux.status.'+state
+                self.assertEqual(run('get',key,native=native).stdout.strip(),glyph)
+                explained=json.loads(run('explain',key,'--json',native=native).stdout)
+                self.assertTrue(any(c['app']=='tmux' and c['supported'] for c in explained['consumers']))
+            run('set','icons.apps.tmux.status.open','O','--json',native=native)
+            self.assertEqual(run('get','icons.apps.tmux.status.open',native=native).stdout.strip(),'O')
+            run('unset','icons.apps.tmux.status.open','--json',native=native)
+            self.assertEqual(run('get','icons.apps.tmux.status.open',native=native).stdout.strip(),'')
+        self.assertEqual(json.loads(run('list','icons','--json').stdout),original)
+
     def test_categories_json_errors_and_frontend_completion(self):
         run=lambda *args,**kwargs:profile_fixtures.ProfileConfig.run_config(self,*args,**kwargs)
         for native in (False,True):

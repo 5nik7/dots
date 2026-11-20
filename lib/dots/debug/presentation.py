@@ -58,6 +58,7 @@ def render(data, action, view='tree', args=None):
     from files.catalog import Presentation
     ui=Presentation();ui.heading('Dots debug '+action);tree=Tree(ui,args)
     if action=='alert':
+        ui.detail('Type',data.get('alert_type','regular'))
         ui.detail('Message',data['message']);ui.resource_detail('Config',data['source'])
         settings=data['settings'];vibration=settings['vibrate'];toast=settings['toast']
         ui.detail('Toast',toast['position']+'; '+('short' if toast['short'] else 'long')+' duration; background '+str(toast['bg_opacity'])+'% opaque')

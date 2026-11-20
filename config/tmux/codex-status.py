@@ -166,8 +166,13 @@ def attention(socket, result):
         if not 0 <= time.time() - doc['time'] <= 15:
             return ''
         windows = {token.split(':')[0] for token in result.split('|') if token}
-        return ''.join(window + ':attention|' for window in doc['windows']
-                       if isinstance(window, str) and window in windows)
+        alerted = {window for window in doc['windows'] if isinstance(window,str) and window in windows}
+        questions = {window for window in doc.get('questions',[]) if isinstance(window,str) and window in windows}
+        types = doc.get('alert_types',{})
+        if not isinstance(types,dict):return ''
+        return (''.join(window+':attention|' for window in sorted(alerted))
+                + ''.join(window+':finished|' for window in sorted(alerted-questions) if types.get(window)=='finished')
+                + ''.join(window+':question|' for window in sorted(questions)))
     except (OSError, ValueError, KeyError, TypeError):
         return ''
 

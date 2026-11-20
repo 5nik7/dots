@@ -150,3 +150,7 @@ units = ""
 
 [controls]
 "apps.nvim.icons" = {}
+
+[apps.tmux.status]
+open = ""
+question = ""

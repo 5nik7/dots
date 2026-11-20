@@ -7,7 +7,7 @@ description: Maintain dots debug inspection, startup tracing, PATH recording and
 
 Read [debugging](../../../docs/debug.md), [diagnostic safety](../../../docs/safety.md#explicit-startup-diagnostics) and [profile behavior](../../../docs/profiles.md). `lib/dots/debug_cli.py` routes into `debug/inspect.py`, `startup.py`, `record.py`, `changes.py`, `selftest.py` and `demo.py`; native tracing adapters also live under `lib/dots/shell`. Keep inspection, opted-in tracing and recording separate.
 
-`dots debug alert` is an explicitly invoked Termux device test, using the existing
+`dots debug alert --type regular|finished` (regular by default) is an explicitly invoked Termux device test, using the existing
 Codex toast/vibration preferences and fixed mock text. It uses no Codex queue or
 attention state. Keep it out of generic checks, curated self-tests and the
 read-only launcher. Verify with Android stand-ins in `tools/test_codex_vibration.py`;

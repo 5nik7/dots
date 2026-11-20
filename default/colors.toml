@@ -450,3 +450,22 @@ fg = "muted"
 
 [apps.tmux.codex_usage.git_separator]
 fg = "muted"
+
+[apps.tmux.indicators.open]
+fg = "muted"
+bold = false
+dim = false
+
+[apps.tmux.indicators.question]
+fg = "bright_red"
+bold = true
+dim = false
+
+[apps.tmux.windows.finished]
+fg = "bright_green"
+
+[apps.tmux.tabs.finished]
+fg = "bright_green"
+
+[apps.tmux.session.finished]
+fg = "bright_green"

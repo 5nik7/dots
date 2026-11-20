@@ -4,6 +4,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -17,9 +18,87 @@ from pkgs_lib import workflows, policies, scopes, streams
 from pkgs_lib.backends import Backend
 from pkgs_lib.common import Package
 
+UV = shutil.which('uv')
+
 
 class Compatibility(unittest.TestCase):
     setUp=fixtures.Workflows.setUp
+
+    def test_termux_uv_automatic_wheels_and_explicit_native_overrides(self):
+        backend=Backend('uv-tool');backend.termux=True
+        rows=[(Package('example','1'), 'explicit','')]
+        env={k:v for k,v in os.environ.items() if not k.upper().startswith('UV_')}
+        with patch.dict(os.environ,env,clear=True), patch.object(scopes,'inventory',return_value=rows):
+            self.assertEqual(workflows.plan(backend,'upgrade',[],self.cfg).commands,
+                             [['uv','tool','upgrade','example','--no-build']])
+            for action in ('install','upgrade'):
+                self.assertNotIn('--no-build',workflows.plan(backend,action,['example'],self.cfg).commands[0])
+            for key,value in (('UV_NO_BUILD','false'),('UV_NO_BUILD_PACKAGE','other'),
+                              ('UV_NO_BINARY','true'),('UV_NO_BINARY_PACKAGE','example')):
+                with self.subTest(env=key), patch.dict(os.environ,{key:value}):
+                    self.assertNotIn('--no-build',workflows.plan(backend,'upgrade',[],self.cfg).commands[0])
+            for flags in (['--no-binary'],['--no-binary-package=example'],['--no-build-package','other'],
+                          ['--no-build'],['--build'],['--build-package','example']):
+                for package in (False,True):
+                    with self.subTest(flags=flags,package=package):
+                        rule={'upgrade':{'flags':flags}}
+                        cfg=dict(self.cfg,policies={'uv-tool':{'packages':{'example':rule}} if package else rule})
+                        command=workflows.plan(backend,'upgrade',[],cfg).commands[0]
+                        self.assertEqual(command,['uv','tool','upgrade','example',*flags])
+            for package in (False,True):
+                rule={'upgrade':{'replace':[['custom','{packages}']]}}
+                cfg=dict(self.cfg,policies={'uv-tool':{'packages':{'example':rule}} if package else rule})
+                self.assertEqual(workflows.plan(backend,'upgrade',[],cfg).commands,[['custom','example']])
+            backend.termux=False
+            self.assertEqual(workflows.plan(backend,'upgrade',[],self.cfg).commands,
+                             [['uv','tool','upgrade','example']])
+
+    @unittest.skipUnless(UV,'native uv unavailable')
+    def test_native_uv_retains_compatible_dependencies_and_persists_no_build(self):
+        wheels=self.home/'wheels ü';wheels.mkdir()
+        def wheel(name,version,requires='',entry=False):
+            path=wheels/f'{name}-{version}-py3-none-any.whl'
+            info=f'{name}-{version}.dist-info/'
+            with zipfile.ZipFile(path,'w') as z:
+                z.writestr(info+'METADATA',f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n'+requires+'\n')
+                z.writestr(info+'WHEEL','Wheel-Version: 1.0\nRoot-Is-Purelib: true\nTag: py3-none-any\n')
+                z.writestr(info+'RECORD','')
+                if entry:
+                    z.writestr(name+'.py',f'def main():\n    print({version!r})\n')
+                    z.writestr(info+'entry_points.txt',f'[console_scripts]\npkgs-fixture-tool = {name}:main\n')
+            return path
+        wheel('pkgs_fixture_native','1.0')
+        wheel('pkgs_fixture_tool','1.0','Requires-Dist: pkgs-fixture-native==1.0\n',True)
+        env={k:v for k,v in os.environ.items() if not k.upper().startswith(('UV_','PIP_'))}
+        env.update(UV_TOOL_DIR=str(self.home/'tools'),UV_TOOL_BIN_DIR=str(self.home/'commands'),
+                   UV_CACHE_DIR=str(self.home/'uv-cache'),UV_PYTHON_INSTALL_DIR=str(self.home/'pythons'),
+                   UV_PYTHON_DOWNLOADS='never',UV_NO_CONFIG='1',UV_OFFLINE='1')
+        def uv(*args,code=0):
+            result=subprocess.run([UV,'tool',*args],cwd=self.home,env=env,capture_output=True,text=True,timeout=30)
+            self.assertEqual(result.returncode,code,result.stdout+result.stderr)
+            return result
+        uv('install','--python',sys.executable,'--no-index','--find-links',str(wheels),'pkgs-fixture-tool')
+        wheel('pkgs_fixture_tool','2.0','Requires-Dist: pkgs-fixture-native==2.0\n',True)
+        marker=self.home/'uv-source-build-attempted'
+        files={'pyproject.toml':'[build-system]\nrequires=[]\nbuild-backend="backend"\nbackend-path=["."]\n',
+               'backend.py':f'from pathlib import Path\nPath({str(marker)!r}).touch()\nraise RuntimeError("no Android build")\n',
+               'PKG-INFO':'Metadata-Version: 2.2\nName: pkgs-fixture-native\nVersion: 2.0\n'}
+        with tarfile.open(wheels/'pkgs_fixture_native-2.0.tar.gz','w:gz') as tar:
+            for name,text in files.items():
+                payload=text.encode();info=tarfile.TarInfo('pkgs_fixture_native-2.0/'+name);info.size=len(payload)
+                tar.addfile(info,io.BytesIO(payload))
+        uv('upgrade','pkgs-fixture-tool','--no-build')
+        self.assertIn('pkgs-fixture-tool v1.0',uv('list').stdout)
+        receipt=self.home/'tools/pkgs-fixture-tool/uv-receipt.toml'
+        self.assertIn('no-build = true',receipt.read_text())
+        # Compatible future releases still upgrade; the saved build policy survives.
+        wheel('pkgs_fixture_tool','3.0','Requires-Dist: pkgs-fixture-native==1.0\n',True)
+        uv('upgrade','pkgs-fixture-tool')
+        self.assertIn('pkgs-fixture-tool v3.0',uv('list').stdout)
+        failed=uv('upgrade','pkgs-fixture-tool==2.0',code=1)
+        self.assertIn('no usable wheels',failed.stderr)
+        self.assertIn('pkgs-fixture-tool v3.0',uv('list').stdout)
+        self.assertFalse(marker.exists())
 
     def test_termux_automatic_wheels_and_explicit_native_overrides(self):
         backend=Backend('pip');backend.termux=True

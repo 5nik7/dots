@@ -456,8 +456,8 @@ class Native(unittest.TestCase):
             alerts.record(event(), prefs)
             alerts.tick(socket, prefs)
             device.assert_called_once()
-            row = self.color('[1 agent ]', (255, 85, 85))
-            for part in ('[', '1', 'agent', '', ']'):
+            row = self.color('[1 agent ]', (255, 85, 85))
+            for part in ('[', '1', 'agent', '', ']'):
                 style = self.fixture.colors_at(row, part)
                 self.assertEqual(style['fg'], (255, 85, 85))
                 self.assertTrue(self.fixture.bold_at(row, part))
@@ -466,12 +466,12 @@ class Native(unittest.TestCase):
             for width in (40, 80, 120):
                 self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
                 alerts.tick(socket, prefs)
-                row = self.color('[1 agent ]', (255, 85, 85))
-                self.assertIn('│[1 agent ]', self.fixture.plain(row))
-                self.assertNotIn(' [1 agent ] ', self.fixture.plain(row))
+                row = self.color('[1 agent ]', (255, 85, 85))
+                self.assertIn('│[1 agent ]', self.fixture.plain(row))
+                self.assertNotIn(' [1 agent ] ', self.fixture.plain(row))
             self.inner('select-window', '-t', pane)
             alerts.tick(socket, prefs, deliver=False)
-            self.assertEqual(alerts.status.attention(socket, '|@1:waiting|'), '')
+            self.assertEqual(alerts.status.attention(socket, '|@1:waiting|'), '@1:question|')
             self.inner('select-window', '-t', ':0')
             alerts.tick(socket, prefs)
             device.assert_called_once()
@@ -480,11 +480,12 @@ class Native(unittest.TestCase):
             self.inner('select-pane', '-t', pane, '-T', f'Ready | {self.title_id()}')
             alerts.record(complete(), prefs)
             alerts.tick(socket, prefs)
-            self.color('[1 agent]', (255, 85, 85))
+            self.inner('set', '-g', '@dots-window-finished-fg', '#55ff55')
+            self.color('[1 agent ]', (85, 255, 85))
             self.assertEqual(device.call_count, 2)
             session = self.inner('display-message', '-p', '#{session_name}')
             self.inner('rename-window', '-t', pane, session)
-            self.color('[1]', (255, 85, 85))
+            self.color('[1 ]', (85, 255, 85))
 
     def test_native_worker_exclusive_lock_callback_and_snapshot(self):
         pane = self.inner('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'agent', self.command('worker'))
@@ -558,10 +559,10 @@ class NativeShortTitles(Native):
             approval = event('PermissionRequest') | {'tool_name': 'Bash', 'tool_input': {'description': 'Allow?'}}
             alerts.record(approval, prefs)
             alerts.tick(socket, prefs)
-            self.color('[1 agent ]', (255, 85, 85))
+            self.color('[1 agent ]', (255, 85, 85))
             device.assert_called_once()
             alerts.acknowledge_pane(socket, pane, thread=THREAD)
-            self.assertEqual(alerts.status.attention(socket, '|@1:waiting|'), '')
+            self.assertEqual(alerts.status.attention(socket, '|@1:waiting|'), '@1:question|')
             # Retired full IDs continue to make matching prefixes ambiguous.
             alerts.record(complete(thread=OTHER), prefs)
             self.assertEqual(alerts.snapshot(socket)[0]['thread'], '-')

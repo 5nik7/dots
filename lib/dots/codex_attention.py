@@ -17,6 +17,16 @@ TTY = re.compile(r'pts/[0-9]+\Z')
 PRIORITY = {'idle': 0, 'waiting': 1, 'working': 2}
 
 
+def alert_type(kinds, *, question=False):
+    """One alert style per group; a pending question always retains red priority."""
+    kinds = set(kinds) - {None, ''}
+    return ('regular' if question or 'regular' in kinds else 'finished') if kinds else None
+
+
+def display_state(value):
+    return 'question' if value.get('question') else value.get('state', 'idle')
+
+
 def root():
     if os.name == 'nt':
         from files.file_platform import state_root
@@ -83,6 +93,8 @@ def load(now=None):
             for pane in server['panes']:
                 if (not PANE.fullmatch(pane['pane']) or not WINDOW.fullmatch(pane['window'])
                         or pane['state'] not in PRIORITY or type(pane['attention']) is not bool
+                        or type(pane.get('question',False)) is not bool
+                        or pane.get('alert_type') not in (None,'regular','finished')
                         or (pane['thread'] != '-' and not THREAD.fullmatch(pane['thread']))
                         or len(pane['sessions']) > 256):
                     raise ValueError('invalid pane')
@@ -125,22 +137,28 @@ def sessions(servers):
                 record['state'] = max(record['state'], pane['state'], key=PRIORITY.__getitem__)
                 record['panes'].append(pane)
                 record['attention'] += int(pane['attention'])
+        for record in groups.values():
+            record['question'] = any(p.get('question',False) for p in record['panes'])
+            record['alert_type'] = alert_type([p.get('alert_type') or 'regular' for p in record['panes'] if p['attention']],question=record['question'])
         result.extend(groups.values())
     return result
 
 
-def tab_states(servers, proc=Path('/proc')):
+def tab_states(servers, proc=Path('/proc'), *, typed=False):
     """Map attached session activity to real tabs, independent of server ancestry."""
-    tabs, undisplayed = {}, set()
+    tabs, undisplayed = {}, {}
     for server in servers:
         live = live_tabs(server, proc)
         for session in sessions([server]):
             owners = {c['tty'] for c in server['clients'] if c['session'] == session['id'] and c['tty'] in live}
             if session['attention'] and not owners:
-                undisplayed.add((server['key'], session['id']))
+                undisplayed[(server['key'], session['id'])] = session['alert_type']
             for tty in owners:
                 tab = live[tty]
                 value = tabs.setdefault((tab['pid'], tab['started'], tty), dict(state='idle', attention=False))
                 value['state'] = max(value['state'], session['state'], key=PRIORITY.__getitem__)
                 value['attention'] |= bool(session['attention'])
-    return tabs, len(undisplayed)
+                if typed:
+                    value['question'] = value.get('question',False) or session['question']
+                    value['alert_type'] = alert_type((value.get('alert_type'),session['alert_type']),question=value['question'])
+    return tabs, (dict(count=len(undisplayed),alert_type=alert_type(undisplayed.values())) if typed else len(undisplayed))

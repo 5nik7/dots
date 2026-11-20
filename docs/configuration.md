@@ -165,7 +165,7 @@ The last example opens that option's editor in a usable terminal. Color editors 
 
 Bare `dots config` opens List/Get/Set/Import appearance in shared-default scope. List is read-only. All shows meaningful endpoints across categories: individual icons/settings and grouped color styles such as `colors.apps.todo.field.alias.value`. A selected category immediately shows all its endpoints. Enter opens a style's fg/bg/attribute fields or the selected value's details/actions; Escape returns to the endpoint list. Alt-F opens category/subcategory filters and sorting (key A–Z, Z–A, or local overrides first). Alt-G changes category directly, Alt-A toggles individual leaf fields, Alt-S changes profile/default scope, and F1 opens help. Queries and focus are remembered. Reviewed edits keep Cancel and Save visible, with Cancel selected initially; Alt-P toggles the preview. Cancellation leaves storage unchanged. The [popup guide](profiles.md#configuration-popup) covers the complete interaction.
 
-`dots config list` prints a categorized terminal report with the profile alias and source path, file-owner counts and corresponding `get` commands, and recursively indented settings, icons, colors, formatting and application controls. Color records combine their fields on one row, for example `high fg:warning,bold,underline` or `selection fg:bright_foreground,bg:selection_background,bold`. The value previews that exact color/style; field names remain blue. Explicit false/null fields remain visible. Icons show their resolved preview color with a muted annotation: native direct color/style names, or the configuration key supplying the color. Menu icon previews use `colors.apps.menu.icon` (theme accent by default), then any consumed icon-specific and representative per-entry overrides, matching the shared menu renderer. This also covers Keys application categories, Weather/navigation choices and launcher icons. Semantic status samples name the actual status or label control; activity/stash/separator samples identify their tmux or Gitmux context. Icons with only the ordinary text-foreground fallback have no color-key annotation. App-specific entries use their corresponding app override. Tmux clock/battery samples follow their component styles; window/session samples identify the active state in their annotation. Native weather icons use their native style and fallback rules under Icons; their stored keys remain `apps.wttr.icons` and `apps.wttr.night_icons`. File and Git samples read the existing published theme tables and label their representative filename/type or repository context. Annotations name the native `file-colors.toml` field (following `use` inheritance) or a Vivid suffix rule, rather than inventing a `dots config` key. These published samples are shown only for the active profile; saved native rule edits require the usual explicit theme publication. Other consumers may use a different context. Unbound navigation placeholders remain unannotated. Shared CLI formatting and color/icon preferences apply. JSON and ordinary redirected listings retain their existing formats.
+`dots config list` prints a categorized terminal report with the profile alias and source path, file-owner counts and corresponding `get` commands, and recursively indented settings, icons, colors, formatting and application controls. Color records combine their fields on one row, for example `high fg:warning,bold,underline` or `selection fg:bright_foreground,bg:selection_background,bold`. The value previews that exact color/style; field names remain blue. Explicit false/null fields remain visible. Icons show their resolved preview color with a muted annotation: native direct color/style names, or the configuration key supplying the color. Menu icon previews use `colors.apps.menu.icon` (theme accent by default), then any consumed icon-specific and representative per-entry overrides, matching the shared menu renderer. This also covers Keys application categories, Weather/navigation choices and launcher icons. Semantic status samples name the actual status or label control; activity/stash/separator samples identify their tmux or Gitmux context. Icons with only the ordinary text-foreground fallback have no color-key annotation. App-specific entries use their corresponding app override. Human icon listings include `icons.apps.tmux.status.open`, `.working`, `.waiting` and `.question`, resolving inherited values with declaration provenance without saving extra overrides. The open sample uses its muted indicator style; question uses its red indicator style. Tmux clock/battery samples follow their component styles; window/session samples identify the active state in their annotation. Native weather icons use their native style and fallback rules under Icons; their stored keys remain `apps.wttr.icons` and `apps.wttr.night_icons`. File and Git samples read the existing published theme tables and label their representative filename/type or repository context. Annotations name the native `file-colors.toml` field (following `use` inheritance) or a Vivid suffix rule, rather than inventing a `dots config` key. These published samples are shown only for the active profile; saved native rule edits require the usual explicit theme publication. Other consumers may use a different context. Unbound navigation placeholders remain unannotated. Shared CLI formatting and color/icon preferences apply. JSON and ordinary redirected listings retain their existing formats.
 
 Config menu previews, Details and Save/Reset reviews show paths under the current home directory as `~/…` (`~` for home itself). This includes source/destination files, winning sources, file mappings and path-valued settings, including nested lists and objects. File colors and icons still describe the original resource. Paths outside home, relative paths and literal `${HOME}` references retain their spelling; editors, saved values and scalar/JSON output retain the full original values.
 
@@ -180,32 +180,42 @@ dots config list colors icons --json
 
 List accepts `all`, `icons`, `colors`, `formatting`, `apps`, `files`, `profile`, `settings`, and `environment`. Tab completes categories after every operand. Repeated categories appear once in the requested order; `all` or no operands selects the complete report. Unknown categories are errors. Profile/default options can appear between category operands.
 
-The report retains the existing Config key set. It does not enumerate other native files, presets or application options. Existing rows whose values come from a published template or a consumer fallback show that value and a muted source note. FZF color rows use the published template colors when their Config override is null, with styled colors/attributes. Runtime-owned values that cannot be read without executing an application identify their owner instead of claiming a resolved value. Profile/default views do not borrow another profile's publication. These are human-view annotations; stored values, JSON, scalar Get and ordinary redirected output retain their data contracts. List never publishes or reloads consumers.
+The report shows declared Config keys plus the supported tmux activity icon controls described above. It does not enumerate other native files, presets or application options. Existing rows whose values come from a published template or a consumer fallback show that value and a muted source note. FZF color rows use the published template colors when their Config override is null, with styled colors/attributes. Runtime-owned values that cannot be read without executing an application identify their owner instead of claiming a resolved value. Profile/default views do not borrow another profile's publication. These are human-view annotations; stored values, JSON, scalar Get and ordinary redirected output retain their data contracts. List never publishes or reloads consumers.
 
 ## Codex warning toast
 
-`apps.codex.toast` exposes only these five fields from the existing
-`config/tmux/codex-alerts.toml` file:
+`apps.codex.alerts.{regular,finished}.toast` exposes five fields per alert type
+from `config/tmux/codex-alerts.toml`. Regular settings use the existing `[termux]`
+fields; finished settings use independent `[termux.finished]` fields. The old
+`apps.codex.toast.*` keys remain aliases for regular settings. Human List and
+Browse show canonical keys once; JSON retains the old `toast`/`vibrate` objects
+and adds `alerts.regular` and `alerts.finished`.
+
+The table shows regular keys and built-in reset values. Finished has the same
+fields/defaults except `fg=bright_green`. The saved checkout currently uses
+`bright_red` regular text, `bright_green` finished text, short middle toasts,
+opaque `dark_background`, and one forced 500 ms pulse for each type. Editing or
+resetting one type never changes the other.
 
 | Config key | Native `[termux]` field | Default / allowed values |
 | --- | --- | --- |
-| `apps.codex.toast.fg` | `toast_foreground` | `warning`; palette role, `palette.NAME`, global `colors.ROLE.fg/bg` reference or `#RRGGBB` |
-| `apps.codex.toast.bg` | `toast_background` | `dark_background`; same color syntax |
-| `apps.codex.toast.bg_opacity` | `toast_background_opacity` | `100`; integer 0–100 percent, transparent to opaque |
-| `apps.codex.toast.position` | `toast_gravity` | `middle`; `top`, `middle`, `bottom` |
-| `apps.codex.toast.short` | `toast_short` | `false`; `true` adds `-s` for a shorter visible duration |
+| `apps.codex.alerts.regular.toast.fg` | `toast_foreground` | `warning`; palette role, `palette.NAME`, global `colors.ROLE.fg/bg` reference or `#RRGGBB` |
+| `apps.codex.alerts.regular.toast.bg` | `toast_background` | `dark_background`; same color syntax |
+| `apps.codex.alerts.regular.toast.bg_opacity` | `toast_background_opacity` | `100`; integer 0–100 percent, transparent to opaque |
+| `apps.codex.alerts.regular.toast.position` | `toast_gravity` | `middle`; `top`, `middle`, `bottom` |
+| `apps.codex.alerts.regular.toast.short` | `toast_short` | `false`; `true` adds `-s` for a shorter visible duration |
 
 ```sh
-dots config get apps.codex.toast
-dots config set apps.codex.toast.fg warning
-dots config set apps.codex.toast.bg dark_background
-dots config set apps.codex.toast.bg_opacity 50
-dots config set apps.codex.toast.position top
-dots config set apps.codex.toast.short true
+dots config get apps.codex.alerts.finished.toast
+dots config set apps.codex.alerts.regular.toast.fg warning
+dots config set apps.codex.alerts.regular.toast.bg dark_background
+dots config set apps.codex.alerts.regular.toast.bg_opacity 50
+dots config set apps.codex.alerts.regular.toast.position top
+dots config set apps.codex.alerts.regular.toast.short true
 ```
 
 Tab offers colors, positions, booleans and example opacity percentages. The Config popup uses the same editors
-and guarded review/save flow. List shows the five native values with
+and guarded review/save flow. List shows both types of native values with
 their owning fields; foreground/background values preview their delivery color.
 Opacity applies after resolving the background color: 50% on `#123456` sends
 `-b "#80123456"` (Android alpha before RGB). The opaque default keeps the
@@ -220,25 +230,25 @@ The worker rereads settings each five-second cycle. An already running worker
 must load the updated code once before using new opacity/hex/reference colors or reset
 fallbacks. Config saves do not restart it or send a test notification. Toast
 delivery remains Termux-only; `short` does not change polling or event timing.
-Missing/unresolvable colors retain black-background/yellow-foreground fallbacks.
+Missing/unresolvable colors retain black backgrounds, with yellow regular and green finished foreground fallbacks.
 See [Codex notifications](themes.md#codex-attention-notifications).
 
 ## Codex vibration
 
-`apps.codex.vibrate` uses the same native configuration, scope rules, Config
+`apps.codex.alerts.{regular,finished}.vibrate` uses the same native configuration, scope rules, Config
 popup, completion and retained undo as the toast controls:
 
 | Config key | Native `[termux]` field | Default / allowed values |
 | --- | --- | --- |
-| `apps.codex.vibrate.duration` | `vibration_ms` | `300`; integer 1–10000 milliseconds, passed with `-d` |
-| `apps.codex.vibrate.force` | `force_vibration` | `true`; adds `-f` to allow vibration in silent mode |
-| `apps.codex.vibrate.count` | `vibration_count` | `1`; integer 0–10, with zero disabling vibration only |
+| `apps.codex.alerts.regular.vibrate.duration` | `vibration_ms` | `300`; integer 1–10000 milliseconds, passed with `-d` |
+| `apps.codex.alerts.regular.vibrate.force` | `force_vibration` | `true`; adds `-f` to allow vibration in silent mode |
+| `apps.codex.alerts.regular.vibrate.count` | `vibration_count` | `1`; integer 0–10, with zero disabling vibration only |
 
 ```sh
-dots config set apps.codex.vibrate.duration 300
-dots config set apps.codex.vibrate.force true
-dots config set apps.codex.vibrate.count 3
-dots debug alert
+dots config set apps.codex.alerts.regular.vibrate.duration 300
+dots config set apps.codex.alerts.regular.vibrate.force true
+dots config set apps.codex.alerts.regular.vibrate.count 3
+dots debug alert --type finished
 ```
 
 `termux-vibrate` has no count option. Dots sends the configured number of requests
@@ -250,9 +260,9 @@ worker polling remain independent; an already started sequence can finish after
 the event is acknowledged. Count and reset handling need an updated worker.
 
 [`dots debug alert`](debug.md#test-codex-alerts) sends a labelled test toast and
-uses these settings immediately, without creating a Codex event or restarting
+uses regular settings by default, or finished settings with `--type finished`, immediately, without creating a Codex event or restarting
 the worker. It waits for all API requests and reports their results. The Config
-List shows these three fields with their actual native/default source.
+List shows these fields for each type with their actual native/default source.
 
 ## Keys and Weather menu appearance
 

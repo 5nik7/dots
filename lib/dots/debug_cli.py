@@ -27,6 +27,7 @@ def parser():
         if name=='demo':
             from debug.demo import arguments
             arguments(s)
+        if name=='alert':s.add_argument('--type',choices=('regular','finished'),default='regular')
         if name=='check':s.add_argument('--only',choices=('platform','profiles','commands','startup','environment'))
         if name=='path':
             s.add_argument('command',nargs='?');s.add_argument('--history',action='store_true');s.add_argument('--entry')
@@ -90,7 +91,7 @@ def main(argv=None):
         from debug.alert import run as alert
         from progress import configure,Progress
         configure(human=not args.json)
-        with Progress('Sending Codex test toast and vibration'): data=alert(root)
+        with Progress('Sending Codex test toast and vibration'): data=alert(root,args.type)
     elif args.action=='path':
         if args.command and (os.sep in args.command or os.altsep and os.altsep in args.command): p.error('path lookup requires a command name, not a path')
         from debug.record import history

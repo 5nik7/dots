@@ -122,9 +122,7 @@ def keys(root=None, identity=None):
     except (OSError, ValueError, ImportError):
         pass
     if sys.version_info>=(3,11) and (checkout(root)/'config/tmux/codex-alerts.toml').is_file() and selected['current']==context(root)['current']:
-        from codex_toast import KEYS
-        result.update(KEYS)
-        from codex_vibration import KEYS
+        from codex_notifications import KEYS
         result.update(KEYS)
     from config_keys import canonical
     return sorted({canonical(key) for key in result})
