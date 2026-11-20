@@ -35,8 +35,19 @@ func linearToSrgb(c float64) float64 {
 	return 1.055*math.Pow(c, 1.0/2.4) - 0.055
 }
 
-// RGBToOKLab converts an RGB color (0-255 per channel) to OKLab.
+// RGBToOKLab retains the original Aether forward matrix used by existing
+// palette recipes and the exact/shaded pixel mappings.
 func RGBToOKLab(rgb RGB) OKLab {
+	return rgbToOKLab(rgb, 0.2164557844, 0.6952417517)
+}
+
+// SRGBToOKLab uses the D65 sRGB forward matrix paired with linearRGB.
+// Reference: https://bottosson.github.io/posts/oklab/#implementation
+func SRGBToOKLab(rgb RGB) OKLab {
+	return rgbToOKLab(rgb, 0.2817188376, 0.6299787005)
+}
+
+func rgbToOKLab(rgb RGB, sGreen, sBlue float64) OKLab {
 	// sRGB to linear RGB
 	r := srgbToLinear(rgb.R / 255.0)
 	g := srgbToLinear(rgb.G / 255.0)
@@ -45,7 +56,7 @@ func RGBToOKLab(rgb RGB) OKLab {
 	// Linear RGB to LMS (using the M1 matrix from Oklab spec)
 	l := 0.4122214708*r + 0.5363325363*g + 0.0514459929*b
 	m := 0.2119034982*r + 0.6806995451*g + 0.1073969566*b
-	s := 0.0883024619*r + 0.2164557844*g + 0.6952417517*b
+	s := 0.0883024619*r + sGreen*g + sBlue*b
 
 	// Cube root (perceptual non-linearity)
 	l_ := math.Cbrt(l)
@@ -63,6 +74,21 @@ func RGBToOKLab(rgb RGB) OKLab {
 // OKLabToRGB converts an OKLab color back to RGB (0-255 per channel).
 // Out-of-gamut values are clamped to the sRGB gamut.
 func OKLabToRGB(lab OKLab) RGB {
+	return roundedRGB(srgb(lab))
+}
+
+func roundedRGB(c RGB) RGB { return RGB{math.Round(c.R), math.Round(c.G), math.Round(c.B)} }
+
+func srgb(lab OKLab) RGB {
+	r, g, b := linearRGB(lab)
+	return RGB{
+		R: linearToSrgb(max(0, min(1, r))) * 255,
+		G: linearToSrgb(max(0, min(1, g))) * 255,
+		B: linearToSrgb(max(0, min(1, b))) * 255,
+	}
+}
+
+func linearRGB(lab OKLab) (float64, float64, float64) {
 	// OKLab to LMS (inverse of M2)
 	l_ := lab.L + 0.3963377774*lab.A + 0.2158037573*lab.B
 	m_ := lab.L - 0.1055613458*lab.A - 0.0638541728*lab.B
@@ -78,17 +104,36 @@ func OKLabToRGB(lab OKLab) RGB {
 	g := -1.2684380046*l + 2.6097574011*m - 0.3413193965*s
 	b := -0.0041960863*l - 0.7034186147*m + 1.7076147010*s
 
-	// Gamut clamp to [0, 1]
-	r = math.Max(0, math.Min(1, r))
-	g = math.Max(0, math.Min(1, g))
-	b = math.Max(0, math.Min(1, b))
+	return r, g, b
+}
 
-	// Linear to sRGB, then scale to 0-255
-	return RGB{
-		R: math.Round(linearToSrgb(r) * 255),
-		G: math.Round(linearToSrgb(g) * 255),
-		B: math.Round(linearToSrgb(b) * 255),
+// WithLightness preserves the hue and reduces chroma only enough to fit sRGB.
+func WithLightness(lab OKLab, lightness float64) RGB {
+	lab.L = lightness
+	return roundedRGB(GamutMappedRGB(lab))
+}
+
+// GamutMappedRGB returns unquantized sRGB channels from 0 to 255 for the
+// caller to round at the destination bit depth. Keep lightness and hue fixed.
+func GamutMappedRGB(lab OKLab) RGB {
+	fits := func(c OKLab) bool {
+		r, g, b := linearRGB(c)
+		return min(r, g, b) >= -1e-7 && max(r, g, b) <= 1.0000001
 	}
+	if !fits(lab) {
+		low, high := 0.0, 1.0
+		for range 12 {
+			scale := (low + high) / 2
+			if fits(OKLab{lab.L, lab.A * scale, lab.B * scale}) {
+				low = scale
+			} else {
+				high = scale
+			}
+		}
+		lab.A *= low
+		lab.B *= low
+	}
+	return srgb(lab)
 }
 
 // OKLabToOKLCH converts OKLab (Cartesian) to OKLCH (polar).

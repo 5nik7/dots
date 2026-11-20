@@ -3,12 +3,14 @@ package anodize
 import (
 	"bytes"
 	"encoding/binary"
+	anodizeColor "github.com/5nik7/dots/anodize/color"
 	"hash/crc32"
 	"image"
 	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"math"
 	"reflect"
 	"testing"
 )
@@ -34,7 +36,7 @@ func document(t *testing.T) Document {
 	return Document{Schema: 1, ID: "fixture", Baseline: p, Options: Options{Mode: "normal"}}
 }
 func TestModesAndDeterminism(t *testing.T) {
-	if len(Modes()) != 23 {
+	if len(Modes()) != 35 {
 		t.Fatal("missing modes")
 	}
 	data := fixture()
@@ -192,5 +194,115 @@ func BenchmarkExtractWallpaper(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = Generate(data, "", Options{Mode: "normal"})
+	}
+}
+
+func TestPatinaPixelsAndTransparency(t *testing.T) {
+	input := image.NewNRGBA64(image.Rect(0, 0, 4, 1))
+	for i, level := range []uint16{0, 0x3333, 0xaaaa, 0xffff} {
+		input.SetNRGBA64(i, 0, color.NRGBA64{R: level, G: level, B: level, A: uint16(i) * 0x4567})
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, input); err != nil {
+		t.Fatal(err)
+	}
+	palette := []string{"#ff0000"}
+	for _, style := range []string{"exact", "shaded"} {
+		out, err := Patina(buf.Bytes(), palette, style)
+		if err != nil || out.Bounds() != input.Bounds() {
+			t.Fatalf("%s: %v", style, err)
+		}
+		for x := range 4 {
+			got := color.NRGBA64Model.Convert(out.At(x, 0)).(color.NRGBA64)
+			if got.A != input.NRGBA64At(x, 0).A {
+				t.Fatal("lost alpha", got)
+			}
+			if x == 0 {
+				continue
+			}
+			if style == "exact" && (got.R != 65535 || got.G != 0 || got.B != 0) {
+				t.Fatal("outside palette", got)
+			}
+			if style == "shaded" {
+				original := input.NRGBA64At(x, 0)
+				lightness := func(p color.NRGBA64) float64 {
+					return anodizeColor.RGBToOKLab(anodizeColor.RGB{R: float64(p.R) / 257, G: float64(p.G) / 257, B: float64(p.B) / 257}).L
+				}
+				if math.Abs(lightness(original)-lightness(got)) > 0.005 {
+					t.Fatal("lost source lightness", original, got)
+				}
+			}
+		}
+	}
+	if _, err := Patina([]byte("invalid"), palette, "exact"); err == nil {
+		t.Fatal("accepted malformed input")
+	}
+}
+
+func TestPatinaGIFCanvasAndFirstFrame(t *testing.T) {
+	palette := color.Palette{color.Black, color.White}
+	img := image.NewPaletted(image.Rect(1, 1, 2, 2), palette)
+	img.Pix[0] = 1
+	var buf bytes.Buffer
+	err := gif.EncodeAll(&buf, &gif.GIF{Image: []*image.Paletted{img, image.NewPaletted(image.Rect(0, 0, 3, 3), palette)}, Delay: []int{1, 1}, Config: image.Config{ColorModel: palette, Width: 3, Height: 3}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := Patina(buf.Bytes(), []string{"#ffffff", "#000000"}, "exact")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Bounds() != image.Rect(0, 0, 3, 3) {
+		t.Fatal(out.Bounds())
+	}
+	r, _, _, a := out.At(1, 1).RGBA()
+	_, _, _, outside := out.At(0, 0).RGBA()
+	if r != 65535 || a != 65535 || outside != 0 {
+		t.Fatal("wrong first frame placement")
+	}
+}
+
+func BenchmarkPatinaWallpaper(b *testing.B) {
+	data := fixtureSize(1920, 1080)
+	palette := []string{"#101820", "#ffd080", "#21a0a0", "#bf4080", "#bbbbcc", "#434967", "#aaddff", "#64ad40"}
+	for _, style := range []string{"alloy", "palette-blend", "harmonize", "gradient", "duotone", "exact", "shaded"} {
+		b.Run(style, func(b *testing.B) {
+			for b.Loop() {
+				if _, err := Patina(data, palette, style); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
+func TestBatchModesAndRenderedCustomSources(t *testing.T) {
+	data := fixture()
+	modes := Modes()
+	generated, err := GenerateModes(data, "", nil, modes, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, mode := range modes {
+		single, err := Generate(data, "", Options{Mode: mode})
+		if err != nil || !reflect.DeepEqual(single, generated[mode]) {
+			t.Fatal("batch differs for", mode, err)
+		}
+	}
+	theme := map[string]string{}
+	for _, k := range ANSIKeys() {
+		theme[k] = "#888888"
+	}
+	plain, err := GenerateModes(nil, "", theme, []string{"accent-pop"}, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	theme["leaf_tip"] = "#48cd63"
+	variant, err := GenerateModes(nil, "", theme, []string{"accent-pop"}, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plain["accent-pop"]["blue"] == variant["accent-pop"]["blue"] || !Hex(variant["accent-pop"]["leaf_tip"]) {
+		t.Fatal("custom source color did not contribute to the variant")
 	}
 }

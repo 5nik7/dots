@@ -69,7 +69,8 @@ class PopupConfig(unittest.TestCase):
         self.assertFalse((self.home/'BAD').exists())
 
     def test_fzf_border_and_colors_override_shell_defaults_without_changing_protocol(self):
-        self.configure(dict(position='right',border='double',colors={'border':'#123456','bg':'#112233'}))
+        self.configure(dict(position='right',border='double',width='auto',height='auto',
+                            colors={'border':'#123456','bg':'#112233'}))
         result=subprocess.CompletedProcess([],0,b'0\tliteral\0')
         with patch('interaction.subprocess.run',return_value=result) as run:
             self.assertEqual(RichSelector(backend='fzf').fzf('Popup',['literal'],False,None,True,True,
@@ -156,10 +157,11 @@ class PopupConfig(unittest.TestCase):
             validate_value(defaults,('apps','menu','popup','width'),value)
         for value in ('0%','101%','90%; touch BAD','50%,30%','80','-2%',0,-1,True,1.5,{},[],10001):
             with self.assertRaises(ValueError):validate_value(defaults,('apps','menu','popup','height'),value)
+        inherited_width = self.cli('get','apps.menu.popup.width').stdout
         self.cli('set','apps.menu.popup.width','90%')
         self.assertEqual(self.cli('get','apps.menu.popup.width').stdout,'90%\n')
         self.cli('unset','apps.menu.popup.width')
-        self.assertEqual(self.cli('get','apps.menu.popup.width').stdout,'auto\n')
+        self.assertEqual(self.cli('get','apps.menu.popup.width').stdout,inherited_width)
         self.assertEqual(dimensions({'width':'90%','height':'50%'},(35,10),(80,30)),(72,15))
         self.assertEqual(dimensions({'width':'fill','height':'fill'},(35,10),(40,12)),(40,12))
         self.assertEqual(dimensions({'width':10000,'height':1},(35,10),(20,4)),(20,4))
@@ -192,9 +194,10 @@ class NativePopup(NativeMenuFixture):
     def test_real_frame_colors_and_placement_at_three_widths(self):
         root=Path(self.env['DOTS']);root.mkdir()
         shutil.copytree(fixtures.ROOT/'default',root/'default')
+        appearance = dict(menu=dict(popup=dict(border='rounded', colors={'border':'accent'})))
         for profile in ('termux','linux','wsl','windows'):
             path=root/'profiles'/profile;path.mkdir(parents=True)
-            (path/'profile.json').write_text(json.dumps(dict(schema=1,id=profile)))
+            (path/'profile.json').write_text(json.dumps(dict(schema=1,id=profile,apps=appearance)))
         palette=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme';palette.mkdir(parents=True)
         (palette/'palette.json').write_text(json.dumps(dict(colors=dict(accent='#123456'))))
         code='''import os,json,subprocess

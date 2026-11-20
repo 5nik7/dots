@@ -325,7 +325,11 @@ def reload_apps(themes, events):
 
 def backgrounds(themes, action, args, preflight=False, identity=None):
     identity = identity or themes.current()
-    files = sorted(set(p for base in (themes.directory(identity) / 'backgrounds', themes.config / 'backgrounds' / identity)
+    from profile_config import config_path
+    personal = themes.config / 'backgrounds' / identity
+    roots = {themes.directory(identity) / 'backgrounds', personal,
+             config_path(Path('backgrounds') / identity, themes.checkout)}
+    files = sorted(set(p for base in roots
                        for p in base.glob('*') if p.is_file() and not p.is_symlink() and p.suffix.lower() in ('.png','.jpg','.jpeg','.webp','.bmp')))
     record, current = themes.state / 'backgrounds' / identity, themes.state / 'background-current'
     if action in ('list', 'current'):

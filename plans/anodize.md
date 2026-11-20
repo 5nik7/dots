@@ -12,7 +12,7 @@ The CLI adapter reuses Python Presentation and Store rather than duplicating the
 
 Anodize.nvim lives in the separate `~/repos/Anodize.nvim` repository. Its agent finished the handoff, and Dots-owned configuration now integrates it. This Dots slice does not authorize edits to that separate repository; follow its local guide and obtain task scope before extending it. Preserve DotsThemeReload, personal highlights and dashboard animation in future integration changes. Android APK, TUI, online sources and arbitrary hooks remain deferred.
 
-Acceptance includes all 23 modes, light/dark, deterministic results, idempotent adjustments, import round trips, collision and drift refusal, interrupted save/recovery/undo, JSON integrity, and the [presentation gate](../docs/presentation.md#acceptance-gate). All tests own their roots. No commits or live activation.
+Acceptance includes all supported modes, light/dark, deterministic results, idempotent adjustments, import round trips, collision and drift refusal, interrupted save/recovery/undo, JSON integrity, and the [presentation gate](../docs/presentation.md#acceptance-gate). All tests own their roots. No commits or live activation.
 
 Verification: isolated Go tests/vet and 14 CLI acceptance tests; existing theme (23), theme workflow (11), file operations (21), file catalog (9), and Bash dispatcher (23) tests passed. ShellCheck warning-level checks and relative Markdown links passed. [Performance evidence](../docs/testing.md#anodize-baseline-2026-09-25) records engine and complete CLI timings. No live theme activation or publication was performed.
 
@@ -38,3 +38,34 @@ The separately authorized [theme plugin slice](theme-plugins.md) now covers expl
 
 The owner-approved [interactive authoring slice](anodize-interactive.md) extends
 storage and CLI selection; application/TUI work remains deferred.
+
+## Patina image export
+
+The Go engine maps an input raster to a rendered theme or an extracted reference palette. One CLI handler owns the four Patina spellings, staged thumbnails, automatic numbering and journaled image saves. The Anodize installer component delivers the standalone shim. The existing menu gains a guided action because choosing a source image and inspecting the result benefits from a preview. Color policy and presentation preferences use the existing controls. Style, palette and destination belong to each invocation. The root README's introductory setup and navigation already lead to the topic guide.
+
+Acceptance covers pixels and alpha, reference extraction, theme overrides, equal output across routes, concurrent saves and collisions, cancellation, undo, literal paths, installer delivery and engine-free six-shell completion. Desktop Linux, WSL and native Windows PowerShell 5.1/7 require separate runtime acceptance. See [Patina usage](../docs/anodize.md#patina).
+
+On Termux, Go tests and vet passed. The CLI fixtures verified all four routes, concurrent numbering, undo, input drift and preview cancellation at 40, 80 and 120 columns. The installer lifecycle delivered the shim, literal Tab completed in Bash, Zsh and Fish, and the catalog check passed across 1,043 contexts. A single 1920×1080 engine benchmark on Android/arm64 took 3.32 s in exact mode and 5.33 s in shaded mode with other checks running.
+
+### Wallpaper styles
+
+Harmonize was the initial hue-matching default, with missing-hue harmony choices, themed gradient and duotone ramps, strength and named stops. Explicit exact and shaded retain their original mapping. The existing guided style selector previews all treatments from one bounded sample and renders the selected treatment at full resolution for review. These are per-image artistic choices. The existing command, installer component and introductory README already cover entry and delivery. On Termux, the Kanagawa regression and the bundled 3840×2160 fern photograph retained green leaf shadows. Checks cover named ramp order, continuous sky tones, neutral clouds, alpha, source identity at zero strength, all four routes, per-style thumbnail parity and picker cancellation at 40, 80 and 120 columns. The median of three single-iteration 1920×1080 mapping benchmarks on Android/arm64 was 2.53 s for harmonize, 2.51 s for gradient and 2.51 s for duotone (about 16.7 MB allocated each, with concurrent checks). Desktop Linux, WSL and native Windows runtime acceptance remain pending.
+
+### Palette modes, comparison sheets and encoders
+
+The ordered engine catalog supplies 35 modes and their descriptions. The integration generator projects its choices into static command metadata for Bash, Zsh, Fish and native PowerShell. Patina derives temporary variants from distinct rendered theme colors and retains custom stop names. The source image is sampled once per sheet. Numbered style and mode sheets, normal exports and all encoders use the existing staged create-only save and undo path.
+
+The stronger harmonize treatment uses theme shadow, midtone and highlight anchors. Natural preserves the previous treatment. The 17 styles include source-group color transfer, ordered dithering and contour ink. Output suffixes take precedence over the format flag. Optional image writers are preflighted before rendering. CLI and engine fixtures cover image headers, conflicting flags, transparent pixels, collision numbering, theme polarity and repeatable previews.
+
+**Menu update.** The existing interactive picker includes the expanded styles and palette modes with image previews. **No configuration integration change needed.** These choices apply to the current image and output. **No README change needed.** The existing introduction links to the Anodize guide. The installer already delivers all four entry points. Native Linux, WSL and Windows PowerShell 5.1/7 runtime acceptance remain pending.
+
+
+On Termux, the 17-style Kanagawa fern sheet retained green leaf shadows. The 35-mode Catppuccin Mocha sheet included the original and authored theme beside the numbered alternatives. All eight output encoders passed local fixture checks, including JPEG input with an explicit WebP destination. The revised 1920×1080 harmonize benchmark took a median 4.43 s and about 16.7 MB over three single-iteration runs with a concurrent fixture. The stronger default adds a theme-family midtone blend and maps source lightness through the theme endpoints.
+
+### Palette-led default
+
+Alloy uses palette-blend lightness and blends hue and chroma with a 25% harmonize contribution. The shared renderer handles theme and reference palettes, native shell entry points and thumbnail previews. The menu update places alloy first in the existing picker. It is style 18 on comparison sheets, following the 17 existing entries. No configuration integration change needed because strength and harmony already express the applicable per-image choices. The existing installer and root README cover the same entry points.
+
+Acceptance compares alloy, palette-blend and harmonize on the Kanagawa fern and Catppuccin village scene. Check implicit and explicit alloy, legacy pixel identity, short-arc hue mixing, near-gray colors, 16-bit alpha, zero strength, picker parity, sheet numbering, all four routes and JPEG-to-WebP export. Native desktop Linux, WSL and Windows PowerShell runtime checks remain separate.
+
+On Termux, both explicit parent styles reproduced the pre-change PNGs byte for byte on both photos. The Kanagawa fern’s tenth-percentile brightness was 32/255 in alloy and palette-blend and 69/255 in harmonize. The Catppuccin village scene measured 39/255, 39/255 and 73/255 respectively. The four routes produced identical default PNGs. One 1920×1080 Go benchmark on Android/arm64 took 3.78 s for alloy, 3.21 s for palette-blend and 3.02 s for harmonize with concurrent checks.

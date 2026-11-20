@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Isolated Anodize authoring and publication acceptance. Requires a prebuilt engine."""
 import base64
+import struct
+import zlib
 from contextlib import contextmanager
 import json
 import os
@@ -35,7 +37,7 @@ class Anodize(unittest.TestCase):
         if not engine or not Path(engine).is_file():
             self.fail('Use python3 -B tools/verify_anodize.py check; ANODIZE_ENGINE must be a prebuilt test binary')
         self.env['ANODIZE_ENGINE'] = engine
-        for p in [REPO / 'bin/anodize', *REPO.glob('bin/dots-anodize*')]:
+        for p in [REPO / 'bin/anodize', REPO / 'bin/patina', REPO / 'bin/dots-patina', *REPO.glob('bin/dots-anodize*')]:
             shutil.copy2(p, self.repo / 'bin' / p.name)
         self.env['PYTHONDONTWRITEBYTECODE'] = '1'
         self.image = self.root / '-wall ü.png'
@@ -50,6 +52,192 @@ class Anodize(unittest.TestCase):
 
     def recipe(self, name='example'):
         return json.loads((self.home / 'config/dots/themes' / name / 'anodize.json').read_text())
+
+    def test_patina_four_routes_numbering_and_undo(self):
+        import concurrent.futures
+        args = [str(self.image), '--theme', 'nord', '--json']
+        routes = [('patina',), ('anodize', 'patina'), ('dots', 'patina'), ('dots', 'anodize', 'patina')]
+        def invoke(route, *flags):
+            command, *rest = route
+            return json.loads(self.run_command([BASH, str(self.repo/'bin'/command), *rest, *args, *flags]).stdout)
+        preview = invoke(routes[0], '--dry-run', '--yes')
+        base = self.home/'config/dots/backgrounds/nord'/self.image.name
+        self.assertEqual((preview['style'],preview['harmony'],preview['strength']), ('alloy','auto',100))
+        self.assertEqual(preview['target'], str(base))
+        self.assertFalse(base.parent.exists())
+        for route in routes:
+            self.assertEqual(invoke(route), preview)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as workers:
+            saved = list(workers.map(lambda route: invoke(route, '--yes'), routes))
+        expected = {base, *(base.with_stem(base.stem+'_'+str(i)) for i in range(1,4))}
+        self.assertEqual({Path(r['target']) for r in saved}, expected)
+        self.assertEqual(len({p.read_bytes() for p in expected}), 1)
+        self.assertTrue(base.read_bytes().startswith(b'\x89PNG'))
+        self.assertFalse(self.active.exists())
+        profile = self.repo/'profiles/termux'
+        (profile/'backgrounds/nord').mkdir(parents=True)
+        (profile/'profile.json').write_text(json.dumps(dict(schema=1, id='termux')))
+        extra = profile/'backgrounds/nord/profile.png'
+        extra.write_bytes(PNG)
+        self.env['TERMUX_VERSION'] = 'fixture'
+        self.env['DOTS_THEME_SELECTION'] = 'nord'
+        listed = {Path(line) for line in self.dots('theme','bg','list').stdout.splitlines()}
+        self.assertTrue((expected | {extra}) <= listed, listed)
+        item = next(r for r in saved if r['target'].endswith('_1.png'))
+        with self.author() as author:
+            store = author.store()
+            ops, guards, catalogs = store.inverse(item['transaction'])
+            store.apply('undo', ops, guards, catalogs=catalogs)
+        self.assertEqual(invoke(routes[0])['target'], item['target'])
+        Path(item['target']).symlink_to('missing')
+        self.assertTrue(invoke(routes[0])['target'].endswith('_4.png'))
+        self.cli('patina',str(self.image),'--theme','nord','--output',str(base),'--yes',code=1)
+        self.cli('patina',str(self.image),'--theme','nord','--light',code=2)
+        uppercase = self.home/'Evening.PNG'
+        uppercase.write_bytes(PNG)
+        occupied = base.parent/uppercase.name
+        occupied.touch()
+        preview = self.cli('patina', str(uppercase), '--theme', 'nord', '--dry-run', '--json')
+        self.assertEqual(Path(json.loads(preview.stdout)['target']), occupied.with_stem('Evening_1'))
+
+    def test_patina_palette_matches_extract_and_show(self):
+        def one_pixel(rgb):
+            def chunk(kind, data):
+                return (struct.pack('>I',len(data)) + kind + data
+                        + struct.pack('>I',zlib.crc32(kind+data)))
+            header = struct.pack('>IIBBBBB',1,1,8,2,0,0,0)
+            return (PNG[:8] + chunk(b'IHDR',header) + chunk(b'IDAT',zlib.compress(b'\0'+rgb))
+                    + chunk(b'IEND',b''))
+        self.cli('create','authored','--color','#222222','--set','custom=#ff0102','--yes')
+        custom = json.loads(self.cli('show','authored','--json').stdout)['colors']['custom']
+        source = self.root/'one ü.png'
+        options = ['--mode','ocean','--light']
+        extracted = json.loads(self.cli('extract',str(self.image),*options,'--json').stdout)['colors']['blue']
+        for palette, flags in ((custom,['--theme','authored']),
+                               (extracted,['--palette-image',str(self.image),*options])):
+            rgb = bytes.fromhex(palette[1:])
+            source.write_bytes(one_pixel(rgb))
+            target = self.root/(palette+'.png')
+            self.cli('patina',str(source),*flags,'--style','exact','--output',str(target),'--yes')
+            output = target.read_bytes()
+            start = output.index(b'IDAT') + 4
+            # The first and only pixel in a row has zero-valued filter neighbors.
+            self.assertEqual(zlib.decompress(output[start:])[1:4], rgb)
+
+    def test_patina_treatments_and_validation(self):
+        source = str(self.image)
+        target = self.root/'duotone.png'
+        self.cli('create','fern','--color','#45584c','--set','fern_tip=#8fad72','--yes')
+        for flags, stops in ((['--theme','fern'], ['fern_tip','foreground']),
+                             (['--palette-image',source,'--mode','pastel'], ['blue','yellow'])):
+            result = json.loads(self.cli('patina',source,*flags,'--style','duotone','--strength','65',
+                                         '--stops',','.join(stops),'--output',str(target),'--dry-run','--json').stdout)
+            self.assertEqual((result['style'], result['strength'], result['stops']),('duotone',65,stops))
+            self.assertFalse(target.exists())
+        for flags in (['--style','duotone','--stops','blue'], ['--style','duotone','--stops','blue,green,red'],
+                      ['--style','exact','--strength','0'], ['--strength','101'], ['--strength','0.5'],
+                      ['--style','gradient','--harmony','source'], ['--stops','blue,yellow']):
+            self.cli('patina',source,'--theme','fern','--output',str(target),'--yes',*flags,code=2)
+        self.cli('patina',source,'--theme','fern','--output',str(target),'--style','gradient',
+                 '--stops','background,unknown','--yes',code=1)
+        self.assertFalse(target.exists())
+
+    def test_patina_output_encoders_and_extension_precedence(self):
+        import xml.etree.ElementTree as ET
+        from cli import parser
+        from patina import output_settings
+        opts = parser().parse_args(['patina', str(self.image), '--theme', 'nord', '--format', 'webp'])
+        with mock.patch.dict(sys.modules, {'PIL': None}):
+            with self.assertRaisesRegex(ValueError, 'WEBP encoder'):
+                output_settings(opts, self.image)
+        try:
+            from PIL import Image
+            Image.init()
+        except ImportError:
+            Image = None
+        for ext, fmt in [('png','png'), ('JpG','jpeg'), ('jpeg','jpeg'), ('gif','gif'), ('svg','svg'),
+                         ('WebP','webp'), ('bmp','bmp'), ('tif','tiff'), ('tiff','tiff'), ('avif','avif')]:
+            with self.subTest(ext=ext):
+                path = self.root/('encoded.' + ext)
+                args = ['patina', str(self.image), '--theme', 'nord', '--format', 'gif', '--output', str(path), '--yes', '--json']
+                if fmt in ('webp','avif','bmp','tiff') and (Image is None or fmt.upper() not in Image.SAVE):
+                    self.cli(*args, code=1)
+                    self.assertFalse(path.exists())
+                    continue
+                report = json.loads(self.cli(*args).stdout)
+                self.assertEqual(report['format'], fmt)
+                if fmt == 'svg':
+                    href = ET.parse(path).getroot()[0].get('{http://www.w3.org/1999/xlink}href')
+                    self.assertTrue(base64.b64decode(href.split(',')[1]).startswith(PNG[:8]))
+                elif Image:
+                    with Image.open(path) as img:
+                        img.load()
+                        self.assertEqual((img.format.lower(), img.size), (fmt, (1, 1)))
+        for ext, extra in [('webp', ['--quality','0']), ('jpg',['--lossless']), ('png', ['--quality','90']),
+                           ('webp', ['--lossless','--quality','30']), ('unknown', [])]:
+            path = self.root/('bad.' + ext)
+            self.cli('patina',str(self.image),'--theme','nord','--output',str(path),*extra,'--yes',code=1)
+            self.assertFalse(path.exists())
+        dest = self.root/'type-selected'
+        result = json.loads(self.cli('patina',str(self.image),'--theme','nord','--output',str(dest),
+                                     '--format','jpg','--quality','82','--json','--yes').stdout)
+        self.assertEqual((result['target'], result['quality']), (str(dest)+'.jpg', 82))
+        self.assertTrue(Path(result['target']).read_bytes().startswith(b'\xff\xd8'))
+
+    def test_patina_comparisons_and_temporary_theme_mode(self):
+        from patina import STYLES
+        self.cli('create','fern','--color','#45ad62','--light','--set','fern_tip=#ed8cab','--yes')
+        before = self.recipe('fern')
+        flags = ['patina',str(self.image),'--theme','fern','--json']
+        for number in range(2):
+            sheet = json.loads(self.cli(*flags,'--mode','jewel-tones','--compare','--yes').stdout)
+            self.assertEqual(sheet['panels'][1:], [f'{i:02d} {s}' for i, s in enumerate(STYLES, 1)])
+            self.assertEqual([sheet['panels'][i] for i in (1, 7, 18)],
+                             ['01 harmonize', '07 palette-blend', '18 alloy'])
+            self.assertTrue(sheet['light'])
+            suffix = '_styles.png' if number == 0 else '_styles_1.png'
+            self.assertEqual(Path(sheet['target']), self.image.with_name(self.image.stem + suffix))
+        sheet = json.loads(self.cli(*flags,'--compare-modes','--style','duotone','--stops','fern_tip,foreground','--dark','--dry-run').stdout)
+        self.assertEqual((sheet['panels'][:2],len(sheet['panels']),sheet['light']), (['Original','01 as-authored'],37,False))
+        self.assertFalse(Path(sheet['target']).exists())
+        self.assertEqual(self.recipe('fern'),before)
+        ref = json.loads(self.cli('patina',str(self.image),'--palette-image',str(self.image),'--compare-modes',
+                                  '--dry-run','--json').stdout)
+        self.assertEqual((len(ref['panels']), ref['style']), (36, 'alloy'))
+        self.assertFalse(Path(ref['target']).exists())
+
+    def test_patina_reference_modes_and_drift(self):
+        from patina import run
+        from cli import parser
+        path = self.root/'explicit ü.png'
+        args = ['patina',str(self.image),'--palette-image',str(self.image),'--style','shaded']
+        self.cli(*args, code=2)
+        out = json.loads(self.cli(*args,'--mode','ocean','--light','--output',str(path),'--json','--yes').stdout)
+        self.assertEqual((out['mode'],out['light'],out['style'],out['width'],out['height']),('ocean',True,'shaded',1,1))
+        self.assertTrue(path.is_file())
+        path.unlink()
+        with self.author() as author:
+            opts = parser().parse_args([*args,'--output',str(path)])
+            def change_input(*_):
+                self.image.write_bytes(PNG + b'changed')
+                return True
+            with self.assertRaisesRegex(ValueError,'changed after preview'):
+                run(author, opts, change_input, self.fail)
+        self.assertFalse(path.exists())
+
+    def test_patina_cancel_thumbnail(self):
+        test_confirmations.install_gum(self.root, self.env)
+        self.env['GUM_CHOICE'] = 'Cancel'
+        for width in (40, 80, 120):
+            self.env.update(COLUMNS=str(width), DOTS_COLOR='always')
+            command = [BASH, str(self.repo/'bin/patina'), str(self.image), '--theme','nord']
+            if width == 40:
+                command.extend(['--interactive','--style','exact','--output',str(self.home/'custom.png')])
+            result = self.terminal(shlex.join(command), width=width)
+            self.assertFalse((self.home/'custom.png').exists())
+            self.assertIn('▀'.encode(), result)
+            self.assertIn(b'Target', result)
+            self.assertFalse((self.home/'config/dots/backgrounds').exists())
 
     def test_local_plugins_share_publication_and_keep_authoring_inert(self):
         hooks = self.home / 'config/dots/hooks/theme-set.d'
@@ -121,7 +309,7 @@ class Anodize(unittest.TestCase):
 
     def test_modes_help_metadata_and_completion(self):
         for width in ('40', '80', '120'):
-            for args in ((), ('--help',), ('create', '--help'), ('import', '--help')):
+            for args in ((), ('--help',), ('create', '--help'), ('import', '--help'), ('patina', '--help')):
                 for color in ('never', 'always'):
                     help_text = self.cli(*args, COLUMNS=width, DOTS_COLOR=color,
                                          FORCE_COLOR='1', PYTHON_COLORS='1',
@@ -131,12 +319,12 @@ class Anodize(unittest.TestCase):
                         self.assertNotIn('\x1b', help_text)
                         self.assertTrue(all(len(line) <= int(width) for line in help_text.splitlines()))
                     else:
-                        self.assertIn('\x1b[1;96m', help_text)
+                        self.assertIn('\x1b[0;1;36mUsage\x1b[0m', help_text)
                     self.assertIn('Usage', help_text)
                     self.assertIn('Options', help_text)
         self.assertIn('Choose exactly one source', self.cli('create', '--help').stdout)
         modes=json.loads(self.cli('modes','--json').stdout)['modes']
-        self.assertEqual(len(modes),23)
+        self.assertEqual(len(modes),35)
         self.assertEqual(modes,json.loads(self.dots('anodize','modes','--json').stdout)['modes'])
         self.dots('commands','--check')
         for action in ('create','import','edit','export','apply','preview'):
@@ -286,6 +474,8 @@ class Anodize(unittest.TestCase):
         self.cli('create','image','--image',self.image,'--yes')
         self.cli('apply','image','--background','--yes',code=1)
         self.assertFalse(self.active.exists())
+        # Wallpaper preflight checks both the adapter and its runtime timeout.
+        (self.tools/'timeout').symlink_to(shutil.which('timeout'))
         adapter=self.repo/'bin/feh'
         adapter.write_text('#!'+BASH+'\nexit 0\n');adapter.chmod(0o755)
         self.cli('apply','image','--background','--dry-run',DISPLAY=':fixture')

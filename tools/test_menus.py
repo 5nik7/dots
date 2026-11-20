@@ -51,18 +51,18 @@ class MenuFixture(unittest.TestCase):
 
 
 class Menus(MenuFixture):
-    def test_selected_row_styles_are_opt_in(self):
+    def test_row_styles_are_opt_in(self):
         from files.catalog import Presentation
+        theme = 'fg:regular,fg:#abcdef:nodim:nobold,fg+:strip,bg+:#112233,hl+:4:underline,pointer:2'
         with patch('menus.terminal', return_value=True), patch('menus.shutil.which', return_value='fixture-fzf'), \
              patch('interaction.rich_fzf_available', return_value=True), \
-             patch('files.picker.fzf_colors', return_value='fg:#abcdef,fg+:strip,bg+:#112233'), \
+             patch('files.picker.fzf_colors', return_value=theme), \
              patch.object(RichSelector, 'fzf', return_value=[0]) as picker:
             for enabled in (False, True):
                 choose(self.menu, mode='browse', ui=Presentation(terminal=True), preserve_row_styles=enabled)
                 colors = picker.call_args.args[6]
-                self.assertIn('bg+:#112233', colors)
-                self.assertEqual('fg+:strip' in colors, not enabled)
-                self.assertEqual('fg+:-1:regular' in colors, enabled)
+                self.assertEqual(colors, 'fg:#abcdef,bg+:#112233,hl+:4:underline,pointer:2,fg+:-1:regular'
+                                 if enabled else theme)
 
     def test_schema_and_data_modes_never_probe_or_select(self):
         with patch('subprocess.run', side_effect=AssertionError('unexpected child')), \

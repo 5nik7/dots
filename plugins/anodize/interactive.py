@@ -18,7 +18,7 @@ from presentation import ColorView, render_preview
 from transactions import parents_safe
 from progress import Progress, sequence, permanent_output
 
-ACTIONS = ['show', 'preview', 'create', 'extract', 'edit', 'apply', 'import', 'export', 'promote']
+ACTIONS = ['show', 'preview', 'create', 'extract', 'patina', 'edit', 'apply', 'import', 'export', 'promote']
 ADJUSTMENTS = ['vibrance', 'saturation', 'contrast', 'brightness', 'shadows', 'highlights',
                'temperature', 'tint', 'blackPoint', 'whitePoint', 'hueShift', 'gamma']
 
@@ -28,6 +28,9 @@ def choose(title, choices, rows=None):
         raise ValueError('No available choices for ' + title)
     ui = Presentation()
     labels = [ui.clean(value) for value in choices]
+    selector = RichSelector()
+    if callable(rows):
+        rows = rows() if selector.backend == 'fzf' else None
     with tempfile.TemporaryDirectory(prefix='anodize-picker-') as directory:
         preview = None
         if rows is not None:
@@ -41,8 +44,8 @@ def choose(title, choices, rows=None):
                         DOTS_ANODIZE_PREVIEW=str(Path(__file__)), DOTS_ANODIZE_SNAPSHOT=str(snapshot),
                         DOTS_ICONS='always' if ui.icons else 'never',
                         DOTS_PROGRESS='never'))
-        index = RichSelector().pick(title, labels, preview=preview, color=ui.color,
-                                    icons=ui.icons, colors=fzf_colors(ui))[0]
+        index = selector.pick(title, labels, preview=preview, color=ui.color,
+                              icons=ui.icons, colors=fzf_colors(ui))[0]
     return index
 
 
@@ -122,8 +125,35 @@ def fill_inputs(parser, args, author):
     action = args.action
     if hasattr(args, 'id'):
         args.id = missing(args.id, 'Theme ID', lambda: entry('New theme ID') if action == 'create' else theme(author, action))
-    if action in ('extract', 'import'):
-        args.file = missing(args.file, 'Source file', lambda: browse(action == 'extract'))
+    if action in ('extract', 'import', 'patina'):
+        args.file = missing(args.file, 'Source file', lambda: browse(action != 'import'))
+    if action == 'patina':
+        if not (args.theme or args.palette_image):
+            if not can_pick:
+                parser.error('patina requires --theme or --palette-image')
+            if choice('Palette source', ['Theme', 'Reference image']) == 'Theme':
+                args.theme = theme(author, 'show')
+            else:
+                args.palette_image = browse(True)
+        if args.theme and not (args.mode or args.compare_modes) and (args.light or args.dark):
+            parser.error('--light and --dark with a theme require --mode or --compare-modes')
+        if args.compare_modes and args.mode:
+            parser.error('--compare-modes includes all modes; omit --mode')
+        if args.compare and ({'--style', '--stops', '--strength', '--harmony'} & args._provided):
+            parser.error('--compare uses each style at its defaults')
+        if guided and args.palette_image:
+            if not (args.light or args.dark):
+                args.light = choice('Lightness', ['Dark', 'Light']) == 'Light'
+        from patina import available_styles
+        if not available_styles(args):
+            parser.error('incompatible Patina settings: harmony requires alloy, harmonize or natural, stops require gradient (2+) or duotone (2), and exact/shaded use fixed strength')
+        if guided and args.theme and not (args.output or args.compare or args.compare_modes):
+            if choice('Destination', ['Personal theme backgrounds', 'Choose an output path']) == 'Choose an output path':
+                args.output = entry('New image file')
+        if args.palette_image and not (args.output or args.compare or args.compare_modes):
+            if not guided:
+                parser.error('--output is required with --palette-image; use --interactive to choose a path')
+            args.output = entry('New image file')
     if action == 'create' and not any((args.image, args.color, args.from_theme)):
         if not can_pick:
             parser.error('create requires exactly one of --image, --color or --from')
@@ -164,15 +194,17 @@ def candidates(author, doc, wallpaper=None, modes=None):
     payload = base64.b64encode(regular_bytes(image, 32 << 20)).decode() if image else None
     result = []
     modes = modes or author.call('modes')['modes']
+    generated = {}
+    if payload or doc.get('seed'):
+        source = dict(image=payload) if payload else dict(color=doc['seed'])
+        generated = author.call('generate-modes', modes=modes, options=doc['options'], **source)['palettes']
     with sequence('Generating mode previews', len(modes), unit='mode') as previews:
         for mode in modes:
             with previews.step(mode):
                 draft = copy.deepcopy(doc)
                 draft['options']['mode'] = mode
-                if payload or draft.get('seed'):
-                    kwargs = dict(options=draft['options'])
-                    kwargs.update(image=payload) if payload else kwargs.update(color=draft['seed'])
-                    draft['baseline'] = author.call('generate', **kwargs)['colors']
+                if generated:
+                    draft['baseline'] = generated[mode]
                 else:
                     draft['baseline'] = author.call('variant', document={k: v for k, v in draft.items() if k != 'generated'})['colors']
                 result.append(dict(document=draft, id=mode, mode='light' if draft['options']['light'] else 'dark',
@@ -235,7 +267,13 @@ def preview(snapshot, token):
     doc = json.loads(regular_bytes(snapshot, 16 << 20))
     row = doc['rows'][int(token)]
     os.environ['DOTS_COLOR'] = 'always' if doc['color'] else 'never'
-    if row.get('error'):
+    if 'thumbnail' in row:
+        from patina import thumbnail_lines
+        view = ColorView(row['colors'], preview=True)
+        view.title(row['id'])
+        for line in thumbnail_lines(row['thumbnail'], doc['color'], view.available, max(1, view.pane_height - 2) if view.pane_height else None):
+            view.line(line)
+    elif row.get('error'):
         Presentation().detail('Unavailable', row['error'])
     else:
         render_preview(row['id'], row['colors'], row.get('mode', ''), logo=preview_logo())

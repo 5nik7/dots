@@ -1,13 +1,20 @@
 # Wallpaper adapters are explicit post-publication actions, never palette hooks.
-dt_bg_files() {
+dt_bg_files() (
   local dir=$1 file
   local personal
   personal=$(python3 -B "${DT_LIB%/themes}/profile_config.py" __path "backgrounds/$DT_BG_ID") || return
-  for file in "$dir/backgrounds/"* "$personal/"*; do
-    [[ -f $file && ! -L $file ]] || continue
-    case ${file,,} in *.png|*.jpg|*.jpeg|*.webp|*.bmp) printf '%s\0' "$file" ;; esac
+  local user="${XDG_CONFIG_HOME:-$HOME/.config}/dots/backgrounds/$DT_BG_ID"
+  local -a dirs=("$dir/backgrounds" "$personal")
+  [[ $user == "$personal" ]] || dirs+=("$user")
+  shopt -s dotglob
+  local directory
+  for directory in "${dirs[@]}"; do
+    for file in "$directory/"*; do
+      [[ -f $file && ! -L $file ]] || continue
+      case ${file,,} in *.png|*.jpg|*.jpeg|*.webp|*.bmp) printf '%s\0' "$file" ;; esac
+    done
   done
-}
+)
 dt_bg_preflight() {
   local file=$1 locked=${2:-0}
   [[ -f $file && $file != *$'\n'* ]] || { dt_error 'background must be an existing image'; return 1; }

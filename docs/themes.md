@@ -617,8 +617,7 @@ for these operations. Downloaded scripts/configuration are never sourced. Manual
 bundled/user ID collisions refuse selection. Recovery is bounded to theme sources;
 there is no generic Git repository manager.
 
-Background discovery includes the selected theme's `backgrounds/` and personal
-`~/.config/dots/backgrounds/ID` (with XDG_CONFIG_HOME respected). `next` cycles images;
+Background discovery includes the selected theme's `backgrounds/`, the resolved profile background directory, and personal `~/.config/dots/backgrounds/ID` (with XDG_CONFIG_HOME respected). [Patina](anodize.md#patina) writes new wallpaper images to the personal directory when invoked with `--theme ID` and the default output path. `next` cycles images;
 `select` reapplies the remembered image or the first; `switcher` uses optional fzf.
 The background picker uses fullscreen FZF with the prompt and list at the top,
 overriding inherited height, layout, margin and padding settings.

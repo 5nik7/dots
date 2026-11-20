@@ -115,7 +115,7 @@ class LauncherContracts(MenuFixture):
             'git/wiki': [('status','git wiki status','','output'),('info','git wiki info','','output'),('publish','git wiki publish','--all','terminal'),('sync','git wiki sync','','sync')],
             'theme': [('show','theme show','','output'),('list','theme list','','output'),('switcher','theme switcher','','terminal'),('files','theme files browse','','terminal'),('backgrounds','theme bg switcher','','terminal'),('plugins','theme plugins','','submenu')],
             'theme/plugins': [(n,'theme plugins '+n,'','output') for n in ('list','doctor')],
-            'anodize': [(n,'anodize '+n,'--interactive --logo=text --logo-layout=base' if n in ('preview','extract') else '--interactive','document' if n in ('preview','extract') else 'terminal') for n in ('create','extract','edit','preview','apply')]+[('list','anodize list','','output')],
+            'anodize': [(n,'anodize '+n,'--interactive --logo=text --logo-layout=base' if n in ('preview','extract') else '--interactive','document' if n in ('preview','extract') else 'terminal') for n in ('create','extract','patina','edit','preview','apply')]+[('list','anodize list','','output')],
             'debug': [(n,'debug '+n,'','output') for n in ('check','startup','path','cache')]+[('demos','debug demo','','submenu')],
             'debug/demo': [(n,'debug demo',n,'terminal') for n in ('progress','spinner')]+[
                 ('sample-help' if n=='help' else n,'debug demo',n+' --static','output') for n in ('pkgs','git','files','messages','help','all')]+[
@@ -162,6 +162,7 @@ class LauncherContracts(MenuFixture):
         def select(menu, **kwargs):
             visits.append((menu.id, kwargs['query']))
             self.assertTrue(kwargs['compact'])
+            self.assertTrue(kwargs['preserve_row_styles'])
             self.assertEqual(kwargs['prompt'], 'dots·files' if menu.id=='dots:files' else 'dots')
             if menu.id == 'dots':
                 self.assertEqual([e.label for e in menu.entries],
@@ -298,6 +299,43 @@ class NativeLauncher(NativeMenuFixture):
 
     def choose(self, text):
         os.write(self.first[1],text.encode());time.sleep(.3);os.write(self.first[1],b'\r')
+
+    def test_saved_label_and_icon_styles_follow_focus(self):
+        from platform_info import detect
+        platform = detect(env=self.env)['platform']
+        profile = self.root/'profiles'/platform
+        profile.mkdir(parents=True)
+        (profile/'profile.json').write_text(json.dumps(dict(schema=1, id=platform)))
+        self.env.update(DOTS_COLOR='always', DOTS_ICONS='always', COLORTERM='truecolor')
+        defaults = self.root/'default'
+        defaults.mkdir()
+        shutil.copy2(ROOT/'default/config.json', defaults/'config.json')
+        (defaults/'icons.toml').write_text('[menu]\nanodize="A"\nbak="B"\n')
+        (defaults/'colors.toml').write_text('[apps.menu.icon]\nfg="#123456"\n[apps.menu.label]\nfg="#abcdef"\n')
+        for field in ('label.bold', 'icon.dim'):
+            saved = subprocess.run([str(self.root/'bin/dots'), 'config', 'set', 'colors.apps.menu.'+field, 'true'],
+                                   env=self.env, capture_output=True, text=True, timeout=20)
+            self.assertEqual(saved.returncode, 0, saved.stdout+saved.stderr)
+
+        theme = Path(self.env['XDG_STATE_HOME'])/'dots/current/theme'
+        theme.mkdir(parents=True)
+        (theme/'fzf.sh').write_text('export _FZF_COLORS_="fg:regular,fg+:strip:#cba6f7:bold,bg+:#45475a"\n')
+        process = self.picker()
+        for focused, other in ((b'anodize', b'backups'), (b'backups', b'anodize')):
+            if focused == b'backups':
+                os.write(self.first[1], b'\x1b[B')
+            # The focused label inherits the selection background after the icon's reset.
+            focus_style = b'\x1b[48;2;69;71;90m\x1b[1m' + focused
+            self.receive(self.first[1], focus_style)
+            self.control('refresh-client', '-t', self.first[2])
+            frame = self.receive(self.first[1], b'blastoff')
+            self.assertIn(focus_style, frame)
+            self.assertIn(b'\x1b[1m' + other, frame)
+            for icon in (b'A', b'B'):
+                self.assertIn(b'\x1b[2m' + icon + b' ', frame)
+        os.write(self.first[1], b'\x03')
+        output, error = process.communicate(timeout=10)
+        self.assertEqual(process.returncode, 130, output+error)
 
     def test_anodize_help_popup_uses_exact_art_after_pipe_capture(self):
         from menu_tmux import TmuxContext

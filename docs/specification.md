@@ -223,6 +223,10 @@ Anodize presentation options and LOGO1/LOGO2 precedence are defined by the [logo
 
 `themes/ID/anodize.json` is a schema-1 authoring document. [Its recipe contract](anodize.md#recipe-and-ownership) owns baseline colors, absolute adjustments, overrides, generation options, source references and local generated-file receipts. Generated `colors.toml` uses the existing flat-theme contract.
 
+### Patina image results
+
+Patina's schema-1 JSON result reports `source`, `width`, `height`, `style`, `target` and `status`. Alloy, harmonize and natural report effective `harmony` and integer `strength` (defaults `auto` and 100). Gradient and duotone report `strength` and the ordered array of resolved stop names in `stops`, including automatic selections. The default style is `alloy`. A theme supplies `id`. A reference image supplies `palette_image`, `mode` and boolean `light`. A completed save includes `transaction`. `format` reports the canonical encoder name (`jpeg` and `tiff` include their extension aliases). Lossy encoders report effective `quality`, and lossless WebP reports `lossless: true`. A temporary theme variant reports `mode` and `light`. Comparison sheets add `comparison` (`styles` or `modes`) and ordered `panels` starting with the original. The reported dimensions describe the saved image or sheet. See [Patina](anodize.md#patina) for naming, collision and preview behavior.
+
 ## Implemented shell path variables
 
 The native shell initialization [environment contract](shell-init.md#environment-and-execution) owns the checkout-derived `DOTS`, `SHELLS`, binary/script/config/secrets paths and shell-directory aliases. The resolved startup file or native loader determines the checkout; initialization replaces inherited Dots path values. Custom overrides can be applied after initialization.

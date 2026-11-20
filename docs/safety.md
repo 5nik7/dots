@@ -436,6 +436,8 @@ have their own external effects.
 
 ## Anodize authoring and apply
 
+Patina stages the encoded image or comparison sheet before approval and publishes it as a create-only transaction. The store serializes concurrent saves and publishes the staged sibling with an atomic no-replace operation. An occupied automatic name advances to the next free suffix and prompts again during interactive saves. An occupied explicit target fails. Dry-run leaves no background directory or journal. Undo verifies the saved image before removing it.
+
 Create/import/edit and export-to-file use the existing file transaction Store with retained snapshots. Existing IDs/export destinations, generated-file drift and unsafe theme objects are refused. Complete staging and digest guards protect saves; existing file history, undo and recovery routes apply. Saves do not activate themes. [Anodize](anodize.md) documents confirmation, copied versus referenced wallpaper, and bounded input formats. Apply uses the existing theme publisher after template/target preflight. Explicit wallpaper changes are journaled post-publication adapter actions; a wallpaper failure leaves the app theme published and returns an error. Read-only previews only use disposable temporary rendering directories.
 
 ## Generated theme commands

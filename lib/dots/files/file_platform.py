@@ -164,3 +164,22 @@ def state_root(env=None):
     if not base.is_absolute():
         raise ValueError('state root must be absolute')
     return base / 'dots'
+
+
+def publish_new_file(source, target):
+    """Publish a prepared sibling atomically, refusing any existing entry."""
+    if os.name == 'nt':
+        os.rename(source, target)  # Windows rename refuses an occupied name.
+        return
+    import ctypes
+    import errno
+    rename = getattr(ctypes.CDLL(None, use_errno=True), 'renameat2', None)
+    if rename is not None:
+        # Linux/Android RENAME_NOREPLACE. This also works on volumes without hard links.
+        if rename(-100, os.fsencode(source), -100, os.fsencode(target), 1) == 0:
+            return
+        error = ctypes.get_errno()
+        if error not in (errno.ENOSYS, errno.EINVAL, errno.EOPNOTSUPP):
+            raise OSError(error, os.strerror(error), str(target))
+    os.link(source, target)
+    os.unlink(source)

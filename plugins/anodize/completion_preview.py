@@ -51,11 +51,14 @@ def request(words, selected):
         if not words:
             return None
         command = words.pop(0)
-        if command not in ('anodize', 'theme', 'themes'): return None
-    elif command not in ('anodize', 'theme'):
+        if command not in ('anodize', 'theme', 'themes', 'patina'): return None
+    elif command not in ('anodize', 'theme', 'patina'):
         return None
     while words and words[0].startswith(('--color=', '--icons=')):
         words.pop(0)
+    if command == 'patina':
+        command = 'anodize'
+        words.insert(0, 'patina')
     mode = selected.removeprefix('--mode=')
     is_mode = bool(words and (words[-1].startswith('--mode=') or len(words) > 1 and words[-2] == '--mode'))
     if not is_mode:
@@ -90,16 +93,20 @@ def main(cache, selected, *words):
         return 0
     values, mode = value
     args = parser().parse_args(values)
-    if args.action not in ('create', 'extract', 'edit', 'import'):
+    if args.action == 'patina':
+        if not (args.palette_image or args.theme):
+            return 3
+        args.file = args.palette_image
+    if args.action not in ('create', 'extract', 'edit', 'import', 'patina'):
         return 3
     sources = []
     for name in ('file', 'image'):
         if getattr(args, name, None): sources.append(Path(getattr(args, name)).absolute())
-    identity = getattr(args, 'from_theme', None) or (args.id if args.action == 'edit' else None)
+    identity = getattr(args, 'theme', None) or getattr(args, 'from_theme', None) or (args.id if args.action == 'edit' else None)
     if identity:
         directory = author.target(identity)
         sources.extend(directory / name for name in ('anodize.json', 'colors.toml', 'palette.toml', 'theme.toml') if (directory / name).exists())
-        if (directory / 'anodize.json').exists():
+        if args.action != 'patina' and (directory / 'anodize.json').exists():
             recipe = json.loads(regular_bytes(directory / 'anodize.json'))
             if recipe.get('wallpaper'):
                 sources.append(directory / recipe['wallpaper'])
@@ -109,32 +116,49 @@ def main(cache, selected, *words):
     if path.exists():
         rows = json.loads(regular_bytes(path, 16 << 20))
     else:
-        if args.action == 'extract':
-            from authoring import new_document
-            options = dict(mode='normal', light=args.light)
-            doc = new_document('preview', author.generate(args.file, options=options), **options)
-            wallpaper = args.file
+        if args.action == 'patina' or args.action == 'extract':
+            from patina import mode_palettes, IMAGE_LIMIT
+            import base64
+            light = args.light
+            if identity:
+                doc = author.load(identity)
+                light = light or (doc['options']['light'] and not args.dark)
+                source = dict(colors=author.render(doc)['colors'])
+            else:
+                source = dict(image=base64.b64encode(regular_bytes(args.file, IMAGE_LIMIT)).decode())
+            palettes = mode_palettes(author, author.call('modes')['modes'], light, **source)
+            rows = [dict(id=key, colors=value, mode='light' if light else 'dark')
+                    for key, value in palettes.items()]
+        elif args.action == 'create' and (args.image or args.color):
+            if not args.id:
+                args.id = 'preview'
+            doc, _, wallpaper = build_document(author, args)
+            rows = candidates(author, doc, wallpaper)
         else:
-            if args.action == 'create' and not any((args.image, args.color, args.from_theme)):
+            if args.action == 'create' and not args.from_theme:
                 raise ValueError('Supply --image, --color or --from before previewing modes')
             if args.action == 'create' and not args.id: args.id = 'preview'
             if args.action == 'import' and not args.name: args.name = 'preview'
-            doc, _, wallpaper = build_document(author, args)
-        if args.action == 'extract' or args.action == 'create' and (args.image or args.color):
-            rows = candidates(author, doc, wallpaper)
-        else:
-            # A palette's unchanged mode keeps its baseline. Each other mode
-            # must derive from the original recipe, not a normal-mode variant.
-            # Reuse the command builder so imports, edits and --from agree with
-            # the command that completion will eventually insert.
-            rows = []
-            for candidate in author.call('modes')['modes']:
-                candidate_args = copy.copy(args)
-                candidate_args.mode = candidate
-                draft, _, _ = build_document(author, candidate_args)
-                rows.append(dict(document=draft, id=candidate,
-                                 mode='light' if draft['options']['light'] else 'dark',
-                                 colors=author.render(draft)['colors']))
+            # Start every variant from the unchanged recipe. Keep its existing
+            # baseline for the one choice that would skip regeneration on save.
+            original = copy.copy(args)
+            original.mode, original.light, original.dark = None, False, False
+            original.reextract = False
+            doc, _, wallpaper = build_document(author, original)
+            light = args.light or (doc['options']['light'] and not args.dark)
+            reextract = getattr(args, 'reextract', False)
+            if reextract and not (wallpaper or doc.get('wallpaper') or doc.get('seed')):
+                raise ValueError('re-extraction requires a saved wallpaper or seed')
+            preserve = light == doc['options']['light'] and not reextract
+            doc['options']['light'] = light
+            ids = author.call('modes')['modes']
+            changed = [key for key in ids if not preserve or key != doc['options']['mode']]
+            by_mode = {row['id']: row for row in candidates(author, doc, wallpaper, changed)}
+            if preserve:
+                key = doc['options']['mode']
+                by_mode[key] = dict(document=doc, id=key, mode='light' if light else 'dark',
+                                    colors=author.render(doc)['colors'])
+            rows = [by_mode[key] for key in ids]
         staged = path.with_suffix('.' + str(os.getpid()) + '.tmp')
         staged.write_bytes(encode(rows))
         staged.chmod(0o600)

@@ -27,10 +27,10 @@ dots_type_valid() {
   case $1 in
     flag|string|file|directory|todo-id|todo-tag) return 0 ;;
     theme|flavor|palette-color|color-format|file-resource|file-repository|git-submodule|theme-id|file-color-key|theme-color|anodize-theme|anodize-user-theme|theme-plugin|theme-file|theme-app|dots-setting|config-key|config-value|profile-id|profile-import|wiki-page|wiki-section) return 0 ;;
-    choice:*)
-      [[ ${1#choice:} && $1 != *, && $1 != *,,* ]] || return 1
+    choice:*|list:*)
+      [[ ${1#*:} && $1 != *, && $1 != *,,* ]] || return 1
       local -a values=()
-      IFS=, read -r -a values <<< "${1#choice:}"
+      IFS=, read -r -a values <<< "${1#*:}"
       for value in "${values[@]}"; do [[ -n $value && $value != *'|'* ]] || return 1; done
       return 0 ;;
     *) return 1 ;;
@@ -157,7 +157,7 @@ dots_command_help() {
   local route=$1 row long short type description position option_label
   local _DOTS_HELP_ACTIVE=1 _DOTS_HELP_ROUTE=$1
   shift
-  if [[ $route == anodize || $route == anodize\ * ]]; then
+  if [[ $route == patina || $route == anodize || $route == anodize\ * ]]; then
     # Shared core renderer only: help must never execute the resolved extension.
     source "$DOTS_LIB_DIR/../../plugins/anodize/logo.bash"
     dots::anodize_logo "$@" || return

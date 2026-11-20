@@ -213,7 +213,7 @@ def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
     colors = fzf_colors(ui)
     if preserve_row_styles:
         from picker_style import picker_colors
-        colors = picker_colors(colors)
+        colors = picker_colors(colors, preserve_unfocused=True)
     from progress import permanent_output
     with permanent_output(), scope as environment:
         selected = RichSelector(backend='fzf').fzf(prompt, labels, False, preview,

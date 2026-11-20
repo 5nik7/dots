@@ -39,8 +39,8 @@ def anodize_options(values):
 
 
 def help_view(directories, words):
-    if words[:1] == ['anodize']:
-        words = ['anodize', *anodize_options(words[1:])]
+    if words[:1] in (['anodize'], ['patina']):
+        words = [words[0], *anodize_options(words[1:])]
     if words[:2] == ['git', 'submodule']:
         stem, path, _ = resolve(directories, words)
         if stem == 'git-submodule' and path.parent.resolve() == (LIB.parents[1] / 'bin').resolve():
@@ -51,7 +51,7 @@ def help_view(directories, words):
     stem = '-'.join(words)
     rows = catalog(directories)
     metadata = read(LIB / 'metadata' / (stem + '.meta')) if stem in BUILTINS else rows.get(stem)
-    if words[:1] == ['anodize']:
+    if words[:1] in (['anodize'], ['patina']):
         from anodize.logo import render
         render(ui, full=True)
     if not words:
@@ -180,8 +180,9 @@ def complete(root, directories, words):
         if value.startswith(current) and not any(c in value + desc for c in '\t\r\n'):
             suggestions.append(('candidate', value, desc))
     def values(kind):
-        if kind.startswith('choice:'):
-            for value in kind[7:].split(','): add(value)
+        if kind.startswith(('choice:', 'list:')):
+            prefix = current.rpartition(',')[0] + ',' if kind.startswith('list:') and ',' in current else ''
+            for value in kind.partition(':')[2].split(','): add(prefix + value)
         elif kind in ('file', 'directory'):
             suggestions.append((kind, '', ''))
         elif kind in ('wiki-page','wiki-section'):
@@ -420,8 +421,8 @@ def main(argv=None):
         elif shell == 'nu': print('$env.DOTS = ' + json.dumps(str(root)) + '\nsource ' + json.dumps(str(loader)))
         else: print('$DOTS = ' + repr(str(root)) + '\nexecx(open(' + repr(str(loader)) + ').read())')
         return 0
-    if args[:1] == ['anodize']:
-        args = ['anodize', *anodize_options(args[1:])]
+    if args[:1] in (['anodize'], ['patina']):
+        args = [args[0], *anodize_options(args[1:])]
     stem, path, count = resolve(directories, args)
     if not path:
         return help_view(directories, args)
@@ -471,6 +472,7 @@ def main(argv=None):
             target, action = 'manage', 'system'
             rest = [a for a in rest if a != '--system']
         return controller('files/' + target + '.py', [action, *rest])
+    if parts[0] == 'patina': parts = ['anodize', 'patina']
     if parts[0] in ('anodize', 'theme') and sys.version_info < (3, 11):
         raise ValueError('theme and Anodize commands require Python 3.11 or newer')
     if parts[0] == 'anodize': return controller('../../plugins/anodize/cli.py', [*parts[1:], *rest])

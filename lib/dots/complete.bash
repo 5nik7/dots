@@ -129,8 +129,11 @@ dots_value_candidates() {
           for name in "${DT_NAMES[@]}"; do dots_candidate "$lead$name"; done ;;
         color-format) for name in "${DT_FORMATS[@]}"; do dots_candidate "$lead$name"; done ;;
       esac ;;
-    choice:*)
-      IFS=, read -r -a values <<< "${type#choice:}"
+    choice:*|list:*)
+      if [[ $type == list:* && $DOTS_CURRENT == *,* ]]; then
+        lead=${DOTS_CURRENT%,*},
+      fi
+      IFS=, read -r -a values <<< "${type#*:}"
       for value in "${values[@]}"; do dots_candidate "$lead$value"; done ;;
     file|directory) DOTS_SUGGESTIONS+=("$type"$'\t'"$lead"$'\t') ;;
   esac

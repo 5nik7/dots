@@ -300,12 +300,25 @@ class Installation:
             required = [source / definition['runtime'], source / manual,
                         *(source / value for value in definition['completions'].values()),
                         self.root / 'bin' / name, self.root / 'bin' / (name + '.ps1')]
+            if name == 'anodize':
+                required.extend([self.root/'bin/patina', self.root/'bin/patina.ps1',
+                                 self.root/'bin/dots-anodize-patina', self.root/'bin/dots-patina',
+                                 source/'completion/_patina'])
             missing = next((path for path in required if not path.is_file()), None)
             if missing:
                 self.item('dots:' + name, 'conflict', missing, reason='bundled application is incomplete')
                 continue
             for path in required:
                 self.guard(path)
+            if name == 'anodize':
+                if self.platform == 'windows':
+                    shim = str(self.root/'bin/patina.ps1').replace("'", "''")
+                    self.add('dots:anodize:patina:command', home/'.local/bin/patina.ps1',
+                             text="& '" + shim + "' @args\nexit $LASTEXITCODE\n")
+                else:
+                    self.add('dots:anodize:patina:command', home/'.local/bin/patina', link=self.root/'bin/patina')
+                    self.add('dots:anodize:patina:bash', data/'bash-completion/completions/patina', link=source/'completion/bash')
+                    self.add('dots:anodize:patina:zsh', data/'zsh/site-functions/_patina', link=source/'completion/_patina')
             if self.platform == 'windows':
                 quoted = str(self.root / 'bin' / (name + '.ps1')).replace("'", "''")
                 self.add('dots:' + name + ':command', home / '.local/bin' / (name + '.ps1'),

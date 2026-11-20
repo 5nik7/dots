@@ -5,6 +5,13 @@ Current shared navigation and Wiki browsing changes are recorded in
 selectors and returning Wiki submenus; earlier one-shot Wiki handoff verification
 below remains historical evidence.
 
+## Launcher icon and label attributes
+
+The interactive launcher and family submenus now preserve each row's configured icon and label attributes as focus moves. The shared selector's row-style option removes FZF's unfocused foreground attributes while retaining its fallback color, selection background, pointer and match highlighting. Both shell frontends use this selector.
+
+Menu assessment is **update** for the existing launcher. Configuration assessment is **no configuration integration change needed** because the shared menu roles already supply the resolved styles. The change affects rendering only. Existing command syntax, completions, installer mappings and Windows application destinations need no updates. User instructions belong in the [configuration guide](../docs/configuration.md#launcher-menu-appearance) because this is a display preference.
+
+Termux verification covered inline FZF and private tmux popups at 40, 80 and 120 columns. Terminal cell checks covered the two Config saves, each attribute switched off independently, focus movement, family navigation, search highlights and hidden icons. Bash and native-controller fixtures produced identical plain and JSON listings. Native Linux, WSL and Windows PowerShell 5.1/7 terminal rendering still requires verification on those hosts.
 
 ## Value discovery and popup sizing (2026-10-31)
 

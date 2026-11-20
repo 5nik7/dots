@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Engine-free completion/manual checks in disposable shell and repository roots."""
 import argparse
+import json
 import os
 from pathlib import Path
 import re
@@ -24,7 +25,7 @@ class Integration(unittest.TestCase):
     def setUp(self):
         fixture.DotsFixture.setUp(self)
         shutil.copytree(REPO/'plugins/anodize', self.repo/'plugins/anodize', ignore=shutil.ignore_patterns('__pycache__', '.build'))
-        for source in [REPO/'bin/anodize', *REPO.glob('bin/dots-anodize*')]:
+        for source in [REPO/'bin/anodize', REPO/'bin/patina', REPO/'bin/dots-patina', *REPO.glob('bin/dots-anodize*')]:
             shutil.copy2(source, self.repo/'bin'/source.name)
         self.env['PYTHONDONTWRITEBYTECODE'] = '1'
         self.env['ANODIZE_ENGINE'] = str(self.root/'engine-must-not-run')
@@ -44,6 +45,18 @@ class Integration(unittest.TestCase):
 
     def candidates(self, *words):
         return self.cli('__complete', 'bash', str(len(words)), '--', 'anodize', *words)
+
+    def test_patina_shim_completion(self):
+        for shell in ('bash', 'zsh', 'fish'):
+            for words, expected in ((['--style', 'gr'], 'gradient'), (['--style', 'ha'], 'harmonize'), (['--style', 'al'], 'alloy'),
+                                    (['--format', 'we'], 'webp'), (['--mode', 'jew'], 'jewel-tones'),
+                                    (['--harmony','com'], 'complementary'), (['--stops=blue,gr'], '--stops=blue,green'), (['--theme', 'du'], 'dusk'),
+                                    (['--output='], 'file\t--output='),
+                                    (['--palette-image='], 'file\t--palette-image=')):
+                out = self.cli('__complete', shell, str(len(words)), '--', 'patina', *words)
+                self.assertIn(expected, out)
+                self.assertEqual(out, self.cli('__complete', shell, str(len(words)+1), '--', 'anodize', 'patina', *words))
+        self.assertFalse((self.home/'engine-ran').exists())
 
     def test_generation_manual_and_parser_metadata(self):
         subprocess.run([sys.executable, '-B', str(REPO/'tools/generate_anodize_integration.py'), '--check'],
@@ -66,7 +79,7 @@ class Integration(unittest.TestCase):
                     self.assertIn('choice:'+','.join(action.choices), header)
         # Static suggestions stay synchronized with the pure core without running it.
         core = (REPO/'plugins/anodize/engine/anodize.go').read_text()
-        modes = re.findall(r'"([^"]+)"', re.search(r'var modes = \[\]string\{([^}]+)\}', core)[1])
+        modes = [entry['id'] for entry in json.loads((REPO/'plugins/anodize/engine/modes.json').read_text())]
         actual = [line.split('\t')[1] for line in self.candidates('extract', 'wall.png', '--mode', '').splitlines()]
         self.assertEqual(actual, modes)
         for name in ('create', 'import', 'edit'):
@@ -226,6 +239,8 @@ printf 'EXECUTED\\n'
                     terminal.send(init+'source "$DOTS/plugins/anodize/completion/'+name+'"; printf "\\nINITIALIZED\\n"\r')
                     terminal.wait(b'INITIALIZED\r\n')
                     for typed, marker, expected in (
+                        ('patina --style=sh\t', b'shaded', '--style=shaded'),
+                        ('patina wall\t', b'png', 'wall ü space.png'),
                         ('anodize cr\t', b'create', 'create'),
                         ('anodize create new --mode=nor\t', b'normal', '--mode=normal'),
                         ('anodize edit dusk --adjust bright\t12', b'brightness', 'brightness=12'),

@@ -114,6 +114,7 @@ def parser():
                     'import': 'Import a local blueprint or palette', 'list': 'List authored themes', 'show': 'Inspect an authored theme',
                     'edit': 'Edit an authored theme', 'preview': 'Preview colors or app configuration', 'export': 'Export a theme',
                     'apply': 'Publish through Dots'}
+    descriptions['patina'] = 'Recolor an image with a theme or an extracted palette'
     descriptions['promote'] = 'Move or copy a user theme into built-in themes'
     descriptions['completion'] = 'Print shell completion source'
     for action, description in descriptions.items():
@@ -125,12 +126,13 @@ def parser():
         if action not in ('modes', 'list'):
             q.add_argument('--interactive', action='store_true', default=argparse.SUPPRESS, help='Guide inputs and preview choices')
         q.add_argument('--json', action='store_true', help='Emit versioned JSON')
-        if action in ('extract', 'import'):
-            q.add_argument('file', nargs='?', help='Local image file' if action == 'extract' else 'Local blueprint or palette file')
+        if action in ('extract', 'import', 'patina'):
+            q.add_argument('file', nargs='?', help='Local image file' if action != 'import' else 'Local blueprint or palette file')
         elif action not in ('modes', 'list'):
             q.add_argument('id', nargs='?', help='Theme identifier')
-        if action in ('create', 'extract', 'edit', 'import'):
-            q.add_argument('--mode', help='Extraction mode (default: normal)')
+        if action in ('create', 'extract', 'edit', 'import', 'patina'):
+            q.add_argument('--mode', help=('Derive a temporary theme variant or select the reference extraction mode'
+                                           if action == 'patina' else 'Palette generation mode'))
             mode = q.add_mutually_exclusive_group()
             mode.add_argument('--light', action='store_true', help='Use a light palette (exclusive with --dark)')
             mode.add_argument('--dark', action='store_true', help='Use a dark palette (exclusive with --light)')
@@ -147,7 +149,7 @@ def parser():
             q.add_argument('--reextract', action='store_true', help='Regenerate from the saved wallpaper or seed')
         if action in ('create', 'import', 'edit'):
             q.add_argument('--reference-wallpaper', action='store_true', help='Keep an absolute external wallpaper reference')
-        if action in ('create', 'import', 'edit', 'export', 'apply', 'promote'):
+        if action in ('create', 'import', 'edit', 'export', 'apply', 'promote', 'patina'):
             q.add_argument('--dry-run', action='store_true', help='Preview without changes; takes precedence over --yes')
             q.add_argument('--yes', action='store_true', help='Apply the preview without prompting')
         if action == 'import':
@@ -158,6 +160,22 @@ def parser():
         if action == 'promote':
             q.add_argument('--copy', action='store_true', help='Keep the user theme; requires a different --name')
             q.add_argument('--name', metavar='ID', help='New theme identifier for the repository copy')
+        if action == 'patina':
+            source = q.add_mutually_exclusive_group()
+            source.add_argument('--theme', metavar='ID', help='Use the rendered colors of this Dots theme')
+            source.add_argument('--palette-image', metavar='FILE', help='Extract the palette from this reference image')
+            from patina import DEFAULT_STYLE, STYLES, HARMONIES, FORMATS, percent, stop_names
+            q.add_argument('--style', choices=STYLES, default=DEFAULT_STYLE, help=f'Wallpaper treatment (default: {DEFAULT_STYLE})')
+            q.add_argument('--harmony', choices=HARMONIES, help='Missing-hue rule for alloy, harmonize or natural (default: auto)')
+            q.add_argument('--strength', type=percent, metavar='0–100', help='Effect strength (except exact and shaded) (default: 100)')
+            q.add_argument('--stops', type=stop_names, metavar='NAME,NAME,…', help='Ordered palette colors for gradient or duotone')
+            q.add_argument('--output', metavar='FILE', help='New image path. Its extension selects the encoder')
+            q.add_argument('--format', choices=FORMATS, type=str.lower, help='Output type for automatic or extensionless names (default: png)')
+            q.add_argument('--quality', type=int, metavar='1–100', help='JPEG/WebP quality (default 90) or AVIF quality (default 80)')
+            q.add_argument('--lossless', action='store_true', help='Use lossless WebP compression')
+            comparison = q.add_mutually_exclusive_group()
+            comparison.add_argument('--compare', action='store_true', help='Save a numbered sheet of all styles')
+            comparison.add_argument('--compare-modes', action='store_true', help='Save a numbered sheet of all palette modes')
         if action == 'export':
             q.add_argument('--format', choices=['anodize', 'aether', 'colors'], default='anodize', help='Output format (default: anodize)')
             q.add_argument('--output', metavar='FILE', help='Save to a new file; otherwise emit raw stdout')
@@ -169,16 +187,17 @@ def parser():
 
 
 @permanent_output()
-def present(result, use_json=False):
+def present(result, use_json=False, palette=None):
     if use_json:
         sys.stdout.buffer.write(encode(result))
         return
     ui = Presentation()
     view = None
-    if 'colors' in result and (sys.stdout.isatty() or os.environ.get('FZF_PREVIEW_COLUMNS') or ui.color):
+    palette = result.get('colors', palette)
+    if palette and (sys.stdout.isatty() or os.environ.get('FZF_PREVIEW_COLUMNS') or ui.color):
         sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'lib/dots/themes'))
         from presentation import ColorView, display, render_preview
-        view = ColorView(result['colors'], preview=True)
+        view = ColorView(palette, preview=True)
 
     def emit(text=''):
         (view.line if view is not None else ui.emit)(text)
@@ -198,11 +217,11 @@ def present(result, use_json=False):
         else:
             ui.resource_detail(label, value, **kwargs)
 
-    render_logo(ui, colors=result.get('colors'), view=view)
+    render_logo(ui, colors=palette, view=view)
     (view.title if view is not None else ui.heading)('Anodize')
     if 'modes' in result:
         for mode in result['modes']:
-            emit('  ' + paint(mode, '94', 'info'))
+            emit('  ' + paint(mode, '94', 'info') + '  ' + result.get('descriptions', {}).get(mode, ''))
     if 'items' in result:
         emit('  ' + paint(str(len(result['items'])), '96', 'hint') + ' authored themes')
         for row in result['items']:
@@ -214,6 +233,28 @@ def present(result, use_json=False):
     if 'status' in result:
         code = '93' if result['status'] == 'preview' else '92'
         emit('  ' + paint(result['status'], code, 'warning' if result['status'] == 'preview' else 'green'))
+    if 'style' in result:
+        resource('Source', result['source'])
+        if 'palette_image' in result:
+            resource('Palette image', result['palette_image'])
+        if 'mode' in result:
+            detail('Extraction', result['mode'] + (' / light' if result['light'] else ' / dark'))
+        if 'comparison' in result:
+            detail('Comparison', result['comparison'])
+        if result.get('comparison') != 'styles':
+            detail('Style', result['style'])
+        detail('Format', result['format'].upper())
+        if 'harmony' in result:
+            detail('Harmony', result['harmony'])
+        if 'strength' in result:
+            detail('Strength', f'{result["strength"]}%')
+        if 'stops' in result:
+            detail('Stops', ', '.join(result['stops']))
+        detail('Dimensions', f'{result["width"]} × {result["height"]}')
+        if 'thumbnail' in result:
+            from patina import thumbnail_lines
+            for line in thumbnail_lines(result['thumbnail'], ui.color):
+                emit(line)
     if 'target' in result:
         resource('Target', result['target'])
     for target in result.get('connectors', []):
@@ -261,16 +302,16 @@ def present_result(result, args):
 
 
 @permanent_output()
-def confirm(args, view):
+def confirm(args, view, palette=None):
     if args.dry_run:
-        present(view, args.json)
+        present(view, args.json, palette)
         return False
     if args.yes:
         return True
     if args.json or not sys.stdin.isatty():
-        present(view, args.json)
+        present(view, args.json, palette)
         return False
-    present(view)
+    present(view, palette=palette)
     approved = gum_confirm('Apply this plan?')
     if approved is not None:
         return approved
@@ -369,7 +410,10 @@ def main(argv=None):
     fill_inputs(p, args, author)
     action = args.action
     if action == 'modes':
-        present(author.call('modes'), args.json)
+        result = author.call('modes')
+        if args.json:
+            result.pop('descriptions', None)
+        present(result, args.json)
         return
     if action == 'list':
         rows = []
@@ -378,6 +422,10 @@ def main(argv=None):
             rows.append(dict(id=doc['id'], mode='light' if doc['options']['light'] else 'dark',
                              storage='builtin' if author.target(identity).parent == author.themes else 'user'))
         present(dict(schema=1, items=rows), args.json)
+        return
+    if action == 'patina':
+        from patina import run
+        run(author, args, confirm, present)
         return
     if action == 'extract':
         opts = dict(mode=args.mode or 'normal', light=args.light)

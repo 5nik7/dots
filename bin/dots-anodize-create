@@ -6,7 +6,7 @@
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--dry-run||flag|Preview without changes
 # dots:option=--yes||flag|Apply the displayed plan
-# dots:option=--mode||choice:normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high-contrast,duotone|Extraction mode
+# dots:option=--mode||choice:normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high-contrast,duotone,dominant,accent-pop,hue-balanced,tonal-range,teal-orange,faded-film,cyanotype,risograph,jewel-tones,accented-analogous,pentadic,neutral-accent|Extraction mode
 # dots:option=--light||flag|Generate light colors
 # dots:option=--dark||flag|Generate dark colors
 # dots:option=--adjust||choice:vibrance=,saturation=,contrast=,brightness=,shadows=,highlights=,hueShift=,temperature=,tint=,gamma=,blackPoint=,whitePoint=|Adjustment NAME=VALUE

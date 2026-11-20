@@ -10,12 +10,23 @@ import (
 )
 
 type request struct {
-	Schema   int              `json:"schema"`
-	Action   string           `json:"action"`
-	Image    []byte           `json:"image,omitempty"`
-	Color    string           `json:"color,omitempty"`
-	Options  anodize.Options  `json:"options"`
-	Document anodize.Document `json:"document"`
+	Modes   []string `json:"modes,omitempty"`
+	Palette []string `json:"palette,omitempty"`
+	anodize.PatinaOptions
+	Colors     map[string]string `json:"colors,omitempty"`
+	Format     string            `json:"format"`
+	Quality    int               `json:"quality"`
+	Rendered   bool              `json:"rendered,omitempty"`
+	Sheet      bool              `json:"sheet"`
+	Candidates []candidate       `json:"candidates,omitempty"`
+	Columns    int               `json:"columns,omitempty"`
+	Rows       int               `json:"rows,omitempty"`
+	Schema     int               `json:"schema"`
+	Action     string            `json:"action"`
+	Image      []byte            `json:"image,omitempty"`
+	Color      string            `json:"color,omitempty"`
+	Options    anodize.Options   `json:"options"`
+	Document   anodize.Document  `json:"document"`
 }
 
 func run() error {
@@ -35,8 +46,28 @@ func run() error {
 	}
 	out := map[string]any{"schema": 1}
 	switch r.Action {
+	case "patina-previews":
+		return writePatinaPreviews(os.Stdout, r)
+	case "patina":
+		return writePatina(os.Stdout, os.Stderr, r)
 	case "modes":
 		out["modes"] = anodize.Modes()
+		out["descriptions"] = anodize.ModeDescriptions()
+	case "generate-modes":
+		palettes, err := anodize.GenerateModes(r.Image, r.Color, r.Colors, r.Modes, r.Options.Light)
+		if err != nil {
+			return err
+		}
+		if r.Rendered {
+			for mode, baseline := range palettes {
+				doc := anodize.Document{Schema: 1, Baseline: baseline, Options: anodize.Options{Mode: mode, Light: r.Options.Light}}
+				palettes[mode], err = anodize.Render(doc)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		out["palettes"] = palettes
 	case "generate":
 		colors, e := anodize.Generate(r.Image, r.Color, r.Options)
 		if e != nil {

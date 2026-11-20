@@ -1,46 +1,3 @@
-[apps.completion.candidate]
-fg = "colors.ui.foreground.fg"
-
-[apps.completion.command]
-fg = "blue"
-
-[apps.completion.option]
-fg = "yellow"
-
-[apps.completion.value]
-fg = "green"
-
-[apps.completion.branch]
-fg = "magenta"
-
-[apps.completion.tag]
-fg = "cyan"
-
-[apps.completion.remote]
-fg = "blue"
-
-[apps.completion.description]
-fg = "colors.ui.muted.fg"
-
-[apps.completion.heading]
-fg = "cyan"
-bold = true
-
-[apps.completion.separator]
-fg = "colors.ui.muted.fg"
-
-[apps.cli.progress.filled]
-fg = "colors.ui.heading.fg"
-
-[apps.cli.progress.percentage]
-fg = "colors.ui.heading.fg"
-
-[apps.cli.progress.empty]
-fg = "colors.ui.muted.fg"
-
-[apps.cli.progress.surround]
-fg = "colors.ui.muted.fg"
-
 [apps.cli.help.argument]
 fg = "green"
 
@@ -68,6 +25,18 @@ fg = "magenta"
 [apps.cli.help.tagline]
 fg = "accent"
 
+[apps.cli.progress.empty]
+fg = "colors.ui.muted.fg"
+
+[apps.cli.progress.filled]
+fg = "colors.ui.heading.fg"
+
+[apps.cli.progress.percentage]
+fg = "colors.ui.heading.fg"
+
+[apps.cli.progress.surround]
+fg = "colors.ui.muted.fg"
+
 [apps.clipboard.error]
 fg = "colors.status.error.fg"
 
@@ -92,6 +61,37 @@ fg = "colors.ui.foreground.fg"
 [apps.clipboard.timestamp]
 fg = "colors.ui.muted.fg"
 
+[apps.completion.branch]
+fg = "magenta"
+
+[apps.completion.candidate]
+fg = "colors.ui.foreground.fg"
+
+[apps.completion.command]
+fg = "blue"
+
+[apps.completion.description]
+fg = "colors.ui.muted.fg"
+
+[apps.completion.heading]
+bold = true
+fg = "cyan"
+
+[apps.completion.option]
+fg = "yellow"
+
+[apps.completion.remote]
+fg = "blue"
+
+[apps.completion.separator]
+fg = "colors.ui.muted.fg"
+
+[apps.completion.tag]
+fg = "cyan"
+
+[apps.completion.value]
+fg = "green"
+
 [apps.fzf.ui.cursor]
 fg = "accent"
 
@@ -105,10 +105,12 @@ fg = "magenta"
 fg = "muted"
 
 [apps.menu.icon]
-fg = "accent"
+dim = true
+fg = "blue"
 
 [apps.menu.label]
-fg = "blue"
+bold = true
+fg = "bright_blue"
 
 [apps.menu.shortcut]
 fg = "cyan"
@@ -116,11 +118,11 @@ fg = "cyan"
 [apps.menu.state]
 fg = "warning"
 
-[apps.pkgs.package]
-fg = "accent"
-
 [apps.pkgs.manager]
 fg = "magenta"
+
+[apps.pkgs.package]
+fg = "accent"
 
 [apps.tmux.battery.icon]
 bg = "dark_background"
@@ -134,11 +136,45 @@ bg = "dark_background"
 [apps.tmux.battery.text]
 bg = "dark_background"
 
+[apps.tmux.codex_usage]
+bold = true
+
+[apps.tmux.codex_usage.critical]
+fg = "red"
+
+[apps.tmux.codex_usage.git_separator]
+fg = "muted"
+
+[apps.tmux.codex_usage.good]
+fg = "green"
+
+[apps.tmux.codex_usage.low]
+fg = "orange"
+
+[apps.tmux.codex_usage.medium]
+fg = "yellow"
+
+[apps.tmux.codex_usage.unknown]
+fg = "muted"
+
+[apps.tmux.indicators.open]
+bold = false
+dim = false
+fg = "muted"
+
+[apps.tmux.indicators.question]
+bold = true
+dim = false
+fg = "bright_red"
+
 [apps.tmux.pane.active_border]
 fg = "selection"
 
 [apps.tmux.pane.inactive_border]
 fg = "muted"
+
+[apps.tmux.session.finished]
+fg = "bright_green"
 
 [apps.tmux.session.repository]
 fg = "colors.ui.accent.fg"
@@ -149,6 +185,9 @@ fg = "colors.ui.accent.fg"
 [apps.tmux.status.working]
 fg = "colors.ui.accent.fg"
 
+[apps.tmux.tabs.finished]
+fg = "bright_green"
+
 [apps.tmux.windows.active]
 bg = "selection_background"
 fg = "bright_green"
@@ -156,6 +195,9 @@ fg = "bright_green"
 [apps.tmux.windows.alert]
 bg = "darker_background"
 fg = "bright_red"
+
+[apps.tmux.windows.finished]
+fg = "bright_green"
 
 [apps.tmux.windows.inactive]
 bg = "dark_background"
@@ -429,43 +471,3 @@ fg = "background"
 "colors.apps.menu.popup.preview.border.fg" = { inherit = true }
 "colors.apps.menu.popup.preview.fg" = { inherit = true }
 "colors.apps.menu.popup.preview.label.fg" = { inherit = true }
-
-[apps.tmux.codex_usage]
-bold = true
-
-[apps.tmux.codex_usage.good]
-fg = "green"
-
-[apps.tmux.codex_usage.medium]
-fg = "yellow"
-
-[apps.tmux.codex_usage.low]
-fg = "orange"
-
-[apps.tmux.codex_usage.critical]
-fg = "red"
-
-[apps.tmux.codex_usage.unknown]
-fg = "muted"
-
-[apps.tmux.codex_usage.git_separator]
-fg = "muted"
-
-[apps.tmux.indicators.open]
-fg = "muted"
-bold = false
-dim = false
-
-[apps.tmux.indicators.question]
-fg = "bright_red"
-bold = true
-dim = false
-
-[apps.tmux.windows.finished]
-fg = "bright_green"
-
-[apps.tmux.tabs.finished]
-fg = "bright_green"
-
-[apps.tmux.session.finished]
-fg = "bright_green"

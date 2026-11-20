@@ -37,7 +37,7 @@ _dots_theme_preview_fzf() {
     command rm -rf -- "$preview_dir"
   }
 }
-for _dots_preview_command in anodize theme; do
+for _dots_preview_command in anodize patina theme; do
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-command _dots_theme_preview_fzf
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-min-height 20
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-flags --preview-window=down,70%
@@ -55,7 +55,7 @@ _dots_theme_completion_context() {
   local -a preview_words=("${(@Q)words}")
   shift preview_words
   while [[ ${preview_words[1]:-} == (--color=*|--icons=*) ]]; do shift preview_words; done
-  [[ ${preview_words[1]:-} == (anodize|theme|themes) ]]
+  [[ ${preview_words[1]:-} == (anodize|patina|theme|themes) ]]
 }
 _dots_config_completion_context() {
   local -a config_words=("${(@Q)words}")

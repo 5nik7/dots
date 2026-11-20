@@ -52,6 +52,14 @@ class NativeCompletion(unittest.TestCase):
     def query(self, *words, shell='nu'):
         return completion.complete(self.repo, shell, list(words))
 
+    def test_patina_styles_and_shims(self):
+        for shell in ('powershell', 'nu', 'xonsh'):
+            expected = [{'value':'shaded', 'description':''}]
+            for prefix in (('patina',), ('dots','patina'), ('anodize','patina'), ('dots','anodize','patina')):
+                self.assertEqual(self.query(*prefix, '--style','sh',shell=shell),expected)
+                for flag, fragment, value in (('--style','al','alloy'),('--style','ha','harmonize'),('--style','gr','gradient'),('--style','ni','night'),('--format','we','webp'),('--mode','pen','pentadic'),('--harmony','com','complementary'),('--stops','blue,gr','blue,green')):
+                    self.assertEqual(self.query(*prefix, flag, fragment, shell=shell),[{'value':value, 'description':''}])
+
     def test_all_standalones_use_inert_existing_grammar_without_shells(self):
         before = list(self.home.rglob('*'))
         with patch('subprocess.run', side_effect=AssertionError('completion ran a provider')):

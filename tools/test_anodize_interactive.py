@@ -64,7 +64,7 @@ class Interactive(unittest.TestCase):
         for entry in ([str(self.repo/'bin/anodize')], [str(self.repo/'bin/dots'), 'anodize']):
             for columns in (40, 80, 120):
                 out = self.terminal(shlex.join([*entry, 'show', 'kanagawa-wave']), width=columns,
-                                    env=dict(self.env, DOTS_COLOR='always', DOTS_ICONS='never'))
+                                    env=dict(self.env, DOTS_COLOR='always', DOTS_ICONS='never', DOTS_PROGRESS='never'))
                 rows = out.decode().replace('\r\n', '\n').splitlines()
                 self.assertTrue(rows[0].startswith(escape(colors['background'], True)))
                 for row in rows:
@@ -170,13 +170,13 @@ a=Author();p=a.promote('example');Store.save=crash;a.save(p)
                 doc['overrides']['accent'] = '#123456'
                 start = time.monotonic()
                 rows = interactive.candidates(author, doc, str(self.image))
-                self.assertEqual(len(rows), 23)
+                self.assertEqual(len(rows), 35)
                 for row in rows:
                     direct = copy.deepcopy(doc)
                     direct['options']['mode'] = row['id']
                     direct['baseline'] = author.generate(self.image, options=direct['options'])
                     self.assertEqual(row['colors'], author.render(direct)['colors'])
-                print(f'23 image modes ({"light" if light else "dark"}): {time.monotonic()-start:.3f}s including direct comparisons')
+                print(f'35 image modes ({"light" if light else "dark"}): {time.monotonic()-start:.3f}s including direct comparisons')
             with tempfile.TemporaryDirectory(dir=self.root) as cache:
                 words = ('anodize', 'create', 'new', '--image', str(self.image), '--mode', '')
                 with redirect_stdout(io.StringIO()):
@@ -278,8 +278,38 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
         self.assertNotIn('\x1b', output.getvalue())
         self.assertIn('#dddddd', output.getvalue())
 
+    def test_patina_numbered_style_review(self):
+        target = self.root/'chosen.png'
+        self.env.update(TERM='dumb', DOTS_COLOR='never', DOTS_PROGRESS='never')
+        self.script = shlex.join([old.BASH, str(self.repo/'bin/patina'), str(self.image),
+                                  '--theme','nord','--interactive','--output',str(target)])
+        output = self.terminal(width=40, steps=((b'Number [1]', b'4\n'), (b'Apply this plan?', b'n\n')))
+        self.assertIn(b'gradient', output)
+        self.assertIn(b'Stops', output)
+        self.assertIn(b'Target', output)
+        self.assertFalse(target.exists())
+
+        default = self.terminal(width=40, steps=((b'Number [1]', b'2\n'), (b'Apply this plan?', b'n\n')))
+        self.assertIn(b'2) 1: alloy', default)
+        self.assertRegex(default, rb'Style\s+alloy')
+        self.assertFalse(target.exists())
+
+    def test_patina_highlight_shows_sample_and_escape_cancels(self):
+        if not shutil.which('fzf'):
+            self.skipTest('native FZF unavailable')
+        (self.tools/'fzf').symlink_to(shutil.which('fzf'))
+        self.env.update(DOTS_COLOR='always', DOTS_PROGRESS='never')
+        target = self.root/'picked.png'
+        self.script = shlex.join([old.BASH, str(self.repo/'bin/patina'), str(self.image),
+                                  '--theme','nord','--interactive','--output',str(target)])
+        for columns in (40, 80, 120):
+            output = self.terminal(width=columns, code=130, steps=(('▀'.encode(), b'\x1b'),), timeout=45)
+            self.assertIn('▀'.encode(), output)
+            self.assertFalse(target.exists())
+
     def test_native_fzf_preview_cancel(self):
         if not shutil.which('fzf'): self.skipTest('native FZF unavailable')
+        (self.tools/'fzf').symlink_to(shutil.which('fzf'))
         self.env['DOTS_COLOR'] = 'always'
         self.env['DOTS_ICONS'] = 'always'
         self.create()
@@ -303,6 +333,7 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
             if os.environ.get('DOTS_TEST_FZF_TAB'):
                 self.fail('requested native Zsh/FZF-tab source or executable unavailable')
             self.skipTest('native Zsh/FZF-tab source unavailable')
+        (self.tools/'fzf').symlink_to(shutil.which('fzf'))
         copied = self.root / 'fzf-tab'
         shutil.copytree(plugin, copied, ignore=shutil.ignore_patterns('.git'))
         integration = self.root / 'completion-preview.zsh'
@@ -319,7 +350,8 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
         cases = [(width, "anodize create draft --color '#725ac1' --mode ") for width in (40, 80, 120)]
         cases += [(80, "dots anodize create draft --color '#725ac1' --mode "),
                   (80, 'anodize show catppuccin-'), (80, 'dots anodize show catppuccin-'),
-                  (80, 'dots theme show catppuccin-')]
+                  (80, 'dots theme show catppuccin-'),
+                  (80, 'patina --theme catppuccin-'), (80, 'dots patina --theme catppuccin-')]
         for columns, command in cases:
             env = dict(self.env)
             if command.startswith('dots theme '): env['ANODIZE_ENGINE'] = str(self.root / 'engine-must-not-run')

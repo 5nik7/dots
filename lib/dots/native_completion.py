@@ -13,7 +13,7 @@ sys.path.insert(0, str(LIB))
 # These are entry-point identities, not another option/subcommand grammar.
 # Every route delegates to its existing shared provider below.
 STANDALONE = {
-    'dots': (), 'theme': ('theme',), 'anodize': ('anodize',),
+    'dots': (), 'theme': ('theme',), 'anodize': ('anodize',), 'patina': ('anodize', 'patina'),
     'blastoff': ('blastoff',), 'pkgs': ('pkgs',),
     'todo': ('__todo_standalone',), 'fonts': ('fonts',),
     'bak': ('bak',), 'dots-bak': ('bak',), 'wttr': ('wttr',),

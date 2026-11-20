@@ -106,7 +106,7 @@ Preview without changes
 .B "\-\-yes"
 Apply the displayed plan
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -155,7 +155,7 @@ Preview without changes
 .B "\-\-yes"
 Apply the displayed plan
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -229,7 +229,7 @@ Guide inputs and preview choices
 .B "\-\-json"
 Emit versioned JSON
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -266,7 +266,7 @@ Preview without changes
 .B "\-\-yes"
 Apply the displayed plan
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -318,6 +318,76 @@ Logo renderer (default: text)
 .TP
 .B "\-\-logo\-layout auto,base,horizontal,stacked,icon"
 Logo layout; base selects LOGO1
+.SS "dots anodize patina"
+Recolor an image with a theme or an extracted palette
+.PP
+.B "dots anodize patina IMAGE [OPTIONS]"
+.TP
+.B "\-\-interactive"
+Guide inputs and preview choices
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+Temporary theme variant or reference extraction mode
+.TP
+.B "\-\-light"
+Generate light colors
+.TP
+.B "\-\-dark"
+Generate dark colors
+.TP
+.B "\-\-theme VALUE"
+Use the rendered colors of a Dots theme
+.TP
+.B "\-\-palette\-image VALUE"
+Extract the palette from a reference image
+.TP
+.B "\-\-output VALUE"
+New image destination (extension selects the encoder)
+.TP
+.B "\-\-format png,jpg,jpeg,webp,gif,svg,bmp,tif,tiff,avif"
+Output type for automatic or extensionless paths
+.TP
+.B "\-\-quality VALUE"
+JPEG, WebP or AVIF quality from 1 to 100
+.TP
+.B "\-\-lossless"
+Encode lossless WebP
+.TP
+.B "\-\-compare"
+Compare all styles on one labeled sheet
+.TP
+.B "\-\-compare\-modes"
+Compare all palette modes on one labeled sheet
+.TP
+.B "\-\-style harmonize,gradient,duotone,exact,shaded,natural,palette\-blend,color\-transfer,split\-tone,muted,vivid,pastel,night,accent,posterize,dither,ink,alloy"
+Wallpaper treatment (default alloy)
+.TP
+.B "\-\-harmony auto,analogous,complementary,source,palette"
+Missing\-hue rule for alloy, harmonize or natural
+.TP
+.B "\-\-strength VALUE"
+Effect strength from 0 to 100
+.TP
+.B "\-\-stops VALUE"
+Ordered comma\-separated palette names for gradient or duotone
+.TP
+.B "\-\-dry\-run"
+Preview without saving
+.TP
+.B "\-\-yes"
+Save without prompting
+.TP
+.B "\-\-logo text,auto,kitty,chafa"
+Logo renderer (default: text)
+.TP
+.B "\-\-logo\-layout auto,base,horizontal,stacked,icon"
+Logo layout; base selects LOGO1
+.TP
+.B "Argument 1 (file)"
+Input file
 .SS "dots anodize preview"
 Preview colors or app configuration
 .PP
@@ -2587,7 +2657,10 @@ dots debug demo all \-\-static
 .SS "dots debug alert"
 Send a test Codex toast and configured Termux vibration
 .PP
-.B "dots debug alert [\-\-json]"
+.B "dots debug alert [\-\-type regular|finished] [\-\-json]"
+.TP
+.B "\-\-type regular,finished"
+Alert settings to test (default regular)
 .TP
 .B "\-\-json"
 Print versioned API results; still sends the test alert
@@ -5101,6 +5174,76 @@ dots menu tmux sessions
 .nf
 dots menu tmux sessions \-\-json
 .fi
+.SS "dots patina"
+Recolor an image with a theme or an extracted palette
+.PP
+.B "dots patina IMAGE [OPTIONS]"
+.TP
+.B "\-\-interactive"
+Guide inputs and preview choices
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+Temporary theme variant or reference extraction mode
+.TP
+.B "\-\-light"
+Generate light colors
+.TP
+.B "\-\-dark"
+Generate dark colors
+.TP
+.B "\-\-theme VALUE"
+Use the rendered colors of a Dots theme
+.TP
+.B "\-\-palette\-image VALUE"
+Extract the palette from a reference image
+.TP
+.B "\-\-output VALUE"
+New image destination (extension selects the encoder)
+.TP
+.B "\-\-format png,jpg,jpeg,webp,gif,svg,bmp,tif,tiff,avif"
+Output type for automatic or extensionless paths
+.TP
+.B "\-\-quality VALUE"
+JPEG, WebP or AVIF quality from 1 to 100
+.TP
+.B "\-\-lossless"
+Encode lossless WebP
+.TP
+.B "\-\-compare"
+Compare all styles on one labeled sheet
+.TP
+.B "\-\-compare\-modes"
+Compare all palette modes on one labeled sheet
+.TP
+.B "\-\-style harmonize,gradient,duotone,exact,shaded,natural,palette\-blend,color\-transfer,split\-tone,muted,vivid,pastel,night,accent,posterize,dither,ink,alloy"
+Wallpaper treatment (default alloy)
+.TP
+.B "\-\-harmony auto,analogous,complementary,source,palette"
+Missing\-hue rule for alloy, harmonize or natural
+.TP
+.B "\-\-strength VALUE"
+Effect strength from 0 to 100
+.TP
+.B "\-\-stops VALUE"
+Ordered comma\-separated palette names for gradient or duotone
+.TP
+.B "\-\-dry\-run"
+Preview without saving
+.TP
+.B "\-\-yes"
+Save without prompting
+.TP
+.B "\-\-logo text,auto,kitty,chafa"
+Logo renderer (default: text)
+.TP
+.B "\-\-logo\-layout auto,base,horizontal,stacked,icon"
+Logo layout; base selects LOGO1
+.TP
+.B "Argument 1 (file)"
+Input file
 .SS "dots pkgs"
 Manage packages on Termux, Linux, WSL and native Windows WinGet
 .PP

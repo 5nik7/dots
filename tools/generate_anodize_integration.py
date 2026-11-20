@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate standalone adapters and the manual; --check performs no writes."""
 import argparse
+import json
 from pathlib import Path
 import re
 import sys
@@ -84,7 +85,7 @@ def manual():
               'underscores or hyphens. Existing theme IDs are never overwritten by create.',
               '.PP',
               'PNG, JPEG and GIF inputs are limited to 32 MiB and 20 million pixels.',
-              'Extraction defaults to normal/dark. Run anodize modes for all 23 modes.',
+              'Extraction defaults to normal/dark. Run anodize modes for the complete list and descriptions.',
               'Light and dark flags are mutually exclusive.',
               '.PP',
               'Adjustments are absolute values applied to the saved baseline. Repeating',
@@ -96,6 +97,17 @@ def manual():
               'Color overrides use named keys and six-digit hex values. Derived color0',
               'through color15 aliases cannot be overridden. Resetting adjustments retains',
               'overrides. Re-extraction requires a saved wallpaper or seed.',
+              '.SH PATINA',
+              'patina IMAGE and dots patina IMAGE are shortcuts for anodize patina IMAGE.',
+              'Choose --theme ID or --palette-image FILE. Use --mode for a temporary variant of the rendered theme or a reference extraction.',
+              'Alloy (default) keeps palette-blend lightness and blends its color with a quarter share of harmonize. Use --harmony for the harmonize contribution.',
+              'Harmonize anchors shadows, hue-matched midtones and highlights to theme colors. Natural preserves the earlier lightness-based treatment.',
+              'Use --compare for a numbered sheet of all styles or --compare-modes for the selected style across all palette modes.',
+              'Gradient and duotone accept ordered palette names with --stops. Exact and shaded use fixed strength. Other styles support --strength 0 through 100.',
+              'An explicit output extension chooses the encoder. Use --format with an automatic or extensionless destination. Default PNG.',
+              'JPEG and BMP flatten transparency onto the theme background. GIF saves one frame. SVG embeds the PNG.',
+              'WebP, TIFF, BMP and AVIF need their corresponding Pillow encoders. JPEG and WebP default to quality 90, AVIF to 80. Lossless WebP accepts --lossless.',
+              'An automatic theme wallpaper goes to personal backgrounds/ID. Comparison sheets go beside the input. Existing automatic names are numbered. Explicit paths must be unused.',
               '.SH IMPORT AND EXPORT',
               'Import accepts Anodize JSON, Aether JSON, Base16 flat JSON/simple YAML,',
               'or Dots colors.toml. Aether colors are already adjusted: source adjustments',
@@ -169,24 +181,32 @@ def manual():
 
 
 def artifacts():
+    catalog = json.loads((REPO/'plugins/anodize/engine/modes.json').read_text())
+    choices = ','.join(mode['id'] for mode in catalog)
+    for command in ('patina', 'create', 'edit', 'import', 'extract'):
+        path = REPO / 'bin' / ('dots-anodize-' + command)
+        header = re.sub(r'(--mode\|\|choice:)[^|]+', lambda match: match[1] + choices, path.read_text())
+        yield path, header
+        if command == 'patina':
+            yield REPO/'bin/dots-patina', header
     for shell in ('bash', 'zsh', 'fish'):
         source = (REPO/'lib/dots/completion'/shell).read_text()
         # The shared adapter's generated theme-command registrations belong to
         # Dots. Standalone Anodize must register only its own command.
         if shell == 'bash':
-            source = source[:source.index('complete -F _dots_complete_bash')] + 'complete -F _dots_complete_bash dots\n'
+            source = source[:source.index('complete -F _dots_complete_bash')] + 'complete -F _dots_complete_bash dots patina\n'
             # Config branch suffixes are not part of the Anodize grammar.
             source = source.replace('[[ $value != *= && $value != *. && $value != *\\[ ]]',
                                     '[[ $value != *= ]]')
         elif shell == 'fish':
-            source = source[:source.index('for name in dots theme')] + "complete -c dots -f -a '(__dots_complete_fish)'\n"
+            source = source[:source.index('for name in dots theme')] + "complete -c dots -f -a '(__dots_complete_fish)'\ncomplete -c patina -f -a '(__dots_complete_fish)'\n"
             # The shared Config browser's edit-buffer retry is Dots-only.
             start = source.index('    set -l key_position 0\n')
             end = source.index('    set -l cursor ', start)
             source = source[:start] + source[end:]
         else:
             source = source[:source.index('if [[ $ZSH_EVAL_CONTEXT')] + '''if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then
-  (( ${+functions[compdef]} )) && compdef _dots dots
+  (( ${+functions[compdef]} )) && compdef _dots dots patina
 else
   _dots "$@"
 fi
@@ -197,6 +217,7 @@ fi
         source = source.replace('_anodize_completion_', '_dots_completion_')
         yield REPO/'plugins/anodize/completion'/shell, source
     yield REPO/'plugins/anodize/man/anodize.1', manual()
+
 
 
 if __name__ == '__main__':
@@ -211,5 +232,7 @@ if __name__ == '__main__':
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
+            if path.parent == REPO/'bin':
+                path.chmod(0o755)
     if stale:
         sys.exit('Stale Anodize artifacts: ' + ', '.join(stale))

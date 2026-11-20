@@ -76,7 +76,7 @@ _anodize() {
   return 0
 }
 if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then
-  (( ${+functions[compdef]} )) && compdef _anodize anodize
+  (( ${+functions[compdef]} )) && compdef _anodize anodize patina
 else
   _anodize "$@"
 fi

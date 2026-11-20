@@ -1,6 +1,6 @@
 # Interactive display only. Completion records and inserted words stay literal.
 # Input checks and warm refresh use Zsh builtins; no style query per candidate.
-typeset -g _DOTS_COMPLETION_PROVIDERS='(_dots|_anodize|_blastoff|_pkgs|_wttr)'
+typeset -g _DOTS_COMPLETION_PROVIDERS='(_dots|_anodize|_patina|_blastoff|_pkgs|_wttr)'
 
 _dots_completion_owned_context() {
   local name=${service:-${words[1]:-}}

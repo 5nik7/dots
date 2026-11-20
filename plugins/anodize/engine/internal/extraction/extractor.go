@@ -1,22 +1,6 @@
 // Adapted from Aether; see ../../PROVENANCE.md (module root PROVENANCE.md).
 package extraction
 
-import (
-	"fmt"
-)
-
-func validateMode(mode string) error {
-	switch mode {
-	case "normal", "monochromatic", "analogous", "pastel", "material", "colorful", "muted", "bright",
-		"complementary", "triadic", "split-complementary", "tetradic",
-		"fire", "ocean", "forest", "earthtone", "neon", "sunset", "vaporwave",
-		"midnight", "aurora", "high-contrast", "duotone":
-		return nil
-	default:
-		return fmt.Errorf("unknown extraction mode %q", mode)
-	}
-}
-
 // normalizeCounts turns per-color pixel counts into coverage shares in [0,1]
 // (each count divided by the total). Returns nil for empty/zero input so callers
 // fall back to lightness-only selection.
@@ -38,9 +22,11 @@ func normalizeCounts(counts []int) []float64 {
 // GeneratePaletteByMode dispatches to the palette generator for a given mode.
 // In "normal" mode, auto-detects between monochrome and chromatic generators.
 // weights (optional, aligned with dominantColors) carries per-color image coverage;
-// only the default chromatic path consumes it for coverage-aware bg/fg selection.
+// the default and source-driven modes use it to prioritize common colors.
 func GeneratePaletteByMode(dominantColors []string, weights []float64, lightMode bool, mode string) [16]string {
 	switch mode {
+	case "dominant", "accent-pop", "hue-balanced", "tonal-range", "teal-orange", "faded-film", "cyanotype", "risograph", "jewel-tones", "accented-analogous", "pentadic", "neutral-accent":
+		return studioPalette(dominantColors, weights, lightMode, mode)
 	case "monochromatic":
 		return GenerateMonochromaticPalette(dominantColors, lightMode)
 	case "analogous":

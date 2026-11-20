@@ -40,6 +40,22 @@ class NativeAnodize(unittest.TestCase):
         self.assertNotIn('\x1b', result.stdout)
         self.command('anodize','create','native-fixture','--color','#123456','--yes','--json',expected=1)
 
+    def test_patina_native_routes(self):
+        import base64
+        self.create()
+        image = self.home/'figure ü.png'
+        image.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC'))
+        args = [str(image),'--theme','native-fixture','--json']
+        preview = self.command('patina',*args).stdout
+        self.assertEqual(preview, self.command('anodize','patina',*args).stdout)
+        self.assertEqual(json.loads(preview)['style'], 'alloy')
+        gradient = json.loads(self.command('patina',*args,'--style','gradient','--stops','red,blue','--strength','70').stdout)
+        self.assertEqual((gradient['stops'], gradient['strength']), (['red','blue'],70))
+        saved = json.loads(self.command('patina',*args,'--yes').stdout)
+        target = self.home/'config/dots/backgrounds/native-fixture'/image.name
+        self.assertEqual(target, Path(saved['target']))
+        self.assertTrue(target.read_bytes().startswith(b'\x89PNG'))
+
     def test_native_bridge_plan_does_not_publish(self):
         self.create()
         result = subprocess.run([sys.executable,'-B',str(self.repo / 'lib/dots/themes/bridge.py'),

@@ -80,4 +80,4 @@ _anodize_complete_bash() {
     esac
   done < <(command anodize __complete bash "$((${#words[@]}-1))" -- "${words[@]}" 2>/dev/null)
 }
-complete -F _anodize_complete_bash anodize
+complete -F _anodize_complete_bash anodize patina

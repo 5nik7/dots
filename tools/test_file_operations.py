@@ -19,6 +19,22 @@ from transactions import Store, digest
 
 
 class Operations(unittest.TestCase):
+    def test_create_only_foreign_file_at_publication(self):
+        from file_platform import publish_new_file
+        from transactions import DestinationOccupied
+        store = Store(self.base/'state')
+        src, target = self.base/'staged', self.base/'wall.png'
+        src.write_bytes(b'new PNG')
+        def race(staged, dest):
+            target.write_bytes(b'foreign PNG')
+            publish_new_file(staged, dest)
+        with mock.patch('transactions.publish_new_file', side_effect=race):
+            with self.assertRaises(DestinationOccupied):
+                store.apply('patina', [dict(path=str(target),source=str(src),create_only=True)],
+                            {str(target):None}, retain=True)
+        self.assertEqual(target.read_bytes(), b'foreign PNG')
+        self.assertEqual(store.records()[0]['status'], 'rolled-back')
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='dots files ü ')
         self.addCleanup(self.tmp.cleanup)

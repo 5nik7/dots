@@ -141,7 +141,7 @@ FAMILIES = {
     'anodize': (*tuple(Action(name, name, ('anodize', name),
                        ('--interactive', '--logo=text', '--logo-layout=base') if name in ('preview', 'extract') else ('--interactive',),
                        'document' if name in ('preview', 'extract') else 'terminal', '󰏘')
-                       for name in ('create', 'extract', 'edit', 'preview', 'apply')),
+                       for name in ('create', 'extract', 'patina', 'edit', 'preview', 'apply')),
                 Action('list', 'list', ('anodize', 'list'))),
     'debug': (*leaves('debug', 'check startup path cache'),
               Action('demos', 'Output demos', ('debug', 'demo'), kind='submenu', submenu='debug/demo', icon='󰃤')),
@@ -304,7 +304,7 @@ def run(args):
         family = frame['family']
         try:
             selected = choose(launcher(root, family=family, interactive=True), mode='browse', query=frame['query'],
-                              context=context, compact=True, navigation=frame,
+                              context=context, compact=True, navigation=frame, preserve_row_styles=True,
                               prompt='dots' + ('·' + family.replace('/', '·') if family else ''))
         except SelectionEvent as event:
             if event.action == 'back':

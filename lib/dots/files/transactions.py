@@ -15,12 +15,16 @@ import stat
 import uuid
 
 from catalog import atomic_json, read_json
-from file_platform import (sync_dir, lock, open_nofollow, check_object, copy_file,
+from file_platform import (sync_dir, lock, open_nofollow, check_object, copy_file, publish_new_file,
                            prepare_text, native_staging_suffix, WINDOWS_EXECUTABLE_SUFFIXES)
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from progress import tracked, report, sequence
+
+
+class DestinationOccupied(ValueError):
+    """A create-only transaction lost its destination name."""
 
 
 def exists(path):
@@ -37,7 +41,10 @@ def private_directory(path):
             break
         missing.append(parent)
     for parent in reversed(missing):
-        parent.mkdir(mode=0o700)
+        try:
+            parent.mkdir(mode=0o700)
+        except FileExistsError:
+            parents_safe(parent / 'placeholder')
         sync_dir(parent.parent)
 
 
@@ -171,7 +178,7 @@ class Store:
         return self.root / identity / (str(index) + '-' + phase + suffix)
 
     @contextlib.contextmanager
-    def locked(self, catalogs=()):
+    def locked(self, catalogs=(), *, blocking=False):
         parents_safe(self.root / 'placeholder')
         private_directory(self.root)
         handles = []
@@ -182,7 +189,7 @@ class Store:
                 fd = open_nofollow(path, os.O_RDWR | os.O_CREAT, 0o600)
                 handle = os.fdopen(fd, 'a')
                 handles.append(handle)
-                lock(handle)
+                lock(handle, blocking=blocking)
             yield
         finally:
             for handle in reversed(handles):
@@ -215,19 +222,31 @@ class Store:
             identities = [os.path.normcase(os.path.abspath(op['path'])) for op in operations]
             if len(identities) != len(set(identities)):
                 raise ValueError('duplicate or case-colliding operation targets')
+            new_files = {op['path'] for op in operations if op.get('create_only')}
+            if any('source' not in op or not Path(op['source']).is_file() or Path(op['source']).is_symlink()
+                   or guards.get(op['path'], False) is not None for op in operations if op.get('create_only')):
+                raise ValueError('create-only publication requires a regular file and an absent destination guard')
+
+            def before_digest(path):
+                if str(path) in new_files:
+                    if exists(path):
+                        raise DestinationOccupied('output already exists: ' + str(path))
+                    return None
+                return digest(path)
+
             registrations = [op['font_registry'] for op in operations if 'font_registry' in op]
             if registrations:
                 import font_registry
                 for spec in registrations: font_registry.verify(spec)
                 if len({spec['name'].casefold() for spec in registrations}) != len(registrations):
                     raise ValueError('duplicate font registration targets')
-            with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs):
+            with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs, blocking=bool(new_files)):
                 for record in self.records():
                     if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
                         raise ValueError('unfinished transaction: run dots files recover ' + record['id'])
                 for path, expected in guards.items():
                     parents_safe(path)
-                    if digest(path) != expected:
+                    if before_digest(path) != expected:
                         raise ValueError(f'changed after preview: {path}')
                 identity = identity or uuid.uuid4().hex
                 if len(identity) != 32 or any(c not in '0123456789abcdef' for c in identity):
@@ -245,12 +264,14 @@ class Store:
                         for i, op in enumerate(operations):
                             path = Path(op['path'])
                             parents_safe(path)
-                            before = digest(path)
+                            before = before_digest(path)
                             if str(path) not in guards or guards[str(path)] != before:
                                 raise ValueError('operation is missing a verified preview guard')
                             entry = {'path': str(path), 'before': before, 'after': None, 'phase': 'prepared',
                                      'old': str(path.with_name(path.name + '.dots-' + identity + native_staging_suffix(path))),
                                      'temp': str(path.with_name(path.name + '.dots-new-' + identity + native_staging_suffix(path)))}
+                            if str(path) in new_files:
+                                entry['create_only'] = True
                             if native_staging_suffix(path):
                                 entry['payload_suffix'] = native_staging_suffix(path)
                             if 'font_registry' in op:
@@ -291,7 +312,7 @@ class Store:
                         report('Verifying prepared files')
                         # All copies and metadata are ready before the first live replacement.
                         for path, expected in guards.items():
-                            if digest(path) != expected:
+                            if before_digest(path) != expected:
                                 raise ValueError(f'changed during preflight: {path}')
                         doc['status'] = 'applying'
                         for spec in registrations: font_registry.verify(spec)
@@ -314,18 +335,25 @@ class Store:
                                 self.save(doc)
                                 sync_dir(parent.parent)
                             parents_safe(path)
-                            if digest(path) != entry['before']:
+                            if before_digest(path) != entry['before']:
                                 raise ValueError(f'changed before replacement: {path}')
                             if entry['after'] is not None:
                                 copy_object(self.payload(identity, i, 'after', entry), entry['temp'])
                             entry['phase'] = 'replacing'
                             self.save(doc)
-                            if exists(path):
-                                os.rename(path, entry['old'])
+                            if entry.get('create_only'):
+                                try:
+                                    publish_new_file(entry['temp'], path)
+                                except FileExistsError as error:
+                                    raise DestinationOccupied('output already exists: ' + str(path)) from error
                                 sync_dir(path.parent)
-                            if entry['after'] is not None:
-                                os.rename(entry['temp'], path)
-                                sync_dir(path.parent)
+                            else:
+                                if exists(path):
+                                    os.rename(path, entry['old'])
+                                    sync_dir(path.parent)
+                                if entry['after'] is not None:
+                                    os.rename(entry['temp'], path)
+                                    sync_dir(path.parent)
                             if 'font_registry' in entry:
                                 font_registry.apply(entry['font_registry'])
                             entry['phase'] = 'done'
@@ -402,11 +430,16 @@ class Store:
                     entry = doc['operations'][i]
                     path = Path(entry['path'])
                     parents_safe(path)
-                    current = digest(path)
                     if exists(entry['old']) and digest(entry['old']) != entry['before']:
                         raise ValueError('retired object changed; manual recovery required: ' + entry['old'])
                     if entry['phase'] == 'prepared':
                         continue
+                    if entry.get('create_only') and entry['phase'] == 'replacing' and exists(entry['temp']):
+                        # The staging name survives a failed no-replace. Only the
+                        # hard-link fallback can leave both names for our file.
+                        if not exists(path) or not os.path.samestat(os.lstat(entry['temp']), os.lstat(path)):
+                            continue
+                    current = digest(path)
                     if 'font_registry' in entry:
                         import font_registry
                         font_registry.rollback(entry['font_registry'])

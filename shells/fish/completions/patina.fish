@@ -1,0 +1,1 @@
+../../../plugins/anodize/completion/fish

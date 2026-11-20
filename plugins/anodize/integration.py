@@ -24,7 +24,10 @@ def complete(argv, parser):
         print(*fields, sep='\t')
     # Drop words after the cursor. Strip root presentation options here;
     # create --color is a seed and leaf logo options use static metadata below.
+    patina = Path(words[0]).name == 'patina'
     words = words[1:cursor+1]
+    if patina:
+        words.insert(0, 'patina')
     prefixes = {'--color': ('auto', 'always', 'never'), '--icons': ('auto', 'always', 'never'),
                 '--logo': MODES, '--logo-layout': LAYOUTS}
     while len(words) > 1:

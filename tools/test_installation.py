@@ -712,6 +712,7 @@ p.apply('install')
         result=run('install.sh','--yes')
         active=self.home/'.state/dots/current/theme'
         first_receipt = self.receipt()
+        self.assertEqual((self.home/'.local/bin/patina').resolve(), self.repo/'bin/patina')
         if profile == 'termux':
             self.assertEqual((self.home/'.termux').resolve(), termux_source)
             self.assertTrue((termux_source/'colors.properties').is_symlink())

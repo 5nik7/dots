@@ -25,3 +25,4 @@ function __anodize_complete_fish
     end
 end
 complete -c anodize -f -a '(__anodize_complete_fish)'
+complete -c patina -f -a '(__anodize_complete_fish)'

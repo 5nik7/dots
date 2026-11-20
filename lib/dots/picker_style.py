@@ -64,7 +64,20 @@ def fit(value, width):
     return value + ' ' * max(0, width - cells(value))
 
 
-def picker_colors(colors):
-    # The shared theme's fg+:strip discards row ANSI. Keep field styling when selected.
-    entries = [entry for entry in colors.split(',') if entry and not entry.startswith('fg+:')]
+def picker_colors(colors, *, preserve_unfocused=False):
+    from fzf_config import ATTRS
+
+    entries = []
+    for entry in colors.split(','):
+        if not entry or entry.startswith('fg+:'):
+            continue
+        if preserve_unfocused and entry.startswith('fg:'):
+            # FZF applies fg attributes such as regular to every unfocused span.
+            # Retain the fallback color for text without its own foreground.
+            colors_only = [atom for atom in entry.split(':')[1:] if atom not in ATTRS]
+            if not colors_only:
+                continue
+            entry = ':'.join(['fg', *colors_only])
+        entries.append(entry)
+    # A focused row inherits its own ANSI spans while bg+ still marks focus.
     return ','.join([*entries, 'fg+:-1:regular'])

@@ -96,14 +96,19 @@ class Author:
         self.engine = Path(os.environ.get('ANODIZE_ENGINE') or self.code / ('plugins/anodize/engine/.build/anodize-engine.exe' if os.name == 'nt' else 'plugins/anodize/engine/.build/anodize-engine'))
         self.bridge = self.code / 'plugins/anodize/themes.bash'
 
-    def call(self, action, **kwargs):
+    def call(self, action, *, image_stream=None, **kwargs):
+        """Patina streams encoded image bytes to the staged file and returns metadata on stderr."""
         if not self.engine.is_file():
             raise ValueError('Anodize engine is not built; run python3 -B tools/verify_anodize.py build in Dots')
         proc = subprocess.run([str(self.engine)], input=encode(dict(schema=1, action=action, **kwargs)),
-                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
+                              stdout=subprocess.PIPE if image_stream is None else image_stream,
+                              stderr=subprocess.PIPE, timeout=120)
         if proc.returncode:
-            raise ValueError(proc.stderr.decode(errors='replace').strip())
-        result = json.loads(proc.stdout)
+            message = proc.stderr.decode(errors='replace').strip()
+            if action in ('patina', 'patina-previews', 'generate-modes') and ('unknown engine action' in message or 'unknown patina style' in message):
+                raise ValueError('Patina requires an updated engine; run python3 -B tools/verify_anodize.py build in Dots')
+            raise ValueError(message)
+        result = json.loads(proc.stdout if image_stream is None else proc.stderr)
         if result.get('schema') != 1:
             raise ValueError('unsupported engine response')
         return result

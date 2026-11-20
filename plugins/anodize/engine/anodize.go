@@ -4,6 +4,7 @@ package anodize
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,9 +13,11 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"maps"
 	"math"
 	"regexp"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/5nik7/dots/anodize/color"
@@ -24,7 +27,27 @@ import (
 const MaxImageBytes = 32 << 20
 const MaxImagePixels = 20_000_000
 
-var modes = []string{"normal", "monochromatic", "analogous", "pastel", "material", "colorful", "muted", "bright", "complementary", "triadic", "split-complementary", "tetradic", "fire", "ocean", "forest", "earthtone", "neon", "sunset", "vaporwave", "midnight", "aurora", "high-contrast", "duotone"}
+//go:embed modes.json
+var modeJSON []byte
+
+var modes, modeDescriptions = readModeCatalog()
+
+func ModeDescriptions() map[string]string { return maps.Clone(modeDescriptions) }
+
+func readModeCatalog() ([]string, map[string]string) {
+	var catalog []struct{ ID, Description string }
+	if err := json.Unmarshal(modeJSON, &catalog); err != nil {
+		panic(err)
+	}
+	ids := make([]string, 0, len(catalog))
+	descriptions := make(map[string]string, len(catalog))
+	for _, mode := range catalog {
+		ids = append(ids, mode.ID)
+		descriptions[mode.ID] = mode.Description
+	}
+	return ids, descriptions
+}
+
 var names = []string{"background", "red", "green", "yellow", "blue", "magenta", "cyan", "foreground", "muted", "bright_red", "bright_green", "bright_yellow", "bright_blue", "bright_magenta", "bright_cyan", "bright_foreground"}
 var keyPattern = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
@@ -56,31 +79,29 @@ func Generate(data []byte, seed string, options Options) (map[string]string, err
 	if !slices.Contains(modes, options.Mode) {
 		return nil, errors.New("unknown extraction mode")
 	}
+	dominant, weights, err := sourceColors(data, seed)
+	if err != nil {
+		return nil, err
+	}
+	return generatePalette(dominant, weights, options), nil
+}
+
+func sourceColors(data []byte, seed string) ([]string, []float64, error) {
 	if (len(data) == 0) == (seed == "") {
-		return nil, errors.New("provide exactly one image or color")
+		return nil, nil, errors.New("provide exactly one image or color")
 	}
 	var dominant []string
 	var weights []float64
 	if seed != "" {
 		if !Hex(seed) {
-			return nil, errors.New("color must be #RRGGBB")
+			return nil, nil, errors.New("color must be #RRGGBB")
 		}
 		dominant = []string{seed}
 		weights = []float64{1}
 	} else {
-		if len(data) > MaxImageBytes {
-			return nil, errors.New("image exceeds 32 MiB")
-		}
-		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+		img, _, err := decodeImage(data)
 		if err != nil {
-			return nil, errors.New("unsupported or invalid image; use PNG, JPEG, or GIF")
-		}
-		if cfg.Width <= 0 || cfg.Height <= 0 || int64(cfg.Width)*int64(cfg.Height) > MaxImagePixels {
-			return nil, errors.New("image exceeds 20 million pixels")
-		}
-		img, _, err := image.Decode(bytes.NewReader(data))
-		if err != nil {
-			return nil, errors.New("cannot decode image")
+			return nil, nil, err
 		}
 		bounds := img.Bounds()
 		step := int(math.Ceil(math.Sqrt(float64(bounds.Dx()*bounds.Dy()) / 40000)))
@@ -95,7 +116,7 @@ func Generate(data []byte, seed string, options Options) (map[string]string, err
 			}
 		}
 		if len(pixels) == 0 {
-			return nil, errors.New("image has no opaque pixels")
+			return nil, nil, errors.New("image has no opaque pixels")
 		}
 		// Small icons and solid images are valid inputs too.
 		for len(pixels) < 100 {
@@ -104,7 +125,7 @@ func Generate(data []byte, seed string, options Options) (map[string]string, err
 		var counts []int
 		dominant, counts, err = extraction.ExtractDominantColorsFromPixels(pixels, 48)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		total := 0
 		for _, n := range counts {
@@ -119,7 +140,65 @@ func Generate(data []byte, seed string, options Options) (map[string]string, err
 		dominant = append(dominant, dominant...)
 		weights = append(weights, weights...)
 	}
-	return generatePalette(dominant, weights, options), nil
+	return dominant, weights, nil
+}
+
+// GenerateModes shares extraction across all candidates. Named palettes contribute each
+// distinct rendered color once, including overrides and application-specific roles.
+func GenerateModes(data []byte, seed string, colors map[string]string, ids []string, light bool) (map[string]map[string]string, error) {
+	var pool []string
+	var weights []float64
+	if len(colors) == 0 {
+		var err error
+		pool, weights, err = sourceColors(data, seed)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		unique := map[string]bool{}
+		for _, hex := range colors {
+			if !Hex(hex) {
+				return nil, errors.New("invalid rendered theme color")
+			}
+			unique[strings.ToLower(hex)] = true
+		}
+		for hex := range unique {
+			pool = append(pool, hex)
+		}
+		sort.Strings(pool)
+		for len(pool) < 8 {
+			pool = append(pool, pool...)
+		}
+	}
+	result := map[string]map[string]string{}
+	for _, id := range ids {
+		if !slices.Contains(modes, id) {
+			return nil, fmt.Errorf("unknown extraction mode %q", id)
+		}
+		palette := generatePalette(pool, weights, Options{id, light})
+		if len(colors) > 0 {
+			for key, hex := range colors {
+				if _, standard := palette[key]; standard {
+					continue
+				}
+				nearest, dist := "", math.Inf(1)
+				lab := color.SRGBToOKLab(color.HexToRGB(hex))
+				for _, role := range names {
+					if original, ok := colors[role]; ok {
+						d := color.OKLabDistance(lab, color.SRGBToOKLab(color.HexToRGB(original)))
+						if d < dist {
+							nearest, dist = role, d
+						}
+					}
+				}
+				if nearest != "" {
+					palette[key] = palette[nearest]
+				}
+			}
+		}
+		result[id] = palette
+	}
+	return result, nil
 }
 
 // Variant regenerates a palette from existing colors without needing its original image.
@@ -218,4 +297,22 @@ func Render(d Document) (map[string]string, error) {
 
 func Contrast(colors map[string]string) float64 {
 	return color.ContrastRatio(colors["foreground"], colors["background"])
+}
+
+func decodeImage(data []byte) (image.Image, image.Config, error) {
+	if len(data) > MaxImageBytes {
+		return nil, image.Config{}, errors.New("image exceeds 32 MiB")
+	}
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return nil, image.Config{}, errors.New("unsupported or invalid image; use PNG, JPEG, or GIF")
+	}
+	if cfg.Width <= 0 || cfg.Height <= 0 || int64(cfg.Width)*int64(cfg.Height) > MaxImagePixels {
+		return nil, image.Config{}, errors.New("image exceeds 20 million pixels")
+	}
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, image.Config{}, errors.New("cannot decode image")
+	}
+	return img, cfg, nil
 }

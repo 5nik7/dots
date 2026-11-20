@@ -264,6 +264,18 @@ uses regular settings by default, or finished settings with `--type finished`, i
 the worker. It waits for all API requests and reports their results. The Config
 List shows these fields for each type with their actual native/default source.
 
+## Launcher menu appearance
+
+These commands open the interactive launcher with bold labels and dim icons.
+
+```sh
+dots config set colors.apps.menu.label.bold true
+dots config set colors.apps.menu.icon.dim true
+dots menu
+```
+
+Reopen the launcher to see the saved styles in the root menu and family submenus. Moving the cursor keeps each icon and label styled independently. The pointer and selection background show which row has focus, and matching letters still highlight as you type. Set either value to `false` to turn that attribute off.
+
 ## Keys and Weather menu appearance
 
 Keys category/mode selectors and Weather main/Location/Units selectors reuse `colors.apps.menu.icon`, `.label` and `.description`, plus existing `formatting.apps.menu` controls. Defaults are accent icons, blue labels and muted descriptions/counts. Individual icon roles can override the shared icon style; a per-entry style is applied last. Foreground, background and supported text attributes inherit fieldwise. Empty icons hide the glyph without leaving its separator; `false` attributes remain explicit overrides.

@@ -55,6 +55,7 @@ class MenuStyles(unittest.TestCase):
 fg="#123456"
 bg="#112233"
 bold=true
+dim=false
 [apps.menu.label]
 fg="#234567"
 [apps.menu.description]
@@ -213,10 +214,9 @@ print(result)
         for theme,fg,bg in (('dark','#abcdef','#101820'),('light','#234567','#f0f4f8')):
             (root/'default/colors.toml').write_text(
                 '[apps.menu.icon]\nfg="#d07842"\n[apps.menu.label]\nfg="'+fg+'"\n'
-                '[apps.menu.description]\nfg="#778899"\n')
-            defaults=json.loads((root/'default/config.json').read_text())
-            defaults['colors']['apps']['menu']['popup']['body'].update(fg=fg,bg=bg)
-            (root/'default/config.json').write_text(json.dumps(defaults))
+                '[apps.menu.description]\nfg="#778899"\n'
+                f'[controls]\n"colors.apps.menu.popup.body.fg" = "{fg}"\n'
+                f'"colors.apps.menu.popup.body.bg" = "{bg}"\n')
             for width,height in ((40,12),(80,24),(120,30)):
                 self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',height,width,0,0))
                 from menu_tmux import TmuxContext

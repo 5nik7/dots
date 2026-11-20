@@ -272,6 +272,8 @@ operations and source/target/catalog guards in memory until Apply.
 
 `plugins/anodize/engine/` is an independent pure Go color engine; `plugins/anodize/` owns Python authoring and the private Bash publication bridge. It reuses `files/transactions.py` and existing theme rendering/publication. `bin/anodize` and static `dots-anodize-*` routes provide CLI access. No engine calls occur during shell startup. See [decision 0011](decisions/0011-anodize-authoring.md).
 
+Patina uses the Go engine for pixel mapping, comparison-sheet layout and built-in image encoders. Its private binary operation streams the raster to a temporary file and returns bounded dimensions and thumbnail samples separately. The style picker batches all treatments against a single bounded sample. The full-resolution render and style samples share the same Go mapping. Python checks optional Pillow encoders before rendering and owns palette resolution, interactive confirmation, personal background paths and the journaled file save.
+
 Anodize standalone completion reuses generated copies of the shared Bash/Zsh/Fish adapters. Its private query bridge translates the standalone command line into the Dots completion protocol, reading bundled static headers and the selected theme repository without executing leaf commands or the Go engine. `tools/generate_anodize_integration.py` owns reproducible adapter generation and `man/anodize.1`; command and option text in the manual comes from the Python parser.
 
 ## Local theme plugin execution

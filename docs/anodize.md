@@ -87,8 +87,9 @@ Authoring commands accept `--json` for a schema-1 response unless they return a 
 | Route | Inputs and behavior |
 | --- | --- |
 | `completion SHELL` | Print Bash, Zsh, Fish or PowerShell completion source; no engine required. |
-| `modes` | List the 23 supported extraction modes. |
+| `modes` | List the 35 palette modes with descriptions. |
 | `extract IMAGE` | Inspect colors and foreground/background contrast without saving. Supports `--mode`, `--light`, `--dark`. |
+| `patina IMAGE` | Recolor a PNG, JPEG or first GIF frame using `--theme ID` or `--palette-image FILE`. See [Patina](#patina). |
 | `create ID` | Exactly one of `--image FILE`, `--color '#RRGGBB'`, `--from THEME`. Supports generation flags, `--adjust NAME=VALUE`, `--set COLOR=HEX`, and `--reference-wallpaper`. |
 | `import FILE --name ID --format FORMAT` | Import `anodize`, `aether`, `base16`, or `colors`. Supports generation flags and `--reference-wallpaper`. |
 | `list` | List authored themes in both user and repository storage. Human output and the additive JSON `storage` field identify `user` or `builtin`. |
@@ -99,9 +100,79 @@ Authoring commands accept `--json` for a schema-1 response unless they return a 
 | `promote ID` | Move an authored user theme into repository `themes/ID`; `--copy --name NEW_ID` retains the user version under its original ID. Accepts `--dry-run`, `--yes`, `--json`, and `--interactive`. |
 | `apply ID` | Preview/publish with the existing Dots publisher; optional `--background` explicitly requests a subsequent wallpaper action. |
 
-Create, import, edit, promote, export-to-file and apply accept `--dry-run` and `--yes`. Raw stdout export is already read-only; `--dry-run` requires `--output`. Raw exports and app previews never receive ANSI decoration. Diagnostics go to stderr. Exit status is 0 for success/preview, 2 for argument usage errors, and 1 for validation or operational failures.
+Patina, create, import, edit, promote, export-to-file and apply accept `--dry-run` and `--yes`. Raw stdout export is already read-only; `--dry-run` requires `--output`. Raw exports and app previews never receive ANSI decoration. Diagnostics go to stderr. Exit status is 0 for success/preview, 2 for argument usage errors, and 1 for validation or operational failures.
 
-IDs start with a lowercase letter and contain lowercase letters, digits, `_` or `-`. New IDs refuse repository and installed-user-theme collisions. PNG, JPEG and GIF input is limited to 32 MiB and 20 million pixels; transparent images without sufficiently opaque pixels are rejected. Extraction defaults to normal/dark. `--light` and `--dark` are mutually exclusive. Use `modes` as the authoritative list of modes.
+IDs start with a lowercase letter and contain lowercase letters, digits, `_` or `-`. New IDs refuse repository and installed-user-theme collisions. PNG, JPEG and GIF input is limited to 32 MiB and 20 million pixels; palette extraction requires at least one sufficiently opaque sampled pixel. Extraction defaults to normal/dark. `--light` and `--dark` are mutually exclusive. Use `modes` as the authoritative list of modes.
+
+## Patina
+
+`patina`, `dots patina`, `anodize patina` and `dots anodize patina` accept the same arguments.
+The first image supplies the pixels. Choose a theme with `--theme` or extract a palette from another image with `--palette-image`.
+
+```sh
+patina reflekt.jpg --theme catppuccin-mocha --output reflect.webp
+patina reflekt.jpg --theme catppuccin-mocha --compare
+patina reflekt.jpg --theme catppuccin-mocha --compare-modes --style palette-blend
+patina forest.jpg --theme kanagawa-wave --mode jewel-tones --style vivid --format jpg
+dots patina coast.png --palette-image sunset.jpg --style gradient --stops background,blue,cyan,foreground --output coast-themed.webp
+```
+
+Use `--yes` to save unattended. The command asks for confirmation at a terminal. A noninteractive invocation or `--json` returns a preview until you pass `--yes`. Use `--dry-run` to preview even with `--yes`.
+
+### Compare treatments
+
+`--compare` saves a labeled sheet of the original image and all 18 styles at their defaults, with the chosen palette visible above each image. Compare **01 harmonize**, **07 palette-blend** and **18 alloy** to see how they handle the same shadows and hues. The interactive style picker starts with alloy. The sheet accepts `--mode`. `--compare-modes` holds the style and its settings fixed and shows each of the 35 palette modes. A named theme also gets an **as-authored** panel. Both sheets default to PNG beside the input, named `reflekt_styles.png` or `reflekt_modes.png` in these examples. Subsequent saves use the first free numbered suffix. Use the printed style or mode name for the full-resolution export.
+
+| Style | Appearance |
+| --- | --- |
+| `alloy` (default) | Keeps the shadow depth and highlights of palette-blend. For colored pixels, 75% of the hue and chroma comes from palette-blend and 25% from harmonize. Near gray, the two tints blend smoothly. |
+| `harmonize` | Maps shadows and highlights to the theme’s dark and light colors. Midtones take a compatible palette hue so dark foliage can keep its green character. |
+| `natural` | The earlier harmonize treatment. Preserves source lightness while gently matching hues. |
+| `palette-blend` | Blends neighboring palette swatches for a painterly result. |
+| `color-transfer` | Matches the image’s most common distinct color groups to different palette swatches and keeps shading within each group. |
+| `gradient` | Runs from the darker to the lighter of background and foreground, through an accent or interior midtone when available. |
+| `duotone` | Maps lightness between two palette colors. |
+| `split-tone` | Tints shadows and highlights separately. |
+| `muted` | Softens saturated colors with the theme’s neutral tones. |
+| `vivid` | Increases chroma and contrast along the theme’s hue families. |
+| `pastel` | Lifts the image toward a pale tint of the theme foreground or background. |
+| `night` | Compresses highlights into the dark end of the palette. |
+| `accent` | Keeps colors near the theme accent and subdues the rest of the image. |
+| `posterize` | Separates shades into six flat tone levels. |
+| `dither` | Uses a repeating ordered-dot pattern to bridge five tone levels. |
+| `ink` | Draws dark contours and a shadow wash on tinted paper. |
+| `exact` | Chooses the nearest original palette swatch for each visible pixel. |
+| `shaded` | Restores source lightness after choosing the nearest swatch. |
+
+`--strength 0–100` blends the treatment with the source in OKLab. The default is 100. Zero preserves source pixels before encoding. The original `exact` and `shaded` styles use fixed strength. For `gradient` and `duotone`, supply ordered palette names with `--stops`. Gradient takes at least two names and duotone takes exactly two. For example, `--stops yellow,blue` gives yellow shadows and blue highlights. Both accept custom theme color names.
+
+For `alloy`, `harmonize` and `natural`, `--harmony auto` fills missing hues using nearby, split-complementary or opposite hues. Choose `analogous`, `complementary`, `palette` or `source` to change that rule. In `alloy`, this rule affects the harmonize contribution. Use `natural` for the full source-lightness effect.
+
+### Choose palette colors
+
+A theme supplies all rendered colors, including its overrides and custom names. Adding `--mode` generates a temporary palette from those colors for this export. It inherits the theme’s light or dark setting, which you can override with `--light` or `--dark`. A reference image defaults to `normal` and dark. Extracted source colors carry their sampled image coverage. Named-theme colors each contribute once.
+
+Run `anodize modes` for all names and descriptions. Modes such as `dominant`, `hue-balanced` and `tonal-range` emphasize different aspects of the source. Try `teal-orange` for a warm/cool pairing, `cyanotype` for a blue print or `risograph` for vivid inks. The same modes work with `create`, `edit`, `import` and `extract`.
+
+### Choose the output file
+
+A recognized `--output` extension chooses the encoder, including when `--format` gives another valid type. For an extensionless output path or automatic filename, `--format` supplies the extension. The default is PNG. Unknown output extensions produce an error.
+
+| Output | Encoding behavior |
+| --- | --- |
+| `png` | Lossless, with source transparency and up to 16-bit channels. |
+| `jpg`, `jpeg` | Composites transparency over the theme background. Default quality 90. |
+| `gif` | One indexed frame with binary transparency. |
+| `svg` | A self-contained SVG containing the recolored PNG raster. |
+| `webp` | Requires Pillow with WebP support. Default quality 90. Accepts `--lossless`. |
+| `bmp`, `tif`, `tiff` | Require the corresponding Pillow encoder. BMP composites over the theme background. |
+| `avif` | Requires Pillow with AVIF support. Default quality 80. |
+
+`--quality 1–100` applies to JPEG, lossy WebP and AVIF. `--lossless` selects lossless WebP and takes no quality setting. PNG, JPEG and GIF inputs can be up to 32 MiB and 20 million pixels. Animated GIFs supply their first frame.
+
+With a theme, omitting `--output` saves a wallpaper under the personal Dots configuration directory in `backgrounds/ID/`. For example, the default for `forest.jpg --theme nord` is `~/.config/dots/backgrounds/nord/forest.png` on POSIX. PNG inputs keep their extension case. If that name exists, the next saves use `forest_1.png`, then `forest_2.png`. Dots respects `XDG_CONFIG_HOME` and defaults to the roaming application-data directory on Windows. An explicit output path must be unused. With a reference image, ordinary exports require an explicit output path.
+
+The interactive style picker previews the treatments on your image. Final review shows the selected render and destination. A saved result includes a transaction ID for `dots files undo`. The theme background selector lists its supported wallpaper formats. See the [theme guide](themes.md) for activation.
 
 ## Shell completion and manual
 

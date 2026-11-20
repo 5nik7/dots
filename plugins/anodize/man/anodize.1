@@ -112,7 +112,7 @@ Emit versioned JSON.
 Local image file.
 .TP
 .B "\-\-mode MODE"
-Extraction mode (default: normal).
+Palette generation mode.
 .TP
 .B "\-\-light"
 Use a light palette (exclusive with \-\-dark).
@@ -142,7 +142,7 @@ Emit versioned JSON.
 Theme identifier.
 .TP
 .B "\-\-mode MODE"
-Extraction mode (default: normal).
+Palette generation mode.
 .TP
 .B "\-\-light"
 Use a light palette (exclusive with \-\-dark).
@@ -199,7 +199,7 @@ Emit versioned JSON.
 Local blueprint or palette file.
 .TP
 .B "\-\-mode MODE"
-Extraction mode (default: normal).
+Palette generation mode.
 .TP
 .B "\-\-light"
 Use a light palette (exclusive with \-\-dark).
@@ -283,7 +283,7 @@ Emit versioned JSON.
 Theme identifier.
 .TP
 .B "\-\-mode MODE"
-Extraction mode (default: normal).
+Palette generation mode.
 .TP
 .B "\-\-light"
 Use a light palette (exclusive with \-\-dark).
@@ -399,6 +399,82 @@ Apply the preview without prompting.
 .TP
 .B "\-\-background"
 Also activate the wallpaper after publishing the theme.
+.SS "anodize patina FILE [OPTIONS]"
+Recolor an image with a theme or an extracted palette.
+.TP
+.B "\-h, \-\-help"
+show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
+.TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
+.B "\-\-json"
+Emit versioned JSON.
+.TP
+.B "FILE"
+Local image file.
+.TP
+.B "\-\-mode MODE"
+Derive a temporary theme variant or select the reference extraction mode.
+.TP
+.B "\-\-light"
+Use a light palette (exclusive with \-\-dark).
+.TP
+.B "\-\-dark"
+Use a dark palette (exclusive with \-\-light).
+.TP
+.B "\-\-dry\-run"
+Preview without changes; takes precedence over \-\-yes.
+.TP
+.B "\-\-yes"
+Apply the preview without prompting.
+.TP
+.B "\-\-theme ID"
+Use the rendered colors of this Dots theme.
+.TP
+.B "\-\-palette\-image FILE"
+Extract the palette from this reference image.
+.TP
+.B "\-\-style STYLE"
+Wallpaper treatment (default: alloy): harmonize, gradient, duotone, exact,
+shaded, natural, palette\-blend, color\-transfer, split\-tone, muted, vivid,
+pastel, night, accent, posterize, dither, ink, alloy.
+.TP
+.B "\-\-harmony HARMONY"
+Missing\-hue rule for alloy, harmonize or natural (default: auto): auto,
+analogous, complementary, source, palette.
+.TP
+.B "\-\-strength 0–100"
+Effect strength (except exact and shaded) (default: 100).
+.TP
+.B "\-\-stops NAME,NAME,…"
+Ordered palette colors for gradient or duotone.
+.TP
+.B "\-\-output FILE"
+New image path. Its extension selects the encoder.
+.TP
+.B "\-\-format FORMAT"
+Output type for automatic or extensionless names (default: png): png, jpg,
+jpeg, webp, gif, svg, bmp, tif, tiff, avif.
+.TP
+.B "\-\-quality 1–100"
+JPEG/WebP quality (default 90) or AVIF quality (default 80).
+.TP
+.B "\-\-lossless"
+Use lossless WebP compression.
+.TP
+.B "\-\-compare"
+Save a numbered sheet of all styles.
+.TP
+.B "\-\-compare\-modes"
+Save a numbered sheet of all palette modes.
 .SS "anodize promote ID [OPTIONS]"
 Move or copy a user theme into built\-in themes.
 .TP
@@ -454,7 +530,8 @@ IDs start with a lowercase letter and contain lowercase letters, digits,
 underscores or hyphens. Existing theme IDs are never overwritten by create.
 .PP
 PNG, JPEG and GIF inputs are limited to 32 MiB and 20 million pixels.
-Extraction defaults to normal/dark. Run anodize modes for all 23 modes.
+Extraction defaults to normal/dark. Run anodize modes for the complete list
+and descriptions.
 Light and dark flags are mutually exclusive.
 .PP
 Adjustments are absolute values applied to the saved baseline. Repeating
@@ -466,6 +543,27 @@ shadows, highlights, temperature, tint, blackPoint and whitePoint accept
 Color overrides use named keys and six-digit hex values. Derived color0
 through color15 aliases cannot be overridden. Resetting adjustments retains
 overrides. Re-extraction requires a saved wallpaper or seed.
+.SH PATINA
+patina IMAGE and dots patina IMAGE are shortcuts for anodize patina IMAGE.
+Choose --theme ID or --palette-image FILE. Use --mode for a temporary variant
+of the rendered theme or a reference extraction.
+Alloy (default) keeps palette-blend lightness and blends its color with a
+quarter share of harmonize. Use --harmony for the harmonize contribution.
+Harmonize anchors shadows, hue-matched midtones and highlights to theme
+colors. Natural preserves the earlier lightness-based treatment.
+Use --compare for a numbered sheet of all styles or --compare-modes for the
+selected style across all palette modes.
+Gradient and duotone accept ordered palette names with --stops. Exact and
+shaded use fixed strength. Other styles support --strength 0 through 100.
+An explicit output extension chooses the encoder. Use --format with an
+automatic or extensionless destination. Default PNG.
+JPEG and BMP flatten transparency onto the theme background. GIF saves one
+frame. SVG embeds the PNG.
+WebP, TIFF, BMP and AVIF need their corresponding Pillow encoders. JPEG and
+WebP default to quality 90, AVIF to 80. Lossless WebP accepts --lossless.
+An automatic theme wallpaper goes to personal backgrounds/ID. Comparison
+sheets go beside the input. Existing automatic names are numbered. Explicit
+paths must be unused.
 .SH IMPORT AND EXPORT
 Import accepts Anodize JSON, Aether JSON, Base16 flat JSON/simple YAML,
 or Dots colors.toml. Aether colors are already adjusted: source adjustments
