@@ -51,6 +51,8 @@ Human views use the shared semantic colors, full wrapped paths and explicit stat
 
 The wizard shows `Profile    termux (~/dots/profiles/termux)`: a blue label, bold yellow active profile ID, and parenthesized directory in dim terminal foreground. It abbreviates the directory's home prefix as `~` and wraps long values without dropping the path. Its introductory instruction uses shared green styling and the Setup preferences heading uses shared cyan styling; disabled color retains the same text.
 
+Core setup also delivers the [standalone Codex quota command](tmux.md#codex-weekly-quota). Its optional provider is supplied by the user.
+
 The default components are `core`, `files`, `themes`, `anodize`, `blastoff` and `pkgs`. Optional components are `packages`, `fonts` and `leaf`. Repeated `--component NAME` replaces defaults; repeated `--resource ID` implies Files and narrows it to enabled applicable catalog IDs without changing their link/copy strategy. Excluding an installed component does not remove it. Use selective uninstall to restore its owned paths.
 
 `--interactive` explicitly requests the wizard; it conflicts with `--yes`, `--json` and `--dry-run`. `--non-interactive` skips it and requires `--yes` to write. Help, dry-run, JSON and redirected output never show the wizard, clear the screen or display branding. `--no-clear` and `--no-logo` disable those entry effects. Optional Gum uses the shared selector; numbered selection remains available.

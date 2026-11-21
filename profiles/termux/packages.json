@@ -108,7 +108,7 @@
         },
         {
           "name": "atuin",
-          "observed_version": "18.25.0",
+          "observed_version": "18.25.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true

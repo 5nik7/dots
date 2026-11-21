@@ -292,6 +292,34 @@ $paths=& (Join-Path $env:FIXTURE_ROOT 'scripts/pathout.ps1') --raw '--' '' '-lit
         self.assertEqual(json.loads(result.stdout), dict(paths=['', '-literal [ü]'], exists=0, directory=1,
                                                        root='unrelated inherited checkout'))
 
+    def test_native_quota_widget_reads_shared_snapshot(self):
+        import time
+        adapter = self.repo/'config/tmux'
+        adapter.mkdir(parents=True)
+        for name in ('codex-usage.py', 'codex_quota.py', 'status_styles.py',
+                     'widget_cache.py', 'widget_cache_windows.py'):
+            shutil.copy2(ROOT/'config/tmux'/name, adapter/name)
+        sys.path.insert(0, str(ROOT/'config/tmux'))
+        self.addCleanup(sys.path.remove, str(ROOT/'config/tmux'))
+        from codex_quota import identity
+        from widget_cache import Cache, command
+        tool = self.base/('aistat.exe' if os.name == 'nt' else 'aistat')
+        tool.write_bytes(b'fixture')
+        tool.chmod(0o700)
+        self.env.update(PATH=str(self.base) + os.pathsep + self.env['PATH'], FIXTURE_ROOT=str(self.repo),
+                        CODEX_HOME=str(self.home/'.codex'))
+        with patch.dict(os.environ, self.env, clear=True):
+            cache = Cache('codex-usage', identity(str(tool)))
+            with cache.locked():
+                cache.write(dict(value={'remaining_percent': 16.8}, updated=time.time()))
+            self.assertEqual(command([sys.executable, '-c', 'print(16)'], 3, 32), '16' + os.linesep)
+            with self.assertRaises(ValueError):
+                command([sys.executable, '-c', 'print("x"*1024)'], 3, 32)
+            with self.assertRaises((OSError, subprocess.TimeoutExpired)):
+                command([sys.executable, '-c', 'import time; time.sleep(8)'], .2, 32)
+        result = self.run_ps(r"& (Join-Path $env:FIXTURE_ROOT 'scripts/codex-usage.ps1'); exit $LASTEXITCODE")
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (0, ' 16%\n', ''))
+
     def test_native_fzopt_updates_only_calling_environment(self):
         self.env.update(FIXTURE_ROOT=str(self.repo), FZF_DEFAULT_OPTS='--height=40% --color=fg:blue',
                         DOTS_UTILITY_PWD='previous literal', DOTS_UTILITY_TRANSPORT='previous transport')

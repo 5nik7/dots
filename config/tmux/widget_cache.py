@@ -1,6 +1,5 @@
 """Private, bounded snapshots for tmux's disposable one-shot status workers."""
 from contextlib import contextmanager
-import fcntl
 import hashlib
 import json
 import math
@@ -15,12 +14,25 @@ import sys
 import tempfile
 import time
 
+if os.name == 'nt':
+    from widget_cache_windows import lock_file, open_file, provider_output, reparse, replace_file
+else:
+    import fcntl
+    from os import replace as replace_file
+
+    def open_file(path, flags):
+        return os.open(path, flags | os.O_NONBLOCK | os.O_NOFOLLOW, 0o600)
+
+    def lock_file(stream):
+        fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
 LIMIT = 128 * 1024
 CHILDREN = []
 
 
 def read(path, limit=LIMIT):
-    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+    fd = open_file(path, os.O_RDONLY)
     with os.fdopen(fd, 'rb') as stream:
         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
             raise ValueError('not a regular cache file')
@@ -39,6 +51,8 @@ def age(updated, now=None):
 
 def command(argv, timeout, limit, **kwargs):
     """Bound bytes and wall time, including descendants holding output open."""
+    if os.name == 'nt':
+        return provider_output(argv, timeout, limit)
     process = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                stderr=subprocess.DEVNULL, start_new_session=True, **kwargs)
     deadline, output = time.monotonic() + timeout, bytearray()
@@ -71,7 +85,10 @@ def command(argv, timeout, limit, **kwargs):
 
 class Cache:
     def __init__(self, kind, identity):
-        base = Path(os.environ.get('XDG_CACHE_HOME') or Path.home()/'.cache')
+        default = Path.home()/'.cache'
+        if os.name == 'nt':
+            default = Path(os.environ.get('LOCALAPPDATA') or Path.home()/'AppData/Local')/'cache'
+        base = Path(os.environ.get('XDG_CACHE_HOME') or default)
         if not base.is_absolute():
             raise ValueError('cache root must be absolute')
         self.root = base / 'dots/tmux-widgets'
@@ -103,17 +120,17 @@ class Cache:
                 try:path.mkdir(mode=0o700)
                 except FileExistsError:pass
                 mode = path.lstat().st_mode
-            if not stat.S_ISDIR(mode):
+            if not stat.S_ISDIR(mode) or (os.name == 'nt' and reparse(path)):
                 raise ValueError('unsafe cache directory')
 
     @contextmanager
     def locked(self):
         self.prepare()
-        fd = os.open(self.path.with_suffix('.lock'), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+        fd = open_file(self.path.with_suffix('.lock'), os.O_CREAT | os.O_RDWR)
         with os.fdopen(fd, 'r+b') as stream:
             if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                 raise ValueError('unsafe cache lock')
-            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            lock_file(stream)
             yield
 
     def write(self, row):
@@ -127,16 +144,19 @@ class Cache:
         try:
             with os.fdopen(fd, 'wb') as stream:
                 stream.write(payload)
-            os.replace(temporary, self.path)
+            replace_file(temporary, self.path)
         finally:
             Path(temporary).unlink(missing_ok=True)
 
     def schedule(self, script, args=(), timeout=10, due=False):
+        """Reserve one refresh, returning False when the cache cannot be used."""
         try:
             with self.locked():
                 row, now = self.read(), time.time()
-                if now < row.get('lease',0) or not due and now < row.get('next_at',0):
-                    return
+                # A caller can recheck freshness under the reservation lock.
+                ready = due(row) if callable(due) else due or now >= row.get('next_at', 0)
+                if now < row.get('lease', 0) or not ready:
+                    return True
                 token = secrets.token_hex(16)
                 row.update(token=token, lease=now+timeout+10)
                 self.write(row)
@@ -144,13 +164,17 @@ class Cache:
                     CHILDREN[:]=[child for child in CHILDREN if child.poll() is None]
                     child=subprocess.Popen([sys.executable, '-B', str(script), '--_worker', token, *args],
                                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL, start_new_session=True)
+                                     stderr=subprocess.DEVNULL, start_new_session=os.name != 'nt',
+                                     creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
                     CHILDREN.append(child)
                 except OSError:
                     row.update(lease=0, next_at=now+5, failed=True)
                     self.write(row)
+                return True
+        except BlockingIOError:
+            return True
         except (OSError, ValueError):
-            pass
+            return False
 
     def work(self, token, producer, interval, retry=5):
         # Scheduler releases the lock immediately after spawning the child.

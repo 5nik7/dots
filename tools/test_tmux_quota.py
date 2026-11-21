@@ -19,6 +19,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'config/tmux'),str(ROOT/'lib/dots')]
 spec=importlib.util.spec_from_file_location('quota',ROOT/'config/tmux/codex-usage.py')
 quota=importlib.util.module_from_spec(spec);spec.loader.exec_module(quota)
+import codex_quota
 from status_styles import preferences
 from widget_cache import Cache
 
@@ -69,16 +70,16 @@ class Quota(unittest.TestCase):
             self.assertLess(time.monotonic(),deadline,value);time.sleep(.05)
 
     def test_active_weekly_only_and_invalid_data(self):
-        self.assertEqual(quota.parse(json.dumps(report())),{'remaining_percent':72.9})
+        self.assertEqual(codex_quota.parse(json.dumps(report())),{'remaining_percent':72.9})
         for value in (True,-1,101,float('nan'),'72',None):
-            with self.subTest(value=value),self.assertRaises(ValueError):quota.parse(json.dumps(report(value)))
+            with self.subTest(value=value),self.assertRaises(ValueError):codex_quota.parse(json.dumps(report(value)))
         for change in ('none','two','error','missing'):
             data=report();rows=data['providers']['codex']['accounts']
             if change=='none':rows[1]['active']=False
             if change=='two':rows[0]['active']=True
             if change=='error':rows[1]['error']='private diagnostics'
             if change=='missing':del rows[1]['limits']['seven_day']
-            with self.assertRaises((ValueError,KeyError)):quota.parse(json.dumps(data))
+            with self.assertRaises((ValueError,KeyError)):codex_quota.parse(json.dumps(data))
 
     def test_colors_zero_rounding_and_literal_styles(self):
         for value,color in ((0,'red'),(9.9,'red'),(10,'colour208'),(24.9,'colour208'),(25,'yellow'),(49.9,'yellow'),(50,'green'),(100,'green'),(None,'brightblack')):
@@ -94,7 +95,7 @@ class Quota(unittest.TestCase):
         with patch.object(Cache,'schedule') as schedule:
             self.assertEqual(quota.main([]),'');schedule.assert_not_called()
         self.publish()
-        with patch.object(quota.shutil,'which',return_value=None),patch.object(Cache,'schedule') as schedule:
+        with patch.object(codex_quota.shutil,'which',return_value=None),patch.object(Cache,'schedule') as schedule:
             self.assertEqual(quota.main([]),'');schedule.assert_not_called()
         self.assertFalse((self.root/'cache').exists())
 
@@ -131,6 +132,119 @@ class Quota(unittest.TestCase):
         with cache.locked():cache.write(dict(token='test',lease=0))
         quota.main(['--_worker','test']);self.assertTrue(cache.read()['failed']);self.assertNotIn('remaining_percent',cache.read().get('value',{}))
 
+    def cli(self, *args, **overrides):
+        return subprocess.run([str(ROOT/'scripts/codex-usage'), *args], env={**self.env, **overrides},
+                              cwd=self.home, capture_output=True, text=True, timeout=6)
+
+    def test_terminal_and_tmux_join_one_refresh(self):
+        self.provider('time.sleep(.3)\nprint((home/"response").read_text())')
+        self.assertIn('?%', quota.main([]))
+        clients = [subprocess.Popen([str(ROOT/'scripts/codex-usage')], env=self.env,
+                                    cwd=self.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                   for _ in range(5)]
+        for client in clients:
+            self.assertEqual(client.communicate(timeout=5), ('  72%\n'.encode(), b''))
+            self.assertEqual(client.returncode, 0)
+        self.assertIn('72%', quota.main([]))
+        self.assertEqual(self.cli().stdout, '  72%\n')
+        self.assertEqual((self.home/'calls').read_text(), 'usage codex\n')
+
+    def test_explicit_request_disabled_widget_and_go_install(self):
+        self.publish({'enabled': False})
+        self.response.write_text(json.dumps(report(0)))
+        go_bin = self.home/'go/bin'
+        go_bin.mkdir(parents=True)
+        self.tool.rename(go_bin/'aistat')
+        # Restrict PATH to the launcher's own tools, never a real provider.
+        for name in ('bash', 'dirname', 'python3', 'readlink'):
+            (self.bin/name).symlink_to(shutil.which(name))
+        self.assertEqual(quota.main([]), '')
+        result = self.cli(PATH=str(self.bin))
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (0, '  0%\n', ''))
+        (go_bin/'aistat').unlink()
+        result = self.cli(PATH=str(self.bin))
+        self.assertEqual((result.returncode, result.stdout), (1, '  ?%\n'))
+        self.assertIn('aistat is unavailable', result.stderr)
+
+    def test_cli_unknown_stale_expiry_and_timeout(self):
+        self.provider('print("private provider failure", file=sys.stderr)\nsys.exit(1)')
+        self.seed(value=19, elapsed=100)
+        result = self.cli()
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (0, '  19%~\n', ''))
+        self.seed(value=19, elapsed=301, failed=True)
+        result = self.cli()
+        self.assertEqual((result.returncode, result.stdout), (1, '  ?%\n'))
+        self.assertNotIn('private', result.stderr)
+        self.publish({'timeout_seconds': 1})
+        self.provider('time.sleep(8)')
+        start = time.monotonic()
+        result = self.cli()
+        self.assertLess(time.monotonic() - start, 2.5)
+        self.assertEqual((result.returncode, result.stdout), (1, '  ?%\n'))
+        cache = Cache('codex-usage', quota.identity(str(self.tool)))
+        deadline = time.monotonic() + 2
+        while cache.read().get('lease'):
+            self.assertLess(time.monotonic(), deadline)
+            time.sleep(.05)
+        self.assertTrue(cache.read()['failed'])
+
+    def test_cli_widget_styles_plain_and_tty(self):
+        import pty
+        self.seed()
+        self.publish()
+        snapshot = self.root/'state/dots/current/theme/preferences.json'
+        data = json.loads(snapshot.read_text())
+        prefs = data['apps']['tmux']
+        prefs.update(icons={'codex_usage': '#[雪]'}, formatting={'codex_usage': {
+            'before': '[', 'after': ']', 'width': 5, 'alignment': 'left', 'spacer': ':'}},
+            colors={'codex_usage.good': {'fg': '#abcdef'}, 'codex_usage.icon': {
+                    'bold': False, 'bg': '#112233'}})
+        snapshot.write_text(json.dumps(data))
+        expected = '[#[雪]:72%  ]'
+        self.assertEqual(self.cli().stdout, expected + '\n')
+        self.assertEqual(self.cli(DOTS_ICONS='never').stdout, '[72%  ]\n')
+        for no_color in ('', '1'):
+            read_fd, write_fd = pty.openpty()
+            try:
+                result = subprocess.run([str(ROOT/'scripts/codex-usage')], stdout=write_fd,
+                    stderr=subprocess.PIPE, env={**self.env, 'TERM': 'xterm-256color', 'NO_COLOR': no_color},
+                    timeout=4)
+                raw = os.read(read_fd, 2048).decode().rstrip('\r\n')
+            finally:
+                os.close(write_fd)
+                os.close(read_fd)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(re.sub(r'\x1b\[[0-9;]*m', '', raw), expected)
+            if no_color:
+                self.assertEqual(raw, expected)
+            else:
+                self.assertIn('\x1b[0;38;2;171;205;239;48;2;17;34;51m#[雪]', raw)
+                self.assertIn('\x1b[0;1;38;2;171;205;239m72%', raw)
+                self.assertTrue(raw.endswith('\x1b[0m'))
+
+    def test_cli_help_completion_and_bad_arguments_do_not_fetch(self):
+        for args in [('--help',), ('-h',)]:
+            result = self.cli(*args)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn('weekly quota', result.stdout)
+        self.assertEqual(self.cli('--_worker', 'token').returncode, 2)
+        from native_completion import complete
+        for shell in ('nu', 'xonsh', 'powershell'):
+            self.assertEqual([row['value'] for row in complete(ROOT, shell, ['codex-usage', '--h'])], ['--help'])
+        for shell in ('bash', 'fish', 'zsh'):
+            argv = [str(ROOT/'bin/dots'), '__complete', shell, '1']
+            if shell == 'zsh':
+                argv.append('--display-types')
+            result = subprocess.run([*argv, '--', 'codex-usage', '--h'], env=self.env,
+                                    capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            fields = result.stdout.rstrip('\n').split('\t')
+            self.assertEqual(fields[:2], ['candidate', '--help'])
+            if shell == 'zsh':
+                self.assertEqual(fields[-1], 'option')
+        self.assertFalse((self.home/'calls').exists())
+        self.assertFalse((self.root/'cache').exists())
+
     def test_config_validation_and_catalog(self):
         from config_values import read_defaults,validate_value,validate_effective,constraints
         from style_catalog import supported
@@ -165,7 +279,8 @@ class NativeQuota(GeneratedStatus):
         super().setUp()
         # General status fixtures omit this optional adapter. Only these cases
         # install it, alongside a fake provider before any client is attached.
-        shutil.copy2(ROOT/'config/tmux/codex-usage.py',self.tmux_config/'codex-usage.py')
+        for name in ('codex-usage.py', 'codex_quota.py'):
+            shutil.copy2(ROOT/'config/tmux'/name, self.tmux_config/name)
 
     def test_quota_cells_visibility_modes_and_right_placement(self):
         profile=self.repo/'profiles/termux'

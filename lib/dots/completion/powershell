@@ -1,6 +1,6 @@
 # Native completion; data comes from trusted Dots readers, never an extension.
 $dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'patina', 'patina.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1', 'todo', 'todo.ps1', 'fonts', 'fonts.ps1', 'bak', 'bak.ps1', 'dots-bak', 'dots-bak.ps1', 'wttr', 'wttr.ps1', 'cpy', 'cpy.ps1', 'pst', 'pst.ps1')
-$global:_DotsUtilityCompletionNames = @('linked', 'lnkd', 'cpwd', 'pathout', 'dirout', 'isdir', 'isfile', 'fzcmd', 'fzenv', 'fzfd', 'fzfig', 'fzg', 'fzopt', 'fzpyfig', 'fzrg', 'fzrg3', 'cht', 'httpGet', 'www')
+$global:_DotsUtilityCompletionNames = @('codex-usage', 'linked', 'lnkd', 'cpwd', 'pathout', 'dirout', 'isdir', 'isfile', 'fzcmd', 'fzenv', 'fzfd', 'fzfig', 'fzg', 'fzopt', 'fzpyfig', 'fzrg', 'fzrg3', 'cht', 'httpGet', 'www')
 $dotsCompletionNames += @($global:_DotsUtilityCompletionNames | ForEach-Object { $_; $_ + '.ps1' })
 $dotsCompletionState = if ($global:dot -and $global:dot.state) { $global:dot.state } elseif ($env:DOTS_STATE_DIR) { $env:DOTS_STATE_DIR } elseif ($env:XDG_STATE_HOME) { Join-Path $env:XDG_STATE_HOME 'dots' } elseif ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'dots' } else { Join-Path $HOME '.local/state/dots' }
 $dotsNamesPath = Join-Path $dotsCompletionState 'themes/commands/current/names'

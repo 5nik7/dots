@@ -1513,6 +1513,8 @@ FZF-tab module requires separate evidence when absent from the local plugin.
 
 ## Codex quota widget
 
+The same suite invokes the standalone command in an owned shell and PTY, covers simultaneous terminal/tmux reads with one fake provider call, and checks cold/warm, disabled-widget, missing-provider, configured styles, plain output and failure cases. The core-launcher lifecycle case in `tools/test_installation.py` verifies selective install/uninstall and Windows shim planning.
+
 Run `python3 -B tools/test_tmux_quota.py -v`, then the affected `tools/test_tmux_widgets.py`, `tools/test_gitmux.py`, `tools/test_tmux_status.py`, `tools/test_config_layout.py` and Config style/value/discovery/completion/live suites sequentially. The quota suite uses synthetic accounts, a fake aistat executable, owned cache/auth metadata and private tmux clients. It covers active weekly selection, thresholds/zero, failure retention, timeout, concurrent refresh coalescing, identity drift, warm-render latency, visibility and right-side cell placement at 40/80/120 columns. No live usage or credential refresh is a test. Termux/private-client evidence does not establish native Linux/WSL visuals or PowerShell 5.1/7 Config behavior.
 
 ## Shared Markdown viewer checks

@@ -10,6 +10,7 @@ This is the authoritative family-to-primary-skill mapping. Select the family own
 | --- | --- |
 | `anodize` | [dots-anodize-maintenance](skills/dots-anodize-maintenance/SKILL.md) |
 | `blastoff` | [dots-blastoff-maintenance](skills/dots-blastoff-maintenance/SKILL.md) |
+| `codex-usage` (standalone) | [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) |
 | `commands` | [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) |
 | `completion` | [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) |
 | `config` | [dots-config](skills/dots-config/SKILL.md) |

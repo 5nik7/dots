@@ -187,7 +187,7 @@ dots_complete() {
   # Standalone wrappers share this same completion protocol.
   local command_name=${words[0]##*/}
   case $command_name in
-    linked|lnkd|cpwd|pathout|dirout|isdir|isfile|fzcmd|fzenv|fzfd|fzfig|fzg|fzopt|fzpyfig|fzrg|fzrg3|cht|httpGet|www)
+    codex-usage|linked|lnkd|cpwd|pathout|dirout|isdir|isfile|fzcmd|fzenv|fzfd|fzfig|fzg|fzopt|fzpyfig|fzrg|fzrg3|cht|httpGet|www)
       local -a utility_completion=()
       [[ $DOTS_DISPLAY_TYPES != 1 ]] || utility_completion+=(--display-types)
       python3 -B "$DOTS_LIB_DIR/utility_completion.py" "${utility_completion[@]}" "$command_name" "${words[@]:1:cursor}"

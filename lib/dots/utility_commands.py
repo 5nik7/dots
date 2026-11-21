@@ -1,6 +1,6 @@
 """Inert grammar for the existing standalone utility adapters."""
 import os
-NAMES = ('linked', 'lnkd', 'cpwd', 'pathout', 'dirout', 'isdir', 'isfile',
+NAMES = ('codex-usage', 'linked', 'lnkd', 'cpwd', 'pathout', 'dirout', 'isdir', 'isfile',
          'fzcmd', 'fzenv', 'fzfd', 'fzfig', 'fzg', 'fzopt', 'fzpyfig', 'fzrg', 'fzrg3',
          'cht', 'httpGet', 'www')
 
@@ -14,6 +14,7 @@ FZF_COLORS = tuple(('fg list-fg selected-fg preview-fg bg list-bg selected-bg pr
     'header-border footer-border label list-label preview-label input-label header-label footer-label prompt '
     'pointer marker spinner header footer').split())
 OPTIONS = {
+    'codex-usage': ('--help', '-h'),
     'linked': ('--full', '-d', '--dirname', '-b', '--basename', '-p', '--prefix', '-s', '--source',
         '-D', '--source-dirname', '-B', '--source-basename', '-C', '--shared-prefix', '-e', '--link-branch-dir',
         '-E', '--source-branch-dir', '-m', '--shared-basename', '-f', '--format', '-j', '--json', '-A', '--arrays',
@@ -24,6 +25,7 @@ OPTIONS = {
     'www': (':', '-q', '--query', '-s', '--search', '-g', '--google'),
 }
 USAGE = {
+    'codex-usage': 'codex-usage [--help]',
     'linked': 'linked [PATH] [--full|--source|--json|--format FORMAT|--arrays [auto|bash|zsh]] [-r|--raw]',
     'lnkd': 'lnkd', 'cpwd': 'cpwd', 'pathout': 'pathout [-r|--raw] [--] PATH...',
     'dirout': 'dirout [-r|--raw] [-j|--join] [-c|--color] [--] [PATH...]',
@@ -55,6 +57,8 @@ def complete(name, words, *, windows=None):
         if token == '--': literal = True; break
         if name == 'linked' and token in ('-f', '--format', '--completion'): index += 1
         index += 1
+    if name == 'codex-usage' and before:
+        return []
     if literal:
         return [('directory' if name == 'isdir' else 'file', '', '')] if name in ('linked', 'isdir', 'isfile', 'pathout', 'dirout') else []
     values = OPTIONS.get(name, ('--help', '-h') if windows else ())

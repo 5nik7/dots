@@ -9,5 +9,8 @@ fi
 export DOTS="${_dots_zsh_file:h:h:h}"
 unset _dots_zsh_file
 _DOTS_STARTUP_MODE=full
-source "$DOTS/lib/dots/shell/startup.bash" || { unset _DOTS_STARTUP_MODE; return 1; }
+source "$DOTS/lib/dots/shell/startup.bash" || {
+  unset _DOTS_STARTUP_MODE
+  return 1
+}
 unset _DOTS_STARTUP_MODE

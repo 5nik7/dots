@@ -13,6 +13,7 @@ def help_text(name):
         source = (Path(__file__).resolve().parents[2] / 'scripts/linked').read_text(encoding='utf-8')
         return source.split("cat <<'USAGE_EOF'\n", 1)[1].split('\nUSAGE_EOF', 1)[0] + '\n'
     notes = {
+        'codex-usage': 'Show the active Codex account’s remaining weekly quota. A stale reading ends in ~.\n',
         'fzfd': 'Enter selects; Ctrl-T switches files/directories; Esc cancels. Requires native fd and fzf.\n',
         'fzg': 'First query word is the ripgrep pattern; remaining words filter matches. Ctrl-R refreshes the search. Enter opens the editor; Esc cancels.\n',
         'fzrg': 'Ctrl-R refreshes ripgrep; Alt-Enter filters the current results. Enter opens the editor; Esc cancels.\n',
@@ -36,6 +37,9 @@ def main(argv=None):
         print(colorize_help(help_text(name), prog=name), end='')
         return 0
     try:
+        if name == 'codex-usage':
+            from codex_usage import main as quota
+            return quota(arguments)
         if name == 'linked' and arguments and arguments[0].split('=')[0] == '--completion':
             shell = arguments[0].partition('=')[2] if '=' in arguments[0] else (arguments[1] if len(arguments) == 2 else '')
             if shell not in ('bash', 'zsh'): raise ValueError('completion shell must be bash or zsh')

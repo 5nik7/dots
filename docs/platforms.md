@@ -25,6 +25,10 @@ The [history controller](clipboard.md) and copy providers support Termux, Linux,
 
 **Status: Live platform adapters; native evidence and pending acceptance recorded by subsystem**
 
+## Terminal quota widget
+
+Core setup provides `codex-usage` on Termux, Linux and WSL and `codex-usage.ps1` on native Windows. The Windows adapter uses a native Python process, `aistat.exe` and the Windows user's cache. With no XDG override, the Windows cache lives under `%LOCALAPPDATA%/cache/dots/tmux-widgets`. See the [widget guide](tmux.md#codex-weekly-quota).
+
 ## System clipboard
 
 The standalone [clipboard commands](shell-utils.md#system-clipboard-commands) select Android on Termux, Wayland/X11 on Linux, and the Windows clipboard on WSL/native Windows. WSL access uses Windows executable interop without translating filesystem paths. Native PowerShell adapters require Python, not Bash. App destinations and PATH precedence are unchanged. Provider-selection and literal-stream fixtures run on Termux; real Android app, Linux desktop, WSL interop, and Windows PowerShell 5.1/7 desktop acceptance remain pending.

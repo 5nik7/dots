@@ -61,6 +61,10 @@ metadata or running extensions. The launcher adds a Fonts submenu for the font
 browser with a directory chooser, glyph browser, current selections, directory report and available app targets; mutations
 retain their normal review. JSON, raw icon formats and exact paths remain data.
 
+## Standalone Codex quota
+
+`codex-usage` prints the active account’s remaining weekly quota as a one-line terminal widget. Use `codex-usage --help` for usage. See [quota readings, output and configuration](tmux.md#codex-weekly-quota).
+
 ## System clipboard shortcuts
 
 `cpy [--] [TEXT...]` copies arguments or stdin to the current system clipboard; `pst` prints its text. These standalone scripts and native PowerShell adapters share platform selection, help and error behavior. They add no `dots` dispatcher routes or completion metadata. See [clipboard usage and providers](shell-utils.md#system-clipboard-commands).

@@ -528,9 +528,9 @@ class Installation:
             else:
                 self.add('dots:fonts:command', home / '.local/bin/fonts', link=fonts)
         if 'core' in self.components:
-            for name in ('bak', 'dots-link'):
+            for name in ('bak', 'codex-usage', 'dots-link'):
                 filename = name + ('.ps1' if self.platform == 'windows' else '')
-                source = self.root / ('scripts' if filename == 'dots-link.ps1' else 'bin') / filename
+                source = self.root / ('scripts' if name == 'codex-usage' or filename == 'dots-link.ps1' else 'bin') / filename
                 if not source.is_file(): continue
                 self.guard(source)
                 if self.platform == 'windows':

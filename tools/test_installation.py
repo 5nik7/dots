@@ -126,6 +126,25 @@ with patch.object(install, 'source_plan', return_value=[{}]), patch.object(insta
         self.cli('uninstall','--yes')
         self.assertEqual(command.read_text(),'Previous fonts command\n')
 
+    def test_codex_usage_core_launcher_lifecycle(self):
+        (self.repo/'scripts').mkdir()
+        for name in ('codex-usage', 'codex-usage.ps1'):
+            shutil.copy2(ROOT/'scripts'/name, self.repo/'scripts'/name)
+        with mock.patch.dict(os.environ, self.env), mock.patch('install.platform', return_value='windows'):
+            native = Installation(self.repo)
+            native.plan_install(components=['core'])
+            launcher = next(op for op in native.operations if Path(op['path']).name == 'codex-usage.ps1')
+            self.assertIn(str(self.repo/'scripts/codex-usage.ps1').replace("'", "''"), launcher['text'])
+        name = 'codex-usage.ps1' if os.name == 'nt' else 'codex-usage'
+        target = self.home/'.local/bin'/name
+        self.cli('install', '--component', 'core', '--yes')
+        self.assertTrue(target.is_file())
+        if os.name != 'nt':
+            self.assertEqual(target.resolve(), self.repo/'scripts'/name)
+        self.assertEqual(json.loads(self.cli('install', '--component', 'core', '--yes', '--json').stdout)['status'], 'unchanged')
+        self.cli('uninstall', '--component', 'core', '--yes')
+        self.assertFalse(target.exists())
+
     def test_todo_command_and_skill_lifecycle(self):
         for name in ('todo', 'todo.ps1'):
             shutil.copy2(ROOT/'bin'/name, self.repo/'bin'/name)
