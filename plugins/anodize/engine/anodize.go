@@ -79,45 +79,49 @@ func Generate(data []byte, seed string, options Options) (map[string]string, err
 	if !slices.Contains(modes, options.Mode) {
 		return nil, errors.New("unknown extraction mode")
 	}
-	dominant, weights, err := sourceColors(data, seed)
+	palettes, err := GenerateModes(data, seed, nil, []string{options.Mode}, options.Light)
+	return palettes[options.Mode], err
+}
+
+func sourcePixels(data []byte, seed string) ([]color.RGB, error) {
+	if (len(data) == 0) == (seed == "") {
+		return nil, errors.New("provide exactly one image or color")
+	}
+	if seed != "" {
+		if !Hex(seed) {
+			return nil, errors.New("color must be #RRGGBB")
+		}
+		return []color.RGB{color.HexToRGB(seed)}, nil
+	}
+	img, _, err := decodeImage(data)
 	if err != nil {
 		return nil, err
 	}
-	return generatePalette(dominant, weights, options), nil
+	bounds := img.Bounds()
+	step := int(math.Ceil(math.Sqrt(float64(bounds.Dx()*bounds.Dy()) / 40000)))
+	step = max(1, step)
+	pixels := make([]color.RGB, 0, 50000)
+	for y := bounds.Min.Y; y < bounds.Max.Y; y += step {
+		for x := bounds.Min.X; x < bounds.Max.X; x += step {
+			c := stdcolor.NRGBAModel.Convert(img.At(x, y)).(stdcolor.NRGBA)
+			if c.A >= 128 {
+				pixels = append(pixels, color.RGB{R: float64(c.R), G: float64(c.G), B: float64(c.B)})
+			}
+		}
+	}
+	if len(pixels) == 0 {
+		return nil, errors.New("image has no opaque pixels")
+	}
+	return pixels, nil
 }
 
-func sourceColors(data []byte, seed string) ([]string, []float64, error) {
-	if (len(data) == 0) == (seed == "") {
-		return nil, nil, errors.New("provide exactly one image or color")
-	}
+func sourceColors(pixels []color.RGB, seed string) ([]string, []float64, error) {
 	var dominant []string
 	var weights []float64
 	if seed != "" {
-		if !Hex(seed) {
-			return nil, nil, errors.New("color must be #RRGGBB")
-		}
-		dominant = []string{seed}
-		weights = []float64{1}
+		dominant, weights = []string{seed}, []float64{1}
 	} else {
-		img, _, err := decodeImage(data)
-		if err != nil {
-			return nil, nil, err
-		}
-		bounds := img.Bounds()
-		step := int(math.Ceil(math.Sqrt(float64(bounds.Dx()*bounds.Dy()) / 40000)))
-		step = max(1, step)
-		pixels := make([]color.RGB, 0, 50000)
-		for y := bounds.Min.Y; y < bounds.Max.Y; y += step {
-			for x := bounds.Min.X; x < bounds.Max.X; x += step {
-				c := stdcolor.NRGBAModel.Convert(img.At(x, y)).(stdcolor.NRGBA)
-				if c.A >= 128 {
-					pixels = append(pixels, color.RGB{R: float64(c.R), G: float64(c.G), B: float64(c.B)})
-				}
-			}
-		}
-		if len(pixels) == 0 {
-			return nil, nil, errors.New("image has no opaque pixels")
-		}
+		var err error
 		// Small icons and solid images are valid inputs too.
 		for len(pixels) < 100 {
 			pixels = append(pixels, pixels...)
@@ -148,11 +152,18 @@ func sourceColors(data []byte, seed string) ([]string, []float64, error) {
 func GenerateModes(data []byte, seed string, colors map[string]string, ids []string, light bool) (map[string]map[string]string, error) {
 	var pool []string
 	var weights []float64
+	var pixels []color.RGB
 	if len(colors) == 0 {
 		var err error
-		pool, weights, err = sourceColors(data, seed)
+		pixels, err = sourcePixels(data, seed)
 		if err != nil {
 			return nil, err
+		}
+		if len(ids) != 1 || ids[0] != "normal" {
+			pool, weights, err = sourceColors(pixels, seed)
+			if err != nil {
+				return nil, err
+			}
 		}
 	} else {
 		unique := map[string]bool{}
@@ -166,6 +177,9 @@ func GenerateModes(data []byte, seed string, colors map[string]string, ids []str
 			pool = append(pool, hex)
 		}
 		sort.Strings(pool)
+		for _, hex := range pool {
+			pixels = append(pixels, color.HexToRGB(hex))
+		}
 		for len(pool) < 8 {
 			pool = append(pool, pool...)
 		}
@@ -175,7 +189,12 @@ func GenerateModes(data []byte, seed string, colors map[string]string, ids []str
 		if !slices.Contains(modes, id) {
 			return nil, fmt.Errorf("unknown extraction mode %q", id)
 		}
-		palette := generatePalette(pool, weights, Options{id, light})
+		var palette map[string]string
+		if id == "normal" {
+			palette = normalPalette(pixels, light)
+		} else {
+			palette = generatePalette(pool, weights, Options{id, light})
+		}
 		if len(colors) > 0 {
 			for key, hex := range colors {
 				if _, standard := palette[key]; standard {
@@ -209,6 +228,13 @@ func Variant(d Document) (map[string]string, error) {
 	dominant := make([]string, 0, len(names))
 	for _, name := range names {
 		dominant = append(dominant, d.Baseline[name])
+	}
+	if d.Options.Mode == "normal" {
+		var pixels []color.RGB
+		for _, hex := range dominant {
+			pixels = append(pixels, color.HexToRGB(hex))
+		}
+		return normalPalette(pixels, d.Options.Light), nil
 	}
 	return generatePalette(dominant, nil, d.Options), nil
 }
@@ -280,6 +306,11 @@ func Render(d Document) (map[string]string, error) {
 		out[k] = strings.ToLower(v)
 	}
 	defaults := map[string]string{"accent": "blue", "cursor": "foreground", "selection": "muted", "selection_background": "selection", "selection_foreground": "foreground", "error": "red", "warning": "yellow", "info": "blue", "hint": "cyan", "orange": "yellow", "brown": "muted", "dark_background": "background", "darker_background": "background", "lighter_background": "background", "dark_foreground": "foreground", "light_foreground": "foreground"}
+	// Keep legacy 16-slot recipes and their exported keys stable. New normal
+	// palettes carry literal white and black swatches in their baseline.
+	if d.Options.Mode == "normal" && d.Baseline["white"] != "" && out["success"] == "" {
+		out["success"] = out["green"]
+	}
 	// Selection is resolved first because selection_background references it.
 	if out["selection"] == "" {
 		out["selection"] = out["muted"]

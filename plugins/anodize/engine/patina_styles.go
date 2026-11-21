@@ -19,6 +19,7 @@ type PatinaOptions struct {
 }
 
 type PatinaMapping struct {
+	previewGeometry     *PatinaGeometry
 	options             PatinaOptions
 	swatches            []swatch
 	ramp                []color.OKLab

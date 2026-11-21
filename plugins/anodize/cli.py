@@ -19,7 +19,7 @@ from progress import configure, sequence, permanent_output
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'lib/dots/files'))
 from catalog import Presentation
 from transactions import digest, exists, parents_safe
-from authoring import Author, encode, new_document, regular_bytes, toml_colors
+from authoring import Author, check_regular, encode, new_document, regular_bytes, toml_colors
 from logo import add_options, render as render_logo
 
 
@@ -126,6 +126,8 @@ def parser():
         if action not in ('modes', 'list'):
             q.add_argument('--interactive', action='store_true', default=argparse.SUPPRESS, help='Guide inputs and preview choices')
         q.add_argument('--json', action='store_true', help='Emit versioned JSON')
+        if action == 'extract':
+            q.add_argument('--all-modes', action='store_true', help='Preview every mode and review a palette to view, save or apply')
         if action in ('extract', 'import', 'patina'):
             q.add_argument('file', nargs='?', help='Local image file' if action != 'import' else 'Local blueprint or palette file')
         elif action not in ('modes', 'list'):
@@ -162,6 +164,8 @@ def parser():
             q.add_argument('--name', metavar='ID', help='New theme identifier for the repository copy')
         if action == 'patina':
             source = q.add_mutually_exclusive_group()
+            source.add_argument('--all-themes', action='store_true', help='Browse recolorings across available themes')
+            q.add_argument('--all-styles', action='store_true', help='Browse compatible styles for one palette or every theme')
             source.add_argument('--theme', metavar='ID', help='Use the rendered colors of this Dots theme')
             source.add_argument('--palette-image', metavar='FILE', help='Extract the palette from this reference image')
             from patina import DEFAULT_STYLE, STYLES, HARMONIES, FORMATS, percent, stop_names
@@ -187,7 +191,7 @@ def parser():
 
 
 @permanent_output()
-def present(result, use_json=False, palette=None):
+def present(result, use_json=False, palette=None, *, pending_choice=False):
     if use_json:
         sys.stdout.buffer.write(encode(result))
         return
@@ -277,7 +281,7 @@ def present(result, use_json=False, palette=None):
                     emit(f'  {key:<22} {value}')
     for note in result.get('notes', []):
         detail('Note', note)
-    if result.get('status') == 'preview':
+    if result.get('status') == 'preview' and not pending_choice:
         emit('  Preview only; no changes made. Use --yes to apply.')
     if view is not None:
         view.fill()
@@ -311,7 +315,7 @@ def confirm(args, view, palette=None):
     if args.json or not sys.stdin.isatty():
         present(view, args.json, palette)
         return False
-    present(view, palette=palette)
+    present(view, palette=palette, pending_choice=True)
     approved = gum_confirm('Apply this plan?')
     if approved is not None:
         return approved
@@ -428,12 +432,12 @@ def main(argv=None):
         run(author, args, confirm, present)
         return
     if action == 'extract':
-        opts = dict(mode=args.mode or 'normal', light=args.light)
-        doc = new_document('preview', author.generate(args.file, options=opts), **dict(light=opts['light'], mode=opts['mode']))
-        if args.interactive and not args.mode:
-            from interactive import select_mode
-            doc = select_mode(author, doc, args.file)
-        present_result(dict(author.render(doc), id='preview'), args)
+        if args.interactive:
+            review_extraction(author, args)
+        else:
+            opts = dict(mode=args.mode or 'normal', light=args.light)
+            doc = new_document('preview', author.generate(args.file, options=opts), **opts)
+            present_result(dict(author.render(doc), id='preview'), args)
         return
     if action in ('create', 'import', 'edit'):
         with sequence('Anodize '+action, 3) as phases:
@@ -543,36 +547,83 @@ def main(argv=None):
             present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
         return
     if action == 'apply':
-        with sequence('Anodize apply', 2) as phases:
-            with phases.step('Prepare theme application'):
-                # Always obtain the publisher's real preflight before approval.
-                wallpaper = None
-                if args.background:
-                    doc = author.load(args.id)
-                    wallpaper = doc.get('wallpaper')
-                    if wallpaper and not Path(wallpaper).is_absolute():
-                        wallpaper = str(author.target(args.id) / wallpaper)
-                    if wallpaper:
-                        regular_bytes(wallpaper, 32 << 20)
-                        if Path(wallpaper).suffix.lower() == '.gif':
-                            raise ValueError('wallpaper activation requires PNG or JPEG; GIF palettes can still be applied without --background')
-                raw, _ = author.theme_bridge('plan', args.id, *(['background', wallpaper or ''] if args.background else []))
-                view = json.loads(raw)
-                view.update(id=args.id, target=view['publish'], notes=['Apply wallpaper too.'] if args.background else [])
-                if wallpaper:
-                    view['wallpaper'] = wallpaper
-            if confirm(args, view):
-                with phases.step('Apply theme'):
-                    raw, diagnostics = author.theme_bridge('apply', args.id, *(['background', wallpaper or ''] if args.background else []))
-                with permanent_output():
-                    if diagnostics:
-                        render_logo(Presentation(sys.stderr))
-                        sys.stderr.flush()
-                        sys.stderr.buffer.write(diagnostics)
-                present(dict(json.loads(raw), id=args.id), args.json)
-            else:
-                phases.cancel()
+        apply_theme(author, args)
+
+
+def review_extraction(author, args):
+    from interactive import candidates, choose, choice, entry
+    source = Path(args.file).absolute()
+    check_regular(source, 32 << 20)
+    before = digest(source)
+    draft = dict(id='preview', schema=1, options=dict(mode=args.mode or 'normal', light=args.light),
+                 adjustments={}, overrides={}, baseline={})
+    rows = candidates(author, draft, str(source), [args.mode] if args.mode else None)
+    names = [row['id'] for row in rows]
+    state = {}
+    while True:
+        index = choose('Extraction mode', names, rows, state=state, swatches=True) if len(rows) > 1 else 0
+        row = rows[index]
+        actions = ['View palette', 'Save as theme', 'Save and apply']
+        if len(rows) > 1:
+            actions.append('Back to modes')
+        preview = dict(author.render(row['document']), id=row['id'])
+        present(preview)
+        selected = actions[choose('Review ' + row['id'], actions, [row] * len(actions))]
+        if selected == 'Back to modes':
+            continue
+        if selected == 'View palette':
+            present_result(preview, args)
             return
+        doc = dict(row['document'], id=entry('New theme ID'))
+        check_regular(source, 32 << 20)
+        if digest(source) != before:
+            raise ValueError('source changed during preview: ' + str(source))
+        plan = author.prepare(doc, wallpaper=source)
+        plan['guards'][str(source)] = before
+        view = dict(id=doc['id'], status='preview', target=plan['target'], files=sorted(plan['files']))
+        args.yes = args.dry_run = False
+        if not confirm(args, view, row['colors']):
+            return
+        receipt = author.save(plan)
+        present(dict(view, status=receipt['status'], transaction=receipt['id']), False, row['colors'])
+        if selected == 'Save and apply':
+            args.id = doc['id']
+            args.background = choice('Apply', ['Theme only', 'Theme and wallpaper']) == 'Theme and wallpaper'
+            apply_theme(author, args)
+        return
+
+
+def apply_theme(author, args):
+    with sequence('Anodize apply', 2) as phases:
+        with phases.step('Prepare theme application'):
+            # Always obtain the publisher's real preflight before approval.
+            wallpaper = None
+            if args.background:
+                doc = author.load(args.id)
+                wallpaper = doc.get('wallpaper')
+                if wallpaper and not Path(wallpaper).is_absolute():
+                    wallpaper = str(author.target(args.id) / wallpaper)
+                if wallpaper:
+                    regular_bytes(wallpaper, 32 << 20)
+                    if Path(wallpaper).suffix.lower() == '.gif':
+                        raise ValueError('wallpaper activation requires PNG or JPEG; GIF palettes can still be applied without --background')
+            raw, _ = author.theme_bridge('plan', args.id, *(['background', wallpaper or ''] if args.background else []))
+            view = json.loads(raw)
+            view.update(id=args.id, target=view['publish'], notes=['Apply wallpaper too.'] if args.background else [])
+            if wallpaper:
+                view['wallpaper'] = wallpaper
+        if confirm(args, view):
+            with phases.step('Apply theme'):
+                raw, diagnostics = author.theme_bridge('apply', args.id, *(['background', wallpaper or ''] if args.background else []))
+            with permanent_output():
+                if diagnostics:
+                    render_logo(Presentation(sys.stderr))
+                    sys.stderr.flush()
+                    sys.stderr.buffer.write(diagnostics)
+            present(dict(json.loads(raw), id=args.id), args.json)
+        else:
+            phases.cancel()
+        return
 
 
 if __name__ == '__main__':

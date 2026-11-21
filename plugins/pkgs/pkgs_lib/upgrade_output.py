@@ -20,6 +20,11 @@ STAGES = {'install': 'Installing', 'upgrade': 'Upgrading', 'uninstall': 'Removin
 NPM_NOTICES = re.compile(r'^npm warn (?:using --force Recommended protections disabled\.|'
                         r'install-scripts \.npmrc allow-scripts setting is being ignored because '
                         r'--allow-scripts was passed on the command line)$', re.I)
+UV_HARDLINK_NOTICE = (
+    'warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.',
+    'If the cache and target directories are on different filesystems, hardlinking may not be supported.',
+    'If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.',
+)
 PIP_CONFLICT = ("pip's dependency resolver does not currently take into account all the packages "
                 'that are installed. This behaviour is the source of the following dependency conflicts.')
 PIP_CONFLICT_ROW = re.compile(r'^\S+ \S+ requires .+, (?:which is not installed\.|'
@@ -84,6 +89,7 @@ class Output:
         self.extra = 0
         self.pause = None
         self.mirror_sync = False
+        self.uv_notice_advice = {}
         self.updated = None
         self.failed, self.partial_result, self.target = [], False, ''
         if manager == 'npm' and action in ('install', 'upgrade'):
@@ -130,6 +136,7 @@ class Output:
 
     def begin(self, command=None):
         self.stage, self.package = self.default_stage, self.target
+        self.uv_notice_advice.clear()
         self.pkg_apt = bool(self.manager == 'apt' and self.action == 'upgrade' and command and
                             re.split(r'[/\\]', command[0])[-1] == 'pkg')
         self.apt_phase = 'repositories' if self.pkg_apt else ''
@@ -311,6 +318,16 @@ class Output:
         if ending and self.manager == 'npm' and re.match(r'^npm warn deprecated\b', text, re.I):
             return  # Available in raw output; never inflate diagnostic counts/tails.
         if ending and self.manager == 'npm' and NPM_NOTICES.fullmatch(text): return
+        if ending and self.manager == 'uv-tool' and self.action == 'upgrade':
+            # The last advice line is also used by other uv warnings.
+            advice = self.uv_notice_advice.pop(stream, ())
+            if text == UV_HARDLINK_NOTICE[0]:
+                self.uv_notice_advice[stream] = UV_HARDLINK_NOTICE[1:]
+                return
+            if advice and text == advice[0]:
+                if len(advice) > 1:
+                    self.uv_notice_advice[stream] = advice[1:]
+                return
         if ending and self.manager == 'pip':
             if text.removeprefix('ERROR: ') == PIP_CONFLICT:
                 self.conflicts = self.conflict_rows = True

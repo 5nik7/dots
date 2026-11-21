@@ -87,8 +87,8 @@ Authoring commands accept `--json` for a schema-1 response unless they return a 
 | Route | Inputs and behavior |
 | --- | --- |
 | `completion SHELL` | Print Bash, Zsh, Fish or PowerShell completion source; no engine required. |
-| `modes` | List the 35 palette modes with descriptions. |
-| `extract IMAGE` | Inspect colors and foreground/background contrast without saving. Supports `--mode`, `--light`, `--dark`. |
+| `modes` | List the 36 palette modes with descriptions. |
+| `extract IMAGE` | Inspect colors and foreground/background contrast. Use `--all-modes` for interactive comparison, or select one with `--mode`. Both support `--light` and `--dark`. |
 | `patina IMAGE` | Recolor a PNG, JPEG or first GIF frame using `--theme ID` or `--palette-image FILE`. See [Patina](#patina). |
 | `create ID` | Exactly one of `--image FILE`, `--color '#RRGGBB'`, `--from THEME`. Supports generation flags, `--adjust NAME=VALUE`, `--set COLOR=HEX`, and `--reference-wallpaper`. |
 | `import FILE --name ID --format FORMAT` | Import `anodize`, `aether`, `base16`, or `colors`. Supports generation flags and `--reference-wallpaper`. |
@@ -103,6 +103,12 @@ Authoring commands accept `--json` for a schema-1 response unless they return a 
 Patina, create, import, edit, promote, export-to-file and apply accept `--dry-run` and `--yes`. Raw stdout export is already read-only; `--dry-run` requires `--output`. Raw exports and app previews never receive ANSI decoration. Diagnostics go to stderr. Exit status is 0 for success/preview, 2 for argument usage errors, and 1 for validation or operational failures.
 
 IDs start with a lowercase letter and contain lowercase letters, digits, `_` or `-`. New IDs refuse repository and installed-user-theme collisions. PNG, JPEG and GIF input is limited to 32 MiB and 20 million pixels; palette extraction requires at least one sufficiently opaque sampled pixel. Extraction defaults to normal/dark. `--light` and `--dark` are mutually exclusive. Use `modes` as the authoritative list of modes.
+
+### Compare extraction modes
+
+Run `anodize extract forest.jpg --all-modes` to browse every mode in dark mode. Add `--light` to compare light palettes. The FZF list includes swatches when terminal color is enabled. Its preview shows syntax, status colors and the candidate’s background. Enter opens a review where you can view the palette, return to the list, or save it as a new personal theme. **Save and apply** saves the accepted palette and opens the normal activation review. Declining activation keeps the saved theme. Plain `extract` prints its result directly.
+
+The default `normal` mode measures the actual area occupied by neighboring hues and uses darker shades of the dominant family for dark backgrounds or lighter shades for light backgrounds. It pairs this with a subtly tinted near-white or near-black foreground, targeting 7:1 contrast. It looks for red, green, yellow, blue, cyan, magenta, orange and brown in the image. Missing hues take related shades with enough color to remain recognizable even on a grayscale source. Error, warning, success, info and hint follow red, yellow, green, blue and cyan, targeting at least 4.5:1 before user adjustments. Use `--mode source-tonal` to reproduce the earlier default. A saved theme uses its stored baseline until you regenerate it.
 
 ## Patina
 
@@ -121,7 +127,18 @@ Use `--yes` to save unattended. The command asks for confirmation at a terminal.
 
 ### Compare treatments
 
-`--compare` saves a labeled sheet of the original image and all 18 styles at their defaults, with the chosen palette visible above each image. Compare **01 harmonize**, **07 palette-blend** and **18 alloy** to see how they handle the same shadows and hues. The interactive style picker starts with alloy. The sheet accepts `--mode`. `--compare-modes` holds the style and its settings fixed and shows each of the 35 palette modes. A named theme also gets an **as-authored** panel. Both sheets default to PNG beside the input, named `reflekt_styles.png` or `reflekt_modes.png` in these examples. Subsequent saves use the first free numbered suffix. Use the printed style or mode name for the full-resolution export.
+To choose one full-resolution result interactively, use any of these forms:
+
+```sh
+patina reflekt.jpg --all-themes --style palette-blend
+patina reflekt.jpg --theme catppuccin-mocha --all-styles
+patina reflekt.jpg --all-themes --all-styles --output reflect.webp
+patina coast.png --palette-image sunset.jpg --all-styles --output coast-themed.png
+```
+
+`--all-themes` includes personal and bundled themes and defaults to alloy. `--all-styles` includes the styles compatible with the supplied settings. Together they open a single searchable list of theme and style pairs. In FZF, type words such as `mocha palette-blend` to narrow the list and see a recolored thumbnail. Enter reviews the selected image and its destination. **Back to results** restores the FZF search and position. **Save image** writes the reviewed file using the usual encoding and collision rules. The Dots Anodize menu offers the same comparisons under Patina. These shortcuts require a terminal. For a saved sheet, use the comparison flags below.
+
+`--compare` saves a labeled sheet of the original image and all 18 styles at their defaults, with the chosen palette visible above each image. Compare **01 harmonize**, **07 palette-blend** and **18 alloy** to see how they handle the same shadows and hues. The interactive style picker starts with alloy. The sheet accepts `--mode`. `--compare-modes` holds the style and its settings fixed and shows each of the 36 palette modes. A named theme also gets an **as-authored** panel. Both sheets default to PNG beside the input, named `reflekt_styles.png` or `reflekt_modes.png` in these examples. Subsequent saves use the first free numbered suffix. Use the printed style or mode name for the full-resolution export.
 
 | Style | Appearance |
 | --- | --- |
@@ -211,10 +228,10 @@ The adapters are generated from the shared Dots shell adapters; the manual's com
 
 ## Interactive authoring and previews
 
-The Dots Anodize menu includes **extract** after **create**. Extract browses images from the current directory (or an entered path), asks for dark/light and an extraction mode, then shows a scrollable palette result with LOGO1. Interactive Preview and Extract keep results in the shared reader until dismissed; inside tmux the picker host closes before the fitted reader opens. Returning restores the parent menu search. Extraction never saves or applies a theme. Raw app preview bytes remain undecorated, including when an interactive result reader displays them.
+In the Dots Anodize menu, **Extract** follows **Create**. Choose an image, lightness and extraction mode to review the palette. **View palette** opens the scrollable LOGO1 result. **Save as theme** reviews a new personal theme, and **Save and apply** also offers activation. Inside tmux, the picker closes before the fitted reader opens. Leaving the reader restores the parent menu search. App preview bytes retain their raw format.
 
 Run `anodize --interactive` for an action menu, or append `--interactive` to
-`create`, `extract`, `edit`, `show`, `preview`, `apply`, `import`, `export` or
+`create`, `extract`, `patina`, `edit`, `show`, `preview`, `apply`, `import`, `export` or
 `promote`. Missing required inputs open selectors automatically when all terminal
 streams are available; complete commands retain their existing defaults. JSON,
 redirected output, `--yes` and `--dry-run` never auto-open selectors. Explicit

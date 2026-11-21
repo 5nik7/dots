@@ -605,7 +605,7 @@
         },
         {
           "name": "fx",
-          "observed_version": "40.0.1",
+          "observed_version": "40.0.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1424,7 +1424,7 @@
         },
         {
           "name": "mise",
-          "observed_version": "2026.11.10",
+          "observed_version": "2026.11.11",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2558,7 +2558,7 @@
         },
         {
           "name": "uutils-coreutils",
-          "observed_version": "0.12.0",
+          "observed_version": "0.13.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3349,7 +3349,7 @@
         },
         {
           "name": "certifi",
-          "observed_version": "2026.10.23",
+          "observed_version": "2026.11.20",
           "pin": null,
           "selection": "explicit",
           "enabled": true

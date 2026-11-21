@@ -27,11 +27,18 @@ ALIASES = {'bg': 'background', 'fg': 'foreground', 'purple': 'magenta', 'bright_
 LIMIT = 1 << 20
 
 
+def check_regular(path, limit):
+    # Check before reading or hashing, including when the operand is a directory or FIFO.
+    metadata = path.lstat()
+    if not stat.S_ISREG(metadata.st_mode):
+        raise ValueError('input must be a regular file: ' + str(path))
+    if metadata.st_size > limit:
+        raise ValueError('input exceeds size limit: ' + str(path))
+
+
 def regular_bytes(path, limit=LIMIT):
     path = Path(path)
-    # lstat before open prevents blocking on a FIFO supplied as input.
-    if not stat.S_ISREG(path.lstat().st_mode):
-        raise ValueError('input must be a regular file: ' + str(path))
+    check_regular(path, limit)
     with path.open('rb') as stream:
         data = stream.read(limit + 1)
     if len(data) > limit:
@@ -105,7 +112,7 @@ class Author:
                               stderr=subprocess.PIPE, timeout=120)
         if proc.returncode:
             message = proc.stderr.decode(errors='replace').strip()
-            if action in ('patina', 'patina-previews', 'generate-modes') and ('unknown engine action' in message or 'unknown patina style' in message):
+            if action in ('patina', 'patina-previews', 'patina-sample', 'generate-modes') and ('unknown engine action' in message or 'unknown patina style' in message):
                 raise ValueError('Patina requires an updated engine; run python3 -B tools/verify_anodize.py build in Dots')
             raise ValueError(message)
         result = json.loads(proc.stdout if image_stream is None else proc.stderr)

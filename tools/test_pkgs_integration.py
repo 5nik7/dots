@@ -123,12 +123,19 @@ else: raise SystemExit('unexpected manager invocation')
         config=Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json'
         config.parent.mkdir(parents=True,exist_ok=True)
         config.write_text(json.dumps({'upgrade':{'managers':['uv-tool']}}))
+        hardlink_notice = (
+            'warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.\n'
+            '         If the cache and target directories are on different filesystems, hardlinking may not be supported.\n'
+            '         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.'
+        )
+        self.env['TEST_UV_NOTICE'] = hardlink_notice
         fake=self.repo/'bin/uv'
         fake.write_text('#!'+sys.executable+'\n'+'''import json,os,sys
 a=sys.argv[1:]
 if a==['tool','list']: print('typer v0.29.2\\n- typer')
 elif a[:2]==['tool','upgrade']:
     with open(os.environ['TEST_UV_CALLS'],'a') as f:f.write(json.dumps(a)+'\\n')
+    print(os.environ['TEST_UV_NOTICE'],file=sys.stderr)
     if os.environ.get('TEST_UV_FAIL'):
         print('error: Failed to upgrade typer',file=sys.stderr);sys.exit(1)
     print('No changes')
@@ -145,17 +152,22 @@ else: raise SystemExit('unexpected uv invocation')
             self.assertTrue(all(result==results[0] for result in results))
             self.assertIn(b'complete',results[0][0])
             self.assertIn(b'none',results[0][0])
+            self.assertEqual(results[0][1],b'')
         self.assertTrue(all(json.loads(line)==['tool','upgrade','typer','--no-build']
                             for line in calls.read_text().splitlines()))
         self.env['TEST_UV_FAIL']='1'
         for argv in self.surfaces('pkgs',['up','--manager','uv-tool']):
             out,err,_=self.call(argv,code=1)
             self.assertIn(b'failed',out)
+            self.assertIn(b'Failed to upgrade typer',err)
+            self.assertNotIn(b'hardlink',err)
         self.env.pop('TEST_UV_FAIL')
         for mode in ('raw','redirect'):
             if mode=='redirect': self.env.pop('DOTS_MENU_CAPTURE')
             for argv in self.surfaces('pkgs',['up',*(['--raw'] if mode=='raw' else [])]):
-                self.assertIn(b'No changes',self.call(argv)[0])
+                out,err,_=self.call(argv)
+                self.assertIn(b'No changes',out)
+                self.assertIn(hardlink_notice.encode()+b'\n',err)
         for argv in self.surfaces('pkgs',['up','--manager','uv-tool','typer']): self.call(argv)
         self.assertEqual(json.loads(calls.read_text().splitlines()[-1]),['tool','upgrade','typer'])
 

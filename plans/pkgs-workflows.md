@@ -1,5 +1,11 @@
 # Package workflows
 
+## uv hardlink fallback notice (2026-11-21)
+
+Implemented in the compact upgrade summary. It suppresses uv's hardlink-to-copy performance notice and its two advice lines. The standalone, Dots and Python entry points passed with an isolated uv fixture on Termux at 40, 80 and 120 columns. The fixture verified the native failure message and exit status, and the complete notice under `--raw` and ordinary redirection.
+
+The package maintenance owner is `dots-pkgs-maintenance`. No configuration integration change needed because the existing output modes cover this choice. The existing upgrade menu uses the shared summary. Command grammar, completions, installer and bootstrap need no updates for a diagnostic filter. The package guide covers the behavior, so no root README change is needed. Bash and PowerShell use the shared Python observer. Native desktop acceptance remains pending.
+
 ## Termux uv tool source-build prevention (2026-11-19)
 
 Implemented and verified on Termux. Automatic unnamed Termux uv tool upgrades pass native `--no-build`, matching the existing pip wheel policy. Typer's installed Pydantic Core Android wheel remains usable, but a newer Pydantic release requires a Core release without an Android wheel and triggers Maturin. Let uv select a compatible wheel-backed dependency set; preserve failures when resolution is impossible. Preserve named targets, install operations, replacement recipes, explicit build/binary recipe flags and native build/binary environment overrides. Do not hard-code package versions, suppress native failures or add retries.

@@ -11,7 +11,7 @@ COMMAND [options]
 .SH DESCRIPTION
 Create and edit palettes from local images, seed colors, existing Dots themes,
 or imported palette files. Saves use recoverable file transactions.
-Saving does not activate a theme; use the apply command separately.
+Activating a saved theme has its own application review.
 .PP
 Mutating commands prompt on interactive input. Without a terminal or with
 \fB\-\-json\fR, omission of \fB\-\-yes\fR returns a preview.
@@ -68,8 +68,8 @@ is unchanged.
 The Dots menu pins Help to text/horizontal and Preview/Extract to text/base.
 Extract follows Create in the menu and guides image, lightness and mode
 selection.
-Interactive Preview/Extract retain results in a scrollable reader without
-saving or applying themes.
+Preview and the View palette action open a scrollable reader. Saving and
+activating a theme each require review.
 .TP
 .B \-h, \-\-help
 Show help without needing the engine.
@@ -107,6 +107,9 @@ Guide inputs and preview choices.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
+.TP
+.B "\-\-all\-modes"
+Preview every mode and review a palette to view, save or apply.
 .TP
 .B "FILE"
 Local image file.
@@ -436,6 +439,12 @@ Preview without changes; takes precedence over \-\-yes.
 .B "\-\-yes"
 Apply the preview without prompting.
 .TP
+.B "\-\-all\-themes"
+Browse recolorings across available themes.
+.TP
+.B "\-\-all\-styles"
+Browse compatible styles for one palette or every theme.
+.TP
 .B "\-\-theme ID"
 Use the rendered colors of this Dots theme.
 .TP
@@ -530,8 +539,10 @@ IDs start with a lowercase letter and contain lowercase letters, digits,
 underscores or hyphens. Existing theme IDs are never overwritten by create.
 .PP
 PNG, JPEG and GIF inputs are limited to 32 MiB and 20 million pixels.
-Extraction defaults to normal/dark. Run anodize modes for the complete list
-and descriptions.
+Normal uses the dominant image family, readable tinted text and recognizable
+named colors. Use source-tonal for the original tonal palette.
+Extract --all-modes previews each palette. Review one to view, save a new
+theme or save and apply it.
 Light and dark flags are mutually exclusive.
 .PP
 Adjustments are absolute values applied to the saved baseline. Repeating
@@ -551,6 +562,8 @@ Alloy (default) keeps palette-blend lightness and blends its color with a
 quarter share of harmonize. Use --harmony for the harmonize contribution.
 Harmonize anchors shadows, hue-matched midtones and highlights to theme
 colors. Natural preserves the earlier lightness-based treatment.
+Use --all-themes, --all-styles or both to browse recolored thumbnails. Review
+and save one full-size result.
 Use --compare for a numbered sheet of all styles or --compare-modes for the
 selected style across all palette modes.
 Gradient and duotone accept ordered palette names with --stops. Exact and

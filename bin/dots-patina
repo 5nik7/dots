@@ -3,9 +3,11 @@
 # dots:summary=Recolor an image with a theme or an extracted palette
 # dots:usage=IMAGE [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
-# dots:option=--mode||choice:normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high-contrast,duotone,dominant,accent-pop,hue-balanced,tonal-range,teal-orange,faded-film,cyanotype,risograph,jewel-tones,accented-analogous,pentadic,neutral-accent|Temporary theme variant or reference extraction mode
+# dots:option=--mode||choice:normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high-contrast,duotone,dominant,accent-pop,hue-balanced,tonal-range,teal-orange,faded-film,cyanotype,risograph,jewel-tones,accented-analogous,pentadic,neutral-accent,source-tonal|Temporary theme variant or reference extraction mode
 # dots:option=--light||flag|Generate light colors
 # dots:option=--dark||flag|Generate dark colors
+# dots:option=--all-themes||flag|Browse recolorings across available themes
+# dots:option=--all-styles||flag|Browse compatible styles for one palette or all themes
 # dots:option=--theme||theme-id|Use the rendered colors of a Dots theme
 # dots:option=--palette-image||file|Extract the palette from a reference image
 # dots:option=--output||file|New image destination (extension selects the encoder)
@@ -17,7 +19,7 @@
 # dots:option=--style||choice:harmonize,gradient,duotone,exact,shaded,natural,palette-blend,color-transfer,split-tone,muted,vivid,pastel,night,accent,posterize,dither,ink,alloy|Wallpaper treatment (default alloy)
 # dots:option=--harmony||choice:auto,analogous,complementary,source,palette|Missing-hue rule for alloy, harmonize or natural
 # dots:option=--strength||string|Effect strength from 0 to 100
-# dots:option=--stops||list:background,red,green,yellow,blue,magenta,cyan,foreground,muted,bright_red,bright_green,bright_yellow,bright_blue,bright_magenta,bright_cyan,bright_foreground,accent,cursor,selection,selection_background,selection_foreground,error,warning,info,hint,orange,brown,dark_background,darker_background,lighter_background,dark_foreground,light_foreground|Ordered comma-separated palette names for gradient or duotone
+# dots:option=--stops||list:background,red,green,yellow,blue,magenta,cyan,foreground,muted,bright_red,bright_green,bright_yellow,bright_blue,bright_magenta,bright_cyan,bright_foreground,accent,cursor,selection,selection_background,selection_foreground,error,warning,info,hint,orange,brown,dark_background,darker_background,lighter_background,dark_foreground,light_foreground,white,black,success|Ordered comma-separated palette names for gradient or duotone
 # dots:option=--dry-run||flag|Preview without saving
 # dots:option=--yes||flag|Save without prompting
 # dots:argument=1|file|Input file

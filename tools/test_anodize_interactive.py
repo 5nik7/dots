@@ -170,13 +170,13 @@ a=Author();p=a.promote('example');Store.save=crash;a.save(p)
                 doc['overrides']['accent'] = '#123456'
                 start = time.monotonic()
                 rows = interactive.candidates(author, doc, str(self.image))
-                self.assertEqual(len(rows), 35)
+                self.assertEqual(len(rows), 36)
                 for row in rows:
                     direct = copy.deepcopy(doc)
                     direct['options']['mode'] = row['id']
                     direct['baseline'] = author.generate(self.image, options=direct['options'])
                     self.assertEqual(row['colors'], author.render(direct)['colors'])
-                print(f'35 image modes ({"light" if light else "dark"}): {time.monotonic()-start:.3f}s including direct comparisons')
+                print(f'36 image modes ({"light" if light else "dark"}): {time.monotonic()-start:.3f}s including direct comparisons')
             with tempfile.TemporaryDirectory(dir=self.root) as cache:
                 words = ('anodize', 'create', 'new', '--image', str(self.image), '--mode', '')
                 with redirect_stdout(io.StringIO()):
@@ -277,6 +277,91 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
             render_preview('plain', colors)
         self.assertNotIn('\x1b', output.getvalue())
         self.assertIn('#dddddd', output.getvalue())
+
+    def test_compare_all_pairs_and_export_only_the_winner(self):
+        import cli
+        import patina
+        target = self.root / 'selected.png'
+        expected = self.root / 'direct.png'
+        with self.author() as author:
+            self.assertGreater(len(author.identities()) * len(patina.STYLES), 64)
+            args = parser().parse_args(['patina', str(self.image), '--all-themes', '--all-styles',
+                                        '--output', str(target)])
+            args.interactive, args._provided = True, set()
+            actions = iter(['Back to results', 'Save image'])
+            snapshots = []
+            def choose(title, labels, rows, **options):
+                if title == 'Review image':
+                    self.assertFalse(target.exists())
+                    return labels.index(next(actions))
+                index = labels.index('nord  palette-blend')
+                directory = Path(options['comparison'])
+                snapshots.append(directory)
+                thumbnail = patina.comparison_thumbnail(author, directory, index, rows[index])
+                self.assertGreater(thumbnail['thumbnail']['width'], 0)
+                self.assertEqual(len(list(directory.glob('thumb-*.json'))), 1)
+                return index
+            with mock.patch.object(interactive, 'choose', choose):
+                patina.run(author, args, cli.confirm, mock.Mock())
+            self.assertEqual(snapshots[0], snapshots[1])
+            self.assertFalse(snapshots[0].exists())
+        self.cli('patina', self.image, '--theme', 'nord', '--style', 'palette-blend',
+                 '--output', expected, '--yes')
+        self.assertEqual(target.read_bytes(), expected.read_bytes())
+
+    def test_extraction_review_saves_exact_draft_and_reviews_activation(self):
+        import cli
+        opts = ['extract', str(self.image), '--all-modes']
+        expected = json.loads(self.cli('extract', self.image, '--mode', 'pastel', '--json').stdout)['colors']
+        with self.author() as author:
+            for name, save, activate in [('cancelled', False, False), ('saved', True, False), ('active', True, True)]:
+                args = parser().parse_args(opts)
+                args.interactive = True
+                def choose(title, labels, *unused, **kwargs):
+                    return labels.index('pastel' if title == 'Extraction mode' else 'Save and apply')
+                with mock.patch.object(interactive, 'choose', choose), mock.patch.object(interactive, 'choice', return_value='Theme only'), mock.patch.object(interactive, 'entry', return_value=name), mock.patch.object(cli, 'present'), mock.patch.object(cli, 'confirm', side_effect=[save, activate]):
+                    cli.review_extraction(author, args)
+                self.assertEqual(author.target(name).exists(), save)
+                self.assertEqual(self.active.exists(), activate)
+                if save:
+                    doc = author.load(name)
+                    self.assertEqual(author.render(doc)['colors'], expected)
+                    self.assertEqual(doc['options']['mode'], 'pastel')
+
+    def test_all_pair_fzf_search_and_cancel(self):
+        if not shutil.which('fzf'):
+            self.skipTest('native FZF unavailable')
+        (self.tools/'fzf').symlink_to(shutil.which('fzf'))
+        self.env.update(DOTS_COLOR='always', DOTS_PROGRESS='never')
+        output = self.root/'never.png'
+        self.script = shlex.join([old.BASH, str(self.repo/'bin/patina'), str(self.image),
+                                  '--all-themes', '--all-styles', '--output', str(output)])
+        for columns in (40, 80, 120):
+            result = self.terminal(width=columns, code=130, steps=((b'Patina results:', b'nord palette-blend'),
+                                   ('▀'.encode(), b'\x1b')), timeout=55)
+            self.assertIn(b'palette-blend', result)
+            self.assertFalse(output.exists())
+
+    def test_patinas_back_restores_search_and_exports_selected_webp(self):
+        from unittest import SkipTest
+        if not shutil.which('fzf'):
+            self.skipTest('native FZF unavailable')
+        try:
+            from PIL import features
+        except ImportError:
+            raise SkipTest('Pillow unavailable')
+        if not features.check('webp'):
+            self.skipTest('WebP encoder unavailable')
+        (self.tools/'fzf').symlink_to(shutil.which('fzf'))
+        self.env.update(DOTS_COLOR='always', DOTS_PROGRESS='never')
+        output, direct = self.root/'chosen.webp', self.root/'direct.webp'
+        self.script = shlex.join([old.BASH, str(self.repo/'bin/patina'), str(self.image), '--all-themes',
+                                  '--all-styles', '--output', str(output)])
+        self.terminal(steps=((b'Patina results:', b'nord palette-blend'), (b'nord palette-blend', b'\r'),
+                             (b'Review image:', b'Back to results\r'), (b'Patina results:', b''),
+                             (b'nord palette-blend', b'\r'), (b'Review image:', b'\r')), timeout=75)
+        self.cli('patina', self.image, '--theme', 'nord', '--style', 'palette-blend', '--output', direct, '--yes')
+        self.assertEqual(output.read_bytes(), direct.read_bytes())
 
     def test_patina_numbered_style_review(self):
         target = self.root/'chosen.png'
@@ -436,6 +521,7 @@ class NativeAnodizeMenus(NativeMenuFixture):
                 self.receive(self.first[1],b'Enter a path');os.write(self.first[1],b'wall');time.sleep(.15);os.write(self.first[1],b'\r')
                 self.receive(self.first[1],b'Lightness:');time.sleep(.15);os.write(self.first[1],b'\r')
                 self.receive(self.first[1],b'Extraction mode:');time.sleep(.15);os.write(self.first[1],b'\r')
+                self.receive(self.first[1],b'View palette');time.sleep(.15);os.write(self.first[1],b'\r')
             else:
                 self.receive(self.first[1],b'sample');time.sleep(.15);os.write(self.first[1],b'\r')
                 self.receive(self.first[1],b'Preview:');time.sleep(.15);os.write(self.first[1],b'\r')

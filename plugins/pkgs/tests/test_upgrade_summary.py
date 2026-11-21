@@ -125,6 +125,24 @@ class UpgradeSummary(unittest.TestCase):
         summary.line('warning: deprecated option','\n',io.StringIO())
         self.assertEqual(summary.warnings,['deprecated option'])
 
+    def test_uv_hardlink_notice_preserves_other_failure_details(self):
+        summary = upgrade_output.Output('uv-tool', self.cfg)
+        out, err = io.StringIO(), io.StringIO()
+        notice, explanation, hint = upgrade_output.UV_HARDLINK_NOTICE
+        warning = 'warning: Failed to hardlink files; destination already exists.'
+        summary.line(warning, '\n', err)
+        summary.line(notice, '\n', err)
+        summary.line('copy failed: disk full', '\n', out)
+        summary.line(explanation, '\n', err)
+        summary.line(hint, '\n', err)
+        self.assertEqual(summary.warnings, [warning.removeprefix('warning: ')])
+        self.assertEqual(list(summary.tail), [warning, 'copy failed: disk full'])
+        self.assertEqual(summary.extra, 0)
+
+        # The same final hint can accompany a different link-mode diagnostic.
+        summary.line(hint, '\n', err)
+        self.assertEqual(summary.tail[-1], hint)
+
     def test_native_warning_is_still_present_in_raw_and_redirected_output(self):
         self.styled_config()
         fake = self.bin/'npm'

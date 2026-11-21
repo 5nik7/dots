@@ -160,7 +160,7 @@ without blocking the transaction or changing its exit status. These reads apply
 only to compact upgrades. The skipped suffix uses the theme's muted foreground.
 Package identities in results and progress default to the active palette's accent through `colors.apps.pkgs`. Manager labels use `colors.apps.pkgs.manager`, defaulting to magenta (pink in the current theme), across owned help, reports, previews, diagnostics and progress.
 Compact npm output hides deprecations and the two routine force/allow-scripts
-notices described in [package output](../../docs/packages.md#output). Other warnings/errors
+notices described in [package output](../../docs/packages.md#output). Compact uv-tool upgrades also hide the hardlink-to-copy performance notice. Other warnings/errors
 remain visible; raw and ordinary redirected output retain all notices.
 Ordinary pip upgrades run per package, continue after failures and report Failed
 targets alongside verified Updated names. Package recipes stop on their own

@@ -221,7 +221,7 @@ Anodize presentation options and LOGO1/LOGO2 precedence are defined by the [logo
 
 ## Implemented Anodize recipe
 
-`themes/ID/anodize.json` is a schema-1 authoring document. [Its recipe contract](anodize.md#recipe-and-ownership) owns baseline colors, absolute adjustments, overrides, generation options, source references and local generated-file receipts. Generated `colors.toml` uses the existing flat-theme contract.
+`themes/ID/anodize.json` is a schema-1 authoring document. [Its recipe contract](anodize.md#recipe-and-ownership) owns baseline colors, absolute adjustments, overrides, generation options, source references and local generated-file receipts. Generated `colors.toml` uses the existing flat-theme contract. New `normal` baselines carry named white, black, orange and brown alongside the sixteen ANSI slots. Rendering supplies success from green after applying overrides. An explicit success value takes precedence.
 
 ### Patina image results
 

@@ -198,12 +198,12 @@ class Anodize(unittest.TestCase):
             suffix = '_styles.png' if number == 0 else '_styles_1.png'
             self.assertEqual(Path(sheet['target']), self.image.with_name(self.image.stem + suffix))
         sheet = json.loads(self.cli(*flags,'--compare-modes','--style','duotone','--stops','fern_tip,foreground','--dark','--dry-run').stdout)
-        self.assertEqual((sheet['panels'][:2],len(sheet['panels']),sheet['light']), (['Original','01 as-authored'],37,False))
+        self.assertEqual((sheet['panels'][:2],len(sheet['panels']),sheet['light']), (['Original','01 as-authored'],38,False))
         self.assertFalse(Path(sheet['target']).exists())
         self.assertEqual(self.recipe('fern'),before)
         ref = json.loads(self.cli('patina',str(self.image),'--palette-image',str(self.image),'--compare-modes',
                                   '--dry-run','--json').stdout)
-        self.assertEqual((len(ref['panels']), ref['style']), (36, 'alloy'))
+        self.assertEqual((len(ref['panels']), ref['style']), (37, 'alloy'))
         self.assertFalse(Path(ref['target']).exists())
 
     def test_patina_reference_modes_and_drift(self):
@@ -324,7 +324,7 @@ class Anodize(unittest.TestCase):
                     self.assertIn('Options', help_text)
         self.assertIn('Choose exactly one source', self.cli('create', '--help').stdout)
         modes=json.loads(self.cli('modes','--json').stdout)['modes']
-        self.assertEqual(len(modes),35)
+        self.assertEqual(len(modes),36)
         self.assertEqual(modes,json.loads(self.dots('anodize','modes','--json').stdout)['modes'])
         self.dots('commands','--check')
         for action in ('create','import','edit','export','apply','preview'):

@@ -1,13 +1,15 @@
 """Patina's staged image export and personal background naming."""
 import argparse
 import base64
+import copy
+import json
 from pathlib import Path
 import shutil
 import stat
 import sys
 import tempfile
 
-from authoring import regular_bytes
+from authoring import encode, regular_bytes
 from file_platform import config_root
 from progress import tracked
 from transactions import DestinationOccupied, digest, exists, parents_safe
@@ -45,7 +47,7 @@ def stop_names(value):
 
 def available_styles(args):
     guided = args.interactive and '--style' not in getattr(args, '_provided', ())
-    styles = PICKER_STYLES if guided else (args.style,)
+    styles = PICKER_STYLES if guided and (not args.all_themes or args.all_styles) else (args.style,)
     return [style for style in styles
             if (args.harmony is None or style in (DEFAULT_STYLE, 'harmonize', 'natural'))
             and (args.strength is None or style not in ('exact', 'shaded'))
@@ -172,7 +174,113 @@ def mode_palettes(author, ids, light, **source):
                        rendered=True, **source)['palettes']
 
 
+def theme_palettes(author, theme, modes, light, dark):
+    doc = author.load(theme)
+    authored = author.render(doc)['colors']
+    light = light or (doc['options']['light'] and not dark)
+    palettes = mode_palettes(author, modes, light, colors=authored) if modes else {}
+    return authored, palettes, light
+
+
+def cache_value(path, generate):
+    """FZF may interrupt a preview worker while another is opening the same row."""
+    if path.is_file():
+        return json.loads(path.read_bytes())
+    value = generate()
+    with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as tmp:
+        tmp.write(encode(value))
+    Path(tmp.name).replace(path)
+    return value
+
+
+def comparison_thumbnail(author, directory, index, row):
+    def build():
+        setup = json.loads((directory / 'sample.json').read_bytes())
+        if row['theme']:
+            def load_colors():
+                mode = setup['mode']
+                authored, palettes, _ = theme_palettes(author, row['theme'], [mode] if mode else [],
+                                                      setup['light'], setup['dark'])
+                return palettes[mode] if mode else authored
+            colors = cache_value(directory / f"palette-{row['theme_index']}.json", load_colors)
+        else:
+            colors = setup['reference_colors']
+        for name in row['settings'].get('stops', ()):
+            if name not in colors:
+                raise ValueError('unknown palette stop: ' + name)
+        thumbs = style_previews(author, setup['sample'], [dict(row['settings'], colors=colors)])
+        return dict(id=row['id'], colors=colors, thumbnail=thumbs[0])
+    return cache_value(directory / f'thumb-{index}.json', build)
+
+
+def compare_interactively(author, args, present):
+    from catalog import Presentation
+    from interactive import choose
+    source = Path(args.file).absolute()
+    guards = {str(source): image_guard(source)}
+    identities = author.identities() if args.all_themes else [args.theme]
+    styles = available_styles(args)
+    rows = [dict(id='  '.join(filter(None, (theme, style))), theme=theme, theme_index=i,
+                 settings=settings(args, style))
+            for i, theme in enumerate(identities) for style in styles]
+    if not rows:
+        raise ValueError('No themes or styles available for comparison')
+    columns, lines = shutil.get_terminal_size()
+    dims = dict(columns=max(1, min(columns, 120)-4), rows=max(1, min(30, lines//2)))
+    sample = author.call('patina-sample', image=base64.b64encode(regular_bytes(source, IMAGE_LIMIT)).decode(),
+                         style='color-transfer' if 'color-transfer' in styles else 'alloy', sample_ink='ink' in styles, **dims)
+    sample = dict(image=sample['image'], transfer_groups=sample['transfer_groups'], geometry=sample['geometry'], **dims)
+    reference_colors = None
+    if args.palette_image:
+        reference = Path(args.palette_image).absolute()
+        guards[str(reference)] = image_guard(reference)
+        mode = args.mode or 'normal'
+        reference_colors = mode_palettes(author, [mode], args.light,
+                    image=base64.b64encode(regular_bytes(reference, IMAGE_LIMIT)).decode())[mode]
+    with tempfile.TemporaryDirectory(prefix='anodize-comparison-') as tmp:
+        directory = Path(tmp)
+        (directory / 'sample.json').write_bytes(encode(dict(sample=sample, reference_colors=reference_colors,
+                                               mode=args.mode, light=args.light, dark=args.dark)))
+        state = {}
+        while True:
+            index = choose('Patina results', [row['id'] for row in rows], rows, state=state, comparison=tmp)
+            row = rows[index]
+            try:
+                candidate = comparison_thumbnail(author, directory, index, row)
+            except (OSError, ValueError) as exc:
+                Presentation().detail('Unavailable', str(exc))
+                if len(rows) == 1:
+                    raise
+                continue
+            selected = copy.copy(args)
+            selected.style = row['settings']['style']
+            selected.theme = row['theme']
+            selected.interactive = False  # The comparison already chose the complete treatment.
+            if any(digest(path) != before for path, before in guards.items()):
+                raise ValueError('Patina input changed during comparison')
+            back = False
+            def review(_args, view, colors):
+                nonlocal back
+                present(view, False, colors, pending_choice=not selected.dry_run)
+                if selected.dry_run:
+                    return False
+                actions = ['Save image', 'Back to results', 'Cancel']
+                detail = dict(candidate, target=view['target'], thumbnail=view.get('thumbnail', candidate['thumbnail']))
+                action = actions[choose('Review image', actions, [detail] * len(actions))]
+                back = action == 'Back to results'
+                return action == 'Save image'
+            render_selected(author, selected, review, present, candidate['colors'], guards)
+            if not back:
+                return
+
+
 def run(author, args, confirm, present):
+    if args.all_themes or args.all_styles:
+        return compare_interactively(author, args, present)
+    return render_selected(author, args, confirm, present)
+
+
+def render_selected(author, args, confirm, present, preview_colors=None, preview_guards=None):
     source = Path(args.file).absolute()
     guards = {str(source): image_guard(source)}
     automatic = args.output is None
@@ -185,11 +293,8 @@ def run(author, args, confirm, present):
         for name in ('anodize.json', 'theme.toml', 'colors.toml', 'palette.toml'):
             path = theme_dir / name
             guards[str(path)] = digest(path)
-        doc = author.load(args.theme)
-        authored = author.render(doc)['colors']
-        light = args.light or (doc['options']['light'] and not args.dark)
         ids = mode_ids or ([args.mode] if args.mode else [])
-        palettes = mode_palettes(author, ids, light, colors=authored) if ids else {}
+        authored, palettes, light = theme_palettes(author, args.theme, ids, args.light, args.dark)
         colors = palettes[args.mode] if args.mode else authored
         selection = dict(id=args.theme)
         if ids:
@@ -205,6 +310,11 @@ def run(author, args, confirm, present):
         colors = palettes[mode]
         selection = dict(palette_image=str(reference), mode=mode, light=args.light)
 
+    if preview_colors is not None and colors != preview_colors:
+        raise ValueError('palette changed during comparison')
+    if preview_guards:
+        if any(guards.get(path) != expected for path, expected in preview_guards.items()):
+            raise ValueError('Patina input changed during comparison')
     for name in args.stops or ():
         if name not in colors:
             raise ValueError('unknown palette stop: ' + name)

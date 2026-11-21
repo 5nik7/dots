@@ -20,7 +20,8 @@ func normalizeCounts(counts []int) []float64 {
 }
 
 // GeneratePaletteByMode dispatches to the palette generator for a given mode.
-// In "normal" mode, auto-detects between monochrome and chromatic generators.
+// The source-tonal recipe retains the original monochrome/chromatic selection.
+// The current normal recipe works from original samples before this quantization.
 // weights (optional, aligned with dominantColors) carries per-color image coverage;
 // the default and source-driven modes use it to prioritize common colors.
 func GeneratePaletteByMode(dominantColors []string, weights []float64, lightMode bool, mode string) [16]string {

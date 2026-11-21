@@ -275,7 +275,7 @@ perform these additional inventory reads.
 The ` · N skipped` suffix uses the theme's muted foreground through
 `colors.ui.muted` and its CLI override; the preceding status keeps its success or
 error color. Plain output retains the same text. Compact npm output hides native
-deprecation notices plus the exact native `using --force Recommended protections disabled.` and `.npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line` notices. These do not consume diagnostic counts or failure tails. Other warnings and errors remain visible; `--raw` and ordinary redirected output retain all native notices.
+deprecation notices plus the exact native `using --force Recommended protections disabled.` and `.npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line` notices. Compact uv-tool upgrades also omit uv’s warning and advice when it falls back from hardlinks to a full copy. These notices do not consume diagnostic counts or failure tails. Other warnings and errors remain visible; `--raw` and ordinary redirected output retain all native notices.
 
 Package identities in Installed, Removed, Updated, Failed and script results, and in transient progress, use the active palette's accent by default. Labels, punctuation, exit codes and the `none`/`unavailable` placeholders keep their own styles. Plain/NO_COLOR output retains the same text.
 

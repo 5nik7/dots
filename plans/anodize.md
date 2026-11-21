@@ -53,7 +53,7 @@ Harmonize was the initial hue-matching default, with missing-hue harmony choices
 
 ### Palette modes, comparison sheets and encoders
 
-The ordered engine catalog supplies 35 modes and their descriptions. The integration generator projects its choices into static command metadata for Bash, Zsh, Fish and native PowerShell. Patina derives temporary variants from distinct rendered theme colors and retains custom stop names. The source image is sampled once per sheet. Numbered style and mode sheets, normal exports and all encoders use the existing staged create-only save and undo path.
+The ordered engine catalog supplies 36 modes and their descriptions. The integration generator projects its choices into static command metadata for Bash, Zsh, Fish and native PowerShell. Patina derives temporary variants from distinct rendered theme colors and retains custom stop names. The source image is sampled once per sheet. Numbered style and mode sheets, normal exports and all encoders use the existing staged create-only save and undo path.
 
 The stronger harmonize treatment uses theme shadow, midtone and highlight anchors. Natural preserves the previous treatment. The 17 styles include source-group color transfer, ordered dithering and contour ink. Output suffixes take precedence over the format flag. Optional image writers are preflighted before rendering. CLI and engine fixtures cover image headers, conflicting flags, transparent pixels, collision numbering, theme polarity and repeatable previews.
 
@@ -69,3 +69,11 @@ Alloy uses palette-blend lightness and blends hue and chroma with a 25% harmoniz
 Acceptance compares alloy, palette-blend and harmonize on the Kanagawa fern and Catppuccin village scene. Check implicit and explicit alloy, legacy pixel identity, short-arc hue mixing, near-gray colors, 16-bit alpha, zero strength, picker parity, sheet numbering, all four routes and JPEG-to-WebP export. Native desktop Linux, WSL and Windows PowerShell runtime checks remain separate.
 
 On Termux, both explicit parent styles reproduced the pre-change PNGs byte for byte on both photos. The Kanagawa fern’s tenth-percentile brightness was 32/255 in alloy and palette-blend and 69/255 in harmonize. The Catppuccin village scene measured 39/255, 39/255 and 73/255 respectively. The four routes produced identical default PNGs. One 1920×1080 Go benchmark on Android/arm64 took 3.78 s for alloy, 3.21 s for palette-blend and 3.02 s for harmonize with concurrent checks.
+
+### Interactive comparisons and dominant-color extraction
+
+The Anodize engine owns the default dominant-family recipe and retains the former default as `source-tonal`. The existing Extract menu reviews mode swatches and delegates accepted drafts to authoring and publication. The Patina menu browses themes, styles or both using session-local samples and per-choice thumbnails. Its four entry points share the full-resolution review and create-only output transaction.
+
+**Menu update.** Extend the existing Extract and Patina pickers. **No configuration integration change needed.** Theme, style and mode describe a single comparison and use existing terminal preferences. The current wrappers and engine build cover installation. The root README already links to the canonical guide. Native Linux, WSL and Windows PowerShell 5.1/7 UI acceptance remain separate.
+
+Native Termux checks compared the combined picker’s saved WebP with a direct Nord palette-blend export byte for byte. FZF restored the query after Back, and cancellation at 40, 80 and 120 columns left the destination unused. The theme-only picker numbered repeat saves and the reference-image style picker matched its direct PNG export. On the bundled leaves photograph, five interleaved engine requests during concurrent verification had median times of 0.569 seconds for normal and 0.593 seconds for source-tonal. The default background was `#294229` and the original recipe selected `#060806`.

@@ -1,6 +1,7 @@
 package anodize
 
 import (
+	"errors"
 	"image"
 	stdcolor "image/color"
 	"image/draw"
@@ -61,7 +62,7 @@ func (m *PatinaMapping) map8(out *image.NRGBA) *image.NRGBA {
 		p := out.Pix[i : i+4]
 		if p[3] != 0 {
 			x, y := (i%out.Stride)/4, i/out.Stride
-			c := m.pixelAt(color.RGB{R: float64(p[0]), G: float64(p[1]), B: float64(p[2])}, x, y, m.edge(out, x, y))
+			c := m.mapAt(out, color.RGB{R: float64(p[0]), G: float64(p[1]), B: float64(p[2])}, x, y)
 			p[0], p[1], p[2] = uint8(math.Round(c.R)), uint8(math.Round(c.G)), uint8(math.Round(c.B))
 		}
 	}
@@ -78,7 +79,7 @@ func (m *PatinaMapping) map16(out *image.NRGBA64) *image.NRGBA64 {
 			if p.A == 0 {
 				continue
 			}
-			c := m.pixelAt(color.RGB{R: float64(p.R) / 257, G: float64(p.G) / 257, B: float64(p.B) / 257}, x, y, m.edge(out, x, y))
+			c := m.mapAt(out, color.RGB{R: float64(p.R) / 257, G: float64(p.G) / 257, B: float64(p.B) / 257}, x, y)
 			out.SetNRGBA64(x, y, stdcolor.NRGBA64{uint16(math.Round(c.R * 257)), uint16(math.Round(c.G * 257)), uint16(math.Round(c.B * 257)), p.A})
 		}
 	}
@@ -128,8 +129,8 @@ func sampleRaster(src image.Image, width, height, columns, rows int) image.Image
 	}
 	for y := range lines {
 		for x := range cols {
-			sx := int(int64(2*x+1) * int64(width) / int64(2*cols))
-			sy := int(int64(2*y+1) * int64(height) / int64(2*lines))
+			sx := sampleCoordinate(x, width, cols)
+			sy := sampleCoordinate(y, height, lines)
 			if image.Pt(sx, sy).In(src.Bounds()) {
 				draw.Draw(out, image.Rect(x, y, x+1, y+1), src, image.Pt(sx, sy), draw.Src)
 			}
@@ -151,10 +152,25 @@ func (m *PatinaMapping) Preview(sample image.Image) image.Image {
 }
 
 // Reverse traversal leaves the left and upper neighbors in their original colors.
-func (m *PatinaMapping) edge(src image.Image, x, y int) float64 {
-	if m.options.Style != "ink" {
-		return 0
+func (m *PatinaMapping) mapAt(src image.Image, rgb color.RGB, x, y int) color.RGB {
+	var edge float64
+	if g := m.previewGeometry; g != nil {
+		b := src.Bounds()
+		if m.options.Style == "ink" {
+			edge = g.Edges[y*b.Dx()+x]
+		}
+		x, y = sampleCoordinate(x, g.Width, b.Dx()), sampleCoordinate(y, g.Height, b.Dy())
+	} else if m.options.Style == "ink" {
+		edge = sourceEdge(src, x, y)
 	}
+	return m.pixelAt(rgb, x, y, edge)
+}
+
+func sampleCoordinate(i, full, sampled int) int {
+	return int(int64(2*i+1) * int64(full) / int64(2*sampled))
+}
+
+func sourceEdge(src image.Image, x, y int) float64 {
 	luminance := func(x, y int) float64 {
 		r, g, b, _ := src.At(x, y).RGBA()
 		return (.2126*float64(r) + .7152*float64(g) + .0722*float64(b)) / 65535
@@ -165,13 +181,48 @@ func (m *PatinaMapping) edge(src image.Image, x, y int) float64 {
 
 // PatinaSamples shares one decode between every candidate and its transfer analysis.
 func PatinaSamples(data []byte, width, height int, transfer bool) (image.Image, []color.OKLab, error) {
+	sample, groups, _, err := PreparePatinaSample(data, width, height, transfer, false)
+	return sample, groups, err
+}
+
+// PatinaGeometry retains the source positions for dither and the original
+// neighboring-pixel contrast for ink, which downsampling would otherwise lose.
+type PatinaGeometry struct {
+	Width  int       `json:"width"`
+	Height int       `json:"height"`
+	Edges  []float64 `json:"edges,omitempty"`
+}
+
+func PreparePatinaSample(data []byte, width, height int, transfer, ink bool) (image.Image, []color.OKLab, PatinaGeometry, error) {
 	src, cfg, err := decodeImage(data)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, PatinaGeometry{}, err
 	}
 	var groups []color.OKLab
 	if transfer {
 		groups = TransferGroups(src, cfg.Width, cfg.Height)
 	}
-	return sampleRaster(src, cfg.Width, cfg.Height, width, height/2), groups, nil
+	sample := sampleRaster(src, cfg.Width, cfg.Height, width, height/2)
+	geometry := PatinaGeometry{Width: cfg.Width, Height: cfg.Height}
+	if ink {
+		w, h := sample.Bounds().Dx(), sample.Bounds().Dy()
+		geometry.Edges = make([]float64, w*h)
+		for y := range h {
+			for x := range w {
+				geometry.Edges[y*w+x] = sourceEdge(src, sampleCoordinate(x, cfg.Width, w), sampleCoordinate(y, cfg.Height, h))
+			}
+		}
+	}
+	return sample, groups, geometry, nil
+}
+
+func (m PatinaMapping) PreviewWithGeometry(sample image.Image, g PatinaGeometry) (image.Image, error) {
+	if m.options.Style == "ink" || m.options.Style == "dither" {
+		w, h := sample.Bounds().Dx(), sample.Bounds().Dy()
+		if g.Width < w || g.Height < h || g.Width > MaxImagePixels/g.Height || (m.options.Style == "ink" && len(g.Edges) != w*h) {
+			return nil, errors.New("invalid Patina sample geometry")
+		}
+		m.previewGeometry = &g
+	}
+	return m.Preview(sample), nil
 }

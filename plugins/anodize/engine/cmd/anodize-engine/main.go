@@ -2,16 +2,25 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/5nik7/dots/anodize"
+	"image/png"
 	"io"
+	"maps"
 	"os"
+
+	"github.com/5nik7/dots/anodize"
+	"github.com/5nik7/dots/anodize/color"
 )
 
 type request struct {
-	Modes   []string `json:"modes,omitempty"`
-	Palette []string `json:"palette,omitempty"`
+	IncludeBaselines bool                    `json:"include_baselines,omitempty"`
+	Geometry         *anodize.PatinaGeometry `json:"geometry,omitempty"`
+	SampleInk        bool                    `json:"sample_ink,omitempty"`
+	TransferGroups   []color.OKLab           `json:"transfer_groups,omitempty"`
+	Modes            []string                `json:"modes,omitempty"`
+	Palette          []string                `json:"palette,omitempty"`
 	anodize.PatinaOptions
 	Colors     map[string]string `json:"colors,omitempty"`
 	Format     string            `json:"format"`
@@ -46,6 +55,16 @@ func run() error {
 	}
 	out := map[string]any{"schema": 1}
 	switch r.Action {
+	case "patina-sample":
+		sample, groups, geometry, err := anodize.PreparePatinaSample(r.Image, r.Columns, r.Rows*2, r.Style == "color-transfer", r.SampleInk)
+		if err != nil {
+			return err
+		}
+		var encoded bytes.Buffer
+		if err := png.Encode(&encoded, sample); err != nil {
+			return err
+		}
+		out["image"], out["transfer_groups"], out["geometry"] = encoded.Bytes(), groups, geometry
 	case "patina-previews":
 		return writePatinaPreviews(os.Stdout, r)
 	case "patina":
@@ -58,9 +77,12 @@ func run() error {
 		if err != nil {
 			return err
 		}
+		if r.IncludeBaselines {
+			out["baselines"] = maps.Clone(palettes)
+		}
 		if r.Rendered {
 			for mode, baseline := range palettes {
-				doc := anodize.Document{Schema: 1, Baseline: baseline, Options: anodize.Options{Mode: mode, Light: r.Options.Light}}
+				doc := anodize.Document{Schema: 1, Baseline: baseline, Options: anodize.Options{Mode: mode, Light: r.Options.Light}, Adjustments: r.Document.Adjustments, Overrides: r.Document.Overrides}
 				palettes[mode], err = anodize.Render(doc)
 				if err != nil {
 					return err

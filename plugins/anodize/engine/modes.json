@@ -1,5 +1,5 @@
 [
-  {"id": "normal", "description": "Use source coverage and contrast"},
+  {"id": "normal", "description": "Shade the dominant image family and match named hues"},
   {"id": "monochromatic", "description": "Build a single-hue lightness scale"},
   {"id": "analogous", "description": "Use neighboring hues"},
   {"id": "pastel", "description": "Soften colors with pale tints"},
@@ -33,5 +33,6 @@
   {"id": "jewel-tones", "description": "Use deep saturated gemstone colors"},
   {"id": "accented-analogous", "description": "Accent neighboring hues with their opposite"},
   {"id": "pentadic", "description": "Space five hues around the color wheel"},
-  {"id": "neutral-accent", "description": "Set one source accent against tinted grays"}
+  {"id": "neutral-accent", "description": "Set one source accent against tinted grays"},
+  {"id": "source-tonal", "description": "Use the original coverage-weighted tonal palette"}
 ]

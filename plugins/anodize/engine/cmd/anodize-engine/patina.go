@@ -183,9 +183,13 @@ func renderCandidates(r request, sheet bool) (candidateRender, error) {
 		w, h = tileW-16, tileH-44
 	}
 	transfer := slices.ContainsFunc(r.Candidates, func(c candidate) bool { return c.Style == "color-transfer" })
-	sample, groups, err := anodize.PatinaSamples(r.Image, w, h, transfer)
+	ink := slices.ContainsFunc(r.Candidates, func(c candidate) bool { return c.Style == "ink" })
+	sample, groups, geometry, err := anodize.PreparePatinaSample(r.Image, w, h, transfer && r.Geometry == nil, ink && r.Geometry == nil)
 	if err != nil {
 		return result, err
+	}
+	if r.Geometry != nil {
+		groups, geometry = r.TransferGroups, *r.Geometry
 	}
 	if sheet {
 		result.canvas = image.NewRGBA(image.Rect(0, 0, 3*tileW, (len(r.Candidates)+3)/3*tileH))
@@ -211,7 +215,10 @@ func renderCandidates(r request, sheet bool) (candidateRender, error) {
 		if c.Style == "color-transfer" {
 			mapping.SetTransferGroups(groups)
 		}
-		img := mapping.Preview(sample)
+		img, err := mapping.PreviewWithGeometry(sample, geometry)
+		if err != nil {
+			return result, err
+		}
 		if sheet {
 			x, y := (i+1)%3*tileW, (i+1)/3*tileH
 			label := fmt.Sprintf("%02d %s", i+1, c.Label)

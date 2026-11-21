@@ -49,7 +49,8 @@ class Integration(unittest.TestCase):
     def test_patina_shim_completion(self):
         for shell in ('bash', 'zsh', 'fish'):
             for words, expected in ((['--style', 'gr'], 'gradient'), (['--style', 'ha'], 'harmonize'), (['--style', 'al'], 'alloy'),
-                                    (['--format', 'we'], 'webp'), (['--mode', 'jew'], 'jewel-tones'),
+                                    (['--all-t'], '--all-themes'), (['--all-s'], '--all-styles'),
+                                    (['--mode','source-t'], 'source-tonal'), (['--format', 'we'], 'webp'), (['--mode', 'jew'], 'jewel-tones'),
                                     (['--harmony','com'], 'complementary'), (['--stops=blue,gr'], '--stops=blue,green'), (['--theme', 'du'], 'dusk'),
                                     (['--output='], 'file\t--output='),
                                     (['--palette-image='], 'file\t--palette-image=')):
@@ -88,8 +89,11 @@ class Integration(unittest.TestCase):
         adjustment_names = re.findall(r'"([^"]+)":', re.search(r'fields := map\[string\]\*float64\{([^}]+)\}', core)[1])
         ansi_names = re.findall(r'"([^"]+)"', re.search(r'var names = \[\]string\{([^}]+)\}', core)[1])
         semantic_names = re.findall(r'"([^"]+)":', re.search(r'defaults := map\[string\]string\{([^}]+)\}', core)[1])
+        # Generated normal palettes also supply literal black/white and the success role.
+        named_keys = ansi_names + semantic_names + ['white', 'black', 'success']
+        self.assertIn('candidate\t--all-modes\t', self.candidates('extract', 'wall.png', '--all-'))
         for name in ('create', 'edit'):
-            for flag, names in (('--adjust', adjustment_names), ('--set', ansi_names+semantic_names)):
+            for flag, names in (('--adjust', adjustment_names), ('--set', named_keys)):
                 actual = [line.split('\t')[1] for line in self.candidates(name, 'theme', flag, '').splitlines()]
                 self.assertEqual(actual, [name+'=' for name in names])
         for shell in ('bash', 'zsh', 'fish'):

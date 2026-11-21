@@ -322,3 +322,28 @@ func TestColorTransferPreviewUsesFullImageGroups(t *testing.T) {
 		t.Fatal("thumbnail changed color assignments")
 	}
 }
+
+func TestSpatialPreviewUsesOriginalPixels(t *testing.T) {
+	data := fixtureSize(127, 89)
+	sample, _, geometry, err := PreparePatinaSample(data, 23, 14, false, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, style := range []string{"ink", "dither"} {
+		m, err := NewPatinaMapping([]string{"#271a28", "#429151", "#caa4b8"}, nil, PatinaOptions{Style: style})
+		if err != nil {
+			t.Fatal(err)
+		}
+		preview, err := m.PreviewWithGeometry(sample, geometry)
+		if err != nil {
+			t.Fatal(err)
+		}
+		full, err := m.Render(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(preview, PatinaThumbnail(full, 23, 7)) {
+			t.Errorf("%s sample differs from full render", style)
+		}
+	}
+}

@@ -36,7 +36,7 @@ func document(t *testing.T) Document {
 	return Document{Schema: 1, ID: "fixture", Baseline: p, Options: Options{Mode: "normal"}}
 }
 func TestModesAndDeterminism(t *testing.T) {
-	if len(Modes()) != 35 {
+	if len(Modes()) != 36 {
 		t.Fatal("missing modes")
 	}
 	data := fixture()
@@ -55,7 +55,7 @@ func TestModesAndDeterminism(t *testing.T) {
 				if !reflect.DeepEqual(a, b) {
 					t.Fatal("non-deterministic generation")
 				}
-				if len(a) != 16 {
+				if (mode != "normal" && len(a) != 16) || (mode == "normal" && len(a) != 20) {
 					t.Fatal("expected 16 ANSI colors")
 				}
 				for k, v := range a {
