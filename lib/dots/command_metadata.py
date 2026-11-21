@@ -45,7 +45,7 @@ def parse(lines, path='<metadata>'):
                     if flag:
                         seen.add(flag)
             kind = fields[2] if key == 'option' else fields[1]
-            allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','config-key','profile-id','profile-import','wiki-page','wiki-section'}
+            allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-resource-or-path','file-repository','file-app','file-category','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','config-key','profile-id','profile-import','wiki-page','wiki-section'}
             allowed.update(('todo-id', 'todo-tag', 'config-value'))
             if kind not in allowed and not (kind.startswith(('choice:', 'list:')) and all(kind.partition(':')[2].split(','))):
                 raise ValueError('invalid metadata type: ' + kind)

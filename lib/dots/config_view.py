@@ -289,6 +289,10 @@ def _listing(ui,result):
         entries=config.get(group,{})
         if not entries and not (group=='icons' and weather_rows):continue
         ui.emit();ui.heading(ui.indentation(ui.detail_indent)+group.title())
+        if group=='files' and isinstance(entries,list):
+            for item in entries:
+                ui.detail(item['id'], item['source'] + ' → ' + (item.get('target') or 'unmapped'))
+            continue
         if group=='files':entries={owner+'('+str(len(items))+')':'dots config get files.'+owner for owner,items in entries.items()}
         elif group=='colors':entries=compact_styles(entries,styles)
         elif group=='icons':entries=icon_tree(entries,styles,tmux_options=config.get('apps',{}).get('tmux',{}),

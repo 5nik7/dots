@@ -203,13 +203,16 @@ def run(root, installation, args):
             args.component = pick_many(selector, 'Components', [(c,c) for c in allowed], args.component)
         elif choice.startswith('Files:'):
             if args.action == 'uninstall':
-                ids = sorted({e['id'] for e in installation.entries.values() if component(e['id']) == 'files'})
+                ids = sorted({identity for e in installation.entries.values() for identity in
+                              e.get('catalog_ids', [e['id']] if component(e['id']) == 'files' else [])})
                 rows = [(key,key) for key in ids]
             else:
                 catalog = Catalog(root, installation.platform)
                 for path in catalog.input_paths(): installation.guard(path)
                 rows = [(r['id'],r['id']+' — '+str(r.get('target') or r['status'])) for r in catalog.records()
-                        if r['enabled'] and r['applicable'] and r['status'] not in ('replaced','conflict','unmapped','source-missing','source-broken-link')]
+                        if r['enabled'] and r['applicable'] and r['status'] not in ('replaced','conflict','unmapped')
+                        and (r['status'] not in ('source-missing','source-broken-link')
+                             or r['repository'] == 'theme' and 'themes' in args.component)]
             args.resource = pick_many(selector, 'Catalog files', rows, [r[0] for r in rows] if args.resource is None else args.resource)
             if args.resource and 'files' not in args.component: args.component.append('files')
             if not args.resource and 'files' in args.component: args.component.remove('files')

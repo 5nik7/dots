@@ -23,6 +23,8 @@ Git human views share `apps.git.view` and `--view default|short|verbose` (`-s`/`
 
 Native help shares the configurable `colors.apps.cli.help.*` roles and `apps.cli.tagline` with Bash, including root synopsis/global options and grouped command discovery. With Python available, the native adapter reads the existing literal settings projection once; without Python, built-in default colors and `Manage your dotfiles and more...` keep bootstrap help usable. No Bash or WSL dependency is introduced. Windows application destinations are unchanged. Native PowerShell help fixture evidence is recorded in the Overkill plan; visible terminal acceptance remains pending. See [help preferences](configuration.md#help-and-usage-preferences).
 
+Native PowerShell accepts `files add -g`, `files link` / `ln` with positional or named paths, and `files find` / `fd`. Quote portable paths such as '${PROFILE}/config/example' or pass native absolute paths. The Dots profile directory is available as `$env:PROFILE`. PowerShell retains its own `$PROFILE` automatic variable. `$env:THEME` points to the native active-theme directory. See [managed files](files.md#add-link-and-find).
+
 ## Clipboard history
 
 `dots clipboard` uses the same Python history, watcher, Config and command grammar as Bash. Enable the optional PSReadLine Ctrl-X, Ctrl-V widget explicitly with `Invoke-Expression ((dots clipboard init powershell) -join [Environment]::NewLine)`; it calls PSReadLine `Insert` without executing the selected text. FZF uses the shared native selector; copy/print remain available without editor integration. PowerShell owns object-pipeline/file-redirection encoding, as with cpy/pst. No Bash dependency, WSL path translation or Windows app destination change is introduced. See [clipboard history](clipboard.md); actual Windows PowerShell 5.1/7 editor/desktop acceptance remains pending.
@@ -100,6 +102,8 @@ terminal and PowerShell preview transport, without invoking Bash or WSL. Explici
 reports and `--json` stay noninteractive. `--client` addresses a tmux client and
 has no native Windows equivalent. Native PowerShell 5.1/7 popup, input, save/undo
 and 40/80/120-column acceptance remain pending; see [configuration popup](profiles.md#configuration-popup).
+
+`dots.ps1 files relink`, `prune` and `sync` use the shared active-profile controller and native path and link adapters. Bare invocation and `--json` preview the plan. Use `-i` for per-item review or `--yes` to apply eligible actions. [Profile maintenance](files.md#relink-and-prune-the-active-profile)
 
 `dots.ps1 files repair` uses the same repair planner, issue helper, guarded queue, flags, JSON and completion as Bash, with native app destinations. FZF/Gum are optional; numbered selection and text confirmation work without Bash. `--yes` applies automatic repairs only. It does not silently substitute copies for links. Native Windows PowerShell 5.1/7 repair/recovery and 40/80/120-column interaction acceptance remain pending; see [repair](files.md#repair-managed-destinations).
 

@@ -49,6 +49,12 @@ class NativeAnodize(unittest.TestCase):
         preview = self.command('patina',*args).stdout
         self.assertEqual(preview, self.command('anodize','patina',*args).stdout)
         self.assertEqual(json.loads(preview)['style'], 'alloy')
+        batch = [str(image), '--all-themes', '--yes', '--dry-run', '--json']
+        plan = self.command('patina', *batch).stdout
+        self.assertEqual(self.command('anodize', 'patina', *batch).stdout, plan)
+        self.assertEqual([(row['id'], row['style']) for row in json.loads(plan)['outputs']],
+                         [('native-fixture', 'alloy')])
+        self.command('patina', str(image), '--all-themes', '--yes', expected=2)
         gradient = json.loads(self.command('patina',*args,'--style','gradient','--stops','red,blue','--strength','70').stdout)
         self.assertEqual((gradient['stops'], gradient['strength']), (['red','blue'],70))
         saved = json.loads(self.command('patina',*args,'--yes').stdout)

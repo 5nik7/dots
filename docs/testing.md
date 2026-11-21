@@ -1517,6 +1517,24 @@ The same suite invokes the standalone command in an owned shell and PTY, covers 
 
 Run `python3 -B tools/test_tmux_quota.py -v`, then the affected `tools/test_tmux_widgets.py`, `tools/test_gitmux.py`, `tools/test_tmux_status.py`, `tools/test_config_layout.py` and Config style/value/discovery/completion/live suites sequentially. The quota suite uses synthetic accounts, a fake aistat executable, owned cache/auth metadata and private tmux clients. It covers active weekly selection, thresholds/zero, failure retention, timeout, concurrent refresh coalescing, identity drift, warm-render latency, visibility and right-side cell placement at 40/80/120 columns. No live usage or credential refresh is a test. Termux/private-client evidence does not establish native Linux/WSL visuals or PowerShell 5.1/7 Config behavior.
 
+## Profile file mappings
+
+Run these suites from the checkout with Python 3:
+
+```sh
+python3 -B tools/test_flat_file_profiles.py
+python3 -B tools/test_file_list_view.py
+python3 -B tools/test_file_path_workflows.py
+python3 -B tools/test_file_maintenance.py
+python3 -B tools/test_file_registration_ids.py
+python3 -B tools/test_flat_mapping_lifecycle.py
+python3 -B tools/test_profile_theme_links.py
+```
+
+They use temporary profiles, application directories, and state to exercise portable source paths, profile inheritance, add/link/find, discovery consent, mapping edits, repair, and profile-declared theme publication. Registration tests cover filename collisions within a batch, inactive and retired IDs, and system configuration categories. Discovery tests compare positional roots and repeatable `--path` options. Run `tools/test_installation.py` for setup and uninstall, including Yazi flavor directory links and migration from individually linked flavor files. Native Windows PowerShell 5.1/7, WSL, and desktop Linux acceptance require their respective hosts.
+
+Use the list-view suite to check both sides of the short layout boundary. At 49 columns, linked files stack with a two-space destination indent, fitting linked directories use a single source icon, and exceptional statuses use headings. Grouped stashed IDs belong at the end. At 50 columns, fitting linked files use the wide inline layout. Check `󱞩` and the plain `->` on stacked destinations, the theme’s `dark_foreground` arrow color across widths, and the existing 40/80/120-column cases for long basenames, native path separators and control characters. `tools/test_files.py` covers explicit sorting, grouping preferences and the data contracts. `tools/test_config_values.py` exercises the list settings, validation and profile inheritance.
+
 ## Shared Markdown viewer checks
 
 Run `python3 -B tools/test_markdown_viewer.py` for renderer order, explicit choices,

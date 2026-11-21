@@ -210,6 +210,9 @@ dt_set() (
   dots::progress_step_start 'Generating theme'
   dt_prepare_generation "$previous" "$fingerprint" || exit 1
   dir=$DT_PREPARED
+  if [[ -n ${DT_CONNECTOR_INPUTS:-} ]]; then
+    python3 -B "$DT_LIB/connector_paths.py" verify "$dir" "$DT_CONNECTOR_INPUTS" || exit 1
+  fi
   dt_record "$dir" prepared || exit 1
   trap 'rc=$?; dots::progress_stop; if (( ! complete )); then dt_restore "$dir" || dt_error "recovery required: $dir"; fi; dots::progress_stop; exit "$rc"' EXIT
   trap 'exit 130' INT

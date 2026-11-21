@@ -36,6 +36,10 @@ introduce arbitrary install manifests, hooks, remote bootstrap, package installa
 or native Windows management. See [themes](../themes.md), [files](../files.md),
 [safety](../safety.md), and the three focused plans under `plans/` for the contracts.
 
+## Profile-declared connectors
+
+The flat [profile mapping contract](../files.md#ownership-and-formats) extends connector publication to explicitly declared, enabled generated sources. Installation and publication resolve the same portable mappings and guard the recognized source and destination directories. Theme generations and their recovery data remain in the state store.
+
 ## Authorized local-hook extension (2026-09-29)
 
 The [theme plugin manager](../theme-plugins.md) extends this historical slice with explicitly enabled local post-commit Bash hooks and journaled GTK 3/Qt6ct adapters. Its bounded authorization supersedes the earlier blanket hook exclusion; downloaded themes and palette/template data remain non-executable. Arbitrary user-hook effects remain outside publication rollback.

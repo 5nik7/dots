@@ -110,7 +110,7 @@ class Operations(unittest.TestCase):
         record, = self.records()
         self.assertEqual(record['source'], 'config/gitmux/gitmux.conf')
         self.assertEqual(record['target'], '${HOME}/.gitmux.conf')
-        self.assertEqual(record['id'], 'file-config-gitmux-gitmux-conf')
+        self.assertEqual(record['id'], 'gitmux-conf')
         self.assertEqual(target.resolve(), self.repo / record['source'])
         self.assertEqual(target.read_text(), original)
         inode = target.lstat().st_ino
@@ -420,5 +420,48 @@ store.apply('test',[{'path':str(p),'link':'destination'}],{str(p):t.digest(p)})
         self.run_cli('remove','dots:missing','--yes')
         self.assertEqual(self.path.read_text(),'original\n')
         self.assertEqual(self.records(),[])
+
+    def test_remove_missing_source_keeps_dangling_link_and_undo_restores_mapping(self):
+        source = self.repo/'config/missing'
+        row = dict(id='missing', source='config/missing', target='${CONFIG}/example/settings ü', strategy='link',
+                   app='example', category='config', platforms=['termux','linux','wsl'])
+        self.write('.dots/files.json', dict(schema=1,repository='dots',resources=[row]))
+        self.path.unlink()
+        self.path.symlink_to(source)
+        original = self.path.lstat()
+        self.run_cli('link', 'dots:missing', '--yes', ok=False)
+        self.run_cli('remove', 'dots:missing', '--dry-run', '--json')
+        self.assertEqual(self.records(), [row])
+        result = json.loads(self.run_cli('remove', 'dots:missing', '--yes', '--json').stdout)
+        self.assertEqual(self.records(), [])
+        self.assertFalse(self.path.exists())
+        self.assertEqual(self.path.readlink(), source)
+        self.assertTrue(os.path.samestat(original, self.path.lstat()))
+        self.run_cli('undo', result['id'], '--yes')
+        self.assertEqual(self.records(), [row])
+        self.assertTrue(os.path.samestat(original, self.path.lstat()))
+        from manage import Manager
+        from types import SimpleNamespace
+        with mock.patch.dict(os.environ, self.env, clear=True):
+            manager = Manager()
+            ops, guards, locks, _ = manager.plan(SimpleNamespace(action='remove', values=['dots:missing']))
+            source.write_text('available now')
+            with self.assertRaisesRegex(ValueError, 'changed after preview'):
+                manager.store.apply('remove', ops, guards, catalogs=locks)
+        self.assertEqual(self.records(), [row])
+        self.assertTrue(os.path.samestat(original, self.path.lstat()))
+        self.path.unlink()
+        self.path.symlink_to(self.base/'unrelated')
+        self.run_cli('remove', 'dots:missing', '--yes', ok=False)
+        self.assertEqual(self.records(), [row])
+        self.assertEqual(self.path.readlink(), self.base/'unrelated')
+        other = dict(row, id='other', source='config/other')
+        (self.repo/other['source']).write_text('also available')
+        self.write('.dots/files.json', dict(schema=1, repository='dots', resources=[row, other]))
+        self.path.unlink()
+        self.path.symlink_to(source)
+        self.run_cli('remove', 'dots:missing', '--yes', ok=False)
+        self.assertEqual(self.records(), [row, other])
+        self.assertEqual(self.path.readlink(), source)
 
 if __name__=='__main__': unittest.main()

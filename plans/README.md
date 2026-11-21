@@ -34,6 +34,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Root help and configurable syntax](usage-help.md) | Grouped root help plus shared help colors/tagline across core frontends, bundled apps and aliases; preserved discovery/completion and presentation acceptance. |
 | [Personal fonts](fonts.md) | Official catalogs, retained versions, per-user registration, app connectors, font/glyph browsers and native acceptance. |
 | [Weather command and browser](wttr.md) | Shared standalone/Dots weather, cached-preview browser, session controls and platform acceptance. |
+| [Profile file mappings](profile-file-mappings.md) | Flat profile catalog, source roots, link discovery and active-theme connectors. |
 | [Core command updates](core-updates.md) | Config List/Get/Set, recoverable file-ID edits and singular theme/profile families. |
 | [Configuration coverage](config-coverage.md) | Audit skill, typed controls, native app integrations, tree views and activation verification. |
 | [Configuration popup](config-popup.md) | Profile/default browsing, typed edits, guarded review and per-change undo. |

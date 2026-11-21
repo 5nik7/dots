@@ -155,7 +155,7 @@ class Inventory:
             definitions = schema()
             settings = {name: default for name, (_, default, _) in definitions.items()}
             settings['files.backup'] = False
-            values = dict(settings=settings, environment={}, files={})
+            values = dict(settings=settings, environment={})
             sources = {('settings', key): 'Built-in default' for key in settings}
             for layer in self.selected['layers']:
                 for group in values:
@@ -170,13 +170,12 @@ class Inventory:
                     from config_completion import value_spec
                     self.rows.append(Row(group+'.'+key, value, source, destination, description,
                                          source == destination, kind,constraints=value_spec(self.root,group+'.'+key)))
-            for owner, mappings in values['files'].items():
-                for item in mappings:
-                    identity = owner+':'+item['id']
-                    source = sources['files', owner]
-                    self.rows.append(Row('files.'+identity, item['source'], source, destination,
-                                         'Managed file mapping · '+identity, source == destination,
-                                         'mapping', dict(item, owner=owner)))
+            from profile_config import file_rows
+            for identity, layer, item in file_rows(self.root, self.selected):
+                source = str(Path(layer['root']) / 'profile.json')
+                self.rows.append(Row('files.'+identity, item['source'], source, destination,
+                                     'Managed file mapping · '+identity, source == destination,
+                                     'mapping', dict(item, owner=identity.split(':', 1)[0])))
         from config_refresh import explain, active, read_json
         from files.file_platform import state_root
         try:
@@ -295,6 +294,7 @@ class Draft:
              ('; automatic refresh disabled' if visual and self.inventory.no_refresh else
               '; '+__import__('codex_toast').ACTIVATION if self.row.kind=='codex' else
               '; next Fonts invocation or popup' if key.startswith('apps.fonts.') else
+              '; next dots files list invocation' if key == 'apps.files' or key.startswith('apps.files.') else
               '; next invocation; no theme refresh' if key in ('apps.cli.tagline','apps.cli.progress','apps.git.view') or key.startswith(('colors.apps.cli.help.','colors.apps.cli.progress.','icons.progress.bar.','icons.apps.cli.progress.bar.','icons.git.status.','icons.apps.cli.git.status.','colors.apps.pkgs.')) else
               '; next popup' if key.startswith('apps.menu.popup.') else '; refresh: '+(', '.join(effect['consumers']) or 'no active change') if effect else '')),
             ('Recovery', 'Retained transaction; undo command shown after saving')], ui=ui)

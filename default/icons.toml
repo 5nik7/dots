@@ -131,6 +131,7 @@ right = "]"
 [status]
 error = ""
 info = "󰋽"
+stashed = ""
 success = ""
 todo = "󰄬"
 waiting = ""

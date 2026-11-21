@@ -151,6 +151,7 @@ def inspect(root):
     for row in paths: row['present'] = row['path'] in os.environ.get('PATH', '').split(os.pathsep)
     values['THEMESCMD'] = dict(value=str(root / ('bin/theme.ps1' if os.name == 'nt' else 'bin/theme')), source='checkout')
     values['THEMESBIN'] = dict(value=str(state_root() / 'themes/commands/current/bin'), source='resolved')
+    values['THEME'] = dict(value=str(state_root() / 'current/theme'), source='resolved', group='Current theme')
     values['DOTS_THEME_ID']['group'] = 'Current theme'
     values['PATH'] = dict(value=os.environ.get('PATH', ''), source='inherited', group='Paths', contributions=paths)
     for entry in os.environ.get('DOTS_ENV_HOOKS', '').split(';'):

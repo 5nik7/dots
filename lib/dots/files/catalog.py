@@ -26,14 +26,14 @@ PLATFORMS = {"termux", "linux", "wsl", "windows"}
 
 class Presentation:
     """Python rendering of the same terminal/color/icon policy as ui.bash."""
-    def __init__(self, stream=None, *, terminal=None, detail_indent=None):
+    def __init__(self, stream=None, *, terminal=None, detail_indent=None, force_human=False, minimum_width=24):
         self.stream = stream if stream is not None else sys.stdout
         terminal = (self.stream.isatty() if terminal is None else terminal) and os.environ.get("TERM", "dumb") != "dumb"
         mode, icons = os.environ.get("DOTS_COLOR", "auto"), os.environ.get("DOTS_ICONS", "auto")
         self.color = mode == "always" or (mode == "auto" and terminal and not os.environ.get("NO_COLOR"))
         self.icons = icons == "always" or (icons == "auto" and terminal)
-        self.human = self.stream.isatty() or terminal or mode == "always" or icons == "always"
-        self.width = max(24, shutil.get_terminal_size((80, 24)).columns)
+        self.human = force_human or self.stream.isatty() or terminal or mode == "always" or icons == "always"
+        self.width = max(minimum_width, shutil.get_terminal_size((80, 24)).columns)
         from config_values import value
         self.formatting=value('formatting.apps.cli',{}) if self.human else {}
         self.detail_indent = self.formatting.get('indent',4) if detail_indent is None else detail_indent
@@ -290,7 +290,8 @@ class Presentation:
     def status(self, status):
         if status in ("linked", "available", "tracked", "managed", "restored", "removed", "published", "unchanged"):
             code, icon = "92", self.icon("status.success", "") if self.icons else "[+]"
-        elif status in ("candidate", "existing-source", "create", "prepare", "restore", "remove", "register-existing-link", "register-and-link"):
+        elif status in ("candidate", "existing-source", "create", "prepare", "restore", "remove", "remove-mapping",
+                        "register-existing-link", "register-and-link"):
             code, icon = "94", self.icon("status.info", "󰋽") if self.icons else "[i]"
         elif status in ("conflict", "broken-link", "source-broken-link", "source-missing", "unavailable", "linked-elsewhere"):
             code, icon = "91", self.icon("status.error", "") if self.icons else "[x]"
@@ -300,7 +301,7 @@ class Presentation:
             code, icon = "93", self.icon("status.warning", "") if self.icons else "[!]"
         return self.paint(f"{icon} {status.replace('-', ' ')}", code)
 
-    def render(self, action, rows, platform, repository=None):
+    def render(self, action, rows, platform, repository=None, *, details=False):
         titles = {"sources": "File sources", "list": "Files", "locate": "Located files", "discover": "Discovered files", "show": "File details", "track": "Tracked file"}
         self.heading(titles[action])
         noun = ("repository" if len(rows) == 1 else "repositories") if action == "sources" else ("resource" if len(rows) == 1 else "resources")
@@ -332,10 +333,10 @@ class Presentation:
                     self.detail('Strategy', row.get('strategy'))
                     if row.get('reason'):
                         self.detail('Reason', row['reason'])
-                if action in ("show", "track"):
+                if details or action in ("show", "track"):
                     if 'enabled' in row:
                         self.detail('Enabled', row['enabled'])
-                    for key, label in (("app", "App"), ("category", "Category"), ("repository", "Repository"), ("platforms", "Platforms"), ("applicable", "Applicable"), ("tracked", "Tracked"), ("strategy", "Strategy"), ("target_spec", "Target spec"), ("replaces", "Replaces"), ("replaced_by", "Replaced by"), ("conflicts", "Conflicts"), ("replacement_unavailable", "Unavailable replacement")):
+                    for key, label in (("app", "App"), ("category", "Category"), ("repository", "Repository"), ("platforms", "Platforms"), ("applicable", "Applicable"), ("tracked", "Tracked"), ("strategy", "Strategy"), ("source_spec", "Source spec"), ("target_spec", "Target spec"), ("replaces", "Replaces"), ("replaced_by", "Replaced by"), ("conflicts", "Conflicts"), ("replacement_unavailable", "Unavailable replacement")):
                         if key in row:
                             if key == 'repository':
                                 self.detail_spans(label, [(self.owner_label(row[key]), '94')])
@@ -394,8 +395,14 @@ def atomic_json(path, data):
             os.unlink(name)
 
 
-class Catalog:
-    def __init__(self, root, selected, manifests=None, profile=None, overrides=None):
+from profile_files import ProfileFiles, augmented_sources
+
+
+class Catalog(ProfileFiles):
+    flat = False
+
+    def __init__(self, root, selected, manifests=None, profile=None, overrides=None, *, _names_only=False):
+        self._names_only = _names_only
         self.root = root.resolve()
         self.overrides = overrides or {}
         self.manifests = manifests or {}
@@ -408,24 +415,29 @@ class Catalog:
         source_rows = composition.get('sources', [])
         self.registry_path = self.root / '.dots/files.json'
         self.registry = None
-        if self.registry_path.is_file():
-            registry_doc = self.read_document(self.registry_path, (1,2,3))
-            if registry_doc.get('schema') in (2,3):
-                from registry import Registry
-                self.registry = Registry(registry_doc, source_rows)
-        if composition.get('schema') == 2 and self.registry is None:
-            raise ValueError('core files registry is required: .dots/files.json (schema 2 or 3)')
         from profiles import resolve
         from platform_info import detect
         facts = detect()
         if facts['platform'] != selected:
             facts = dict(facts, platform=selected, distro=selected, family=[])
-        known_paths = {(self.root / row['path']).resolve() for row in source_rows}
         self.profile = profile or resolve(self.root, facts)
         if self.overrides:
             self.profile = dict(self.profile, layers=[
                 dict(self.overrides.get(Path(layer['root'])/'profile.json', layer), root=layer['root'])
                 for layer in self.profile['layers']])
+        self.flat = any(isinstance(layer.get('files'), list) for layer in self.profile['layers'])
+        known_paths = {(self.root / row['path']).resolve() for row in source_rows}
+        if self.flat:
+            source_rows = augmented_sources(self.root, source_rows)
+            known_paths.update((self.root / row['path']).resolve() for row in source_rows if 'path' in row)
+        self.identity_sources = source_rows if self.flat else augmented_sources(self.root, source_rows)
+        if self.registry_path.is_file():
+            registry_doc = self.read_document(self.registry_path, (1,2,3))
+            if registry_doc.get('schema') in (2,3):
+                from registry import Registry
+                self.registry = Registry(registry_doc, self.identity_sources)
+        if composition.get('schema') == 2 and self.registry is None:
+            raise ValueError('core files registry is required: .dots/files.json (schema 2 or 3)')
         for layer in self.profile['layers']:
             path = Path(layer['root'])
             if path.resolve() not in known_paths and (path / '.dots/files.json').is_file():
@@ -436,6 +448,11 @@ class Catalog:
             if not ID.fullmatch(row["id"]) or row["id"] in seen:
                 raise ValueError("duplicate or invalid repository ID")
             seen.add(row["id"])
+            if row.get('virtual'):
+                if row['id'] != 'theme' or 'path' in row:
+                    raise ValueError('invalid virtual source')
+                self.sources.append(dict(row, root=str(self.theme_root), status='available'))
+                continue
             path = self.root / relative(row["path"])
             if not path.resolve().is_relative_to(self.root):
                 raise ValueError("repository escapes dots root")
@@ -447,10 +464,7 @@ class Catalog:
                 if row['id'] == 'dots' and path == self.root and self.profile['layers']:
                     raise ValueError('active profile requires a files.dots declaration')
             self.sources.append(row)
-        allowed = {row['id'] for row in self.sources if row['status'] != 'excluded'}
-        for layer in self.profile['layers']:
-            if set(layer.get('files', {})) - allowed:
-                raise ValueError('profile files refers to an unknown or excluded repository')
+        self.load_layers()
 
     def read_document(self, path, schemas=(1,)):
         path = Path(path)
@@ -458,16 +472,21 @@ class Catalog:
         return copy.deepcopy(self.overrides[path]) if path in self.overrides else read_json(path, schemas)
 
     def override(self, identity):
+        if hasattr(self, 'effective'):
+            return list(self.effective[identity].values()) if identity in self.effective else None
         for layer in reversed(self.profile['layers']):
-            if identity in layer.get('files', {}): return layer['files'][identity]
+            files = layer.get('files', {})
+            if isinstance(files, dict) and identity in files: return files[identity]
         return None
 
     def base_path(self, source):
+        if source.get('virtual'):
+            return self.registry_path
         path = Path(source['root'])
         manifest = path / 'profile.json'
         if manifest.is_file():
             data = read_json(manifest)
-            if source['id'] in data.get('files', {}): return manifest
+            if isinstance(data.get('files'), list) or source['id'] in data.get('files', {}): return manifest
         return path / '.dots/files.json'
 
     def input_paths(self):
@@ -481,7 +500,7 @@ class Catalog:
         # Serialize cross-profile validation even when eligibility is unchanged.
         return [str(self.registry_path)] if self.registry else []
 
-    def updates(self, documents):
+    def updates(self, documents, *, update_registry=True):
         """Serialize catalog edits into one active profile or legacy source catalogs."""
         if not documents: return []
         if self.registry and not self.profile['layers']: raise ValueError('file mapping edits require a profile manifest')
@@ -491,11 +510,16 @@ class Catalog:
             operations = []
             if self.registry:
                 from registry import implementation
-                registry = self.registry.update(documents)
-                if registry != read_json(self.registry_path, (1,2,3)): operations.append(dict(path=str(self.registry_path), data=registry))
-            for owner, doc in documents.items():
-                data.setdefault('files', {})[owner] = ([implementation(row,self.platform) for row in doc['resources']]
-                                                      if self.registry else doc['resources'])
+                if update_registry:
+                    registry = self.registry.update(documents)
+                    if registry != read_json(self.registry_path, (1,2,3)):
+                        operations.append(dict(path=str(self.registry_path), data=registry))
+            if self.flat and isinstance(data.get('files', []), list):
+                self.flat_updates(data, documents)
+            else:
+                for owner, doc in documents.items():
+                    data.setdefault('files', {})[owner] = ([implementation(row,self.platform) for row in doc['resources']]
+                                                          if self.registry else doc['resources'])
             if data != read_json(path): operations.append(dict(path=str(path), data=data))
             return operations
         return [dict(path=str(self.base_path(next(s for s in self.sources if s['id'] == owner))), data=doc)
@@ -507,7 +531,7 @@ class Catalog:
         return self.platform in platforms
 
     def manifest(self, source):
-        if (Path(source["root"]) / ".dots").is_symlink():
+        if not source.get("virtual") and (Path(source["root"]) / ".dots").is_symlink():
             raise ValueError("catalog directory must not be a symlink")
         doc = self.manifests.get(source['id'])
         if doc is None:
@@ -516,19 +540,26 @@ class Catalog:
                 if self.registry and any('platforms' in row or 'targets' in row for row in rows):
                     raise ValueError('profile mappings use one target; platforms belong in the core registry')
                 doc = dict(schema=1, repository=source['id'], resources=rows)
-            elif self.registry and self.applicable(source['platforms']):
+            elif self.registry and (self.flat or self.applicable(source['platforms'])):
                 # A registry identity alone never supplies an installation.
                 doc = dict(schema=1, repository=source['id'], resources=[])
             else:
                 path = self.base_path(source)
                 doc = read_json(path) if path.is_file() and (not self.registry or path.name == 'profile.json') else dict(schema=1,repository=source['id'],resources=[])
                 if path.name == 'profile.json':
-                    doc = dict(schema=1, repository=source['id'], resources=doc['files'][source['id']])
+                    files = doc.get('files', {})
+                    rows = files.get(source['id'], []) if isinstance(files, dict) else []
+                    doc = dict(schema=1, repository=source['id'], resources=rows)
         if canonical(doc.get("repository")) != canonical(source["id"]) or not isinstance(doc.get("resources"), list):
             raise ValueError("catalog repository identity mismatch")
         doc = canonical_document(doc)
         if self.registry:
-            doc = dict(doc, resources=self.registry.join(source['id'], doc['resources'], candidate=source['id'] in self.manifests))
+            def declared_platforms(name):
+                layer = self.mapping_layers.get((source['id'], name), {})
+                return source['platforms'] if isinstance(layer.get('files'), list) else None
+            doc = dict(doc, resources=self.registry.join(source['id'], doc['resources'],
+                       candidate=source['id'] in self.manifests,
+                       fallback=declared_platforms if self.flat else None))
         seen = set()
         for row in doc["resources"]:
             if not isinstance(row, dict):
@@ -538,10 +569,23 @@ class Catalog:
             seen.add(row["id"])
             if type(row.get('enabled', True)) is not bool:
                 raise ValueError('enabled must be a boolean')
-            relative(row["source"])
+            rel = relative(row["source"])
+            if self.flat and source['id'] in self.manifests:
+                path = Path(source['root']) / rel
+                spec = self.source_spec(path, self.mapping_layers.get((source['id'], row['id'])))
+                resolved = self.resolve_source(spec, self.mapping_layers.get((source['id'], row['id'])))
+                if self.source_owner(resolved)['id'] != source['id']:
+                    raise ValueError('source must be declared in its owning repository')
             self.applicable(row["platforms"])
             if row.get("strategy") not in ("link", "directory-link", "copy"):
                 raise ValueError("invalid file strategy")
+            if source.get('virtual') and row['strategy'] not in ('link', 'directory-link'):
+                raise ValueError('generated theme artifacts require a link strategy')
+            if self.flat and not source.get('virtual') and row['strategy'] == 'directory-link':
+                directory = Path(source['root']) / rel
+                if any(owner['id'] != source['id'] and root.is_relative_to(directory)
+                       for root, owner in self.owner_roots):
+                    raise ValueError('managed source directory includes another repository: ' + str(directory))
             for field in ("app", "category"):
                 if not ID.fullmatch(row.get(field, "")):
                     raise ValueError(f"invalid {field}")
@@ -566,9 +610,13 @@ class Catalog:
         if application:
             from app_paths import config_directory
             suffix = relative(application[2]) if application[2] else Path('.')
-            if self.platform != 'windows':
+            if application[1] in ('eza', 'television', 'leaf', 'codex', 'pi', 'windows-terminal', 'yazi', 'wezterm'):
+                from app_paths import connector_directory
+                base = connector_directory(application[1], self.platform)
+            elif self.platform == 'windows':
+                base = config_directory(application[1])
+            else:
                 return None
-            base = config_directory(application[1])
             if base is None:
                 return None
             if not base.is_absolute():
@@ -603,8 +651,11 @@ class Catalog:
         return str(Path(base) / suffix)
 
     @tracked('Inspecting file catalog')
-    def records(self):
+    def records(self, *, include_inactive=False):
+        if getattr(self, '_names_only', False):
+            raise ValueError('name completion does not observe resources')
         result = []
+        self._generation_observed = False
         for source in self.sources:
             if source["status"] != "available":
                 continue
@@ -616,6 +667,10 @@ class Catalog:
                 row.setdefault('enabled', True)
                 row.update(id=source["id"] + ":" + item["id"], repository=source["id"], tracked=True)
                 row["source"] = str(Path(source["root"]) / item["source"])
+                if self.flat:
+                    key = source['id'], item['id']
+                    stored = self.source_templates.get(key) if source['id'] not in self.manifests else None
+                    row['source_spec'] = stored or self.source_spec(row['source'], self.mapping_layers.get(key))
                 row["target_spec"] = item.get('targets', {}).get(self.platform, item.get('targets', {}).get('linux', item.get('target')) if inherited_linux else item.get('target'))
                 row["target"] = self.target(row['target_spec']) if row['target_spec'] else None
                 row["applicable"] = self.applicable(row["platforms"]) and self.applicable(source["platforms"])
@@ -655,16 +710,57 @@ class Catalog:
         for child in active:
             for parent in Path(child["target"]).parents:
                 for owner in directories.get(parent, []):
+                    if child['repository'] == 'theme' and owner['repository'] != 'theme' and owner['status'] != 'conflict':
+                        # Exact managed directory ownership is revalidated before a child write.
+                        continue
                     for row, other in ((owner, child), (child, owner)):
                         row["status"] = "conflict"
                         row["conflicts"] = sorted(set(row.get("conflicts", [])) | {other["id"]})
+        if include_inactive and self.flat:
+            self.inactive_records(result)
         return result
 
-    @staticmethod
-    def observe(row):
+    def inactive_records(self, result):
+        """Add inspection-only rows without granting the active profile a mapping."""
+        from profiles import available
+        from profile_views import selected
+        seen = {row['id'] for row in result}
+        for layer in available(self.root):
+            if layer['id'] == self.profile['current']:
+                continue
+            context = selected(self.root, layer['id'])
+            other = Catalog(self.root, context['facts']['platform'], profile=context)
+            other.observe = lambda row: 'unobserved'
+            for row in other.records():
+                if row['id'] in seen or not row['applicable']:
+                    continue
+                seen.add(row['id'])
+                result.append(dict(row, applicable=False, status='inactive-platform', mapping_profile=layer['id']))
+
+    def observe(self, row):
         if not row.get('enabled', True):
             return 'stashed'
         src = Path(row["source"])
+        theme = row.get('repository') == 'theme'
+        if theme:
+            from managed_destination import published_generation
+            from transactions import parents_safe
+            if not self._generation_observed:
+                try:
+                    self._observed_generation = published_generation(self.theme_root, required=False)
+                except (OSError, ValueError):
+                    self._observed_generation = None
+                self._generation_observed = True
+            if self._observed_generation is None:
+                return 'theme-unavailable'
+            physical = self._observed_generation / src.relative_to(self.theme_root)
+            try:
+                parents_safe(physical)
+                expected_kind = physical.is_dir if row['strategy'] == 'directory-link' else physical.is_file
+                if physical.is_symlink() or not expected_kind():
+                    return 'theme-unavailable'
+            except (OSError, ValueError):
+                return 'theme-unavailable'
         if not src.exists():
             return "source-broken-link" if src.is_symlink() else "source-missing"
         if not row["applicable"]:
@@ -677,6 +773,9 @@ class Catalog:
         if target.is_symlink():
             if not target.exists():
                 return "broken-link"
+            if theme:
+                from managed_destination import points_to
+                return 'linked' if points_to(target, src) else 'linked-elsewhere'
             return "linked" if target.resolve() == src.resolve() else "linked-elsewhere"
         if not target.exists():
             return "missing"
@@ -688,10 +787,10 @@ class Catalog:
         covered = [(Path(r["source"]), r["strategy"] == "directory-link") for r in tracked]
         result = []
         for source in self.sources:
-            if source["status"] != "available":
+            if source["status"] != "available" or source.get("virtual"):
                 continue
             root = Path(source["root"])
-            child_roots = {Path(x["root"]) for x in self.sources if x != source}
+            child_roots = {Path(x["root"]) for x in self.sources if x != source and Path(x["root"]).is_relative_to(root)}
             # Git supplies exclusions without executing hooks or traversing submodules.
             try:
                 git = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
@@ -735,16 +834,30 @@ class Catalog:
 
     @tracked('Tracking file metadata')
     def track(self, args):
+        path = None
+        if self.flat and (args.value.startswith('${') or Path(args.value).expanduser().is_absolute()):
+            path = (self.resolve_source(args.value) if args.value.startswith('${')
+                    else Path(args.value).expanduser())
+            owner = self.source_owner(path)
+            if args.repo and owner['id'] != args.repo:
+                raise ValueError('--repo does not match the source owner')
+            args.repo = owner['id']
         source = next((s for s in self.sources if s["id"] == args.repo), None)
         if not source or source["status"] != "available":
-            raise ValueError("select an available repository with --repo")
+            raise ValueError("select a rooted source or an available repository with --repo")
         root = Path(source["root"])
-        self.manifest(source)  # Validate the directory before opening its lock.
-        rel = relative(args.value)
+        self.manifest(source)
+        rel = path.relative_to(root) if path is not None else relative(args.value)
         path = root / rel
+        if self.flat:
+            self.resolve_source(self.source_spec(path))
+        source_guards = {}
+        if source.get('virtual'):
+            from managed_destination import theme_artifact
+            theme_artifact(path, self.theme_root, source_guards)
         if not path.exists() and not path.is_symlink():
             raise ValueError("source does not exist")
-        if not path.parent.resolve().is_relative_to(root.resolve()):
+        if path != root and not path.parent.resolve().is_relative_to(root.resolve()):
             raise ValueError("source parent escapes repository")
         for child in self.sources:
             c = Path(child["root"])
@@ -754,14 +867,14 @@ class Catalog:
             raise ValueError("track requires --id, --app and --category")
         if path.is_dir() and args.strategy != "directory-link":
             raise ValueError("whole directories require --strategy directory-link")
-        row = dict(id=args.id, source=str(rel), app=args.app, category=args.category,
+        row = dict(id=args.id, source=rel.as_posix(), app=args.app, category=args.category,
                    platforms=args.platforms or (self.registry.entries.get(source["id"]+":"+args.id, source["platforms"]) if self.registry else source["platforms"]), target=args.target, strategy=args.strategy)
         if args.replaces:
             row["replaces"] = args.replaces
         if self.registry:
             from transactions import Store, digest, parents_safe
             from file_platform import state_root
-            guards = {}
+            guards = dict(source_guards)
             for guarded in self.input_paths():
                 parents_safe(guarded); guards[str(guarded)] = digest(guarded)
             fresh = Catalog(self.root, self.platform)
@@ -808,7 +921,70 @@ class Catalog:
         return row
 
 
+def completion_ids(root, kind, selected_platform=None, include_inactive=False, repository=None):
+    """Read mapping names and filters without probing targets, artifacts or imports."""
+    from profiles import available
+    from profile_views import selected as profile_context
+    if kind not in ('file-resource', 'file-resource-or-path', 'file-repository', 'file-app', 'file-category'):
+        raise ValueError('unknown file completion type')
+    if selected_platform and selected_platform not in PLATFORMS:
+        raise ValueError('unknown completion platform')
+    platform_name = selected_platform or platform()
+    context = (profile_context(root, selected_platform) if selected_platform and
+               (root/'profiles'/selected_platform/'profile.json').is_file() else None)
+    catalog = Catalog(root, platform_name, profile=context, _names_only=True)
+    if kind == 'file-repository':
+        return [s['id'] for s in catalog.sources if include_inactive or
+                s['status'] == 'available' and catalog.applicable(s['platforms'])]
+    names = set()
+    field = {'file-app': 'app', 'file-category': 'category'}.get(kind)
+    def collect(reader):
+        for owner in reader.sources:
+            if field and repository and owner['id'] != repository:
+                continue
+            if owner['status'] != 'available' or not include_inactive and not reader.applicable(owner['platforms']):
+                continue
+            rows = reader.effective.get(owner['id'])
+            if rows is not None:
+                mappings = rows.values()
+            elif reader.registry:
+                continue
+            else:
+                path = reader.base_path(owner)
+                if not path.is_file() or path.name == 'profile.json':
+                    continue
+                mappings = read_json(path).get('resources', [])
+            for row in mappings:
+                name = row.get('id')
+                if not isinstance(name, str) or not ID.fullmatch(name):
+                    continue
+                identity = owner['id'] + ':' + name
+                if reader.registry and reader.registry.resolve(identity) != identity:
+                    continue
+                platforms = (reader.registry.entries.get(identity, owner['platforms']) if reader.registry
+                             else row.get('platforms', owner['platforms']))
+                if include_inactive or reader.applicable(platforms):
+                    value = row.get(field) if field else identity
+                    if isinstance(value, str) and value and value.isprintable():
+                        names.add(value)
+    collect(catalog)
+    if include_inactive and catalog.flat:
+        for layer in available(root):
+            if layer['id'] != catalog.profile['current']:
+                context = profile_context(root, layer['id'])
+                collect(Catalog(root, context['facts']['platform'], profile=context, _names_only=True))
+    return sorted(names)
+
+
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ['__complete']:
+        if len(argv) not in (4, 5) or argv[3] not in ('0', '1'):
+            raise ValueError('invalid file completion arguments')
+        root = Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[3])
+        for name in completion_ids(root, argv[1], argv[2], argv[3] == '1', argv[4] if len(argv) == 5 else None):
+            print(name)
+        return 0
     from help_adapters import HelpArgumentParser
     parser = HelpArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["sources", "discover", "list", "locate", "show", "source", "target", "track"])
@@ -819,7 +995,15 @@ def main(argv=None):
     parser.add_argument("--status")
     parser.add_argument("--platform", choices=sorted(PLATFORMS), default=platform())
     parser.add_argument("--all-platforms", action="store_true")
-    parser.add_argument("--sort", choices=["id", "app", "repository", "source", "status"], default="id")
+    parser.add_argument("--sort", choices=["id", "app", "repository", "source", "status"])
+    parser.set_defaults(view=None)
+    if argv[:1] == ['list']:
+        from cli_preferences import VIEWS
+        views = parser.add_mutually_exclusive_group()
+        views.add_argument('--view', choices=VIEWS)
+        views.add_argument('-s', '--short', dest='view', action='store_const', const='short')
+        views.add_argument('--default', dest='view', action='store_const', const='default')
+        views.add_argument('-v', '--verbose', dest='view', action='store_const', const='verbose')
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--pick", action="store_true")
     parser.add_argument("--id")
@@ -836,7 +1020,7 @@ def main(argv=None):
     cat = Catalog(Path(os.environ.get("DOTS") or Path(__file__).resolve().parents[3]), args.platform)
     if picking:
         from picker import select
-        candidates = [r for r in cat.records() if args.all_platforms or r['applicable']]
+        candidates = [r for r in cat.records(include_inactive=args.all_platforms) if args.all_platforms or r['applicable']]
         for option, field in ((args.repo, "repository"), (args.app, "app"), (args.category, "category"), (args.status, "status")):
             if option:
                 candidates = [r for r in candidates if r.get(field) == option]
@@ -853,7 +1037,7 @@ def main(argv=None):
     elif args.action == "track":
         rows = [cat.track(args)]
     else:
-        rows = cat.discover() if args.action == "discover" else cat.records()
+        rows = cat.discover() if args.action == "discover" else cat.records(include_inactive=args.all_platforms)
         if args.action == "locate":
             rows += cat.discover()
             q = args.value.casefold()
@@ -869,18 +1053,36 @@ def main(argv=None):
                 rows = [r for r in rows if r.get(field) == option]
         if args.action in ("show", "source", "target") and len(rows) != 1:
             raise ValueError("resource does not match the requested filters")
-        rows.sort(key=lambda r:(str(r.get(args.sort, "")), r["id"]))
+        rows.sort(key=lambda r:(str(r.get(args.sort or "id", "")), r["id"]))
     if args.json:
         print(json.dumps(dict(schema=1, platform=args.platform, resources=rows if args.action!="sources" else [], sources=rows if args.action=="sources" else cat.sources), ensure_ascii=False))
-    elif args.action in ("source", "target"):
+        return 0
+    if args.action in ("source", "target"):
         value = rows[0].get(args.action)
         if value is None:
             raise ValueError("resource has no resolved target")
         print(value)
-    elif Presentation().human:
-        ui = Presentation()
+        return 0
+    list_report = args.action == 'list' and (args.view is not None or os.environ.get('DOTS_MENU_CAPTURE') == '1')
+    ui = Presentation(force_human=list_report, minimum_width=1 if args.action == 'list' else 24)
+    if ui.human:
         ui.repository_roots(cat.sources)
-        ui.render(args.action, rows, args.platform, args.repo)
+        if args.action == 'list':
+            from config_values import Controls
+            from list_view import render_list
+            try:
+                preferences = Controls(cat.root, cat.profile).values.get('apps', {}).get('files', {})
+            except (OSError, ValueError):
+                # The catalog is still readable if optional display settings are broken.
+                preferences = {}
+            if not isinstance(preferences, dict):
+                preferences = {}
+            saved_view = preferences.get('list_view')
+            view = args.view or (saved_view if saved_view in VIEWS else 'short')
+            render_list(ui, rows, view, args.platform, args.repo,
+                        group_by_status=args.sort is None and preferences.get('group_by_status', True))
+        else:
+            ui.render(args.action, rows, args.platform, args.repo)
     elif args.action == "show":
         for key, value in rows[0].items():
             print(f"{key}: {value}")

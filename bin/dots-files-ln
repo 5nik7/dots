@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# dots:summary=Alias for files link
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
+# dots:usage=[RESOURCE... | [-s] SOURCE [-t] TARGET] [OPTIONS]
+# dots:option=--source|-s|file|Managed source path for a new link
+# dots:option=--target|-t|file|Exact destination path for a new link
+# dots:option=--pick||flag|Select interactively; combine with --dry-run to preview
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--yes||flag|Apply the displayed plan without prompting
+# dots:option=--backup||flag|Retain verified backups
+# dots:option=--no-backup||flag|Disable optional retained backups
+# dots:argument=*|file-resource-or-path|Qualified resource ID or source and target paths
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/manage.py" link "$@"

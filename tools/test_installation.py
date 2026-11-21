@@ -68,6 +68,179 @@ class InstallationTests(unittest.TestCase):
     def receipt(self):
         return json.loads((self.home/'.state/dots/installation.json').read_text())
 
+    def yazi_profile(self):
+        scoped = mock.patch.dict(os.environ, self.env, clear=True)
+        scoped.start()
+        self.addCleanup(scoped.stop)
+        from catalog import platform
+        selected = platform()
+        self.write('.dots/files.json', dict(schema=3, resources=[], renames={}))
+        profiles = self.repo/'profiles'/selected
+        profiles.mkdir(parents=True)
+        rows = [dict(id='yazi', app='yazi', category='config', strategy='directory-link',
+                     source='${DOTS}/config/yazi', target='${CONFIG}/yazi'),
+                dict(id='yazi', app='yazi', category='theme', strategy='directory-link',
+                     source='${THEME}/yazi', target='${CONFIG}/yazi/flavors/dots.yazi')]
+        self.write('profiles/'+selected+'/profile.json', dict(schema=1, id=selected, files=rows))
+        self.state = Installation(self.repo).state
+        self.active = self.state/'current/theme'
+        generation = self.state/'themes/generations/g.check'
+        (generation/'yazi').mkdir(parents=True)
+        for name in ('flavor.toml','tmtheme.xml'):
+            (generation/'yazi'/name).write_text('published '+name)
+        (generation/'status').write_text('committed\n')
+        (self.state/'themes/current').write_text(generation.name+'\n')
+        self.active.parent.mkdir()
+        self.active.symlink_to(generation,target_is_directory=True)
+        config = self.repo/'config/yazi'
+        (config/'flavors').mkdir(parents=True)
+        self.flavor = config/'flavors/dots.yazi'
+        live = self.home/'.config/yazi'
+        live.parent.mkdir()
+        live.symlink_to(config, target_is_directory=True)
+        self.logical_flavor = live/'flavors/dots.yazi'
+
+    def yazi_action(self, action):
+        preview = Installation(self.repo)
+        getattr(preview, 'plan_'+action)({'files'}, {'theme:yazi'})
+        return preview.apply(action)
+
+    def test_yazi_migrate_child_receipts_and_restore_original_payloads(self):
+        self.yazi_profile()
+        from backup_catalog import BackupPlan
+        self.flavor.mkdir(mode=0o750)
+        original_mode = self.flavor.stat().st_mode & 0o777
+        flavor, syntax = self.flavor/'flavor.toml', self.flavor/'tmtheme.xml'
+        flavor.write_text('my original flavor')
+        legacy = Installation(self.repo)
+        legacy.add('theme:yazi-flavor', flavor, link=self.active/'yazi/flavor.toml')
+        legacy.add('theme:yazi-syntax', syntax, link=self.active/'yazi/tmtheme.xml')
+        legacy.apply('install')
+        # Real old receipts may spell a child via its app directory link.
+        doc = self.receipt()
+        doc['entries'][str(self.logical_flavor/flavor.name)] = doc['entries'].pop(str(flavor))
+        legacy.receipt_path.write_text(json.dumps(doc))
+        before = digest(self.flavor)
+        first_id = doc['entries'][str(self.logical_flavor/flavor.name)]['backup_id']
+        result = self.yazi_action('install')
+        self.assertEqual(self.flavor.readlink(), self.active/'yazi')
+        self.assertEqual(set(self.receipt()['entries']), {str(self.flavor)})
+        with self.assertRaisesRegex(ValueError, 'no separate uninstall receipt'):
+            Installation(self.repo).plan_uninstall({'files','themes'}, {'theme:yazi-flavor'})
+        self.assertIn(first_id, BackupPlan(self.state).protected())
+        with self.assertRaisesRegex(ValueError, 'required for uninstall'):
+            BackupPlan(self.state).delete([first_id])
+        self.assertEqual(self.yazi_action('install')['status'], 'unchanged')
+        store = Store(self.state)
+        inverse, guards, catalogs = store.inverse(result['id'])
+        store.apply('undo', inverse, guards, catalogs=catalogs, retain=True)
+        self.assertEqual(digest(self.flavor), before)
+        self.assertEqual(self.receipt(), doc)
+        self.yazi_action('install')
+        self.yazi_action('uninstall')
+        self.assertFalse(self.flavor.is_symlink())
+        self.assertEqual(self.flavor.stat().st_mode & 0o777, original_mode)
+        self.assertEqual(flavor.read_text(), 'my original flavor')
+        self.assertFalse(syntax.exists())
+        self.assertNotIn(first_id, BackupPlan(self.state).protected())
+        self.assertFalse(self.receipt()['entries'])
+
+    def test_yazi_partially_owned_split_restores_relative_unowned_link(self):
+        self.yazi_profile()
+        self.flavor.mkdir()
+        foreign = self.flavor/'tmtheme.xml'
+        spelling = os.path.relpath(self.active/'yazi/tmtheme.xml', self.flavor)
+        foreign.symlink_to(spelling)
+        owner = Installation(self.repo)
+        owner.add('theme:yazi-flavor', self.flavor/'flavor.toml', link=self.active/'yazi/flavor.toml')
+        owner.apply('install')
+        self.yazi_action('install')
+        self.yazi_action('uninstall')
+        self.assertEqual(list(self.flavor.iterdir()), [foreign])
+        self.assertEqual(os.readlink(foreign), spelling)
+
+    def test_yazi_setup_created_split_is_removed_and_observed_link_stays_unowned(self):
+        self.yazi_profile()
+        legacy = Installation(self.repo)
+        for name, identity in [('flavor.toml','theme:yazi-flavor'), ('tmtheme.xml','theme:yazi-syntax')]:
+            legacy.add(identity, self.flavor/name, link=self.active/'yazi'/name)
+        legacy.apply('install')
+        receipt = legacy.receipt_path.read_bytes()
+        damaged = json.loads(receipt)
+        damaged['entries'][str(self.flavor/'tmtheme.xml')]['backup'] = '0'*32
+        legacy.receipt_path.write_text(json.dumps(damaged))
+        with self.assertRaisesRegex(ValueError, 'original setup transaction is missing'):
+            self.yazi_action('install')
+        self.assertFalse(self.flavor.is_symlink())
+        legacy.receipt_path.write_bytes(receipt)
+        self.yazi_action('install')
+        self.yazi_action('uninstall')
+        self.assertFalse(os.path.lexists(self.flavor))
+        self.flavor.symlink_to(os.path.relpath(self.active/'yazi', self.flavor.parent), target_is_directory=True)
+        self.assertEqual(self.yazi_action('install')['status'], 'unchanged')
+        self.assertFalse(self.receipt()['entries'])
+        self.assertEqual(self.yazi_action('uninstall')['status'], 'unchanged')
+        self.assertTrue(self.flavor.is_symlink())
+
+    def test_yazi_unowned_split_and_previous_grouped_parent_restore_first_baseline(self):
+        self.yazi_profile()
+        self.flavor.mkdir()
+        for name in ('flavor.toml','tmtheme.xml'):
+            (self.flavor/name).symlink_to(self.active/'yazi'/name)
+        before = digest(self.flavor)
+        self.yazi_action('install')
+        self.yazi_action('uninstall')
+        self.assertEqual(digest(self.flavor), before)
+        for child in self.flavor.iterdir():
+            child.unlink()
+        self.flavor.rmdir()
+        self.flavor.symlink_to(self.active/'yazi', target_is_directory=True)
+        legacy = Installation(self.repo)
+        legacy.add('theme:yazi', self.flavor, managed=True, yazi_pair=True)
+        legacy.entries[str(self.flavor)]['catalog_ids'] = ['theme:yazi-flavor', 'theme:yazi-syntax']
+        legacy.apply('install')
+        oldest = self.receipt()['entries'][str(self.flavor)]
+        self.yazi_action('install')
+        now = self.receipt()['entries'][str(self.flavor)]
+        self.assertEqual([now[k] for k in ('before','backup','index','backup_id')],
+                         [oldest[k] for k in ('before','backup','index','backup_id')])
+        self.assertEqual(now['catalog_ids'], ['theme:yazi'])
+        self.yazi_action('uninstall')
+        self.assertEqual(self.flavor.readlink(), self.active/'yazi')
+
+    def test_yazi_refuses_unexpected_files_and_missing_first_backup(self):
+        self.yazi_profile()
+        self.flavor.mkdir()
+        flavor = self.flavor/'flavor.toml'
+        flavor.write_text('original')
+        syntax = self.flavor/'tmtheme.xml'
+        syntax.symlink_to(self.active/'yazi/tmtheme.xml')
+        legacy = Installation(self.repo)
+        legacy.add('theme:yazi-flavor', flavor, link=self.active/'yazi/flavor.toml')
+        legacy.apply('install')
+        before = self.receipt()
+        extra = self.flavor/'README'
+        extra.write_text('local edits')
+        with self.assertRaisesRegex(ValueError, 'preserve and review'):
+            self.yazi_action('install')
+        self.assertEqual(extra.read_text(), 'local edits')
+        extra.unlink()
+        syntax.unlink()
+        syntax.write_text('edited syntax')
+        with self.assertRaisesRegex(ValueError, 'preserve and review'):
+            self.yazi_action('install')
+        self.assertEqual(syntax.read_text(), 'edited syntax')
+        syntax.unlink()
+        syntax.symlink_to(self.active/'yazi/tmtheme.xml')
+        from backup_catalog import BackupPlan
+        catalog = BackupPlan(self.state)
+        payload = catalog.verified_payload(catalog.entry(before['entries'][str(flavor)]['backup_id']))
+        payload.write_text('damaged backup')
+        with self.assertRaisesRegex(ValueError, 'backup is missing or changed'):
+            self.yazi_action('install')
+        self.assertEqual(self.receipt(), before)
+        self.assertFalse(self.flavor.is_symlink())
+
     @unittest.skipUnless(os.name == 'nt', 'native Windows restart argv and status')
     def test_source_restart_preserves_literal_arguments_and_child_status(self):
         entry = self.repo/'lib/dots/files/install.py'
@@ -153,7 +326,8 @@ with patch.object(install, 'source_plan', return_value=[{}]), patch.object(insta
         definitions = []
         for platform in ('termux', 'linux', 'wsl', 'windows'):
             profile = json.loads((ROOT/'profiles'/platform/'profile.json').read_text())
-            resources = [r for r in profile['files']['dots'] if r['id'] in names]
+            resources = [dict(r, source=r['source'].removeprefix('${DOTS}/')) for r in profile['files']
+                         if r['id'] in names and r['source'].startswith('${DOTS}/')]
             self.assertEqual({r['id'] for r in resources}, set(names))
             if definitions: self.assertEqual(resources, definitions)
             definitions = resources
@@ -633,9 +807,9 @@ p.apply('install')
             'XDG_RUNTIME_DIR','LANG','LC_ALL','LC_CTYPE','PYTHONNOUSERSITE','PYTHONUTF8','PYTHONIOENCODING',
             'CODEX_HOME','PI_CODING_AGENT_DIR','GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM',
             'GIT_TERMINAL_PROMPT','GIT_EXEC_PATH','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
-        # Keep the outer fixture's owned Termux loader prefix, not the canonical
-        # live prefix (which selects Termux even without TERMUX_VERSION).
-        if profile == 'termux':
+        # On Android, both fixtures need the shebang adapter. A private prefix
+        # keeps it available without forcing platform detection to choose Termux.
+        if profile == 'termux' or self.env.get('TERMUX__PREFIX'):
             prefix = self.base/'prefix/usr'
             bindir = prefix/'bin'
             bindir.mkdir(parents=True)
@@ -645,8 +819,10 @@ p.apply('install')
                 native = sys.executable if name in ('python', 'python3') else shutil.which(name, path=self.env['PATH'])
                 self.assertTrue(native, 'required native runtime: '+name)
                 (bindir/name).symlink_to(native)
-            self.env.update(PREFIX=str(prefix), TERMUX__PREFIX=str(prefix), TERMUX_VERSION=termux_version)
+            self.env['TERMUX__PREFIX'] = str(prefix)
             self.env['PATH'] = str(bindir)+os.pathsep+self.env['PATH']
+        if profile == 'termux':
+            self.env.update(PREFIX=str(prefix), TERMUX_VERSION=termux_version)
         else:
             self.env['WSL_DISTRO_NAME']='Fixture'
         self.env['DOTS_PROGRESS']='never'
@@ -716,7 +892,7 @@ p.apply('install')
             self.assertEqual(snapshot(self.home), before_home)
             self.assertEqual(snapshot(prefix), before_prefix)
             self.assertEqual(snapshot(self.repo), before_source)
-            mapping = next(r for r in preview['items'] if r['id']=='termux:file-config-termux')
+            mapping = next(r for r in preview['items'] if r['id']=='termux:termux')
             self.assertEqual(Path(mapping['target']), self.home/'.termux')
             self.assertEqual(set(preview['components']), {'core','files','themes','anodize','blastoff','pkgs'})
         else:
@@ -750,13 +926,16 @@ p.apply('install')
                                 and Path(target).resolve().is_relative_to(self.base), target)
         self.assertTrue((self.home/'.config/fsh').is_symlink())
         self.assertTrue((self.home/'.config/fsh/dots.ini').is_file())
-        for line in (self.repo/'lib/dots/themes/connectors.tsv').read_text().splitlines():
-            app,suffix,artifact=line.split('\t')
-            row=next((r for r in result['items'] if r['id']=='theme:'+app),None)
-            if row:
-                self.assertTrue(Path(row['target']).is_symlink(),app)
-                self.assertTrue(Path(row['target']).exists(),app)
-                self.assertTrue((active/artifact).exists(),app)
+        manifest = json.loads((self.repo/'profiles'/profile/'profile.json').read_text())
+        for mapping in manifest['files']:
+            if not mapping['source'].startswith('${THEME}/'):
+                continue
+            artifact = mapping['source'].removeprefix('${THEME}/')
+            row = next((r for r in result['items'] if r['id'] == 'theme:'+mapping['id']), None)
+            if row and row['status'] != 'skipped':
+                self.assertTrue(Path(row['target']).is_symlink(), mapping['id'])
+                self.assertTrue(Path(row['target']).exists(), mapping['id'])
+                self.assertTrue((active/artifact).exists(), mapping['id'])
         for template in (self.repo/'default/themed').glob('*.tpl'):
             self.assertTrue((active/template.name[:-4]).is_file(),template.name)
         self.assertFalse((self.repo/'config/btop/themes/dots.theme').exists())  # Stashed.

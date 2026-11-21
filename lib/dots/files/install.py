@@ -27,7 +27,8 @@ from progress import Progress, configure, sequence, permanent_output
 
 from identities import canonical, current_source
 from setup_components import DEFAULTS, component
-from managed_destination import physical
+from managed_destination import physical, points_to, yazi_flavor_directory
+from backup_catalog import created_setup_parent, original_payload
 
 PUBLIC_SOURCES = ('termux', 'windows', 'nvim')
 
@@ -124,6 +125,7 @@ class Installation:
         self.theme = None
         self.theme_environment = {}
         self.theme_prepared = False
+        self.connector_rows = []
         self.components = None
         self.resources = None
         self.catalog_records = []
@@ -168,7 +170,7 @@ class Installation:
             self.operations.append(operation)
             self.item(label, 'create' if guards.get(operation['path']) is None else 'replace-with-backup', operation['path'])
 
-    def add(self, identity, path, *, link=None, text=None, source=None, directory=False, managed=False):
+    def add(self, identity, path, *, link=None, text=None, source=None, directory=False, managed=False, yazi_pair=False):
         path = Path(path)
         self.guard(path)
         key = str(path)
@@ -178,7 +180,8 @@ class Installation:
         if not owned and key in getattr(self, 'legacy_verified', set()):
             managed = True
         current = self.guards[key]
-        same = link is not None and link_target_matches(path, link)
+        same = link is not None and (points_to(path, link) if identity.startswith('theme:')
+                                     else link_target_matches(path, link))
         if source is not None:
             source = Path(source)
             if source.is_symlink() or not source.is_file():
@@ -195,7 +198,7 @@ class Installation:
             return
         if path.is_symlink() and not owned and not managed:
             # A matching relative link predating setup is observed, never owned.
-            if link is not None and path.resolve() == Path(link).resolve():
+            if link is not None and not identity.startswith('theme:') and path.resolve() == Path(link).resolve():
                 self.item(identity, 'unchanged', path, link)
                 return
             if not self.review_replacements:
@@ -204,7 +207,9 @@ class Installation:
         if link is not None and path.is_dir() and path.resolve() == Path(link).resolve():
             raise ValueError('source and target overlap: ' + key)
         op = dict(path=key)
-        if link is not None:
+        if yazi_pair:
+            op['yazi_pair'] = True
+        elif link is not None:
             op.update(link=str(link), directory=directory)
         elif source is not None:
             op['source'] = str(source)
@@ -370,8 +375,25 @@ class Installation:
 
     def reconcile_destinations(self, records, planned=()):
         """Retain original recovery pointers when a directory mapping moved a child."""
+        flavors = {Path(r['target']) for r in records if yazi_flavor_directory(r)}
+        flavor_paths = {}
+        if any(Path(key).parent in flavors or e['id'] in ('theme:yazi-flavor', 'theme:yazi-syntax')
+               for key, e in self.entries.items()):
+            for logical in flavors:
+                actual = physical(logical, records, self.guards, planned=planned)
+                flavor_paths.update({logical: actual, actual: actual})
         for key, entry in list(self.entries.items()):
-            path = physical(key, records, self.guards, planned=planned)
+            old = Path(key)
+            if old.parent in flavor_paths:
+                # Translate the old flavor directory itself through the app mapping.
+                # Its new directory-link declaration must never redirect a child into a generation.
+                parent = flavor_paths[old.parent]
+                if parent.is_symlink():
+                    raise ValueError('old child installation receipt underneath a linked Yazi flavor; preserve and review: ' + key)
+                path = parent / old.name
+                parents_safe(path)
+            else:
+                path = physical(key, records, self.guards, planned=planned)
             if str(path) == key:
                 continue
             if str(path) in self.entries:
@@ -400,7 +422,7 @@ class Installation:
             if row['applicable'] and not row['enabled']:
                 self.item(row['id'], 'skipped', row['target'], reason='stashed')
         records = [r for r in observed if r['enabled'] and r['applicable'] and r['status'] != 'replaced']
-        selected = [r for r in records if 'files' in self.components
+        selected = [r for r in records if r.get('repository') != 'theme' and 'files' in self.components
                     and (self.resources is None or r['id'] in self.resources)]
         if self.platform == 'windows' and os.environ.get('DOTS_POWERSHELL_PROFILES'):
             # The native adapter asks each installed engine for its all-hosts
@@ -421,7 +443,8 @@ class Installation:
                         selected.append(dict(template, target=target, status='available'))
                         targets.add(key)
         if self.resources is not None:
-            missing = self.resources - {r['id'] for r in selected}
+            missing = self.resources - {r['id'] for r in selected} - {
+                r['id'] for r in records if r.get('repository') == 'theme'}
             if missing:
                 raise ValueError('setup resource is not enabled/applicable: ' + ', '.join(sorted(missing)))
         planned = {r['target'] for r in selected if r['strategy'] == 'directory-link'}
@@ -433,7 +456,9 @@ class Installation:
                     and r['target'] and (r in selected or Path(r['target']).resolve() == Path(r['source']))), None)
         if bat and not os.environ.get('BAT_CONFIG_DIR'):
             self.theme_environment['BAT_CONFIG_DIR'] = bat['source']
-        connectors = []
+        from themes import connector_paths
+        from managed_destination import theme_artifact
+
         if not defer_theme and 'themes' in self.components and (self.root / 'lib/dots/themes' / ('setup.py' if self.platform == 'windows' else 'setup.bash')).is_file():
             with Progress('Inspecting theme inputs'):
                 identity, fingerprint, current, incomplete = self.theme_bridge('inspect')
@@ -447,30 +472,28 @@ class Installation:
                     for status in folder.glob('*/status'):
                         if status.read_text().strip() == 'prepared':
                             raise ValueError('unfinished theme publication; recover with dots theme refresh first')
-            for line in (self.root / 'lib/dots/themes/connectors.tsv').read_text().splitlines():
-                app, suffix, artifact = line.split('\t')
-                if self.platform == 'windows' and app not in ('yazi', 'git', 'vivid', 'eza', 'leaf'):
-                    continue
-                owner = next((r for r in records if r['app'] == app and r['strategy'] == 'directory-link' and r['target']), None)
-                if app in ('eza', 'leaf'):
-                    from app_paths import eza_config_directory, leaf_config_directory
-                    resolver = leaf_config_directory if app == 'leaf' else eza_config_directory
-                    base = resolver(windows=self.platform == 'windows')
-                    if not owner or Path(owner['target']) != base:
-                        continue
-                if owner and Path(owner['source']).is_dir():
-                    connectors.append((app, Path(owner['source']) / suffix, artifact))
-            if self.platform == 'termux':
-                target = Path(os.environ['HOME']) / '.termux/colors.properties'
-                selected = [r for r in selected if r['target'] != str(target)]
-                if not any(not r['enabled'] and r['target'] == str(target) for r in observed):
-                    connectors.append(('termux', physical(target, observed, self.guards, planned=planned), 'termux.properties'))
-            # Preserve the publisher's opt-in-by-existing-directory boundaries.
-            for app, parent, filename, artifact in (
-                ('codex', Path(os.environ.get('CODEX_HOME') or Path.home()/'.codex')/'themes', 'dots.tmTheme', 'bat.tmTheme'),
-                ('pi', Path(os.environ.get('PI_CODING_AGENT_DIR') or Path.home()/'.pi/agent').expanduser()/'themes', 'dots.json', 'pi.json')):
-                if parent.is_dir():
-                    connectors.append((app, parent / filename, artifact))
+        requested_theme = (self.resources or set()) & {r['id'] for r in records if r.get('repository') == 'theme'}
+        if self.theme or requested_theme and not defer_theme:
+            planned_targets = [Path(r['target']) for r in selected if r['target'] and r['status'] not in
+                               ('unmapped', 'unsupported-platform', 'source-missing', 'source-broken-link', 'conflict')]
+            links, guards = connector_paths.plan(self.root, self.platform, catalog=catalog, records=observed,
+                                                  planned=planned, planned_targets=planned_targets)
+            self.merge_plan([], guards, label='theme profile')
+            self.connector_rows = [r for r in links if r.eligible and (r.identity in requested_theme if requested_theme else self.theme)]
+            if not connector_paths.uses_profile(catalog) and self.platform == 'termux':
+                target = str(Path(os.environ['HOME']) / '.termux/colors.properties')
+                selected = [r for r in selected if r['target'] != target]
+                if any(not r['enabled'] and r['target'] == target for r in observed):
+                    self.connector_rows = [r for r in self.connector_rows if str(r.logical) != target]
+            if not self.theme:
+                for row in self.connector_rows:
+                    active = self.state / 'current/theme'
+                    artifact = theme_artifact(active / row.artifact, active, self.guards)
+                    if not (artifact.is_dir() if row.directory else artifact.is_file()):
+                        raise ValueError('published theme artifact does not match its link strategy: ' + row.artifact)
+            for row in links:
+                if not row.eligible and self.resources and row.identity in self.resources:
+                    self.item(row.identity, 'skipped', row.logical, reason='application destination unavailable')
         for row in selected:
             if row['status'] in ('unmapped', 'unsupported-platform', 'source-missing', 'source-broken-link'):
                 self.item(row['id'], 'skipped', row['target'], reason=row['status'])
@@ -538,11 +561,27 @@ class Installation:
                              text="& '"+str(source).replace("'", "''")+"' @args\nexit $LASTEXITCODE\n")
                 else:
                     self.add('dots:'+name+':command', home/'.local/bin'/filename, link=source)
-        for app, path, artifact in connectors:
+        converted = set()
+        for row in self.connector_rows:
+            path, artifact = row.target, row.artifact
             desired = self.state / 'current/theme' / artifact
+            if row.split_directory:
+                if self.no_backup:
+                    raise ValueError('migrating a split Yazi flavor requires a retained recovery backup')
+                self.guard(path)
+                connector_paths.consolidate_yazi_receipt(row, self.entries, self.state/'current/theme', self.guards)
+            if row.legacy_parent:
+                parent = path.parent
+                if parent not in converted:
+                    pair = {r.target.name for r in self.connector_rows if r.legacy_parent and r.target.parent == parent}
+                    if pair != set(connector_paths.YAZI_FILES):
+                        raise ValueError('select both Yazi flavor resources to migrate the old directory link')
+                    self.add('theme:yazi', parent, managed=True, yazi_pair=True)
+                    self.entries[str(parent)]['catalog_ids'] = sorted(
+                        r.identity for r in self.connector_rows if r.legacy_parent and r.target.parent == parent)
+                    converted.add(parent)
+                continue
             old = native_link_text(os.readlink(path)) if path.is_symlink() else ''
-            # A fixed connector may repair a relocated generated-state link,
-            # but an arbitrary link is never treated as installer ownership.
             suffix = Path('dots/current/theme') / artifact
             managed = bool(old) and Path(old).parts[-len(suffix.parts):] == suffix.parts
             if managed and self.platform == 'windows':
@@ -550,7 +589,17 @@ class Installation:
                     validate_windows_path(old)
                 except ValueError:
                     managed = False
-            self.add('theme:' + app + (':' + artifact if app == 'leaf' else ''), path, link=desired, directory=artifact == 'yazi', managed=managed)
+            self.add(row.identity, path, link=desired, directory=row.directory, managed=managed)
+            entry = self.entries.get(str(path))
+            if catalog.flat and entry:
+                # Older Leaf receipts include the artifact after a second colon.
+                # Keep their first backup and uninstall baseline at the same path.
+                if row.app == 'leaf' and entry['id'] == 'theme:leaf:' + artifact:
+                    entry['id'] = row.identity
+                    self.receipt_changed = True
+                if entry['id'] == row.identity and entry.get('catalog_ids') != [row.identity]:
+                    entry['catalog_ids'] = [row.identity]
+                    self.receipt_changed = True
         if self.theme:
             generation = self.state / 'themes/generations' / self.theme['generation']
             stored = generation / 'fingerprint'
@@ -572,9 +621,38 @@ class Installation:
         elif 'themes' in self.components:
             self.item('themes', 'prepare' if defer_theme else 'skipped', reason='prepare after prerequisites' if defer_theme else 'theme preparation adapter is unavailable')
 
+    def restore_yazi_directory(self, path, entry):
+        """Build a single directory replacement from the retired child receipts."""
+        from themes.connector_paths import YAZI_FILES
+        children, unowned, mode = entry['yazi_children'], entry['yazi_unowned'], entry['yazi_mode']
+        if (not isinstance(children, dict) or not children or not isinstance(unowned, dict)
+                or set(children) & set(unowned) or set(children) | set(unowned) != set(YAZI_FILES)
+                or type(mode) is not int or not 0 <= mode <= 0o7777):
+            raise ValueError('invalid retained Yazi flavor directory baseline: ' + str(path))
+        active = self.state / 'current/theme/yazi'
+        if not points_to(path, active):
+            raise ValueError('retained Yazi flavor destination points elsewhere: ' + str(path))
+        for name, spelling in unowned.items():
+            if not isinstance(spelling, str) or Path(os.path.abspath(path / native_link_text(spelling))) != active / name:
+                raise ValueError('invalid retained Yazi flavor link: ' + str(path / name))
+        payloads = {name: original_payload(child, path/name, self.state, self.guards)
+                    for name, child in children.items()}
+        if not unowned and not any(payloads.values()):
+            roots = (path, entry.get('logical_path', path))
+            if created_setup_parent(self.state, children.values(), roots, self.guards):
+                return {'delete': True}
+        return {'yazi_restore': dict(payloads=payloads, links=unowned, mode=mode)}
+
     def plan_uninstall(self, components=None, resources=None):
         self.components = None if components is None else set(components)
         self.resources = None if resources is None else set(resources)
+        retired = (self.resources or set()) & {'theme:yazi-flavor', 'theme:yazi-syntax'}
+        if retired:
+            recorded = {identity for entry in self.entries.values()
+                        for identity in entry.get('catalog_ids', (entry['id'],))}
+            if retired - recorded:
+                raise ValueError('retired Yazi file has no separate uninstall receipt: ' +
+                                 ', '.join(sorted(retired - recorded)))
         # Old receipts can name a child through a subsequently installed
         # catalog directory link. Only load catalog inputs for this bounded case.
         if any(any(p.is_symlink() for p in Path(key).parents) for key in self.entries):
@@ -590,7 +668,12 @@ class Installation:
             raise ValueError('theme removal would break retained managed files; include those files or retain themes')
         for path, entry in list(self.entries.items())[::-1]:
             owner = entry.get('component', component(entry['id']))
-            if self.components is not None and owner not in self.components:
+            catalog_ids = entry.get('catalog_ids', (entry['id'],) if entry['id'] in retired else ())
+            requested_connector = (owner == 'themes' and self.resources
+                                   and self.resources.intersection(catalog_ids))
+            if requested_connector and not self.resources.issuperset(catalog_ids):
+                raise ValueError('select all resources sharing this retained baseline: ' + ', '.join(catalog_ids))
+            if self.components is not None and owner not in self.components and not requested_connector:
                 continue
             if owner == 'files' and self.resources is not None and entry['id'] not in self.resources:
                 continue
@@ -599,23 +682,15 @@ class Installation:
                 self.item(entry['id'], 'preserved', path, reason='target changed after installation')
                 continue
             op = dict(path=path)
-            if entry['before'] is None:
+            if 'yazi_children' in entry:
+                op.update(self.restore_yazi_directory(Path(path), entry))
+            elif entry['before'] is None:
                 op['delete'] = True
-            elif entry.get('backup_id'):
-                from backup_catalog import BackupPlan
-                backups = BackupPlan(self.state)
-                payload = backups.verified_payload(backups.entry(entry['backup_id']))
-                self.merge_plan([], backups.guards, label='backup catalog')
-                op['source'] = str(payload)
             else:
-                payload = self.store.payload(entry['backup'], entry['index'], 'before')
-                self.guard(payload)
-                if self.guards[str(payload)] != entry['before']:
-                    raise ValueError('original backup failed verification: ' + path)
-                op['source'] = str(payload)
+                op['source'] = original_payload(entry, path, self.state, self.guards)
             self.operations.append(op)
             del self.entries[path]
-            self.item(entry['id'], 'restore' if entry['before'] else 'remove', path,
+            self.item(entry['id'], 'remove' if op.get('delete') else 'restore', path,
                       reason='original was deliberately discarded with --no-backup' if entry.get('discarded_original') else None)
 
     def prepare_theme(self):
@@ -633,6 +708,14 @@ class Installation:
             raise ValueError('invalid prepared theme generation')
         self.store.notify('Prepared', generation, reason='inactive theme generation', kind='dir')
         displayed = len(self.items)
+        status = generation / 'status'
+        self.guard(status)
+        if status.is_symlink() or status.read_bytes() not in (b'staged\n', b'committed\n'):
+            raise ValueError('invalid prepared theme publication status')
+        if status.read_bytes() == b'staged\n':
+            # POSIX rendering stages an inactive payload. Commit it in the same
+            # transaction as the active pointer, with reversal on failed setup.
+            self.operations.append(dict(path=str(status), text='committed\n'))
         self.add('theme:selection', base / 'current', text=generation.name + '\n', managed=True)
         self.add('theme:active', self.state / 'current/theme', link=generation, directory=True, managed=True)
         if len(values) > 1 and values[1]:
@@ -667,6 +750,10 @@ class Installation:
                     raise ValueError('changed after preview: ' + path)
             if action == 'install':
                 self.prepare_theme()
+            if action == 'install' and self.theme:
+                from themes.connector_paths import validate_artifacts
+                generation = getattr(self, 'theme_payload', self.state/'themes/generations'/self.theme['generation'])
+                validate_artifacts(self.connector_rows, generation)
             if self.blocked:
                 raise ValueError('installation plan contains conflicts')
             if not self.operations and not self.receipt_changed:
@@ -675,22 +762,39 @@ class Installation:
             # after approval. No live target is touched during preparation.
             private_directory(self.state / 'setup-staging')
             import tempfile
-            with tempfile.TemporaryDirectory(dir=self.state / 'setup-staging') as tmp:
-                for index, op in enumerate(self.operations):
-                    if op['path'] not in self.entries:
-                        continue
-                    prepared = Path(tmp) / (str(index) + native_staging_suffix(op['path']))
-                    if 'link' in op:
-                        try:
-                            prepared.symlink_to(op['link'], target_is_directory=op.get('directory', False))
-                        except OSError as error:
-                            raise ValueError('symbolic links unavailable; enable link capability explicitly before retrying') from error
-                    elif 'text' in op:
-                        prepare_text(prepared, op['text'], op['path'])
-                    elif 'source' in op:
-                        copy_object(op['source'], prepared)
-                    self.entries[op['path']]['after'] = digest(prepared)
-                    self.entries[op['path']].pop('desired', None)
+            tmp = stack.enter_context(tempfile.TemporaryDirectory(dir=self.state / 'setup-staging'))
+            for index, op in enumerate(self.operations):
+                if op.pop('yazi_pair', False):
+                    from themes.connector_paths import populate_yazi
+                    pair = Path(tmp) / ('yazi-' + str(index))
+                    populate_yazi(pair, self.state / 'current/theme')
+                    op['source'] = str(pair)
+                elif 'yazi_restore' in op:
+                    prior = op.pop('yazi_restore')
+                    directory = Path(tmp) / ('yazi-original-' + str(index))
+                    directory.mkdir(mode=0o700)
+                    for name, payload in prior['payloads'].items():
+                        if payload is not None:
+                            copy_object(payload, directory / name)
+                    for name, spelling in prior['links'].items():
+                        (directory / name).symlink_to(spelling)
+                    directory.chmod(prior['mode'])
+                    op['source'] = str(directory)
+            for index, op in enumerate(self.operations):
+                if op['path'] not in self.entries:
+                    continue
+                prepared = Path(tmp) / (str(index) + native_staging_suffix(op['path']))
+                if 'link' in op:
+                    try:
+                        prepared.symlink_to(op['link'], target_is_directory=op.get('directory', False))
+                    except OSError as error:
+                        raise ValueError('symbolic links unavailable; enable link capability explicitly before retrying') from error
+                elif 'text' in op:
+                    prepare_text(prepared, op['text'], op['path'])
+                elif 'source' in op:
+                    copy_object(op['source'], prepared)
+                self.entries[op['path']]['after'] = digest(prepared)
+                self.entries[op['path']].pop('desired', None)
             receipt = dict(self.receipt, entries=self.entries,
                            transactions=self.receipt['transactions'] + [self.transaction])
             if self.backup_plan:
@@ -711,6 +815,8 @@ class Installation:
                 if row['created'] and path != self.state and self.state not in path.parents:
                     candidates.add(path)
         for path in sorted(candidates, key=lambda p: len(p.parts), reverse=True):
+            if any(parent.is_symlink() for parent in path.parents):
+                continue
             parents_safe(path)
             if path.is_dir() and not path.is_symlink() and not any(path.iterdir()):
                 self.store.apply('uninstall-empty-directory', [dict(path=str(path), delete=True)],

@@ -186,8 +186,7 @@ behavior. Existing cache/export paths and the palette schema are unchanged.
 
 The `${PREFIX}` destination token resolves only on Termux, from the explicit `PREFIX` environment variable. Unset/empty values and other platforms are unmapped; relative, filesystem-root, parent-traversal and control-containing values are invalid. Suffixes use the existing traversal-free relative-path contract. The shared mapping editor converts absolute paths beneath this prefix into the token. This adds no arbitrary environment interpolation and changes no catalog/receipt schema; see [destination rules](files.md#ownership-and-formats).
 
-The [file catalog](files.md#ownership-and-formats) joins the schema-2/3 core `.dots/files.json` registry (qualified IDs and platforms), schema-2 `.dots/sources.json` source ownership, and schema-1 profile implementation arrays. A registry entry without a profile mapping never installs. Legacy schema-1 catalogs remain readable. Public command JSON and transaction journals retain schema 1. Directory ownership
-conflicts with nested target claims. Catalog inspection and tracking are distinct from the managed operation routes. Installation, linking, copying, adoption and undo use the shared file transaction engine; linking is the default and copying is explicit.
+The [file catalog](files.md#ownership-and-formats) joins the schema-2/3 core `.dots/files.json` registry (qualified IDs and platforms), schema-2 `.dots/sources.json` source ownership, and schema-1 profile implementation arrays. A registry entry without a profile mapping never installs. Legacy schema-1 catalogs remain readable. Public command JSON and transaction journals retain schema 1. A managed directory owns its descendants. An explicit generated theme mapping can place a connector below a verified managed directory. Catalog inspection and tracking are distinct from the managed operation routes. Installation, linking, copying, adoption and undo use the shared file transaction engine; linking is the default and copying is explicit.
 
 Schema 3 contains exactly `schema`, `resources` and `renames`. Resource rows keep the schema-2 shape. `renames` maps reserved qualified historical IDs directly to current registered IDs with the same owner; cycles, chains and occupied keys are invalid. Effective renames upgrade schema 2 transactionally and flatten prior history. Unchanged reads/edits retain schema 2. Receipt readers resolve historical IDs, while CLI selectors and profile mapping/replacement fields require current IDs. See [rename behavior](files.md#file-id-renames).
 
@@ -199,7 +198,7 @@ Catalog resources accept optional boolean `enabled` (default true). False is a
 profile-local stash: the record/source remains, while active target claims,
 replacement precedence and installation exclude it. Existing mappings and unknown
 metadata survive `files edit`; `files track --update` preserves optional metadata
-including disabled state and extension metadata. Profile rows store one target; platform eligibility belongs to the core registry. Older schema-1 catalog target maps are compatibility inputs only.
+including disabled state and extension metadata. Profile rows store one target. The core registry can restrict an ID to specific platforms. A new flat mapping inherits its source owner's eligibility. Older schema-1 catalog target maps remain readable.
 
 Mapping operations preserve the installation receipt's first-install baseline.
 An intentionally unlinked owned target uses `after: null` while retaining its
@@ -215,6 +214,12 @@ through the same journal model. It adds no catalog fields; unrelated record data
 replacement declarations and installation receipts are preserved. Its versioned
 inspection/result JSON is documented in [files](files.md#check-missing-sources).
 
+A `files rm` or `files remove` preview reports `status: "remove-mapping"` and a reason when the selected mapping is replaced or its repository source has been deleted. The surviving resource retains its declared replacement precedence. Removal from a child profile uses the normal inheritance rules.
+
+The `files relink`, `files prune` and `files sync` JSON reports identify the action, active profile, platform, status, counts and items. Preview is the default. An applied batch includes its transaction ID for `files undo`. [Profile maintenance](files.md#relink-and-prune-the-active-profile)
+
+`files list` and its `files ls` alias share the schema-1 catalog and the redirected four-column TSV format. Both default to ID order for these interfaces. The selected profile’s `apps.files.list_view` and `apps.files.group_by_status` settings apply to the human report. An explicit view or sort overrides its corresponding preference. [List views](files.md#list-views)
+
 `files repair` uses the resolved registry/profile catalog plus existing schema-1 transaction journals and installation receipts without migrating historical data. It preserves first-install `before`/`backup`/`index` values and updates `after` for repaired destinations in the same transaction, including explicitly approved same-resource drift. Newly repaired destinations receive a pre-repair baseline; correct pre-existing links remain unowned. Receipt evidence takes precedence over transaction evidence, which uses only the latest completed operation at the destination. `replacement_unavailable` alone is informational; only actual conflicting catalog claims block repair. Interactive issue/action identities and queued decisions stay internal and introduce no new catalog, receipt or JSON fields. The schema-1 command result is specified in [repair results](files.md#repair-managed-destinations).
 
 Anodize presentation options and LOGO1/LOGO2 precedence are defined by the [logo contract](anodize.md#terminal-logo). The `base` layout selects exact LOGO1; data schemas and recipe bytes do not change.
@@ -224,6 +229,8 @@ Anodize presentation options and LOGO1/LOGO2 precedence are defined by the [logo
 `themes/ID/anodize.json` is a schema-1 authoring document. [Its recipe contract](anodize.md#recipe-and-ownership) owns baseline colors, absolute adjustments, overrides, generation options, source references and local generated-file receipts. Generated `colors.toml` uses the existing flat-theme contract. New `normal` baselines carry named white, black, orange and brown alongside the sixteen ANSI slots. Rendering supplies success from green after applying overrides. An explicit success value takes precedence.
 
 ### Patina image results
+
+The `--all-themes --yes --dry-run --json` plan has `schema: 1` and `status: "preview"`. It reports the source, destination pattern, encoder settings, `theme_count`, compatible `styles`, `total` image count and an ordered `outputs` array. Each row contains the theme `id`, `style`, `target` and `status`. Rows start as `planned`. A destination that fails preflight has status `failed` and an `error`. Paths reflect current occupancy. Each approved batch save takes the first available numbered name when a collision occurs.
 
 Patina's schema-1 JSON result reports `source`, `width`, `height`, `style`, `target` and `status`. Alloy, harmonize and natural report effective `harmony` and integer `strength` (defaults `auto` and 100). Gradient and duotone report `strength` and the ordered array of resolved stop names in `stops`, including automatic selections. The default style is `alloy`. A theme supplies `id`. A reference image supplies `palette_image`, `mode` and boolean `light`. A completed save includes `transaction`. `format` reports the canonical encoder name (`jpeg` and `tiff` include their extension aliases). Lossy encoders report effective `quality`, and lossless WebP reports `lossless: true`. A temporary theme variant reports `mode` and `light`. Comparison sheets add `comparison` (`styles` or `modes`) and ordered `panels` starting with the original. The reported dimensions describe the saved image or sheet. See [Patina](anodize.md#patina) for naming, collision and preview behavior.
 
@@ -305,10 +312,10 @@ Directory `show` returns a bounded human/plain listing rather than file bytes. `
 
 Profile schema 1 uses `id`, optional `description`, `alias`, `extends`, `environment`,
 `path`, `replaces_commands`, `settings` and `files`; definitions and precedence are specified in
-[profiles](profiles.md#definitions-and-inheritance). Profile mappings retain resource and replacement IDs; their platform eligibility comes from the core registry. The internal source flag `bundled`
+[profiles](profiles.md#definitions-and-inheritance). Profile mappings retain resource and replacement IDs. The internal source flag `bundled`
 marks resources that no longer need optional-source acquisition.
 
-Profile `settings` maps registered shell names to validated strings and `files.backup` to a boolean. Profile `files` maps repository IDs to complete implementation arrays without `platforms` or `targets`. The most specific array replaces the inherited/default array for that repository; source ownership and installation receipts keep their existing identities. Profile edits and migration use Store transactions without introducing a new journal schema. See [profile configuration](profiles.md#profile-configuration).
+Profile `settings` maps registered shell names to validated strings and `files.backup` to a boolean. Profile `files` accepts an ordered array with local IDs, rooted source paths and one target per row. The catalog qualifies IDs using source ownership. `${PROFILE}` resolves at the declaring layer, `${DOTS}` at the checkout, and `${THEME}` at the native state directory’s stable `current/theme` pointer. A child overrides individual qualified IDs. Platform restrictions and historical IDs live in the core registry. Hand-written flat rows can introduce new IDs. The shipped `theme:yazi` mapping declares `${THEME}/yazi` with strategy `directory-link`. The two generated files remain individually inspectable with `dots theme files`. Legacy grouped manifests retain whole-owner array inheritance. See [file mappings](files.md#ownership-and-formats).
 
 Environment JSON remains version 1 with `values.NAME.value` and `source`, adding
 `group`, inherited-match status, sensitivity, defaults and PATH contribution
@@ -514,7 +521,7 @@ Popup `width`/`height` are string-or-integer controls: `auto`, `fit`, `fill`, in
 
 ## Existing-source registration inputs
 
-Registration retains the current core registry and profile mapping schemas. Resource IDs/platform eligibility stay central, while source, target, strategy, app and category stay in the active profile. Existing IDs retain eligibility; new IDs use matching location eligibility or the source owner. Inferred IDs use the existing file- normalized relative-path naming and never reuse retired IDs. A unique observed/mapped destination precedes reverse location inference; explicit single-source --target overrides inference. Existing-link operands retain their literal link text. Discovery adds registration readiness metadata inside its existing schema-1 envelope; redirected catalog columns and scalar APIs retain their contracts. See [registration](files.md#register-files-already-in-the-repository).
+Registration retains the current core registry and profile mapping schemas. Resource IDs/platform eligibility stay central, while source, target, strategy, app and category stay in the active profile. Existing IDs retain eligibility; new IDs use matching location eligibility or the source owner. Automatic naming tries the normalized source filename within the owner, then qualifies collisions. Existing mappings keep their IDs, and retired IDs remain reserved. A unique observed/mapped destination precedes reverse location inference; explicit single-source --target overrides inference. Existing-link operands retain their literal link text. Discovery adds registration readiness metadata inside its existing schema-1 envelope; redirected catalog columns and scalar APIs retain their contracts. See [registration](files.md#register-files-already-in-the-repository).
 
 ## Package policy and manifest data
 

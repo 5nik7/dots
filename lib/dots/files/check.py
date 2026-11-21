@@ -38,7 +38,7 @@ class Check:
         self.manager = Manager()
         self.catalog = Catalog(self.manager.root, args.platform)
         self.guards = {}
-        self.documents = {}
+        self.catalogs = {}
         self.items = []
 
     def guard(self, path):
@@ -53,11 +53,8 @@ class Check:
             raise ValueError('unknown repository: ' + self.args.repo)
         for path in self.catalog.input_paths():
             self.guard(path)
-        for owner in self.catalog.sources:
-            if owner['status'] == 'available':
-                path = self.catalog.base_path(owner)
-                self.documents[owner['id']] = (str(path), self.catalog.manifest(owner))
-        rows = self.catalog.records()
+        self.catalogs[self.catalog.profile['current']] = self.catalog
+        rows = self.catalog.records(include_inactive=self.args.all_platforms)
         rows = [r for r in rows if (self.args.all_platforms or r['applicable']) and all(
             getattr(self.args, option) is None or r[field] == getattr(self.args, option)
             for option, field in (('repo', 'repository'), ('app', 'app'),
@@ -65,11 +62,14 @@ class Check:
         rows.sort(key=lambda r: (str(r.get(self.args.sort, '')), r['id']))
         with sequence('Checking file sources', 1) as steps, steps.step('Checking file sources') as progress:
             for index, row in enumerate(rows):
-                state = source_state(row['source'])
+                # A selection change can temporarily remove a generated artifact.
+                # Its profile declaration remains valid before the first publish.
+                state = 'generated' if row['repository'] == 'theme' else source_state(row['source'])
                 self.items.append(dict(row, source_state=state, eligible=state == 'absent',
                                        outcome='candidate' if state == 'absent' else 'kept',
                                        reason={'absent': 'Source path is absent',
                                                'present': 'Source exists',
+                                               'generated': 'Published theme artifact; keep profile declaration',
                                                'broken-source-link': 'Broken source symlink; repair or review manually'}[state]))
                 progress.update('Checking file sources', index + 1, len(rows))
         self.verify_metadata()
@@ -95,13 +95,23 @@ class Check:
             if source_state(row['source']) != 'absent':
                 raise ValueError('source changed after preview: ' + row['source'])
             guards[row['source']] = None
-            path, original = self.documents[row['repository']]
+            profile = row.get('mapping_profile', self.catalog.profile['current'])
+            if profile not in self.catalogs:
+                from profile_views import selected as profile_context
+                context = profile_context(self.catalog.root, profile)
+                self.catalogs[profile] = Catalog(self.catalog.root, context['facts']['platform'], profile=context)
+            catalog = self.catalogs[profile]
+            edits = documents.setdefault(profile, {})
             owner = row['repository']
-            if owner not in documents:
-                documents[owner] = copy.deepcopy(original)
-            documents[owner]['resources'] = [r for r in documents[owner]['resources']
-                                            if row['repository'] + ':' + r['id'] not in selected]
-        operations = self.catalog.updates(documents)
+            if owner not in edits:
+                source = next(s for s in catalog.sources if s['id'] == owner)
+                edits[owner] = copy.deepcopy(catalog.manifest(source))
+            edits[owner]['resources'] = [r for r in edits[owner]['resources']
+                                         if owner + ':' + r['id'] != row['id']]
+        operations = []
+        for profile, edits in documents.items():
+            catalog = self.catalogs[profile]
+            operations.extend(catalog.updates(edits, update_registry=False))
         for operation in operations:
             path = Path(operation['path'])
             state = self.manager.store.state
@@ -117,7 +127,7 @@ class Check:
 
 @permanent_output()
 def confirm(question, action='Apply'):
-    approved = gum_confirm(question, action, cancel='Skip' if action == 'Remove entry' else 'Cancel')
+    approved = gum_confirm(question, action, cancel='Cancel' if action == 'Apply' else 'Skip')
     if approved is not None:
         return approved
     ui = Presentation(sys.stderr)

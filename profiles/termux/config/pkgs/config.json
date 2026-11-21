@@ -1,0 +1,37 @@
+{
+  "policies": {
+    "npm": {
+      "skip": [
+        "@openai/codex-linux-arm64"
+      ],
+      "packages": {
+        "@openai/codex": {
+          "install": {
+            "replace": [
+              [
+                "npm",
+                "install",
+                "-g",
+                "--force",
+                "@openai/codex@latest",
+                "@openai/codex-linux-arm64@npm:@openai/codex@linux-arm64"
+              ]
+            ]
+          },
+          "upgrade": {
+            "replace": [
+              [
+                "npm",
+                "install",
+                "-g",
+                "--force",
+                "@openai/codex@latest",
+                "@openai/codex-linux-arm64@npm:@openai/codex@linux-arm64"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -29,7 +29,8 @@ def registry(root=None):
     data = read_json(path, (1, 2, 3))
     if data['schema'] == 1: return None
     sources = read_json(root / '.dots/sources.json', (1, 2))
-    return Registry(data, sources['sources'])
+    from profile_files import augmented_sources
+    return Registry(data, augmented_sources(root, sources['sources']))
 
 
 def validate_cli(args, parser):

@@ -59,6 +59,7 @@ bin-release/
 !/bin/dots*
 
 # Machine-local theme connectors (colors are generated in XDG state).
+/profiles/termux/config/termux/colors.properties
 /config/bat/themes/Dots.tmTheme
 /config/kitty/dots-theme.conf
 /config/tmux/dots-theme.conf

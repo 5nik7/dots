@@ -81,6 +81,60 @@ class Values(fixtures.ProfileConfig):
             self.run_config('set',key,value,'--no-refresh',code=1)
             self.assertEqual(self.path.read_bytes(),before)
 
+    def test_files_list_preferences_discovery_review_and_activation(self):
+        from config_menu import Draft, Inventory
+        from config_transfer import portable
+        from config_values import candidates
+        view, grouping = 'apps.files.list_view', 'apps.files.group_by_status'
+        self.assertEqual(self.run_config('get','apps.files','--json').stdout.count('\x1b'), 0)
+        inventory = Inventory(self.root, self.platform)
+        expected = [(view, 'short', ['short','default','verbose']), (grouping, True, [True,False])]
+        for key, default, allowed in expected:
+            self.assertIn(key, keys(self.root))
+            self.assertTrue(portable(key))
+            row = inventory.find(key)
+            self.assertEqual(row.value, default)
+            self.assertEqual(row.constraints['choices'], allowed)
+            self.assertEqual(candidates(self.root,key), [v if isinstance(v,str) else json.dumps(v) for v in allowed])
+            explanation = json.loads(self.run_config('explain',key,'--json').stdout)
+            self.assertEqual((explanation['value'], explanation['consumer'], explanation['activation']),
+                             (default, 'files', 'next invocation'))
+            self.assertEqual(explanation['source'], str(self.root/'default/config.json'))
+            self.run_config('set',key,'invalid','--no-refresh',code=1)
+        before = self.path.read_bytes()
+        draft = Draft(inventory, inventory.find(view)).prepare('verbose')
+        self.assertIn('next dots files list invocation', draft.review())
+        self.assertEqual(self.path.read_bytes(), before)
+        with patch('config_refresh.refresh', side_effect=AssertionError('unexpected theme publication')):
+            saved = draft.save()
+        self.assertEqual(saved['refresh']['consumers'], [dict(app='files',status='next invocation')])
+        self.assertEqual(self.run_config('get',view,native=True).stdout, 'verbose\n')
+        self.run_config('set',grouping,'false')
+        self.assertEqual(self.run_config('get',grouping).stdout, 'false\n')
+        self.run_config('unset',view)
+        self.run_config('unset',grouping)
+        self.assertEqual(json.loads(self.run_config('get','apps.files','--json').stdout)['value'],
+                         dict(list_view='short',group_by_status=True))
+        self.assertFalse((self.home/'state/dots/current/theme').is_symlink())
+        self.assertFalse((self.home/'state/dots/themes/generations').exists())
+
+    def test_files_list_profile_inheritance_and_reset(self):
+        base = self.root/'profiles/linux'
+        leaf = base/'distros/fixture'
+        leaf.mkdir(parents=True)
+        (leaf/'profile.json').write_text(json.dumps(dict(schema=1, id='linux/fixture', files=[])))
+        self.run_config('set','apps.files.list_view','default','--profile','linux','--no-refresh')
+        self.run_config('set','apps.files.group_by_status','false','--profile','linux','--no-refresh')
+        selected = context(self.root, 'linux/fixture')
+        controls = Controls(self.root, selected)
+        self.assertEqual(controls.values['apps']['files'], dict(list_view='default',group_by_status=False))
+        self.assertEqual(controls.resolve('apps.files.list_view')['source'], str(base/'config.json'))
+        self.run_config('set','apps.files.list_view','verbose','--profile','linux/fixture','--no-refresh')
+        self.assertEqual(Controls(self.root,selected).values['apps']['files'], dict(list_view='verbose',group_by_status=False))
+        self.run_config('unset','apps.files.list_view','--profile','linux/fixture','--no-refresh')
+        self.assertEqual(Controls(self.root,selected).resolve('apps.files.list_view'),
+                         controls.resolve('apps.files.list_view'))
+
     def test_literals_types_null_and_data(self):
         key='apps.nvim.highlights["@variable.member"].fg'
         self.assertEqual(name(parts(key)),key)

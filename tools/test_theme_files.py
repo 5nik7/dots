@@ -216,9 +216,9 @@ class ThemeFiles(unittest.TestCase):
         with self.assertRaises(subject.SelectionEnded):subject.browse(selector=Cancel())
 
     def test_native_destinations_and_errors(self):
-        with patch.object(subject,'eza_config_directory',return_value=self.home/'Roaming/eza'):
+        with patch('app_paths.eza_config_directory',return_value=self.home/'Roaming/eza'):
             self.assertEqual(self.row('eza.yml')['connections'][0]['target'],str(self.home/'Roaming/eza/theme.yml'))
-        with patch.object(subject,'television_config_directory',side_effect=ValueError('invalid')):
+        with patch('app_paths.television_config_directory',side_effect=ValueError('invalid')):
             self.assertFalse(self.doc('television')['healthy'])
         with patch.object(subject.Path,'lstat',side_effect=PermissionError('denied')):
             self.assertEqual(subject.Inspection().publication,'unavailable')

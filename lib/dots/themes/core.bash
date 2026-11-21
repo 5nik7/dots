@@ -296,7 +296,10 @@ dt_emit_init() {
   case $shell in bash|zsh|fish) ;; *) dt_error 'expected bash, zsh, or fish'; return 1 ;; esac
   if [[ $shell == fish ]]; then
     printf 'set -gx DOTS_THEME_ID %s\n' "$DT_ID"
-    printf 'set -gx THEME %s\nset -gx FLAVOR %s\n' "$theme" "$selected"
+    printf '%s\n' 'if set -q XDG_STATE_HOME; and test -n "$XDG_STATE_HOME"' \
+      '    set -gx THEME "$XDG_STATE_HOME/dots/current/theme"' 'else' \
+      '    set -gx THEME "$HOME/.local/state/dots/current/theme"' 'end'
+    printf 'set -gx DOTS_THEME_FAMILY %s\nset -gx FLAVOR %s\n' "$theme" "$selected"
     for name in "${DT_NAMES[@]}"; do printf "set -g dots_color_%s '%s'\n" "$name" "${DT_COLORS[$name]}"; done
     for role in background foreground muted accent selection error warning info hint; do printf "set -g dots_role_%s '%s'\n" "$role" "${DT_SEMANTIC[$role]:-${DT_COLORS[${DT_META[roles.$role]}]}}"; done
     return
@@ -319,7 +322,8 @@ SHELL
   printf '[[ ${ESC-} == %q ]] || declare -g ESC=%q\n' $'\033' $'\033'
   printf '[[ ${rst-} == %q ]] || declare -g rst=%q\n' $'\e[0m' $'\e[0m'
   printf '[[ ${RST-} == %q ]] || declare -g RST=%q\n' $'\e[0m' $'\e[0m'
-  printf 'export THEME=%q FLAVOR=%q\n' "$theme" "$selected"
+  printf '%s\n' 'export THEME="${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme"'
+  printf 'export DOTS_THEME_FAMILY=%q FLAVOR=%q\n' "$theme" "$selected"
   # App styling remains available when named shell color shortcuts are disabled.
   printf '_DOTS_LESS_FOREGROUND_HEX=%q\n_DOTS_LESS_BACKGROUND_HEX=%q\n' \
     "${DT_SEMANTIC[foreground]:-${DT_COLORS[${DT_META[roles.foreground]}]}}" \

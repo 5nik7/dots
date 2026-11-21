@@ -632,7 +632,7 @@ except SelectionEnded as e:raise SystemExit(e.status)
         import time
         code="""import os
 import config_cli
-raise SystemExit(config_cli.main(['browse','--client',os.environ['CLIENT'],'--query',os.environ['QUERY']]))
+raise SystemExit(config_cli.main(['browse','--profile',os.environ['PROFILE'],'--client',os.environ['CLIENT'],'--query',os.environ['QUERY']]))
 """
         for width in (40,80,120):
             theme=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme';theme.mkdir(parents=True,exist_ok=True)
@@ -642,7 +642,7 @@ raise SystemExit(config_cli.main(['browse','--client',os.environ['CLIENT'],'--qu
             self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
             time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
             before=set(self.base.iterdir())
-            p=self.worker(code,QUERY='environment.TEST_LABEL',DOTS_COLOR='never' if width==40 else 'always',
+            p=self.worker(code,PROFILE=self.platform,QUERY='environment.TEST_LABEL',DOTS_COLOR='never' if width==40 else 'always',
                           DOTS_ICONS='always' if width==80 else 'never')
             self.receive(self.first[1],b'List');time.sleep(.1);os.write(self.first[1],b'\r')
             try:self.receive(self.first[1],b'TEST_LABEL')

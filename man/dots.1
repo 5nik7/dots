@@ -106,7 +106,7 @@ Preview without changes
 .B "\-\-yes"
 Apply the displayed plan
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent,source\-tonal"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -118,7 +118,7 @@ Generate dark colors
 .B "\-\-adjust vibrance=,saturation=,contrast=,brightness=,shadows=,highlights=,hueShift=,temperature=,tint=,gamma=,blackPoint=,whitePoint="
 Adjustment NAME=VALUE
 .TP
-.B "\-\-set background=,red=,green=,yellow=,blue=,magenta=,cyan=,foreground=,muted=,bright_red=,bright_green=,bright_yellow=,bright_blue=,bright_magenta=,bright_cyan=,bright_foreground=,accent=,cursor=,selection=,selection_background=,selection_foreground=,error=,warning=,info=,hint=,orange=,brown=,dark_background=,darker_background=,lighter_background=,dark_foreground=,light_foreground="
+.B "\-\-set background=,red=,green=,yellow=,blue=,magenta=,cyan=,foreground=,muted=,bright_red=,bright_green=,bright_yellow=,bright_blue=,bright_magenta=,bright_cyan=,bright_foreground=,accent=,cursor=,selection=,selection_background=,selection_foreground=,error=,warning=,info=,hint=,orange=,brown=,dark_background=,darker_background=,lighter_background=,dark_foreground=,light_foreground=,white=,black=,success="
 Override COLOR=HEX
 .TP
 .B "\-\-image VALUE"
@@ -155,7 +155,7 @@ Preview without changes
 .B "\-\-yes"
 Apply the displayed plan
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent,source\-tonal"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -167,7 +167,7 @@ Generate dark colors
 .B "\-\-adjust vibrance=,saturation=,contrast=,brightness=,shadows=,highlights=,hueShift=,temperature=,tint=,gamma=,blackPoint=,whitePoint="
 Adjustment NAME=VALUE
 .TP
-.B "\-\-set background=,red=,green=,yellow=,blue=,magenta=,cyan=,foreground=,muted=,bright_red=,bright_green=,bright_yellow=,bright_blue=,bright_magenta=,bright_cyan=,bright_foreground=,accent=,cursor=,selection=,selection_background=,selection_foreground=,error=,warning=,info=,hint=,orange=,brown=,dark_background=,darker_background=,lighter_background=,dark_foreground=,light_foreground="
+.B "\-\-set background=,red=,green=,yellow=,blue=,magenta=,cyan=,foreground=,muted=,bright_red=,bright_green=,bright_yellow=,bright_blue=,bright_magenta=,bright_cyan=,bright_foreground=,accent=,cursor=,selection=,selection_background=,selection_foreground=,error=,warning=,info=,hint=,orange=,brown=,dark_background=,darker_background=,lighter_background=,dark_foreground=,light_foreground=,white=,black=,success="
 Override COLOR=HEX
 .TP
 .B "\-\-reextract"
@@ -226,10 +226,13 @@ Inspect an image palette
 .B "\-\-interactive"
 Guide inputs and preview choices
 .TP
+.B "\-\-all\-modes"
+Browse all extraction modes and review a palette
+.TP
 .B "\-\-json"
 Emit versioned JSON
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent,source\-tonal"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -266,7 +269,7 @@ Preview without changes
 .B "\-\-yes"
 Apply the displayed plan
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent,source\-tonal"
 Extraction mode
 .TP
 .B "\-\-light"
@@ -329,7 +332,7 @@ Guide inputs and preview choices
 .B "\-\-json"
 Emit versioned JSON
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent,source\-tonal"
 Temporary theme variant or reference extraction mode
 .TP
 .B "\-\-light"
@@ -338,6 +341,12 @@ Generate light colors
 .B "\-\-dark"
 Generate dark colors
 .TP
+.B "\-\-all\-themes"
+Browse themes, or add \-\-yes to save images for every theme
+.TP
+.B "\-\-all\-styles"
+Include every compatible style
+.TP
 .B "\-\-theme VALUE"
 Use the rendered colors of a Dots theme
 .TP
@@ -345,7 +354,8 @@ Use the rendered colors of a Dots theme
 Extract the palette from a reference image
 .TP
 .B "\-\-output VALUE"
-New image destination (extension selects the encoder)
+Image destination, relative to each theme background folder in a batch
+(extension selects the encoder)
 .TP
 .B "\-\-format png,jpg,jpeg,webp,gif,svg,bmp,tif,tiff,avif"
 Output type for automatic or extensionless paths
@@ -378,7 +388,7 @@ Ordered comma\-separated palette names for gradient or duotone
 Preview without saving
 .TP
 .B "\-\-yes"
-Save without prompting
+Save the image, or confirm one batch with \-\-all\-themes
 .TP
 .B "\-\-logo text,auto,kitty,chafa"
 Logo renderer (default: text)
@@ -2895,7 +2905,7 @@ Register repository sources or import configurations and link them
 Show actions, backups and unchanged/skipped reasons
 .TP
 .B "\-\-pick"
-Select interactively; combine with \-\-dry\-run to preview
+Choose from scan results grouped by action, as with bare add
 .TP
 .B "\-\-json"
 Emit versioned JSON
@@ -2915,7 +2925,13 @@ Disable optional retained backups
 .B "\-\-scan"
 Add ready repository sources and registered configurations
 .TP
-.B "\-\-target VALUE"
+.B "\-\-global, \-g"
+Store new imports in the shared checkout instead of the active profile
+.TP
+.B "\-\-source, \-s VALUE"
+Storage path for one unmanaged input
+.TP
+.B "\-\-target, \-t VALUE"
 Destination for one explicit repository source
 .TP
 .B "\-\-directory\-link"
@@ -3071,13 +3087,13 @@ Select interactively; combine with \-\-dry\-run to preview
 Create an explicit new catalog mapping
 .TP
 .B "\-\-repo VALUE"
-Owning repository for a new mapping
+Owner for a relative source path
 .TP
 .B "\-\-id VALUE"
 Local ID for a new mapping or checkout\-wide rename
 .TP
 .B "\-\-source VALUE"
-Source relative to the owning repository
+Rooted source template, absolute path or owner\-relative path
 .TP
 .B "\-\-target VALUE"
 Portable target template or supported destination path
@@ -3086,7 +3102,7 @@ Portable target template or supported destination path
 Application for a new mapping
 .TP
 .B "\-\-category VALUE"
-Category for a new mapping
+Set the mapping's category in the selected profile
 .TP
 .B "\-\-strategy link,directory\-link,copy"
 Source strategy; live copy is unsupported
@@ -3117,6 +3133,50 @@ Refuse occupied replacements; retain required recovery data
 .TP
 .B "Argument 1 (file\-resource)"
 Qualified resource ID
+.SS "dots files fd"
+Alias for files find
+.PP
+.B "dots files fd [PATH...] [\-\-path DIR]... [OPTIONS]"
+.TP
+.B "\-\-path VALUE"
+Recursively inspect this directory; repeat for additional roots
+.TP
+.B "\-\-verbose, \-v"
+Show operation details
+.TP
+.B "\-\-json"
+Print discovered links or an explicitly applied result as JSON
+.TP
+.B "\-\-dry\-run"
+Show missing mappings without adding them
+.TP
+.B "\-\-yes"
+Register eligible links without prompting
+.TP
+.B "Argument * (file)"
+Directory or link to inspect
+.SS "dots files find"
+Find existing links into Dots and offer to register missing mappings
+.PP
+.B "dots files find [PATH...] [\-\-path DIR]... [OPTIONS]"
+.TP
+.B "\-\-path VALUE"
+Recursively inspect this directory; repeat for additional roots
+.TP
+.B "\-\-verbose, \-v"
+Show operation details
+.TP
+.B "\-\-json"
+Print discovered links or an explicitly applied result as JSON
+.TP
+.B "\-\-dry\-run"
+Show missing mappings without adding them
+.TP
+.B "\-\-yes"
+Register eligible links without prompting
+.TP
+.B "Argument * (file)"
+Directory or link to inspect
 .SS "dots files history"
 List managed file transactions
 .PP
@@ -3186,12 +3246,18 @@ Restore exact font preferences
 .B "\-\-font\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal"
 Select saved font targets; repeat
 .SS "dots files link"
-Link catalogued configuration sources
+Link a managed source to a target or link catalogued resources
 .PP
-.B "dots files link [RESOURCE...] [OPTIONS]"
+.B "dots files link [RESOURCE... | [\-s] SOURCE [\-t] TARGET] [OPTIONS]"
 .TP
 .B "\-\-verbose, \-v"
 Show actions, backups and unchanged/skipped reasons
+.TP
+.B "\-\-source, \-s VALUE"
+Managed source path for a new link
+.TP
+.B "\-\-target, \-t VALUE"
+Exact destination path for a new link
 .TP
 .B "\-\-pick"
 Select interactively; combine with \-\-dry\-run to preview
@@ -3211,12 +3277,24 @@ Retain verified backups
 .B "\-\-no\-backup"
 Disable optional retained backups
 .TP
-.B "Argument * (file\-resource)"
-Qualified resource ID
+.B "Argument * (file\-resource\-or\-path)"
+Qualified resource ID or source and target paths
 .SS "dots files list"
 List tracked files and their status
 .PP
-.B "dots files list [OPTIONS]"
+.B "dots files list [\-\-short | \-\-default | \-\-verbose | \-\-view VIEW] [OPTIONS]"
+.TP
+.B "\-\-short, \-s"
+Show a compact file list
+.TP
+.B "\-\-default"
+Show the standard file summary
+.TP
+.B "\-\-verbose, \-v"
+Show detailed file mappings
+.TP
+.B "\-\-view short,default,verbose"
+Select the human output view
 .TP
 .B "\-\-json"
 Emit versioned JSON
@@ -3241,6 +3319,40 @@ Observe a platform
 .TP
 .B "\-\-sort id,app,repository,source,status"
 Sort by id, app, repository, source or status
+.SS "dots files ln"
+Alias for files link
+.PP
+.B "dots files ln [RESOURCE... | [\-s] SOURCE [\-t] TARGET] [OPTIONS]"
+.TP
+.B "\-\-verbose, \-v"
+Show actions, backups and unchanged/skipped reasons
+.TP
+.B "\-\-source, \-s VALUE"
+Managed source path for a new link
+.TP
+.B "\-\-target, \-t VALUE"
+Exact destination path for a new link
+.TP
+.B "\-\-pick"
+Select interactively; combine with \-\-dry\-run to preview
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-dry\-run"
+Preview without changes
+.TP
+.B "\-\-yes"
+Apply the displayed plan without prompting
+.TP
+.B "\-\-backup"
+Retain verified backups
+.TP
+.B "\-\-no\-backup"
+Disable optional retained backups
+.TP
+.B "Argument * (file\-resource\-or\-path)"
+Qualified resource ID or source and target paths
 .SS "dots files locate"
 Find files by name, app, source or target
 .PP
@@ -3276,6 +3388,46 @@ List registered user configuration search locations
 .TP
 .B "\-\-json"
 Emit versioned JSON
+.SS "dots files ls"
+Alias for files list
+.PP
+.B "dots files ls [\-\-short | \-\-default | \-\-verbose | \-\-view VIEW] [OPTIONS]"
+.TP
+.B "\-\-short, \-s"
+Show a compact file list
+.TP
+.B "\-\-default"
+Show the standard file summary
+.TP
+.B "\-\-verbose, \-v"
+Show detailed file mappings
+.TP
+.B "\-\-view short,default,verbose"
+Select the human output view
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-all\-platforms"
+Include inactive platforms
+.TP
+.B "\-\-repo VALUE"
+Repository ID
+.TP
+.B "\-\-app VALUE"
+Filter by application
+.TP
+.B "\-\-category VALUE"
+Filter by category
+.TP
+.B "\-\-status VALUE"
+Filter by observed status
+.TP
+.B "\-\-platform termux,linux,wsl,windows"
+Observe a platform
+.TP
+.B "\-\-sort id,app,repository,source,status"
+Sort by id, app, repository, source or status
 .SS "dots files migrate apps"
 Preview or migrate legacy applications into Dots plugins with retained backups
 .PP
@@ -3292,6 +3444,34 @@ Approve the plan without prompting
 .TP
 .B "\-\-json"
 Emit versioned JSON
+.SS "dots files prune"
+Preview and remove stale file mappings from the active profile
+.PP
+.B "dots files prune [OPTIONS]"
+.TP
+.B "\-\-interactive, \-i"
+Choose individual changes in a terminal
+.TP
+.B "\-\-yes"
+Apply all eligible changes without prompting
+.TP
+.B "\-\-dry\-run"
+Preview changes without applying them (default)
+.TP
+.B "\-\-json"
+Print the preview or applied result as JSON
+.TP
+.B "\-\-verbose, \-v"
+Show detailed file actions and reasons
+.TP
+.B "\-\-repo VALUE"
+Filter by repository ID
+.TP
+.B "\-\-app VALUE"
+Filter by application
+.TP
+.B "\-\-category VALUE"
+Filter by category
 .SS "dots files recover"
 Recover an interrupted file transaction
 .PP
@@ -3314,8 +3494,36 @@ Retain verified backups
 .TP
 .B "\-\-no\-backup"
 Disable optional retained backups
+.SS "dots files relink"
+Preview and restore eligible links declared by the active profile
+.PP
+.B "dots files relink [OPTIONS]"
+.TP
+.B "\-\-interactive, \-i"
+Choose individual changes in a terminal
+.TP
+.B "\-\-yes"
+Apply all eligible changes without prompting
+.TP
+.B "\-\-dry\-run"
+Preview changes without applying them (default)
+.TP
+.B "\-\-json"
+Print the preview or applied result as JSON
+.TP
+.B "\-\-verbose, \-v"
+Show detailed file actions and reasons
+.TP
+.B "\-\-repo VALUE"
+Filter by repository ID
+.TP
+.B "\-\-app VALUE"
+Filter by application
+.TP
+.B "\-\-category VALUE"
+Filter by category
 .SS "dots files remove"
-Stop managing configurations and retain local copies
+Remove selected mappings and preserve usable local configurations
 .PP
 .B "dots files remove [RESOURCE...] [OPTIONS]"
 .TP
@@ -3477,6 +3685,34 @@ Refuse occupied replacements; retain required recovery data
 .TP
 .B "Argument * (file\-resource)"
 Qualified resource ID
+.SS "dots files sync"
+Preview and apply both relink and prune for the active profile
+.PP
+.B "dots files sync [OPTIONS]"
+.TP
+.B "\-\-interactive, \-i"
+Choose individual changes in a terminal
+.TP
+.B "\-\-yes"
+Apply all eligible changes without prompting
+.TP
+.B "\-\-dry\-run"
+Preview changes without applying them (default)
+.TP
+.B "\-\-json"
+Print the preview or applied result as JSON
+.TP
+.B "\-\-verbose, \-v"
+Show detailed file actions and reasons
+.TP
+.B "\-\-repo VALUE"
+Filter by repository ID
+.TP
+.B "\-\-app VALUE"
+Filter by application
+.TP
+.B "\-\-category VALUE"
+Filter by category
 .SS "dots files target"
 Print a file destination path
 .PP
@@ -3505,7 +3741,7 @@ Emit versioned JSON
 Include inactive platforms
 .TP
 .B "\-\-repo VALUE"
-Repository ID
+Owner for an owner\-relative source (inferred for rooted paths)
 .TP
 .B "\-\-id VALUE"
 Stable resource ID
@@ -5185,7 +5421,7 @@ Guide inputs and preview choices
 .B "\-\-json"
 Emit versioned JSON
 .TP
-.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent"
+.B "\-\-mode normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split\-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high\-contrast,duotone,dominant,accent\-pop,hue\-balanced,tonal\-range,teal\-orange,faded\-film,cyanotype,risograph,jewel\-tones,accented\-analogous,pentadic,neutral\-accent,source\-tonal"
 Temporary theme variant or reference extraction mode
 .TP
 .B "\-\-light"
@@ -5194,6 +5430,12 @@ Generate light colors
 .B "\-\-dark"
 Generate dark colors
 .TP
+.B "\-\-all\-themes"
+Browse themes, or add \-\-yes to save images for every theme
+.TP
+.B "\-\-all\-styles"
+Include every compatible style
+.TP
 .B "\-\-theme VALUE"
 Use the rendered colors of a Dots theme
 .TP
@@ -5201,7 +5443,8 @@ Use the rendered colors of a Dots theme
 Extract the palette from a reference image
 .TP
 .B "\-\-output VALUE"
-New image destination (extension selects the encoder)
+Image destination, relative to each theme background folder in a batch
+(extension selects the encoder)
 .TP
 .B "\-\-format png,jpg,jpeg,webp,gif,svg,bmp,tif,tiff,avif"
 Output type for automatic or extensionless paths
@@ -5234,7 +5477,7 @@ Ordered comma\-separated palette names for gradient or duotone
 Preview without saving
 .TP
 .B "\-\-yes"
-Save without prompting
+Save the image, or confirm one batch with \-\-all\-themes
 .TP
 .B "\-\-logo text,auto,kitty,chafa"
 Logo renderer (default: text)

@@ -260,12 +260,15 @@ source "$DOTS/lib/dots/shell/init.bash" && exit 4
 
     def test_diagnostic_sources(self):
         self.env['DOTS_THEME_DEFAULT'] = 'nord'
+        self.env['THEME'] = 'old-family'
         result = subprocess.run([str(REPO / 'bin/dots'), 'env', '--json'], env=self.env,
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         data = json.loads(result.stdout)
         self.assertEqual({key: data['values']['DOTS_THEME_DEFAULT'][key] for key in ('value', 'source')}, {'value': 'nord', 'source': 'environment'})
         self.assertEqual(data['values']['DOTS_INIT_THEME']['source'], 'config')
+        self.assertEqual(data['values']['THEME']['value'], str(self.home/'state/dots/current/theme'))
+        self.assertEqual(data['values']['THEME']['inherited'], 'different')
         self.assertIn('PATH', data['values'])
         self.assertIn('platform', data)
         self.assertIn('profile', data)
@@ -297,6 +300,7 @@ source "$DOTS/lib/dots/shell/init.bash" && exit 4
         (second / 'ls_colors').write_text('di=38;2;4;5;6\n')
         for shell, script in {
             'fish': '''source "$DOTS/lib/dots/shell/init.fish"
+test "$THEME" = "$_DOTS_STATE/current/theme"; and test "$DOTS_THEME_FAMILY" = nord; or exit 8
 printf "%s|%s" "$DOTS_THEME_ID" "$dots_color_blue_hex"
 printf 'g.second\n' > "$_DOTS_STATE/themes/current"
 false
@@ -318,6 +322,7 @@ if $env.dots_colors.red.hex != '#abcdef' {{ error make {{msg: 'missing red'}} }}
 if $env.LS_COLORS != 'di=38;2;4;5;6' {{ error make {{msg: 'stale file colors'}} }}
 "g.invalid\n" | save --force ($env.dot.state | path join 'themes/current')
 try {{ _dots-refresh-theme }}
+if $env.THEME != ($env.dot.state | path join 'current/theme') or $env.DOTS_THEME_FAMILY != white {{ error make {{msg: 'theme path or family lost'}} }}
 if $env.DOTS_THEME_ID != white {{ error make {{msg: 'lost last good theme'}} }}
 ''',
         }.items():

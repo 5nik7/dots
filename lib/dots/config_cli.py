@@ -12,7 +12,7 @@ LIB = Path(__file__).resolve().parent
 sys.path.insert(0, str(LIB / 'files'))
 from profile_config import checkout, context, directory, legacy_directory, read_env, schema
 from profiles import definition, public_report, SENSITIVE
-from catalog import Catalog, Presentation, read_json
+from catalog import Catalog, Presentation, read_json, relative
 from transactions import Store, digest, parents_safe, exists
 from file_platform import state_root
 from style_config import Styles, read as read_styles, encode as encode_styles, nested, flatten, validate as validate_styles
@@ -26,9 +26,6 @@ def validate(root, selected, data):
     candidate = copy.deepcopy(selected)
     candidate['layers'][-1] = dict(data, root=layer['root'])
     catalog = Catalog(root, candidate['facts']['platform'], profile=candidate)
-    owners = {row['id'] for row in catalog.sources if row['status'] != 'excluded'}
-    if set(data.get('files', {})) - owners:
-        raise ValueError('profile files refers to an unknown or excluded repository')
     rows = catalog.records()
     if any(row['applicable'] and row['status'] == 'conflict' for row in rows):
         raise ValueError('profile file mappings contain conflicting destinations')
@@ -36,6 +33,7 @@ def validate(root, selected, data):
 
 
 def key_parts(key):
+    if key == 'files': return 'files', ''
     if key.startswith('DOTS_'): return 'settings', key
     group, dot, name = key.partition('.')
     if not dot or group not in ('settings', 'environment', 'files', 'profile') or not name:
@@ -79,6 +77,39 @@ class Plan:
 
     def edit(self, key, value=None, unset=False, json_value=False):
         group, name = key_parts(key)
+        if group == 'files' and not name:
+            if unset:
+                self.data.pop('files', None)
+            else:
+                rows = json.loads(value)
+                if not isinstance(rows, list):
+                    raise ValueError('files expects a JSON array of mappings')
+                self.data['files'] = rows
+            self.items.append(dict(action='unset' if unset else 'set', key=key))
+            return
+        if group == 'files' and isinstance(self.data.get('files'), list):
+            # Compatibility for a bulk files.OWNER edit. New manifests always
+            # keep the single portable array as their storage contract.
+            catalog = Catalog(self.root, self.selected['facts']['platform'], profile=self.selected)
+            owner = next((s for s in catalog.sources if s['id'] == name and s['status'] != 'excluded'), None)
+            if not owner:
+                raise ValueError('unknown mapping owner: ' + name)
+            rows = [] if unset else json.loads(value)
+            if not isinstance(rows, list):
+                raise ValueError('files.' + name + ' expects a JSON array')
+            result = [r for r in self.data['files']
+                      if catalog.source_owner(catalog.resolve_source(r['source']))['id'] != name]
+            for row in rows:
+                if not isinstance(row, dict) or not isinstance(row.get('source'), str):
+                    raise ValueError('expected a mapping with a source')
+                path = (catalog.resolve_source(row['source']) if row['source'].startswith('${') else
+                        Path(owner['root']) / relative(row['source']))
+                if catalog.source_owner(path)['id'] != name:
+                    raise ValueError('source belongs to a different owner')
+                result.append(dict(row, source=catalog.source_spec(path)))
+            self.data['files'] = result
+            self.items.append(dict(action='unset' if unset else 'set', key=key))
+            return
         if group == 'profile':
             if unset: self.data.pop(name, None)
             else:
@@ -299,7 +330,7 @@ def render_value(ui, name, value, prefix=''):
             ui.emit()
             if isinstance(item,dict) and 'source' in item:
                 owner = name if prefix.rstrip('.') == 'files' else name.rsplit('.',1)[-1]
-                ui.heading(owner+':'+str(item.get('id',index+1)))
+                ui.heading(str(item.get('id',index+1)) if name == 'files' else owner+':'+str(item.get('id',index+1)))
                 for key in ('source','target'):
                     if item.get(key) is not None: ui.resource_detail(key.title(),item[key],display=item[key])
                 for key in ('strategy','app','category','platforms','replaces','targets'):
@@ -340,6 +371,9 @@ def render(result):
     for group, entries in result.get('config', {}).items():
         if not entries: continue
         ui.emit(); ui.heading(group.title())
+        if group == 'files' and isinstance(entries, list):
+            render_value(ui, 'files', entries)
+            continue
         for name, value in entries.items():
             if group == 'files': ui.detail(name,str(len(value))+' resources; dots config get files.'+name)
             else: render_value(ui,name,value,group+'.')
@@ -429,7 +463,7 @@ def main(argv=None):
             applied=plan.apply();result.update(status=applied['status'],transaction=applied.get('id'))
         print(json.dumps(result)) if args.json else render(result)
         return 0
-    implicit_shared = not args.profile and not args.defaults and not (args.key or '').startswith(('apps.wttr','apps.pkgs','apps.codex','environment.','files.','profile.'))
+    implicit_shared = not args.profile and not args.defaults and args.key != 'files' and not (args.key or '').startswith(('apps.wttr','apps.pkgs','apps.codex','environment.','files.','profile.'))
     from interaction import terminal
     browser_intent=(args.action=='browse' and not args.json) or (automatic and terminal() and not args.json)
     preference_path=args.action=='path' and (not args.key or args.key=='config.json' or args.key.startswith(('apps.','formatting.','colors','icons','settings.','DOTS_')))
@@ -621,8 +655,15 @@ def main(argv=None):
         else:
             merged = dict(settings={key:default for key,(_,default,_) in schema().items()},environment={},files={})
             merged['settings']['files.backup']=False
+            file_items = {}
+            flat_files = not args.defaults and any(isinstance(i.get('files'), list) for i in selected['layers'])
             for item in selected['layers'] if not args.defaults else []:
-                for key in merged: merged[key].update(item.get(key, {}))
+                for key in ('settings','environment'): merged[key].update(item.get(key, {}))
+                if not flat_files: merged['files'].update(item.get('files', {}))
+            if flat_files:
+                from profile_config import file_rows
+                file_items = {identity: row for identity, layer_info, row in file_rows(root, selected)}
+                merged['files'] = list(file_items.values())
             if not args.defaults: merged['profile'] = dict(alias=layer.get('alias'))
             from profile_config import settings as resolved_settings
             merged['settings'].update({k:v['value'] for k,v in resolved_settings(root,selected,defaults=args.defaults).items()})
@@ -657,8 +698,14 @@ def main(argv=None):
                     result['path']=resolved['source'] or str((root/'default' if args.defaults else Path(layer['root']))/appearance_file(args.key))
                 else:
                     group, key = key_parts(args.key)
-                    if key not in merged[group]: raise ValueError('key is not configured in this profile or its parents')
-                    value = merged[group][key]
+                    if group == 'files' and not key:
+                        value = merged[group]
+                    elif group == 'files' and flat_files:
+                        value = file_items.get(key) or [r for identity, r in file_items.items() if identity.split(':',1)[0] == key]
+                        if not value: raise ValueError('no file mapping matches ' + key)
+                    else:
+                        if key not in merged[group]: raise ValueError('key is not configured in this profile or its parents')
+                        value = merged[group][key]
                 print_value(result,args.key,value,args.json)
                 return 0
             from config_keys import document,public_styles

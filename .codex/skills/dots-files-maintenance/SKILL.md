@@ -19,8 +19,8 @@ root agent contract. Inspect Git state, source boundaries and the active profile
 Capture effective inventories before migrations, including Windows destinations.
 
 Keep the core `.dots/files.json` registry and `.dots/sources.json` source list.
-The registry owns qualified IDs and platform eligibility. Profile
-`files.REPOSITORY` arrays own implementation fields: local ID, source, target,
+The registry preserves explicit eligibility and historical IDs. Profiles own a flat
+`files` array of rooted source definitions. Hand-written new IDs take effect directly. Fields include local ID, source, target,
 app, category, strategy and optional enabled/replaces. Profile rows never carry
 platform lists or target maps. A registered resource without a profile mapping
 must not install. Preserve qualified IDs and recovery compatibility.

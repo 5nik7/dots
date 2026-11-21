@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import shutil
 import sys
@@ -106,6 +107,18 @@ class Files(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             return proc.stdout
         call("commands", "--check")
+        native = [sys.executable, '-B', str(self.repo / 'lib/dots/cli.py')]
+        for route in ('list', 'ls'):
+            help_text = call('help', 'files', route)
+            for option in ('--view', '--short', '--default', '--verbose'):
+                self.assertIn(option, help_text)
+            expected = call('files', 'list', '-s')
+            self.assertEqual(call('files', route, '-s'), expected)
+            result = subprocess.run([*native, 'files', route, '-s'], text=True, capture_output=True, check=True)
+            self.assertEqual(result.stdout, expected)
+            choices = call('__complete', 'zsh', '4', '--', 'dots', 'files', route, '--view', '')
+            for value in ('short', 'default', 'verbose'):
+                self.assertIn('candidate\t' + value + '\t', choices)
         self.assertIn('--dry-run', call('help', 'files', 'check'))
         for shell in ('bash', 'zsh', 'fish'):
             self.assertIn('check', call('__complete', shell, '2', '--', 'dots', 'files', 'ch'))
@@ -140,7 +153,7 @@ class Files(unittest.TestCase):
             p = subprocess.run(cmd + list(args), env=env, text=True, capture_output=True)
             self.assertEqual(p.returncode, 0, p.stderr)
             return p.stdout
-        display = run("list")
+        display = run("list", "--default")
         self.assertIn("\x1b[", display)
         self.assertIn("[+] linked", display)
         self.assertIn("Source", display)
@@ -153,18 +166,26 @@ class Files(unittest.TestCase):
         self.assertFalse((self.repo / ".dots/files.lock").exists())
         env.update(DOTS_COLOR="never", DOTS_ICONS="always")
         self.assertNotIn("\x1b", run("list"))
-        self.assertIn("", run("list"))
+        self.assertIn("", run("list", "--default"))
         env.update(DOTS_COLOR="auto", DOTS_ICONS="auto")
         self.assertTrue(run("list").startswith("dots:app\tlinked\t"))
 
+    @unittest.skipIf(os.name == 'nt', 'POSIX terminal fixture')
     def test_terminal_presentation_and_no_color(self):
+        import fcntl
         import pty
+        import struct
+        import termios
+        from resources import cells
         cmd = [sys.executable, "-B", str(ROOT / "lib/dots/files/catalog.py"), "list"]
-        for extra, colored in [({}, True), ({"NO_COLOR": "1"}, False), ({"TERM": "dumb"}, False), ({"DOTS_COLOR": "never"}, False)]:
+        for width, extra, colored in [(40, {}, True), (49, {}, True), (50, {}, True), (80, {"NO_COLOR": "1"}, False),
+                                      (120, {"TERM": "dumb"}, False), (24, {"DOTS_COLOR": "never"}, False)]:
             env = dict(os.environ, TERM="xterm-256color", DOTS_COLOR="auto", DOTS_ICONS="never", NO_COLOR="")
             env.update(extra)
+            env.pop('COLUMNS', None)
             master, slave = pty.openpty()
             try:
+                fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, width, 0, 0))
                 proc = subprocess.run(cmd, env=env, stdout=slave, stderr=subprocess.PIPE, timeout=10)
                 os.close(slave); slave = None
                 output = b""
@@ -178,11 +199,73 @@ class Files(unittest.TestCase):
                     output += chunk
                 self.assertEqual(proc.returncode, 0, proc.stderr)
                 self.assertEqual(b"\x1b[" in output, colored)
-                self.assertIn(b"Source", output)
+                self.assertIn(b"->", output)
+                plain = re.sub(r'\x1b\[[0-9;]*m', '', output.decode())
+                self.assertEqual(plain.splitlines()[0] == '', width < 50)
+                self.assertTrue(all(cells(line) <= width for line in plain.splitlines()), plain)
             finally:
                 if slave is not None:
                     os.close(slave)
                 os.close(master)
+
+    def test_list_groups_human_statuses_and_preserves_script_order(self):
+        rows = []
+        for name in ('a-missing', 'b-stashed', 'c-linked', 'd-linked', 'e-existing'):
+            source = self.repo / 'config' / name
+            source.write_text(name)
+            if name.endswith('linked'):
+                (self.home / name).symlink_to(source)
+            if name == 'e-existing':
+                (self.home / name).write_text('preexisting')
+            rows.append(dict(self.row, id=name, source='config/' + name,
+                             target='${HOME}/' + name, strategy='link', enabled=name != 'b-stashed'))
+        self.write('files', dict(schema=1, repository='dots', resources=rows))
+        cmd = [sys.executable, '-B', str(ROOT / 'lib/dots/files/catalog.py'), 'list']
+        env = dict(os.environ, DOTS_COLOR='never', DOTS_ICONS='never', DOTS_PROGRESS='never', COLUMNS='120')
+        def listing(*args, **extra):
+            return subprocess.run([*cmd, *args], env=dict(env, **extra), capture_output=True,
+                                  text=True, check=True, timeout=20).stdout
+        grouped = ['c-linked', 'd-linked', 'b-stashed', 'a-missing', 'e-existing']
+        stashes_last = ['c-linked', 'd-linked', 'a-missing', 'e-existing', 'b-stashed']
+        alphabetical = sorted(grouped)
+        def check_order(output, expected):
+            positions = [output.index(name) for name in expected]
+            self.assertEqual(positions, sorted(positions), output)
+        for mode in ('short', 'default', 'verbose'):
+            with self.subTest(mode=mode):
+                check_order(listing('--view', mode), grouped)
+                check_order(listing('--view', mode, COLUMNS='50'), grouped)
+                check_order(listing('--view', mode, COLUMNS='49'), stashes_last if mode == 'short' else grouped)
+                check_order(listing('--view', mode, '--sort', 'id'), alphabetical)
+        for width in ('49', '50'):
+            for sort in ('id', 'app'):
+                check_order(listing('--short', '--sort', sort, COLUMNS=width), alphabetical)
+        fallback = listing(COLUMNS='49', DOTS_MENU_CAPTURE='1')
+        self.assertEqual(fallback, listing('--short', COLUMNS='49'))
+        self.assertIn('\n[missing]\n', fallback)
+        check_order(fallback, stashes_last)
+        raw = listing()
+        check_order(raw, alphabetical)
+        self.assertTrue(all(len(line.split('\t')) == 4 for line in raw.splitlines()))
+        self.assertEqual(listing(COLUMNS='49'), raw)
+        json_rows = listing('--json')
+        self.assertEqual(json_rows, listing('--json', '-s', DOTS_ICONS='always'))
+        self.assertEqual(json_rows, listing('--json', '-s', COLUMNS='49', DOTS_COLOR='always', DOTS_ICONS='always'))
+        self.assertEqual([row['id'] for row in json.loads(json_rows)['resources']],
+                         ['dots:' + name for name in alphabetical])
+
+        pref_dir = self.repo / 'default'
+        pref_dir.mkdir()
+        (pref_dir / 'config.json').write_text(json.dumps(dict(schema=1, apps={
+            'files': {'list_view': 'verbose', 'group_by_status': False}})))
+        report = listing(DOTS_MENU_CAPTURE='1')
+        check_order(report, alphabetical)
+        self.assertIn('Strategy', report)
+        check_order(listing('-s', COLUMNS='49'), alphabetical)
+        check_order(listing(COLUMNS='49', DOTS_MENU_CAPTURE='1'), alphabetical)
+        self.assertNotIn('Strategy', listing('-s'))
+        self.assertEqual(listing(), raw)
+        self.assertEqual(listing('--json'), json_rows)
 
     def test_directory_ownership_and_catalog_symlink_refusal(self):
         child = dict(self.row, id="child", source="config/app/-settings", strategy="link", target="${CONFIG}/app/settings")

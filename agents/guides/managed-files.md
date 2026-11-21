@@ -93,12 +93,15 @@ private exclusions, explicit replacements and directory collision classification
 The separate `tools/migrate_config_paths.py` defaults to preview and requires an
 absolute recovery journal for apply/rollback. Never use real-home migration as a test.
 Run `python3 -B tools/test_files.py`; scale checks use `tools/bench_files.py`.
+For list views, also run `tools/test_file_list_view.py`. Preserve the short view’s basenames at narrow widths and the order and values of redirected TSV and JSON.
 
 ## Bounded managed operations
 
 Read [files](../../docs/files.md) and [decision 0010](../../docs/decisions/0010-git-and-managed-file-operations.md) before changing adoption, linking, removal or backups. All routes use the shared Python engine and existing per-repository ownership. Keep optional retained snapshots separate from mandatory temporary rollback data. Remove preserves both a usable config and the repository source. Never use bak as an unverified replacement primitive. Run `python3 -B tools/test_file_operations.py` alongside catalog regressions; use only disposable homes and repositories.
 
 ## Bounded checkout lifecycle
+
+Run `tools/test_file_maintenance.py` for active-profile relink, prune and combined sync. Preserve preview-only defaults, per-item approval, byte-identical file backups, active-profile inheritance and one guarded transaction per apply.
 
 `dots files repair` owns current-platform destination repair. Reuse its receipt/latest-transaction evidence checks and retained installation baselines; do not broaden automatic eligibility or infer ownership from a catalog path alone. Ordinary occupied destinations and unverified links require an explicit helper choice plus final batch approval. Keep theme/other-owner/catalog-conflict/unsafe-path blocks, bind review to captured guards and never rebuild after approval. Run `tools/test_files_repair.py` with file-platform, picker, installation and mapping regressions. Source restoration, recursive repair and theme publication remain separate workflows.
 
@@ -114,7 +117,7 @@ the public mapping editor.
 
 Profile `files` arrays are effective catalog inputs. Use `Catalog.input_paths()` for preview guards and `Catalog.updates()` for metadata writes; do not hardcode `.dots/files.json` as the mutation destination. Preserve profile settings/environment fields and independent repository ownership. Run `tools/test_profile_config.py` alongside affected file lifecycle suites. See [profile configuration](../../docs/profiles.md#profile-configuration).
 
-The core schema-2/3 registry is permanent: IDs/platforms stay in `.dots/files.json`, sources in `.dots/sources.json`, and implementations in profile arrays without platforms/target maps. Always journal the full `Catalog.updates()` result, including tracking. Explicit mapping `--platform` selects a base profile; live apply requires the active leaf. See [file maintenance](../../.codex/skills/dots-files-maintenance/SKILL.md) and run `tools/test_profile_backend.py`.
+Flat profile arrays define mappings by rooted source and qualify IDs through source ownership. Hand-written rows are effective without a registry edit. The core schema-2/3 registry retains explicit platform limits and reserved IDs for recovery. Always journal the full `Catalog.updates()` result, including tracking. Explicit mapping `--platform` selects a base profile; live apply requires the active leaf. See [file maintenance](../../.codex/skills/dots-files-maintenance/SKILL.md) and run `tools/test_profile_backend.py`.
 
 File ID edits use `files edit OWNER:OLD --id NEW`. Schema 3 retains reserved
 historical IDs for receipt recovery; schema 2 remains readable until an effective

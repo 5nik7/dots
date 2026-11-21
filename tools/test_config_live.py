@@ -366,6 +366,7 @@ dots_options[DOTS_INIT_COMPLETION]=0
 source "$DOTS/lib/dots/themes/shell.bash"
 FZF_DEFAULT_OPTS='--height=40%'
 set_theme || exit 10
+[[ $THEME == "$_DOTS_THEME_ACTIVE" && $DOTS_THEME_FAMILY == fixture ]] || exit 15
 [[ ${_DOTS_STYLE_ICONS[applications.codex]} == FIRST ]] || exit 11
 command ln -sfn "$NEXT" "$_DOTS_THEME_ACTIVE"
 false

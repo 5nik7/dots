@@ -2,9 +2,7 @@
 
 **Status: Inventory, metadata, bounded adoption/link/remove/repair, checkout installation and recovery implemented; general profile installation remains proposed.**
 
-`dots files` starts the managed-files workflow by locating sources, recording their
-intent, classifying targets, and listing them. It requires Python 3.9+; discovery additionally requires Git. Native Windows supports the bounded install/uninstall, inspection and recovery routes described in [checkout installation](installation.md); adoption and the browser remain POSIX-only. Neither ordinary dispatch nor basic
-help requires Python or Git.
+`dots files` reads the active profile, locates its sources, and reports the state of each destination. Files commands require Python 3.9+. Repository discovery also uses Git. Bash and native PowerShell route path adoption and link registration through the shared controller. See [checkout installation](installation.md) for setup, uninstall and recovery.
 
 Slow catalog/system discovery, browser loading, planning and file operations use [terminal progress](presentation.md#operation-progress). Preparation, apply and reverse recovery have separate item counts; final results retain transaction and recovery details. `DOTS_PROGRESS=never` disables the display. JSON, raw source/target queries and dry runs never animate.
 
@@ -17,6 +15,7 @@ Managed files operations preflight the complete plan before applying changes. A 
 ```bash
 dots files sources
 dots files browse
+dots files ls
 dots files list --sort app
 dots files list --repo termux --platform termux
 dots files list --all-platforms --json
@@ -38,12 +37,40 @@ List/discover/locate accept `--repo`, `--app`, `--category`, `--status`, `--plat
 `--all-platforms`, `--sort id|app|repository|source|status`, and `--json`. The default
 platform is detected; other platforms can be inspected explicitly. `--json` emits
 one schema-1 object with `platform`, `resources` and `sources`; diagnostics go to
-stderr. Terminal views use colored status markers, counts and labeled source/target paths,
-abbreviating HOME as `~` and wrapping long paths for narrow screens. Details show
-application, category, platform, strategy and ownership information. Empty results
-are explicit. Piped lists retain tab-separated ID, status, source and target; piped
-sources retain ID, availability, repository root and platforms. Success is 0; validation/I/O
+stderr. Terminal reports abbreviate HOME as `~`. The default and verbose layouts show
+resource counts, status and labeled paths. Empty results are explicit. Piped lists
+use tab-separated ID, status, source and target unless a human view is explicitly selected.
+Piped sources retain ID, availability, repository root and platforms. Success is 0; validation/I/O
 errors are 1 and invalid command syntax is 2.
+
+### List views
+
+`dots files ls` and `dots files list` open the same listing. The **short** view is the terminal default. At 50 columns and up, a linked file that fits shows its repository source and installed destination on one line. A stashed entry shows its qualified ID.
+
+```text
+ 󰈔 ~/dots/shells/zsh/zshrc -> 󰌷 ~/.zshrc
+  dots:waybar
+```
+
+Below 50 columns, each linked file has its own source line. Its destination starts on the next line with two spaces and `󱞩`, or `->` when icons are off. A linked directory that fits stays on one line, with a single directory icon on the source side when icons are enabled. Longer paths retain their basenames as intermediate directories are shortened. The short view uses the theme’s `dark_foreground` color for link arrows at every width.
+
+The narrow layout uses headings such as `[missing]` for exceptional statuses. With status grouping enabled, stashed entries form a compact list of qualified IDs at the end. An explicit `--sort` keeps the selected order. Setting `apps.files.group_by_status` to `false` also preserves the catalog order. If two shortened path pairs look alike, the listing gives them more room and shows their qualified IDs when needed.
+
+| View | Option | Contents |
+| --- | --- | --- |
+| Short | `-s`, `--short` | Compact path pairs and status rows |
+| Default | `--default` | Resource ID, status, source and target |
+| Verbose | `-v`, `--verbose` | Default fields plus application, category, ownership, strategy and mapping details |
+
+`--view short|default|verbose` selects the same layouts. A view flag also works in a pipe. Use `--json` for the complete catalog with its original paths. To change future terminal and Files menu listings, use the Config browser or set a preference directly.
+
+```sh
+dots config browse --query apps.files
+dots config set apps.files.list_view verbose
+dots config set apps.files.group_by_status false
+```
+
+Setting `apps.files.list_view` to `short` restores the shipped view. `apps.files.group_by_status` defaults to `true`. The stashed glyph uses `icons.status.stashed`. With icons disabled, its row carries a text label.
 
 Tracking writes the core registry and selected profile metadata in one guarded, retained transaction. The result includes an undo ID. Legacy schema-1 catalogs retain their compatible single-file writer. Quote destination tokens to leave them literal:
 
@@ -77,6 +104,7 @@ dots files stash dots:example --yes
 dots files stash dots:example --restore
 dots files edit                         # Select an entry or choose New mapping
 dots files edit dots:example --target '${CONFIG}/example-new' --apply
+dots files edit termux:os-release --category config --dry-run
 dots files edit --new --repo dots --id example --source config/example \
   --target '${CONFIG}/example' --app example --category config \
   --strategy directory-link
@@ -93,7 +121,7 @@ repeat stash there to unlink a matching link, even if metadata is already disabl
 All machines must use a CLI version that understands `enabled`.
 
 `edit` changes mappings, not source contents. It preserves unspecified fields,
-IDs unless `--id` is supplied, and repository ownership. `--source` is relative to the owning repo;
+IDs unless `--id` is supplied, and repository ownership. `--source` accepts a rooted token, an absolute path or an owner-relative path;
 existing sources must be regular files or directories within that owner. Whole
 directories require `directory-link`. `--target` accepts existing destination
 templates or home/XDG paths normalized to portable templates. Other absolute
@@ -108,6 +136,8 @@ platform's base profile; without it the active leaf profile is edited. Each prof
 has one target per mapping. Eligibility changes validate other profiles, while
 implementation edits affect only the selected profile. Live apply requires the
 active profile. Legacy schema-1 catalogs retain their target-override semantics.
+
+`--category NAME` updates the selected profile's category. It can be combined with `--id` to rename and reclassify a mapping in one transaction.
 
 By default edit only saves catalog metadata. It explicitly reports that existing
 links remain; use `--apply` during the edit to migrate the current old/new mapping.
@@ -140,6 +170,27 @@ the same journal without creating an installation receipt.
 Success/no-op/cancel return 0, validation or operation errors 1, syntax/nonterminal
 usage errors 2, and interruption/EOF 130. These routes also use the native
 PowerShell adapter; link capability failures are explicit, never silent copies.
+
+## Relink and prune the active profile
+
+| Command | What it does |
+| --- | --- |
+| `dots files relink` | Creates missing links, repairs verified broken links, and converts byte-identical regular files to links after backing up the files. |
+| `dots files prune` | Removes profile mappings whose repository sources have been deleted. Each destination stays in place, including a dangling link. |
+| `dots files sync` | Prunes selected stale mappings and relinks eligible files using the resulting profile. A combined apply has one transaction ID for undo. |
+
+All three commands preview by default. Add `--yes` to apply eligible changes, or `-i` / `--interactive` to choose items and confirm the batch. Use `--repo`, `--app`, or `--category` to narrow the active profile. Add `--verbose` to see healthy and skipped entries as well. Use `--json` for a structured preview or `--yes --json` for the applied result.
+
+```sh
+dots files relink --app tmux
+dots files prune -i
+dots files sync --dry-run --json
+dots files sync --yes
+```
+
+Correct links keep their identity. An edited file, a working link to a different source, or an occupied directory stays available for review with `dots files repair`. Copy mappings keep their strategy. Pruning preserves the registry and original uninstall receipts. It skips unavailable repositories, dangling source symlinks, and generated theme artifacts that have yet to be published.
+
+When a destination needs manual review, the command exits with status 1. Other eligible changes can still be applied. The JSON status is `partial` if a transaction completed with unresolved items, or `unresolved` if no changes could be applied. Use `dots files undo TRANSACTION` to reverse an applied batch.
 
 ## Check missing sources
 
@@ -270,7 +321,7 @@ the [documented Escape/error ambiguity](presentation.md#optional-gum-interaction
 Other tool/validation/operation errors return 1; invalid CLI syntax returns 2.
 The chosen backend is fixed for the session, with no fallback after a UI failure.
 Inherited Gum colors and Dots presentation controls are respected without sourcing
-shell configuration. The browser and its adoption/stop-managing actions remain unsupported on native Windows; bounded setup/recovery uses the separate native adapter.
+shell configuration. Native Windows uses the shared controller and native interactions; bounded setup/recovery uses the separate native adapter.
 
 ## Ownership and formats
 
@@ -281,30 +332,18 @@ own their declared roots. Missing source directories are unavailable. Secrets an
 third-party PowerShell/Rainmeter ownership remain excluded; inspection never
 initializes private or optional sources.
 
-[.dots/files.json](../.dots/files.json) is the permanent core registry:
+Each profile has one `files` array. You can write a row directly in `profile.json` and inspect it immediately with `dots files list`. Use a local ID, a portable source, one target, an application, a category and a strategy.
 
 ```json
-{"schema": 2, "resources": [{"id": "dots:example", "platforms": ["linux", "wsl"]}]}
-```
-
-Registry rows contain only a qualified ID and a nonempty unique platform list.
-The owner before `:` must name a non-excluded source. The selected profile joins
-that registry with its implementation array:
-
-```json
-{"schema": 1, "id": "linux", "files": {"dots": [{
-  "id": "example", "source": "config/example", "target": "${CONFIG}/example",
+{"schema": 1, "id": "linux", "files": [{
+  "id": "example", "source": "${PROFILE}/config/example", "target": "${CONFIG}/example",
   "app": "example", "category": "config", "strategy": "directory-link"
-}]}}
+}]}
 ```
 
-A profile row has no `platforms` or `targets`. Optional `enabled` and `replaces`
-retain their meanings. An unknown registry ID is invalid; a registered ID without
-an effective profile mapping never installs. Source and registry platform lists
-jointly determine eligibility. Whole-array profile inheritance is described in
-[profiles](profiles.md#profile-configuration). Older schema-1 compositions and
-source catalogs remain readable for compatibility and journal recovery; they do
-not replace the schema-2/3 core registry in this checkout.
+`${DOTS}` names the checkout, `${PROFILE}` names the directory containing the declaration, and `${THEME}` names the stable published theme. The most specific source owner supplies the qualified ID. For example, `${DOTS}/config/nvim` belongs to `nvim`. Child profiles inherit mappings by qualified ID. A child row can override one mapping or disable it with `enabled: false`.
+
+[.dots/files.json](../.dots/files.json) retains explicit platform eligibility, reserved IDs and rename history. An effective profile mapping supplies the installation definition. A new hand-written ID inherits its owner's eligibility until explicit limits are recorded. Grouped profiles retain their earlier whole-owner inheritance and owner-relative sources. Older receipts and catalogs remain readable.
 
 ### File ID renames
 
@@ -343,7 +382,7 @@ cross-platform state access. Historical journals are immutable. Use the returned
 `dots files recover ID`.
 
 IDs, applications and categories use lowercase letters, digits, `_` and `-`,
-starting with a letter. Sources stay repository-relative without `..`. Targets
+starting with a letter. Portable source suffixes must stay within their owner. Targets
 start with `${HOME}`, `${CONFIG}`, `${BIN}`, `${TERMUX}` or `${PREFIX}` on POSIX and contain no traversal.
 CONFIG uses XDG_CONFIG_HOME or HOME/.config; BIN is HOME/.local/bin; TERMUX is
 HOME/.termux and resolves only on Termux. A null target records an unmapped source.
@@ -361,9 +400,7 @@ There is no content hashing or claim that an existing copy matches its source.
 
 The JSON catalog defines resource ownership and target mappings in [data contracts](specification.md). Managed file operations consume that ownership and follow the transaction rules in [safety](safety.md).
 
-Theme publication may deliberately connect Termux colors to generated state instead
-of the catalogued baseline source. Inventory reports that link as `linked-elsewhere`;
-it does not infer adoption or overwrite it. Managed operations refuse to replace these unrelated generated links.
+An explicit theme connection may live below a managed application directory. Operations verify the parent link against its active directory mapping and guard the physical destination. A theme link follows the stable active pointer across publications. A link pinned to a specific generation requires review.
 
 ## Presentation
 
@@ -426,7 +463,28 @@ remain eligible. Excluded directories produce one metadata record without walkin
 their contents; totals count observed entries, not every descendant of a pruned
 directory. The same exclusions protect `add --scan` and explicit adoption.
 
-The explicit gitmux home-file mapping imports `~/.gitmux.conf` into `config/gitmux/gitmux.conf` on Termux, Linux and WSL. The catalog resource is `dots:file-config-gitmux-gitmux-conf`, application `gitmux`, with the ordinary file-link strategy. It has no native Windows destination. Use `dots files show dots:file-config-gitmux-gitmux-conf` to inspect it, or `dots files link dots:file-config-gitmux-gitmux-conf --backup` to link a checkout's source with the normal conflict/backup policy. Gitmux reads this file through the tmux integration's explicit `-cfg` argument; see [status configuration](themes.md#gitmux).
+The explicit gitmux home-file mapping imports `~/.gitmux.conf` into `config/gitmux/gitmux.conf` on Termux, Linux and WSL. The catalog resource is `dots:gitmux`, application `gitmux`, with the ordinary file-link strategy. It has no native Windows destination. Use `dots files show dots:gitmux` to inspect it, or `dots files link dots:gitmux --backup` to link a checkout's source with the normal conflict/backup policy. Gitmux reads this file through the tmux integration's explicit `-cfg` argument; see [status configuration](themes.md#gitmux).
+
+## Add, link and find
+
+```sh
+dots files add ~/.config/example/settings.toml --dry-run
+dots files add ~/.config/example/settings.toml --global
+dots files add ~/.example --source config/example/dotfile
+dots files ln '${PROFILE}/config/example/settings.toml' '${CONFIG}/example/settings.toml'
+dots files link -s '${THEME}/yazi' -t '${CONFIG}/yazi/flavors/dots.yazi'
+dots files fd --dry-run --json
+dots files find ~/Documents
+dots files fd --path "${PREFIX}/etc" --dry-run
+```
+
+`add PATH` imports an ordinary file under the active profile. `-g` or `--global` places imported content under the checkout. Both save the mapping only in the current profile. A known destination rule supplies the relative source layout. For a previously unmapped home file, enter the desired source during review or pass `--source`. An existing repository source or link can be registered in place. If it already belongs to a profile, the theme, or a nested repository, omit `--global` to retain that ownership.
+
+`link` and `ln` accept source first and target second. Supply either operand using its flag or use two positionals. The source and destination parent must exist. A missing final target is created with its profile mapping. A correct pre-existing link keeps its ownership. If the Yazi flavor still has the old two-link layout, use the [installer migration](installation.md#declared-ownership) so its backups remain usable on uninstall. Existing resource-ID and picker forms remain available.
+
+`find` and `fd` review existing links to Dots, profile and generated theme sources. With no search roots they search managed locations. Give an existing directory positionally or with `--path DIR` to search recursively from it. On Termux, `dots files fd "${PREFIX}/etc"` and `dots files fd --path "${PREFIX}/etc"` search the same tree. You can repeat `--path`, combine it with positional roots, or pass an individual link positionally.
+
+Review proposed pairs individually, preview with `--dry-run` or `--json`, or select eligible entries with `--yes`. Registration records the selected pairs together and preserves their link text and uninstall ownership. Two links to the same source can have separate mappings. A repeated scan skips pairs already represented in the effective profile. A generated directory mapping covers its contents, including the previous individually linked Yazi flavor files. The broader `add --scan` also finds ordinary files eligible for adoption.
 
 ## Register files already in the repository
 
@@ -444,7 +502,7 @@ An existing link supplies its destination directly. For source operands, a uniqu
 
 Repository discovery groups known app directories, proposes destinations and strategies, and retains individual sources when no directory boundary is known. The Add picker combines repository sources, eligible imports and existing links. Explicit repository-directory picker operands select that directory as a whole. Scans include ready sources, report unresolved/excluded candidates as skipped, and preflight all selected conflicts before changing anything. Repository enumeration uses Git exclusions; user-location imports still work in fixtures/checkouts without Git enumeration. Neither discovery nor ordinary startup searches the whole home directory. Known private/generated exclusions and nested repository boundaries remain enforced.
 
-New identities use the existing `file-` plus normalized repository-relative source naming. Exact mappings are reused; conflicting IDs, retired IDs, stashed mappings and ambiguous claims require explicit editing or restoration. Existing eligibility is retained; new eligibility comes from the matching location or owning repository. Only the active profile receives a mapping.
+New IDs start with the normalized source filename. For example, `${PROFILE}/system/etc/os-release` registers as `termux:os-release` when that ID is free. Files recognizes `system/etc` sources and `${PREFIX}/etc` destinations as configuration. When a filename is taken within its owner, Files adds parent directory names until it finds an available ID. It can also use the destination to distinguish multiple links to one source. Retired names remain reserved. An existing source–target mapping keeps its ID and platform eligibility. Only the active profile receives the new mapping.
 
 A correct pre-existing link keeps its original link text and object identity and is not claimed by installation. Registration undo restores metadata; uninstall leaves that link alone. Newly created links receive installation receipts and retained recovery baselines. Occupied ordinary targets require `--backup`; unrelated links, broken or chained source links, unsafe ancestors, unsupported objects and conflicting claims are refused. The complete metadata/link/receipt batch uses guarded transactions, rollback and normal drift-aware undo. Catalog, source, destination or location changes after preview require a fresh review.
 
@@ -475,16 +533,15 @@ the [interaction contract](presentation.md#optional-gum-interactions).
 
 All mutations preview before confirmation; `--yes` enables unattended execution,
 `--dry-run` writes nothing, and `--json` keeps stdout structured. Examples using
-`dots:example` require that resource to exist in the catalog. Add generates stable
-IDs from repository-relative paths, displays them, and refuses collisions. Use
+`dots:example` require that resource to exist in the catalog. Add previews
+the available ID for each new mapping. Use
 `files list` to obtain qualified IDs for subsequent commands.
 
-Add copies and verifies configurations into their mapped owning repository,
+Add copies and verifies imported configurations under the selected source root,
 records catalog entries and links the original locations to the sources. It uses
 individual files by default, preserving unrelated files and directory structure.
 `--directory-link` requires explicit paths and owns the whole directory. Identical
-existing sources may be reused; different occupied sources are refused. Paths
-outside registered locations need a registry update first. Symlinked parent paths,
+existing sources may be reused; different occupied sources are refused. For home files outside registered locations, supply the intended source path. Symlinked parent paths,
 unrelated links, overlapping batches, secret-like files and protected generated
 theme targets require manual review. A blocked input refuses the complete batch.
 
@@ -499,6 +556,8 @@ refuses nested links or Git metadata that would change meaning outside the sourc
 repository; these require manual review. Removal does not delete the
 repository source, so repository discovery can find it again as an untracked
 resource. Nothing stages or commits Git changes.
+
+If you deleted the repository source, `dots files rm OWNER:ID` removes its profile mapping and leaves the destination as you found it, including a dangling link. You can also remove a mapping marked `replaced`. For example, when `dots:tmux` owns the live link, `dots files rm termux:tmux --dry-run` previews just the old Termux mapping. The winner keeps its link and installation history. Removing an inherited mapping disables it in the active profile.
 
 ### Verbose action details
 
@@ -586,6 +645,8 @@ dots files edit                      # Choose a mapping or New mapping
 dots files show                      # Select one resource to inspect
 dots files remove                    # Select resources to stop managing
 ```
+
+Bare `dots files add` shows one searchable scan list grouped by action. Each row shows a short action label and one path. Use the details preview for the full source and target. You can mark candidates across groups and review them together.
 
 Explicit operands without `--pick` retain their behavior. Only add accepts
 operands together with `--pick`; supplied paths narrow its eligible discovery

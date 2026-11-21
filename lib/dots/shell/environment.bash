@@ -48,6 +48,7 @@ _dots_derive_paths() {
 _dots_derive_paths
 unset -f _dots_derive_paths
 export THEMESCMD="$DOTS/bin/theme"
+export THEME="${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme"
 export THEMESBIN="${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current/bin"
 dot[config]=$_DOTS_CONFIG_PATH dot[state]=${XDG_STATE_HOME:-$HOME/.local/state}/dots
 shells[root]=$SHELLS shells[zsh]=$ZSH shells[bash]=$SHELLS/bash shells[pwsh]=$PWSH

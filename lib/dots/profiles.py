@@ -56,8 +56,9 @@ def definition(root, identity, data=None):
         from config_values import validate_groups
         validate_groups(root, data)
     files = data.get('files', {})
-    if not isinstance(files, dict) or any(not re.fullmatch(r'[a-z][a-z0-9_-]*', key) or not isinstance(rows, list) for key, rows in files.items()):
-        raise ValueError('profile files must map repository IDs to resource lists')
+    if not isinstance(files, list) and not (isinstance(files, dict) and all(
+            re.fullmatch(r'[a-z][a-z0-9_-]*', key) and isinstance(rows, list) for key, rows in files.items())):
+        raise ValueError('profile files must be a list of mappings or a legacy repository map')
     for field in ('path', 'replaces_commands'):
         if field in data and (not isinstance(data[field], list) or any(not isinstance(v, str) for v in data[field])): raise ValueError('profile ' + field + ' must be a string list')
     for key, value in data.get('environment', {}).items():

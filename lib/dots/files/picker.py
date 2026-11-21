@@ -30,14 +30,14 @@ INTENT = {
 }
 
 
-def candidates(manager, action, values=(), repo=None, restore=False):
+def candidates(manager, action, values=(), repo=None, restore=False, *, global_files=False):
     if action == 'add':
         from registration import Registration, candidates as registrations
         resolver = Registration(manager)
-        roots = [Path(os.path.abspath(os.path.expanduser(p))) for p in values]
+        from path_operands import operand
+        roots = [operand(manager.catalog, p) for p in values]
         explicit = []
         for root in roots:
-            parents_safe(root)
             row = resolver.candidate(root, repo)
             if row:
                 explicit.append(row)
@@ -48,10 +48,26 @@ def candidates(manager, action, values=(), repo=None, restore=False):
         if roots and len(explicit) == len(roots):
             return list({(r['source'], r.get('target')): r for r in explicit}.values())
         rows = registrations(manager, repo)
-        return explicit + [r for r in rows if r['status'] != 'excluded'
-                           and not any(r.get('source') == e.get('source') for e in explicit)
-                           and (not roots or any(Path(r['candidate']) == p or Path(r['candidate']).is_relative_to(p) for p in roots
-                                                if str(p) not in {e['candidate'] for e in explicit}))]
+        rows = explicit + [r for r in rows if r['status'] != 'excluded'
+                          and not any(r.get('source') == e.get('source') for e in explicit)
+                          and (not roots or any(Path(r['candidate']) == p or Path(r['candidate']).is_relative_to(p) for p in roots
+                                               if str(p) not in {e['candidate'] for e in explicit}))]
+        owners = {s['id']: Path(s['root']) for s in manager.catalog.sources}
+        import_owner = None
+        if manager.catalog.flat and not repo:
+            import_owner = 'dots' if global_files else manager.catalog.profile_owner()['id']
+        for row in rows:
+            if row.get('kind') != 'import':
+                continue
+            # Discovery describes the location; add stores its relative layout
+            # under the chosen owner. Show the same endpoints as the later plan.
+            if import_owner:
+                relative = Path(row['source']).relative_to(owners[row['repository']])
+                source = owners[import_owner] / relative
+                row.update(repository=import_owner, source=str(source),
+                           status='existing-source' if os.path.lexists(source) else 'candidate')
+            row.update(target_spec=row['target'], target=row['candidate'])
+        return rows
     rows = manager.catalog.records()
     if action == 'link':
         rows = [r for r in rows if r['enabled'] and r['applicable']]
@@ -87,10 +103,32 @@ def fzf_colors(ui):
     return ','.join(part for part in (colors,overrides) if part)
 
 
+ADD_GROUPS = {'candidate': 'Import', 'register-existing-link': 'Existing link',
+              'register-and-link': 'Link source', 'needs-target': 'Set target',
+              'existing-source': 'Source exists'}
+
+
+def add_path_label(row, ui):
+    path = Path(row['candidate'])
+    if row.get('source') == str(path):
+        if row.get('source_spec'):
+            return row['source_spec']
+        root = row.get('_source_root')
+        if root and path.is_relative_to(root):
+            return row['repository'] + '/' + path.relative_to(root).as_posix()
+    return ui.path(path)
+
+
 def select(rows, action, multi=False, new=False, selector=None, owners=()):
     ui = Presentation()
     roots = {o['id']: o['root'] for o in owners}
     rows = [dict(r, _source_root=roots.get(r.get('repository'))) for r in rows]
+    if action == 'add':
+        order = {status: index for index, status in enumerate(ADD_GROUPS)}
+        for row in rows:
+            row['_display'] = add_path_label(row, ui)
+        rows.sort(key=lambda r: (order.get(r.get('status'), len(order)),
+                                 r['_display'].casefold(), r['candidate']))
     if new:
         rows.insert(0, {'id': '__new__', 'label': 'New mapping', 'status': 'new'})
     if not rows:
@@ -100,6 +138,17 @@ def select(rows, action, multi=False, new=False, selector=None, owners=()):
     for row in rows:
         if row.get('label'):
             labels.append(ui.clean(row['label']))
+            continue
+        if action == 'add':
+            group = ADD_GROUPS.get(row.get('status'), 'Review')
+            display = row['_display']
+            if ui.width < 60:
+                path = Path(display)
+                if path.name and path.parent != Path('.'):
+                    # The file name stays visible when FZF clips a phone-width row.
+                    display = path.name + '  ' + str(path.parent)
+            labels.append(ui.paint(group.ljust(13) if ui.width >= 60 else group, '96') +
+                          '  ' + ui.resource(row['candidate'], display))
             continue
         identity = row.get('id') or ui.repository_label(row.get('_source_root'), row.get('repository', ''))
         paths = [ui.resource(row[k]) for k in ('source', 'target') if row.get(k)]

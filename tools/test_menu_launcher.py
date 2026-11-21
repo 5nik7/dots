@@ -109,7 +109,11 @@ class LauncherContracts(MenuFixture):
     def test_action_map_uses_existing_safe_routes(self):
         expected = {
             'tmux': [('sessions','menu tmux sessions','','session'),('keys','menu tmux keys','--browse','popup')],
-            'files': [('browse','files browse','','terminal'), ('install','files install','','terminal'), ('backups','bak browse','','terminal'), ('uninstall','files uninstall','','terminal'), ('add','files add','','terminal'), *[(n,'files '+n,'','output') for n in ('list','history','sources')]],
+            'files': [('browse','files browse','','terminal'), ('install','files install','','terminal'),
+                      ('backups','bak browse','','terminal'), ('uninstall','files uninstall','','terminal'),
+                      ('add','files add','','terminal'), ('find','files find','','terminal'),
+                      *[(n,'files '+n,'-i','terminal') for n in ('relink','prune','sync')],
+                      *[(n,'files '+n,'','output') for n in ('list','history','sources')]],
             'git': [('status','git status','','output'),('info','git info','','output'),('submodules','git submodules','','submenu'),('wiki','git wiki','','submenu'),('publish','git publish','--all','terminal'),('sync','git sync','','sync')],
             'git/submodules': [('list','git submodules','','output'),('info','git submodules info','','output'),('status','git submodules status','','output')],
             'git/wiki': [('status','git wiki status','','output'),('info','git wiki info','','output'),('publish','git wiki publish','--all','terminal'),('sync','git wiki sync','','sync')],
@@ -168,7 +172,9 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual([e.label for e in menu.entries],
                      'anodize backups blastoff cleanup clipboard config debug env files fonts git keys pkgs profile projects theme tmux todo weather wiki'.split())
             else:
-                self.assertEqual([e.id for e in menu.entries], ['browse', 'install', 'backups', 'uninstall', 'add', 'list', 'history', 'sources', 'help'])
+                self.assertEqual([e.id for e in menu.entries],
+                                 ['browse', 'install', 'backups', 'uninstall', 'add', 'find',
+                                  'relink', 'prune', 'sync', 'list', 'history', 'sources', 'help'])
             step=len(visits)
             if step==1:
                 kwargs['navigation']['query']='fil'; return Entry(next(e.id for e in menu.entries if e.label=='files'),'inert $(touch sentinel)')

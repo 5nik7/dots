@@ -16,16 +16,14 @@ from catalog import Presentation, platform
 from file_platform import config_root, state_root, open_nofollow, check_object, native_link_text
 from transactions import parents_safe
 from interaction import Selector, SelectionEnded, terminal
-from app_paths import eza_config_directory, television_config_directory, leaf_config_directory, config_directory, terminal_fragment_directory
 from picker import CREDENTIAL, LIMIT
 if __package__:
     from .file_preview import directory_view, text_view, resource_span
 else:
     from file_preview import directory_view, text_view, resource_span
 
-# These are publication internals, never browsable content or completion operands.
-INTERNAL = {'id', 'selection', 'fingerprint', 'previous', 'previous-active', 'status',
-            'connectors', 'commands', 'commands-old', 'commands-new', 'active.new'}
+from themes.artifact_names import INTERNAL, identifier
+
 CACHES = {'bat-cache', 'bat-source', 'delta-cache'}
 DERIVED = {'yazi/flavor.toml': 'yazi.toml', 'yazi/tmtheme.xml': 'bat.tmTheme'}
 SHARED = {'palette.json', 'shell.tsv', 'init.zsh', 'init.fish', 'init.ps1',
@@ -77,19 +75,12 @@ def bounded(path, limit=2 * 1024 * 1024):
     return data
 
 
-def identifier(value):
-    p = PurePosixPath(value)
-    if (not value or '\\' in value or p.is_absolute() or any(x in ('', '.', '..') for x in value.split('/'))
-            or p.parts[0] in INTERNAL or p.parts[0].startswith('.') or len(p.parts) > 2):
-        raise ValueError('expected a listed generation-relative file identifier')
-    return value
-
-
 def lexical(path):
     return Path(os.path.abspath(path))
 
 
 def registry():
+    # Compatibility accessor for the artifact inventory of older checkouts.
     return [line.split('\t') for line in (LIB / 'connectors.tsv').read_text().splitlines() if line]
 
 
@@ -109,6 +100,7 @@ class Inspection:
         self.connections = []
         self.publication = 'absent'
         self._inventoried = False
+        self._connectors = {}
         self._snapshot()
 
     def finding(self, message, artifact=None):
@@ -188,37 +180,16 @@ class Inspection:
                                source=source, consumers=[], connections=[])
 
     def fixed_connections(self, *, windows=None):
-        """Mirror publisher eligibility, including app-specific native destinations."""
-        windows = os.name == 'nt' if windows is None else windows
-        connector_config = Path(os.environ.get('XDG_CONFIG_HOME') or self.home / '.config')
-        for app, suffix, artifact in registry():
-            base = connector_config / app
-            supported = (windows if app == 'windows-terminal' else
-                         not windows or app in ('yazi', 'git', 'vivid', 'eza', 'television', 'leaf', 'wezterm'))
-            error = None
-            try:
-                if app == 'windows-terminal': base = terminal_fragment_directory(windows=windows)
-                elif windows and app == 'wezterm': base = config_directory('wezterm')
-                elif app == 'eza': base = eza_config_directory(windows=windows)
-                elif app == 'television': base = television_config_directory(windows=windows)
-                elif app == 'leaf': base = leaf_config_directory(windows=windows)
-                elif windows and app == 'yazi': base = config_directory('yazi')
-                target = base / suffix if base else None
-                eligible = supported and target is not None and (
-                    base.is_dir() if app in ('television', 'leaf') else target.parent.is_dir())
-            except (OSError, ValueError, RuntimeError):
-                target, eligible, error = None, False, 'Invalid or unreadable application directory.'
-            self.connect(app, artifact, target, eligible, supported, error=error)
-        if not windows:
-            target = self.home / '.termux/colors.properties'
-            self.connect('termux', 'termux.properties', target, target.parent.is_dir())
-        for app, value, suffix, artifact in (
-            ('codex', os.environ.get('CODEX_HOME') or str(self.home / '.codex'), 'themes/dots.tmTheme', 'bat.tmTheme'),
-            ('pi', os.environ.get('PI_CODING_AGENT_DIR') or str(self.home / '.pi/agent'), 'themes/dots.json', 'pi.json')):
-            base = Path(value).expanduser()
-            safe = base.is_absolute() and not any(p in ('.', '..') for p in value.replace('\\', '/').split('/')) and not any(ord(c) < 32 for c in value)
-            self.connect(app, artifact, base / suffix if safe else None,
-                         safe and (base / suffix).parent.is_dir(), error=None if safe else 'Invalid application directory.')
+        rows = self.profile_connections(windows)
+        for row in rows:
+            self.connect(row.app, row.artifact, row.logical, row.eligible, row.supported, error=row.error)
+
+    def profile_connections(self, windows=None):
+        from connector_paths import plan
+        selected = platform() if windows is None else ('windows' if windows else 'linux')
+        if selected not in self._connectors:
+            self._connectors[selected] = plan(self.checkout, selected, inspect=True)[0]
+        return self._connectors[selected]
 
     def connect(self, app, artifact, target, eligible, supported=True, origin='fixed', error=None):
         row = dict(app=app, artifact=artifact, target=str(target) if target else None,
@@ -315,8 +286,9 @@ class Inspection:
                     self.add(name, required=True)
                 for name in ('palette.json', 'colors.json', 'colors.lua', 'shell.tsv', 'ls_colors', 'file-styles.tsv', 'git-styles.tsv'):
                     self.add(name, required=True)
-                for _, _, name in registry():
-                    if name != 'yazi': self.add(name, required=True)
+                for row in self.profile_connections():
+                    if row.artifact != 'yazi' and row.supported and row.required and not row.directory:
+                        self.add(row.artifact, required=True)
                 if connections:
                     self.fixed_connections()
                     self.supplementary()
@@ -539,7 +511,9 @@ def main(argv=None):
     if args and args[0] in ('__files', '__apps'):
         if len(args) != 1: raise ValueError('unexpected completion arguments')
         if args[0] == '__apps':
-            names = {r[0] for r in registry()} | {'codex', 'pi', 'termux', 'managed'}
+            from connector_paths import app_names
+            checkout = Path(os.environ.get('DOTS') or LIB.parents[2]).resolve()
+            names = app_names(checkout, platform()) | {'managed'}
             names.update(a for consumers in CONSUMERS.values() for a, _, _ in consumers)
         else:
             names = {r['id'] for r in Inspection().inventory(connections=False)['artifacts']}

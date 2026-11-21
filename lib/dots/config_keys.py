@@ -114,6 +114,10 @@ def public_styles(group, values, *, strict=False):
 
 def description(key):
     key=canonical(key)
+    if key == 'apps.files.list_view':
+        return 'Default level of detail in dots files list'
+    if key == 'apps.files.group_by_status':
+        return 'Group dots files list entries by their catalog status'
     if key.startswith(('colors.apps.', 'icons.apps.', 'formatting.apps.')):
         _,_,app,*tail=key.split('.')
     elif key.startswith('apps.'):

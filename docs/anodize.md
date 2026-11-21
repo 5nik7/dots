@@ -24,7 +24,7 @@ bin/anodize apply dusk --dry-run
 
 Saving a theme does not select or activate it. Review `anodize apply dusk --dry-run`, then use `anodize apply dusk --yes` to publish. Mutating commands prompt on interactive input; without a terminal or with `--json`, omission of `--yes` returns the preview. `--dry-run` takes precedence over `--yes` and creates no persistent state.
 
-Interactive human confirmations prefer Gum's **Cancel / Apply** menu with Cancel selected by default, falling back to the existing text prompt when tools or terminal streams are unavailable. JSON, nonterminal preview, `--yes` and `--dry-run` do not probe Gum. Selector failure stops without retry; Ctrl-C exits 130 without a traceback. These prompts cover create/import/edit, export to a file and apply; saving still does not activate a theme. See the [interaction contract](presentation.md#optional-gum-interactions).
+Interactive human confirmations prefer Gum with **Cancel** selected by default and a text prompt when Gum is unavailable. Create, import, edit, single-file export and apply accept `--yes` for unattended use. Patina's all-theme batch asks for one confirmation. JSON and dry runs skip the prompt. Ctrl-C exits 130. See the [interaction contract](presentation.md#optional-gum-interactions).
 
 ## Terminal logo
 
@@ -123,7 +123,19 @@ patina forest.jpg --theme kanagawa-wave --mode jewel-tones --style vivid --forma
 dots patina coast.png --palette-image sunset.jpg --style gradient --stops background,blue,cyan,foreground --output coast-themed.webp
 ```
 
-Use `--yes` to save unattended. The command asks for confirmation at a terminal. A noninteractive invocation or `--json` returns a preview until you pass `--yes`. Use `--dry-run` to preview even with `--yes`.
+For a single image, use `--yes` to save unattended. The command asks for confirmation at a terminal. A noninteractive single-image invocation or `--json` returns a preview until you pass `--yes`. Use `--dry-run` to preview even with `--yes`.
+
+### Save an image for every theme
+
+```sh
+patina reflekt.jpg --all-themes --yes
+patina reflekt.jpg --all-themes --yes --style palette-blend --output reflect.webp
+patina reflekt.jpg --all-themes --all-styles --yes --output walls/reflect.webp
+```
+
+Patina shows the number of themes, styles and images, then offers **Save images** or **Cancel**. Cancel is the default. Save images renders the source once per selected treatment for every personal and bundled theme. The first example saves `reflekt.png` in each theme’s personal `backgrounds/ID/` folder. The second saves `reflect.webp` there. With `--all-styles`, filenames include the compatible style, such as `walls/reflect_alloy.webp` and `walls/reflect_palette-blend.webp`. Occupied batch filenames get the first available suffix, such as `reflect_1.webp`.
+
+Saving requires a terminal. Add `--dry-run --json` to list the intended paths without rendering or writing. Each saved image has its own undo transaction. If a theme or style fails, Patina reports it and continues with the others. A change to the input image stops the remaining exports.
 
 ### Compare treatments
 
@@ -187,7 +199,7 @@ A recognized `--output` extension chooses the encoder, including when `--format`
 
 `--quality 1–100` applies to JPEG, lossy WebP and AVIF. `--lossless` selects lossless WebP and takes no quality setting. PNG, JPEG and GIF inputs can be up to 32 MiB and 20 million pixels. Animated GIFs supply their first frame.
 
-With a theme, omitting `--output` saves a wallpaper under the personal Dots configuration directory in `backgrounds/ID/`. For example, the default for `forest.jpg --theme nord` is `~/.config/dots/backgrounds/nord/forest.png` on POSIX. PNG inputs keep their extension case. If that name exists, the next saves use `forest_1.png`, then `forest_2.png`. Dots respects `XDG_CONFIG_HOME` and defaults to the roaming application-data directory on Windows. An explicit output path must be unused. With a reference image, ordinary exports require an explicit output path.
+With a theme, omitting `--output` saves a wallpaper under the personal Dots configuration directory in `backgrounds/ID/`. For example, the default for `forest.jpg --theme nord` is `~/.config/dots/backgrounds/nord/forest.png` on POSIX. PNG inputs keep their extension case. If that name exists, the next saves use `forest_1.png`, then `forest_2.png`. Dots respects `XDG_CONFIG_HOME` and defaults to the roaming application-data directory on Windows. An explicit single-image or comparison-sheet output path must be unused. With a reference image, ordinary exports require an explicit output path.
 
 The interactive style picker previews the treatments on your image. Final review shows the selected render and destination. A saved result includes a transaction ID for `dots files undo`. The theme background selector lists its supported wallpaper formats. See the [theme guide](themes.md) for activation.
 

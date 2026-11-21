@@ -59,6 +59,7 @@ if set -q XDG_STATE_HOME; and test -n "$XDG_STATE_HOME"
     set state "$XDG_STATE_HOME"
 end
 set -g _DOTS_STATE "$state/dots"
+set -gx THEME "$_DOTS_STATE/current/theme"
 set -gx THEMESBIN "$_DOTS_STATE/themes/commands/current/bin"
 set -g dot_state "$_DOTS_STATE"
 set -g dot_config "$_DOTS_CONFIG_PATH"
@@ -150,7 +151,7 @@ function _dots_fish_theme
                         set -gx DOTS_THEME_ID "$fields[3]"
                         set -g dot_theme "$fields[3]"
                     case family
-                        set -gx THEME "$fields[3]"
+                        set -gx DOTS_THEME_FAMILY "$fields[3]"
                     case flavor
                         set -gx FLAVOR "$fields[3]"
                 end

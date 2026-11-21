@@ -76,4 +76,10 @@ The Anodize engine owns the default dominant-family recipe and retains the forme
 
 **Menu update.** Extend the existing Extract and Patina pickers. **No configuration integration change needed.** Theme, style and mode describe a single comparison and use existing terminal preferences. The current wrappers and engine build cover installation. The root README already links to the canonical guide. Native Linux, WSL and Windows PowerShell 5.1/7 UI acceptance remain separate.
 
+### All-theme Patina saves
+
+All four Patina routes use one terminal confirmation for `--all-themes --yes`, including when a wrapper passes `--interactive`. Acceptance covers Cancel before rendering, an engine-free dry-run manifest, explicit relative filenames, numbered collisions, every compatible style, independent undo and retained successes on partial failure or source drift. Native Windows and WSL terminal acceptance remains pending.
+
+**Menu unchanged.** The existing Patina picker covers browsing. Batch approval is available directly to callers passing the two flags. **No configuration integration change needed.** The flags express a choice for one invocation. The existing installer owns all shims, the completion grammar already includes both flags, and the root README’s setup and navigation are unaffected.
+
 Native Termux checks compared the combined picker’s saved WebP with a direct Nord palette-blend export byte for byte. FZF restored the query after Back, and cancellation at 40, 80 and 120 columns left the destination unused. The theme-only picker numbered repeat saves and the reference-image style picker matched its direct PNG export. On the bundled leaves photograph, five interleaved engine requests during concurrent verification had median times of 0.569 seconds for normal and 0.593 seconds for source-tonal. The default background was `#294229` and the original recipe selected `#060806`.

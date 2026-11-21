@@ -75,6 +75,59 @@ def bounded_json(path, default):
     return read_json(path)
 
 
+def setup_journal(store, identity, guards):
+    if not isinstance(identity, str) or not ID.fullmatch(identity):
+        raise ValueError('invalid original setup transaction: ' + str(identity))
+    path = store.root / identity / 'journal.json'
+    parents_safe(path)
+    before = digest(path)
+    if before is None:
+        raise ValueError('original setup transaction is missing: ' + identity)
+    journal = store.load(identity)
+    if (journal.get('id') != identity or journal.get('status') != 'complete'
+            or guards.setdefault(str(path), before) != before or digest(path) != before):
+        raise ValueError('original setup transaction failed verification: ' + identity)
+    return journal
+
+
+def created_setup_parent(state, entries, paths, guards):
+    """Only retained transaction records establish the origin of an empty directory."""
+    paths = set(map(str, paths))
+    store = Store(state)
+    created = False
+    for identity in {e['backup'] for e in entries}:
+        journal = setup_journal(store, identity, guards)
+        if any(p['created'] and p['path'] in paths for p in journal['created_parents']):
+            created = True
+    return created
+
+
+def original_payload(entry, path, state, guards):
+    """Verify a setup receipt's first uninstall baseline and pin it for apply."""
+    if entry['before'] is None:
+        return None
+    if entry.get('backup_id'):
+        backups = BackupPlan(state)
+        payload = backups.verified_payload(backups.entry(entry['backup_id']))
+        observed = backups.guards
+    else:
+        store = Store(state)
+        identity, index = entry['backup'], entry['index']
+        observed = {}
+        journal = setup_journal(store, identity, observed)
+        if type(index) is not int or not 0 <= index < len(journal['operations']):
+            raise ValueError('original setup transaction failed verification: ' + str(path))
+        payload = store.payload(identity, index, 'before', journal['operations'][index])
+        parents_safe(payload)
+        observed[str(payload)] = digest(payload)
+    if observed[str(payload)] != entry['before']:
+        raise ValueError('original backup failed verification: ' + str(path))
+    for key, value in observed.items():
+        if guards.setdefault(key, value) != value:
+            raise ValueError('original backup changed after preview: ' + str(path))
+    return str(payload)
+
+
 class BackupPlan:
     def __init__(self, state=None, directory=None, location='store', *, identity=None):
         self.state = absolute(state if state is not None else state_root())
@@ -204,8 +257,14 @@ class BackupPlan:
         return receipt
 
     def protected(self):
-        return {entry['backup_id']: path for path, entry in self.installation()['entries'].items()
-                if entry.get('backup_id')}
+        retained = {}
+        for path, entry in self.installation()['entries'].items():
+            if entry.get('backup_id'):
+                retained[entry['backup_id']] = path
+            for name, child in entry.get('yazi_children', {}).items():
+                if child.get('backup_id'):
+                    retained[child['backup_id']] = str(Path(path) / name)
+        return retained
 
     def records(self):
         protected = self.protected()

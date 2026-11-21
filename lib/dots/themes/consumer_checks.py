@@ -169,6 +169,8 @@ class Verifier:
             return result(basis='configuration', reason='No supported application destination on this platform.')
         target = Path(c['target'])
         base = target.parent.parent if app in ('yazi', 'btop', 'leaf', 'television') else target.parent
+        if app == 'yazi' and target.parent.name == 'dots.yazi':
+            base = base.parent
         config = base / {'yazi':'theme.toml', 'btop':'btop.conf', 'leaf':'config.toml',
                          'television':'config.toml', 'kitty':'kitty.conf', 'tmux':'tmux.conf'}[app]
         text = self.text(config)

@@ -315,8 +315,7 @@ does not establish that every application renders it. Bat disables italic output
 default; `bat --italic-text=always` enables it when supported by the terminal.
 Its rendered `bat.tmTheme`
 is also copied to `yazi/tmtheme.xml` in the same generation; `yazi.toml` becomes
-`yazi/flavor.toml`. The Yazi `flavors/dots.yazi` connector points to that generated
-`yazi` directory, so both applications share the syntax theme. Edit the template
+`yazi/flavor.toml`. Yazi reads both files through one directory link from `flavors/dots.yazi` to `${THEME}/yazi`. Termux, Linux and WSL place the link under `${CONFIG}/yazi`. Windows uses `${APP_CONFIG:yazi}`, which defaults to `%APPDATA%/yazi/config` and honors Yazi’s configured directory. Edit the template
 and run `dots theme refresh` to publish changes; generated files are replaced on
 publication. Personal templates and bundled application overrides retain the
 precedence described above.
@@ -428,14 +427,7 @@ local connector. Btop selects `dots.theme`; Yazi selects the `dots` flavor. Bat 
 the generated `Dots` theme and per-generation cache through shell initialization.
 Existing app settings and Neovim transparency remain in their source configurations.
 
-On selection, fixed connector links are created only for configured applications:
-Kitty/tmux `dots-theme.conf`, btop `themes/dots.theme`, Yazi `flavors/dots.yazi`, and
-Termux `~/.termux/colors.properties`, Pi's `themes/dots.json`, and Codex's
-`themes/dots.tmTheme`, Vivid `themes/dots.yml`, FSH `dots.ini`, eza `theme.yml`, Television `themes/dots.toml`, and Leaf `themes/dots.toml` plus `themes/dots.tmTheme` (see below). Existing regular files or symlinks are saved in
-the generation's connector journal before replacement; real directories are refused.
-Parent application directories must exist. If an application directory itself is
-linked into a repository, the connector lives in that source directory. It is
-machine state, not a configuration to commit. No generic files installer is involved.
+On selection, the publisher reads enabled `${THEME}` links from the effective profile. Their targets cover configured applications such as Kitty, tmux, btop, Git, Bat, Yazi, Vivid, Termux, Pi, Codex, eza, Television, and Leaf. Custom rows use the same destination checks and rollback. The `theme:yazi` mapping preserves an existing correct flavor directory link. Setup and publication can convert a real `dots.yazi` directory when it contains exactly the two expected links from the earlier profile. Extra entries or changed children require manual review. Connector sources retain the stable `current/theme` path across theme changes. See [file mappings](files.md#ownership-and-formats).
 
 Termux settings reload when available; an existing tmux server reloads the generated
 colors; Kitty remote control is used only when KITTY_LISTEN_ON is supplied. Reload
@@ -885,7 +877,7 @@ if the palette is unavailable. See [file colors](file-colors.md) for the new
 
 ## Explicit checkout setup
 
-[Checkout installation](installation.md) reuses immutable theme and generated-command preparation, then publishes state pointers and fixed connectors through the shared file Store. Prepared generations carry `staged` status; normal theme recovery leaves them to the owning file journal. The current theme/default is preserved. Fixed app connector definitions are shared through `lib/dots/themes/connectors.tsv`; btop's generated connector is now ignored. Setup creates declared missing parents and suppresses application reloads, wallpaper actions and plugin hooks. Normal theme commands keep their existing publication behavior.
+[Checkout installation](installation.md) reuses immutable theme and generated-command preparation, then publishes state pointers and profile connectors through the shared file Store. Prepared generations carry `staged` status; normal theme recovery leaves them to the owning file journal. The current theme/default is preserved. Fixed app connector definitions are shared through `lib/dots/themes/connectors.tsv`; btop's generated connector is now ignored. Setup creates declared missing parents and suppresses application reloads, wallpaper actions and plugin hooks. Normal theme commands keep their existing publication behavior.
 
 ### CLI file-style projection
 
@@ -1013,7 +1005,7 @@ dots theme files browse
 
 Sources are labeled **Source for next refresh**, not historical provenance: retained generations have no source manifest. Current resolution follows trusted bundled overrides, personal templates and default templates. Derived files identify their parent artifact. Generated shared data and caches have no single editable template. Missing source files do not prevent inspecting the published artifact. Direct changes to generated files are replaced on publication; this interface never opens an editor or refreshes automatically.
 
-Fixed connector inspection uses the publisher's platform paths and directory eligibility. `linked` means the destination follows the stable active path; relative links are resolved from their actual parent. `pinned` means a link resolves to the captured generation directly and will not follow future switches. Other statuses are `missing`, `broken`, `points-elsewhere`, `regular-file`, `unavailable` and `not-configured`. Missing optional app directories and unsupported native-platform connectors are informational. Eligible unhealthy connections, missing/unreadable generated artifacts, an app filter matching no artifacts and incomplete inspection make `check` fail. Checks do not compare arbitrary regular-file contents or prove that a running application loaded its theme.
+Profile connector inspection uses the publisher's platform paths and directory eligibility. `linked` means the destination follows the stable active path; relative links are resolved from their actual parent. `pinned` means a link resolves to the captured generation directly and will not follow future switches. Other statuses are `missing`, `broken`, `points-elsewhere`, `regular-file`, `unavailable` and `not-configured`. Missing optional app directories and unsupported native-platform connectors are informational. Eligible unhealthy connections, missing/unreadable generated artifacts, an app filter matching no artifacts and incomplete inspection make `check` fail. Checks do not compare arbitrary regular-file contents or prove that a running application loaded its theme.
 
 Supplementary connections are discovered only at destinations recorded by completed managed file transactions, when their existing links still refer to a listed active artifact. This finds links such as a separately repaired bat theme without scanning the home directory. Finalized journals do not retain the intended link value, so a removed or redirected supplementary link cannot be reconstructed from those records. Fixed connectors remain independently diagnosable. Discovery is bounded to 512 transaction entries and 4096 operations per record; oversized, unreadable or malformed metadata reports incomplete inspection. No retained file contents are read.
 

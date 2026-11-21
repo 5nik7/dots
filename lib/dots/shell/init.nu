@@ -133,6 +133,7 @@ def --env _dots-load [] {
     }
     $env.dot = ($paths | upsert config $config | upsert state $env._DOTS_NATIVE_PATHS.state)
     load-env $exports
+    $env.THEME = ($env.dot.state | path join 'current/theme')
     $env.THEMESCMD = $env._DOTS_NATIVE_PATHS.theme_command
     $env.THEMESBIN = ($env.dot.state | path join 'themes/commands/current/bin')
 
@@ -161,7 +162,7 @@ def --env _dots-refresh-theme [] {
     $env.dots_palette = ($data | get '@palette')
     $env.dots_roles = ($data | get '@role')
     $env.dots_colors = if $env.dots_options.DOTS_INIT_COLORS == '1' { $data | reject '@theme' '@palette' '@role' } else { {} }
-    $env.THEME = $identity.family
+    $env.DOTS_THEME_FAMILY = $identity.family
     $env.FLAVOR = $identity.flavor
     $env.DOTS_THEME_ID = $identity.id
     $env.dot = ($env.dot | upsert theme $identity.id)

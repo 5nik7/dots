@@ -1,5 +1,7 @@
 # Dots shell environment
 
+`THEME` is the stable active theme directory (`dots/current/theme` in the native state store). Read the family from `DOTS_THEME_FAMILY`, the flavor from `FLAVOR`, and the complete selection from `DOTS_THEME_ID`. Shell reload can read older published snapshots.
+
 Nu and Xonsh completion use the private shared Python completion bridge, including
 standalone application names and generated theme aliases. They resolve state
 through the shared platform roots, not a hard-coded POSIX path, and do not launch

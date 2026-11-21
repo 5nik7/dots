@@ -35,6 +35,7 @@ for _dots_line in (_DotsPath($DOTS) / 'lib/dots/shell/paths.tsv').read_text().sp
         dot[_dots_key] = _dots_value
 dot['config'] = _dots_config
 dot['state'] = _dots_profile_document['shell_paths']['state']
+$THEME = str(_DotsPath(dot['state']) / 'current/theme')
 $THEMESCMD = _dots_profile_document['shell_paths']['theme_command']
 $THEMESBIN = str(_DotsPath(dot['state']) / 'themes/commands/current/bin')
 $PATH = [p for p in $PATH if p not in (str(_DotsPath($DOTS) / 'themes/bin'), $THEMESBIN)]
@@ -81,7 +82,7 @@ if $XONSH_INTERACTIVE:
                     names.append(name)
         ctx['_dots_color_names'] = names
         ctx['dots_palette'], ctx['dots_roles'] = data['@palette'], data['@role']
-        $THEME, $FLAVOR, $DOTS_THEME_ID = data['@theme']['family'], data['@theme']['flavor'], data['@theme']['id']
+        $DOTS_THEME_FAMILY, $FLAVOR, $DOTS_THEME_ID = data['@theme']['family'], data['@theme']['flavor'], data['@theme']['id']
         dot['theme'] = $DOTS_THEME_ID
         ls_file = _DotsPath(dot['state']) / 'themes/generations' / generation / 'ls_colors'
         if ls_file.is_file():

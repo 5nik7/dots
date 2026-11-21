@@ -384,8 +384,11 @@ def after_save(root, before):
                 {k:v for k,v in old_cli.items() if k!='formatting'}=={k:v for k,v in new_cli.items() if k!='formatting'}):
             return dict(schema=1,status='complete',consumers=[dict(app=key,status='next popup' if key=='menu' else 'next invocation') for key in sorted(formats)])
         if not changed:
-            if before.get('config',{}).get('apps',{}).get('git') != after.get('config',{}).get('apps',{}).get('git'):
-                return dict(schema=1,status='complete',consumers=[dict(app='git',status='next invocation')])
+            old_apps = before.get('config', {}).get('apps', {})
+            new_apps = after.get('config', {}).get('apps', {})
+            listings = [app for app in ('git','files') if old_apps.get(app) != new_apps.get(app)]
+            if listings:
+                return dict(schema=1,status='complete',consumers=[dict(app=app,status='next invocation') for app in listings])
             if before.get('config',{}).get('apps',{}).get('clipboard') != after.get('config',{}).get('apps',{}).get('clipboard'):
                 return dict(schema=1,status='complete',consumers=[dict(app='clipboard',status='next invocation or watcher poll')])
             if before.get('config',{}).get('apps',{}).get('wiki') != after.get('config',{}).get('apps',{}).get('wiki'):
@@ -416,9 +419,12 @@ def preview_save(root, plan):
         changes=affected(before,after)
         if changes==['completion']:
             return dict(schema=1,status='preview',consumers=changes,reason='Next Zsh prompt and completion; no theme publication or reload')
-        if before['config'].get('apps',{}).get('git') != after['config'].get('apps',{}).get('git'):
-            changes.append('git')
-        if plan.items and all(item.get('key') in ('apps.cli.progress','apps.cli.markdown_viewer','apps.git.view') for item in plan.items):
+        for app in ('git','files'):
+            if before['config'].get('apps',{}).get(app) != after['config'].get('apps',{}).get(app):
+                changes.append(app)
+        immediate = ('apps.cli.progress','apps.cli.markdown_viewer','apps.git.view',
+                     'apps.files','apps.files.list_view','apps.files.group_by_status')
+        if plan.items and all(item.get('key') in immediate for item in plan.items):
             return dict(schema=1,status='preview',consumers=changes,reason='Next invocation or popup; no theme publication or reload')
         if before['config'].get('apps',{}).get('clipboard') != after['config'].get('apps',{}).get('clipboard'):
             changes.append('clipboard')

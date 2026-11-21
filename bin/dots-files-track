@@ -3,7 +3,7 @@
 # dots:usage=SOURCE [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms
-# dots:option=--repo||file-repository|Repository ID
+# dots:option=--repo||file-repository|Owner for an owner-relative source (inferred for rooted paths)
 # dots:option=--id||string|Stable resource ID
 # dots:option=--app||string|Application
 # dots:option=--category||string|Category

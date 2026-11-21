@@ -43,6 +43,8 @@ both Bash and native PowerShell; previews leave preferences and publication stat
 
 `apps.git.view` accepts `default` (initial value), `short` and `verbose` for terminal/menu Git reports. `apps.cli.progress` accepts `none`, `spinner`, `bar` and `both` (initial value) for existing shared progress consumers. Both use the ordinary profile/parent/shared-default precedence, Config browser, completion and reset behavior. Changes take effect at the next invocation or popup; they do not publish a theme or reload applications.
 
+`apps.files.list_view` selects `short` (initial value), `default`, or `verbose` for `dots files ls`, `dots files list`, and the Files menu’s List entry. `apps.files.group_by_status` starts enabled. Disable it for ID ordering or pass `--sort` to override the order once. Both settings take effect on the next listing. [Files list views](files.md#list-views)
+
 CLI Git view flags override the saved view. `DOTS_PROGRESS=auto` follows Config; explicit modes override it, with `never` retained as an alias for `none`. Terminal/data gates still apply. See [Git views](git.md#output-views) and [progress](presentation.md#operation-progress).
 
 
@@ -320,7 +322,7 @@ Use `dots config explain KEY` to check the actual consumer and activation rule. 
 | Root help logo | `apps.cli.logo_gradient` (`classic` or `installer`) | [Application controls](profiles.md#application-and-formatting-controls) |
 | Neovim editor and highlights | `apps.nvim`, `formatting.apps.nvim.lualine.sections` | [Neovim integration](neovim.md) |
 | Weather | `apps.wttr` | [Native weather configuration](profiles.md#native-weather-configuration) |
-| Files and source mappings | `files.dots`, `files.termux` | [Managed files](files.md) |
+| Files and source mappings | `files` in the selected profile | [Managed files](files.md) |
 
 This is a starting map, not a second settings catalog. Completion, Config details and `config explain` read the implemented declarations. The [profile reference](profiles.md#application-and-formatting-controls) documents supported controls and platform limits.
 

@@ -84,12 +84,20 @@ dots_value_candidates() {
       output=$(python3 -B "$DOTS_LIB_DIR/git/inspection.py" _complete -C "$base" 2>/dev/null) || return 0
       while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
-    file-resource|file-repository)
-      local action=list
-      [[ $type != file-repository ]] || action=sources
-      local output
-      output=$(DOTS_COLOR=never DOTS_ICONS=never python3 -B "$DOTS_LIB_DIR/files/catalog.py" "$action" --all-platforms 2>/dev/null) || return 0
-      while IFS=$'\t' read -r value _; do dots_candidate "$lead$value"; done <<< "$output"
+    file-resource|file-resource-or-path|file-repository|file-app|file-category)
+      if [[ $type == file-resource-or-path ]]; then
+        local supplied=0
+        [[ ! ${DOTS_OPTION_VALUES[--source]:-} && ! ${DOTS_OPTION_VALUES[-s]:-} ]] || supplied=1
+        [[ ! ${DOTS_OPTION_VALUES[--target]:-} && ! ${DOTS_OPTION_VALUES[-t]:-} ]] || (( ++supplied ))
+        if (( supplied )) || [[ ! ${DOTS_POSITIONALS[0]:-} =~ ^[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*$ ]]; then
+          (( supplied + ${#DOTS_POSITIONALS[@]} >= 2 )) || dots_value_candidates file "$lead"
+          (( ! supplied && ! ${#DOTS_POSITIONALS[@]} )) || return 0
+        fi
+      fi
+      local output inactive=${DOTS_OPTION_VALUES[--all-platforms]:-0}
+      [[ ${DOTS_ROUTE:-} != 'files sources' ]] || inactive=1
+      output=$(python3 -B "$DOTS_LIB_DIR/files/catalog.py" __complete "$type" "${DOTS_OPTION_VALUES[--platform]:-}" "$inactive" "${DOTS_OPTION_VALUES[--repo]:-}" 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
     file-color-key)
       local output

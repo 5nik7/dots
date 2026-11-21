@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# dots:summary=Preview and restore eligible links declared by the active profile
+# dots:usage=[OPTIONS]
+# dots:option=--interactive|-i|flag|Choose individual changes in a terminal
+# dots:option=--yes||flag|Apply all eligible changes without prompting
+# dots:option=--dry-run||flag|Preview changes without applying them (default)
+# dots:option=--json||flag|Print the preview or applied result as JSON
+# dots:option=--verbose|-v|flag|Show detailed file actions and reasons
+# dots:option=--repo||file-repository|Filter by repository ID
+# dots:option=--app||file-app|Filter by application
+# dots:option=--category||file-category|Filter by category
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/maintenance.py" relink "$@"

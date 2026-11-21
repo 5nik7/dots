@@ -8,7 +8,7 @@ from unittest import mock
 
 import test_installation as fixtures
 from install import Installation
-from managed_destination import physical
+from managed_destination import GeneratedDirectoryMember, physical
 from transactions import digest
 
 
@@ -102,6 +102,31 @@ class SetupComponents(unittest.TestCase):
             plan = self.setup(['files'])
             with self.assertRaisesRegex(ValueError, 'symlinked parent'):
                 physical(parent/'nested/font.ttf', plan.catalog_records, {})
+
+    def test_generated_directory_protects_logical_and_repository_members(self):
+        source, app = self.termux_mapping()
+        app.symlink_to(source, target_is_directory=True)
+        alias = self.home/'other-app'
+        alias.symlink_to(source, target_is_directory=True)
+        flavor = Path('flavors/dots.yazi')
+        split = source/flavor
+        split.mkdir(parents=True)
+        (split/'existing').write_text('preserved')
+        directory = dict(strategy='directory-link', enabled=True, applicable=True, status='linked')
+        rows = [dict(directory, repository='dots', target=str(p), source=str(source)) for p in (app, alias)]
+        theme = dict(directory, repository='theme', target=str(app/flavor), source=str(self.home/'generated/yazi'),
+                     status='theme-unavailable')
+        rows.append(theme)
+        self.assertEqual(physical(app/flavor, rows, {}), split)
+        for base in (app, alias, source):
+            for child in ('existing', 'missing'):
+                with self.subTest(base=base, child=child), self.assertRaises(GeneratedDirectoryMember):
+                    physical(base/flavor/child, rows, {})
+        self.assertEqual((split/'existing').read_text(), 'preserved')
+        self.assertFalse((split/'missing').exists())
+        for override in (dict(enabled=False), dict(applicable=False), dict(status='replaced')):
+            inactive = [*rows[:-1], dict(theme, **override)]
+            self.assertEqual(physical(app/flavor/'existing', inactive, {}), split/'existing')
 
 
 if __name__ == '__main__':

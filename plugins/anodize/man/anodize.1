@@ -437,13 +437,13 @@ Use a dark palette (exclusive with \-\-light).
 Preview without changes; takes precedence over \-\-yes.
 .TP
 .B "\-\-yes"
-Apply the preview without prompting.
+Save the image, or confirm one batch with \-\-all\-themes.
 .TP
 .B "\-\-all\-themes"
-Browse recolorings across available themes.
+Browse themes, or add \-\-yes to save images for every theme.
 .TP
 .B "\-\-all\-styles"
-Browse compatible styles for one palette or every theme.
+Include every compatible style.
 .TP
 .B "\-\-theme ID"
 Use the rendered colors of this Dots theme.
@@ -467,7 +467,8 @@ Effect strength (except exact and shaded) (default: 100).
 Ordered palette colors for gradient or duotone.
 .TP
 .B "\-\-output FILE"
-New image path. Its extension selects the encoder.
+Image filename or path. For batch saves it is relative to each theme
+background folder. Its extension selects the encoder.
 .TP
 .B "\-\-format FORMAT"
 Output type for automatic or extensionless names (default: png): png, jpg,
@@ -564,6 +565,12 @@ Harmonize anchors shadows, hue-matched midtones and highlights to theme
 colors. Natural preserves the earlier lightness-based treatment.
 Use --all-themes, --all-styles or both to browse recolored thumbnails. Review
 and save one full-size result.
+With --all-themes --yes, confirm Save images once in a terminal to export for
+every theme. Cancel is the default.
+Batch output paths are relative to each personal theme background directory.
+Add --all-styles to include each compatible style in its filename.
+Each batch file takes the first free numbered name and has its own undo
+transaction. Use --dry-run --json to list planned paths.
 Use --compare for a numbered sheet of all styles or --compare-modes for the
 selected style across all palette modes.
 Gradient and duotone accept ordered palette names with --stops. Exact and
@@ -576,7 +583,7 @@ WebP, TIFF, BMP and AVIF need their corresponding Pillow encoders. JPEG and
 WebP default to quality 90, AVIF to 80. Lossless WebP accepts --lossless.
 An automatic theme wallpaper goes to personal backgrounds/ID. Comparison
 sheets go beside the input. Existing automatic names are numbered. Explicit
-paths must be unused.
+single-image and sheet paths must be unused.
 .SH IMPORT AND EXPORT
 Import accepts Anodize JSON, Aether JSON, Base16 flat JSON/simple YAML,
 or Dots colors.toml. Aether colors are already adjusted: source adjustments

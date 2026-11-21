@@ -13,6 +13,7 @@ from events import OperationOutput
 from install import Installation
 from manage import Manager
 from transactions import digest, exists, parents_safe
+from managed_destination import physical, points_to, theme_artifact, yazi_migration_reason
 from interaction import SelectionEnded, gum_confirm
 from progress import Progress, configure, sequence, permanent_output
 
@@ -27,6 +28,24 @@ def target_spec(catalog, value):
         base = catalog.target('${' + token + '}')
         if base and path.is_relative_to(Path(base)):
             roots.append((len(Path(base).parts), token, Path(base)))
+    if getattr(catalog, 'flat', False):
+        # Include configured native app roots outside HOME. Generic roots win
+        # an exact tie (for instance when an app defaults to HOME itself).
+        apps = {'APP_CONFIG:codex', 'APP_CONFIG:pi', 'APP_CONFIG:leaf', 'APP_CONFIG:television',
+                'APP_CONFIG:eza', 'APP_CONFIG:windows-terminal'}
+        for rows in catalog.effective.values():
+            for row in rows.values():
+                template = row.get('target') or ''
+                if template.startswith('${APP_CONFIG:'):
+                    apps.add(template[2:template.index('}')])
+        for token in sorted(apps):
+            try:
+                base = catalog.target('${' + token + '}')
+            except (ValueError, OSError):
+                # An unusable optional app root cannot describe this absolute operand.
+                continue
+            if base and path.is_relative_to(Path(base)):
+                roots.append((len(Path(base).parts), token, Path(base)))
     if not roots:
         raise ValueError('target must be within a supported destination root or use a destination template')
     _, token, base = max(roots, key=lambda item: item[0])
@@ -93,6 +112,11 @@ class MappingPlan:
 
     def source(self, owner, rel, strategy, require=True):
         path = Path(next(s['root'] for s in self.catalog.sources if s['id'] == owner)) / relative(rel)
+        if owner == 'theme':
+            artifact = theme_artifact(path, self.catalog.theme_root, self.install.guards, required=require)
+            if strategy == 'copy' or artifact is not None and artifact.is_dir() != (strategy == 'directory-link'):
+                raise ValueError('generated source requires a matching file or directory link strategy')
+            return path
         parents_safe(path)
         for other in self.catalog.sources:
             child = Path(other['root'])
@@ -118,7 +142,8 @@ class MappingPlan:
     def unlink(self, row, strict=False):
         if not row['target'] or not row['applicable']:
             return 'No applicable destination'
-        target = Path(row['target'])
+        logical = Path(row['target'])
+        target = physical(logical, self.original_rows, self.install.guards) if row['repository'] == 'theme' else logical
         source = Path(row['source'])
         if target == source or source.is_relative_to(target) or target.is_relative_to(source):
             raise ValueError('source and target overlap')
@@ -126,12 +151,14 @@ class MappingPlan:
         owned = self.install.entries.get(str(target))
         if owned and self.install.guards[str(target)] != owned['after']:
             raise ValueError('installer-owned target changed: ' + str(target))
-        if matching(target, row['source']):
+        correct = points_to if row['repository'] == 'theme' else matching
+        if correct(target, row['source']):
             for other in self.candidate():
                 if other['id'] == row['id'] or not other['enabled'] or not other['applicable'] or not other['target']:
                     continue
                 claimed = Path(other['target'])
-                if claimed == target or claimed.is_relative_to(target) or (other['strategy'] == 'directory-link' and target.is_relative_to(claimed)):
+                if (claimed == logical or claimed.is_relative_to(logical) or
+                        (other['strategy'] == 'directory-link' and logical.is_relative_to(claimed) and row['repository'] != 'theme')):
                     raise ValueError('link is still claimed by another enabled resource: ' + other['id'])
             self.operation(target, delete=True)
             self.live = True
@@ -155,15 +182,19 @@ class MappingPlan:
         if row['strategy'] == 'copy':
             raise ValueError('live copy installation is not supported; use a link strategy')
         source = self.source(row['repository'], self.raw(row['id'])['source'], row['strategy'])
-        target = Path(row['target'])
+        target = (physical(row['target'], self.candidate(), self.install.guards)
+                  if row['repository'] == 'theme' else Path(row['target']))
+        if reason := yazi_migration_reason(row, target, self.install.entries, self.install.guards):
+            raise ValueError(reason)
         if target == source or source.is_relative_to(target) or target.is_relative_to(source):
             raise ValueError('source and target overlap')
         self.install.guard(target)
-        known_old = bool(old and old['target'] == row['target'] and matching(target, old['source']))
+        correct = points_to if row['repository'] == 'theme' else matching
+        known_old = bool(old and old['target'] == row['target'] and correct(target, old['source']))
         owned = self.install.entries.get(str(target))
         if owned and self.install.guards[str(target)] != owned['after']:
             raise ValueError('installer-owned target changed: ' + str(target))
-        if target.is_symlink() and not matching(target, source) and not known_old:
+        if target.is_symlink() and not correct(target, source) and not known_old:
             raise ValueError('unrelated link is protected: ' + str(target))
         if exists(target) and not target.is_symlink() and not self.backup:
             raise ValueError('occupied target requires --backup: ' + str(target))
@@ -237,7 +268,7 @@ class MappingPlan:
         if self.catalog.registry and selected != self.catalog.platform:
             from registry import Registry
             candidate = Catalog(self.root, selected, overrides=self.overrides)
-            candidate.registry = Registry(self.catalog.registry.update(self.documents), candidate.sources)
+            candidate.registry = Registry(self.catalog.registry.update(self.documents), candidate.identity_sources)
             return candidate.records()
         return Catalog(self.root, selected, self.documents, profile=self.catalog.profile,
                        overrides=self.overrides).records()
@@ -247,7 +278,13 @@ class MappingPlan:
         owner, old = identity.split(':', 1)
         new = owner + ':' + name
         if not self.catalog.registry: raise ValueError('file ID rename requires a core registry')
-        registry = self.catalog.registry.renamed(identity, new)
+        registry = self.catalog.registry
+        if identity not in registry.entries:
+            from registry import Registry
+            current = self.record(identity)
+            registry = Registry(registry.update({owner: {'resources': [dict(id=old, platforms=current['platforms'])]}}),
+                                self.catalog.identity_sources)
+        registry = registry.renamed(identity, new)
         if identity == new: return identity
         from profiles import available
         profiles = available(self.root)
@@ -258,11 +295,18 @@ class MappingPlan:
             path = Path(profile['root'])/'profile.json'
             data = read_json(path)
             before = copy.deepcopy(data)
-            for repository, rows in data.get('files', {}).items():
-                for row in rows:
-                    if repository == owner and row['id'] == old: row['id'] = name
-                    if 'replaces' in row:
-                        row['replaces'] = [new if value == identity else value for value in row['replaces']]
+            files = data.get('files', {})
+            if isinstance(files, list):
+                rows = ((self.catalog.source_owner(self.catalog.resolve_source(row['source'], profile))['id'], row)
+                        for row in files)
+            else:
+                rows = ((repository, row) for repository, items in files.items() for row in items)
+            for repository, row in rows:
+                if repository == owner and row['id'] == name:
+                    raise ValueError('resource ID exists in profile ' + profile['id'] + ': ' + new)
+                if repository == owner and row['id'] == old: row['id'] = name
+                if 'replaces' in row:
+                    row['replaces'] = [new if value == identity else value for value in row['replaces']]
             if before != data:
                 self.overrides[path] = data
                 changed_profiles.append(profile['id'])
@@ -291,6 +335,18 @@ class MappingPlan:
     def edit(self, args):
         if args.id is not None and not ID.fullmatch(args.id):
             raise ValueError('new ID must be a local resource ID')
+        if args.category is not None and not ID.fullmatch(args.category):
+            raise ValueError('category must be a local identifier')
+        mapping_changes = any((args.source, args.target, args.strategy, args.platforms, args.apply))
+        rooted = args.source and (args.source.startswith('${') or Path(args.source).is_absolute())
+        if rooted:
+            path = self.catalog.resolve_source(args.source) if args.source.startswith('${') else Path(args.source)
+            owner = self.catalog.source_owner(path)
+            if args.new and args.repo is None: args.repo = owner['id']
+            expected = args.repo if args.new else args.values[0].partition(':')[0]
+            if expected != owner['id']:
+                raise ValueError('source belongs to a different owner: ' + owner['id'])
+            args.source = path.relative_to(owner['root']).as_posix()
         if args.new:
             if not args.repo or args.repo not in self.documents:
                 raise ValueError('new mappings require an available --repo')
@@ -306,8 +362,7 @@ class MappingPlan:
             before = None
         else:
             identity = args.values[0]
-            mapping_changes = any((args.source, args.target, args.strategy, args.platforms, args.apply))
-            if args.id and not mapping_changes:
+            if args.id and not mapping_changes and args.category is None:
                 self.rename(identity, args.id)
                 return
             before = self.record(identity)
@@ -316,6 +371,8 @@ class MappingPlan:
                 before = dict(before, id=identity)
             raw = self.raw(identity)
         owner_id = identity.split(':', 1)[0]
+        if args.category is not None:
+            raw['category'] = args.category
         if args.source:
             raw['source'] = relative(args.source).as_posix()
         if args.strategy:
@@ -328,7 +385,8 @@ class MappingPlan:
             else:
                 raw['target'] = spec
         if args.platforms: raw['platforms'] = args.platforms
-        self.source(owner_id, raw['source'], raw['strategy'])
+        if args.new or mapping_changes or args.category is None:
+            self.source(owner_id, raw['source'], raw['strategy'])
         # Validate effective claims for every platform affected by shared fields.
         for selected in PLATFORMS:
             row = next((r for r in self.candidate(selected) if r['id'] == identity), None)
@@ -352,6 +410,8 @@ class MappingPlan:
                               old_source=before['source'] if before else None,
                               old_target=before['target'] if before else None,
                               reason='Reconcile live links' if args.apply else 'Metadata only; existing links remain unchanged'))
+        if args.category is not None:
+            self.rows[-1].update(category=after['category'], old_category=before['category'] if before else None)
 
     def finish(self):
         documents = {owner: doc for owner, doc in self.documents.items() if doc != self.original[owner]}
@@ -438,8 +498,8 @@ def arguments(argv=None):
     if args.action == 'edit':
         if args.restore or len(args.values) > 1 or (args.new and args.values):
             p.error('edit takes one resource or --new; --restore belongs to stash')
-        if not args.new and any((args.repo, args.app, args.category)):
-            p.error('--repo/--app/--category require --new')
+        if not args.new and (args.repo or args.app):
+            p.error('--repo and --app require --new')
     return p, args
 
 
@@ -457,6 +517,9 @@ def render(doc, final=False):
             for path in row.get('metadata', []): ui.resource_detail('Metadata', path)
             if row.get('receipt'): ui.resource_detail('Receipt', row['receipt'])
             if 'profile' in row: ui.detail('Profile', row['profile'])
+            if row.get('old_category') and row['old_category'] != row.get('category'):
+                ui.detail('Old category', row['old_category'])
+            if 'category' in row: ui.detail('Category', row['category'])
             if row.get('old_platforms') and row['old_platforms'] != row.get('platforms'): ui.detail('Old platforms', ', '.join(row['old_platforms']))
             if 'platforms' in row: ui.detail('Platforms', ', '.join(row['platforms']))
             for key, label in (('old_source','Old source'), ('old_target','Old target'), ('source','Source'), ('target','Target')):
@@ -475,8 +538,8 @@ def main(argv=None):
     p, args = arguments(argv)
     from interaction import selection_requested as requested
     picking = requested(p, args, args.values)
-    if args.pick and args.dry_run and args.action == 'edit' and not any((args.id, args.source, args.target, args.strategy, args.platforms)):
-        p.error('--pick --dry-run edit requires explicit --id, --source, --target, --strategy or --platforms')
+    if args.pick and args.dry_run and args.action == 'edit' and not any((args.id, args.source, args.target, args.category, args.strategy, args.platforms)):
+        p.error('--pick --dry-run edit requires explicit --id, --source, --target, --category, --strategy or --platforms')
     configure(not args.json and not args.dry_run)
     with Progress('Loading file mappings'):
         plan = MappingPlan(args.backup if args.backup is not None else Manager().backup_default(), args.platform)
@@ -501,18 +564,18 @@ def main(argv=None):
         p.error('supply resource IDs or explicit --new options')
     if args.action == 'edit' and interactive:
         if args.new:
-            if not args.repo:
+            if not args.repo and not args.source:
                 args.repo = pick('Owning repository', ['Cancel'] + list(plan.documents))
                 if args.repo == 'Cancel': return 0
             for field in ('id', 'source', 'target', 'app', 'category'):
                 if not getattr(args, field): setattr(args, field, prompt(field.title()))
             if not args.strategy:
                 args.strategy = pick('Link strategy', ['link', 'directory-link', 'copy'])
-        elif not any((args.id, args.source, args.target, args.strategy, args.platforms)):
+        elif not any((args.id, args.source, args.target, args.category, args.strategy, args.platforms)):
             row = plan.raw(args.values[0])
             name = prompt('ID', row['id'])
             if name != row['id']: args.id = name
-            args.source = prompt('Source', row['source'])
+            args.source = prompt('Source', plan.record(args.values[0]).get('source_spec', row['source']))
             args.target = prompt('Target', row.get('targets', {}).get(args.platform, row.get('target')) if args.platform else row.get('target'))
             args.strategy = pick('Link strategy', [row['strategy']] + [s for s in ('link', 'directory-link', 'copy') if s != row['strategy']])
     with sequence('File mappings', 2) as phases:

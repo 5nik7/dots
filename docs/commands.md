@@ -168,10 +168,16 @@ text and JSON keep their established formats.
 See [Git commands](git.md#repository-info-and-submodules) for schemas, safety,
 presentation, dependencies and examples. No new sync route is introduced.
 
+`dots files ls` aliases `dots files list`. Both accept `-s`/`--short`, `--default`, `-v`/`--verbose`, or `--view short|default|verbose`. Below 50 columns, the short view stacks linked files and keeps linked directories inline when they fit. `--sort` sets the order for one invocation. [Files list views](files.md#list-views)
+
+`dots files relink` restores eligible links. `dots files prune` removes active-profile mappings with absent repository sources. `dots files sync` performs both in one transaction. Each command previews by default, accepts `--yes` to apply, and offers per-item review with `-i` or `--interactive`. [Profile maintenance](files.md#relink-and-prune-the-active-profile)
+
 The [files reference](files.md) also defines `locations`, `discover --system`,
 `add`, `link`, `remove`/`rm`, `history`, `undo`, `recover` and
 `backups list|show|restore`. Metadata-only `track` and existing inventory formats
 remain compatible.
+
+`dots files rm OWNER:ID` can remove a stale mapping after its source was deleted or another resource replaced it. Use `--dry-run` to see which mapping will be removed. [Managed file operations](files.md#import-link-and-stop-managing)
 
 `files discover --system` groups config candidates by directory by default and
 summarizes managed/excluded entries. `--verbose` shows individual files and source
@@ -466,9 +472,9 @@ preceded by `-`. Option names must be unique. Positional records are
 applies to remaining positions. Types are `flag` (options only), `string`, `file`,
 `directory`, `choice:VALUE,VALUE`, `list:VALUE,VALUE` (suggested items in a comma-separated input), or the core-owned theme data types
 `theme`, `flavor`, `palette-color`, `color-format`, `theme-id`, `theme-color`, `theme-plugin`, `file-resource`,
-`file-repository`, and `git-submodule`. The latter reads registered descendant paths
+`file-repository`, `file-app`, `file-category`, and `git-submodule`. The latter reads registered descendant paths
 relative to Dots or a preceding `-C`/`--directory`, without initialization or network.
-`theme-plugin` reads local plugin names without executing hooks;
+`file-app` and `file-category` complete values from the selected profile’s mapping metadata. `theme-plugin` reads local plugin names without executing hooks;
 `theme-id`, `file-resource`, and `file-repository` read flat theme IDs and qualified catalog IDs. Theme ID and native family/flavor enumeration use the data-only shared theme discovery module; current-ID reconstruction is shared with theme queries. Flat completion retains literal filename hints (including duplicates and invalid names); listing validates/deduplicates IDs and selection still validates them. `theme` lists native families for `list --flavors`. `theme-color` reads the selected theme or a preceding `--theme ID`/`--theme=ID`, honoring a preceding `--native`; it suggests native names alone in native mode and semantic/native names otherwise. The retained generic `flavor`/`palette-color` metadata providers use preceding positional family/flavor arguments. All providers read data and never execute
 extensions. Fields cannot contain `|`; choice values
 cannot contain commas. Descriptions are required. No code callbacks, aliases,
@@ -564,6 +570,8 @@ pywal16 flavor discovery works without its optional generated input. Palette fil
 Television theme publication uses the existing theme routes and their output contracts. See [Television integration](themes.md#television) for the `dots` theme selector, destination overrides, and journaled creation of its themes child directory.
 
 ## Implemented Anodize commands
+
+`patina IMAGE --all-themes --yes` asks once to save an image in every theme’s personal backgrounds folder. Add `--all-styles` for one file per compatible style. A batch `--output` is relative to each folder. Use `--dry-run --json` to list filenames without a terminal.
 
 `dots anodize patina IMAGE`, `anodize patina IMAGE`, `dots patina IMAGE` and `patina IMAGE` share one image export command. Choose `--theme ID` or `--palette-image FILE`, then `--style` for the treatment (default `alloy`) and optionally `--mode` for the palette. Browse recolorings with `--all-themes`, `--all-styles`, or both. Save a numbered sheet with `--compare` or `--compare-modes`. An explicit output extension selects the encoder. For example, `patina reflekt.jpg --theme catppuccin-mocha --output reflect.webp` exports WebP. Use `--format` for an automatic or extensionless destination. See the [styles, encoders and output rules](anodize.md#patina).
 
@@ -664,7 +672,9 @@ Theme set/refresh (including `--commands-only`) and switcher accept the same fla
 
 ## Existing-source registration
 
-`dots files add PATH...` registers existing file/directory links into eligible repositories and sources already in those repositories, alongside ordinary configuration imports. `--target DESTINATION` resolves one explicit source without a known destination; repository directories use directory-link automatically. `files discover`, the Add picker and `add --scan` include registration candidates. Scans skip unresolved candidates and report their reasons. Correct pre-existing links stay intact and unowned by uninstall; new links receive normal installation recovery. See [registration](files.md#register-files-already-in-the-repository) for inference, profile ownership, output and safety contracts. The Files launcher includes Add. Both shell frontends share these options and their completion metadata.
+`dots files add PATH [-g|--global]` imports into the active profile by default or into the checkout with `-g`. Both save the current profile's mapping. Use `--source PATH` to choose storage for a previously unmapped home file. Existing sources and links can be registered in place. `dots files link|ln SOURCE TARGET` accepts `-s/--source` and `-t/--target` and creates a missing target in an existing parent.
+
+`dots files find` and `dots files fd` review existing links missing from the effective profile. Pass a directory positionally or with `--path DIR`. Both forms search recursively, and multiple roots can be combined. With no roots the command searches managed locations. Use `--dry-run` or `--json` for a preview and `--yes` to register eligible links. A new mapping takes the available normalized filename as its ID. Use `dots files edit RESOURCE --category NAME` to change its category. Add and Find are available in the Files launcher. See [Files workflows](files.md#add-link-and-find).
 
 ## Implemented file selection flags
 

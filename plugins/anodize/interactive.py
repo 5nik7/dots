@@ -127,7 +127,13 @@ def theme(author, action):
 
 
 def fill_inputs(parser, args, author):
-    if any(getattr(args, flag, False) for flag in ('all_modes', 'all_styles', 'all_themes')):
+    if args.action == 'patina' and args.all_themes and args.yes:
+        args.interactive = False  # The batch has its own single approval, including from guided wrappers.
+        if not args.file:
+            parser.error('patina --all-themes --yes requires an input image')
+        if not args.dry_run and (args.json or not terminal()):
+            parser.error('saving all themes requires a terminal confirmation; use --dry-run --json to list outputs')
+    elif any(getattr(args, flag, False) for flag in ('all_modes', 'all_styles', 'all_themes')):
         args.interactive = True
     guided = args.interactive
     if guided and (getattr(args, 'json', False) or getattr(args, 'yes', False) or not terminal()):
@@ -150,7 +156,7 @@ def fill_inputs(parser, args, author):
         if args.all_styles and '--style' in args._provided:
             parser.error('choose --style or --all-styles')
         if (args.all_styles or args.all_themes) and (args.compare or args.compare_modes):
-            parser.error('choose an interactive comparison or a saved comparison sheet')
+            parser.error('choose --all-themes or --all-styles for individual images, or use a comparison sheet')
         if not (args.theme or args.palette_image or args.all_themes):
             if not can_pick:
                 parser.error('patina requires --theme or --palette-image')

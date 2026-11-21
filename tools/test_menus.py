@@ -352,7 +352,8 @@ class NativeMenuFixture(MenuFixture):
         data = bytearray(); deadline = time.monotonic() + 15
         while needle not in data and time.monotonic() < deadline:
             data.extend(self.drain(master))
-        self.assertIn(needle, data[-10000:])
+        if needle not in data:
+            self.fail(f'{needle!r} missing from client output; tail={bytes(data[-1500:])!r}')
         return data
 
     def worker(self, code, **extra):

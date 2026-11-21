@@ -141,11 +141,11 @@ class Profiles(unittest.TestCase):
         platform=detect(env=self.env)['platform']
         for shell in ('bash','zsh'):
             if not shutil.which(shell): continue
-            self.profile(platform,settings={'DOTS_INIT_COLORS':'0'})
+            manifest = self.profile(platform,settings={'DOTS_INIT_COLORS':'0'}) / 'profile.json'
             code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s|%s" "${dots_options[DOTS_INIT_COLORS]}" "${dots_option_sources[DOTS_INIT_COLORS]}"'
             cold=self.run_shell(shell,code)
             self.assertEqual(cold.returncode,0,cold.stderr)
-            self.assertEqual(cold.stdout,'0|profile:'+platform)
+            self.assertEqual(cold.stdout,'0|'+str(manifest))
             commands=self.home/('profile-settings-'+shell);commands.mkdir()
             shim=commands/'python3';shim.write_text('#!'+shutil.which('sh')+'\nprintf PYTHON_WAS_CALLED >&2\nexit 99\n');shim.chmod(0o700)
             warm=self.run_shell(shell,code,PATH=str(commands)+os.pathsep+self.env['PATH'])
@@ -154,7 +154,7 @@ class Profiles(unittest.TestCase):
             self.profile(platform,settings={'DOTS_INIT_COLORS':'1'})
             changed=self.run_shell(shell,code)
             self.assertEqual(changed.returncode,0,changed.stderr)
-            self.assertEqual(changed.stdout,'1|profile:'+platform)
+            self.assertEqual(changed.stdout,'1|'+str(manifest))
 
     def test_separated_preference_creation_edit_and_removal_invalidate_startup(self):
         self.public()

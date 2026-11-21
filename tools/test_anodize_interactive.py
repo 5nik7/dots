@@ -309,6 +309,156 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
                  '--output', expected, '--yes')
         self.assertEqual(target.read_bytes(), expected.read_bytes())
 
+    def test_patina_batch_one_prompt_for_personal_and_bundled_themes(self):
+        backgrounds = self.home / 'config/dots/backgrounds'
+        # Two selectable themes, one in each root.
+        themes = self.repo / 'themes'
+        themes.rename(self.root / 'fixture themes')
+        themes.mkdir()
+        shutil.copytree(self.root / 'fixture themes/nord', themes / 'nord')
+        self.create('personal')
+        flags = [str(self.image), '--all-themes', '--yes', '--interactive',
+                 '--style', 'palette-blend', '--output', 'walls ü/reflect.jpg', '--format', 'png']
+        plan = None
+        for program, *route in [('patina',), ('dots', 'patina'), ('anodize', 'patina'), ('dots', 'anodize', 'patina')]:
+            command = [old.BASH, str(self.repo / 'bin' / program), *route, *flags]
+            result = self.run_command([*command, '--dry-run', '--json'],
+                                      env=dict(self.env, ANODIZE_ENGINE=str(self.root / 'absent')))
+            parsed = json.loads(result.stdout)
+            if plan is None:
+                plan = parsed
+            self.assertEqual(plan, parsed)
+        self.assertEqual((plan['theme_count'], plan['total'], plan['styles'], plan['format']),
+                         (2, 2, ['palette-blend'], 'jpeg'))
+        paths = [backgrounds / theme / 'walls ü/reflect.jpg' for theme in ('nord', 'personal')]
+        self.assertEqual([Path(row['target']) for row in plan['outputs']], paths)
+        self.cli('patina', *flags, code=2)
+        self.cli('patina', *flags, '--json', code=2)
+        script = shlex.join(command)
+        before = digest(self.home / 'state')
+        out = self.terminal(script, width=40, env=dict(self.env, TERM='dumb', ANODIZE_ENGINE=str(self.root/'absent')),
+                            steps=((b'Save images?', b'\r'),))
+        self.assertEqual(out.count(b'Save images?'), 1)
+        for label in (b'Themes', b'Styles', b'Images'):
+            self.assertIn(label, out)
+        self.assertFalse(backgrounds.exists())
+        self.assertEqual(digest(self.home / 'state'), before)
+        old.test_confirmations.install_gum(self.root, self.env)
+        self.terminal(script, env=dict(self.env, GUM_CHOICE='Cancel'))
+        gum_args = json.loads((self.home / 'gum-calls').read_text())['args']
+        self.assertEqual(gum_args[-2:], ['Cancel', 'Save images'])
+        self.assertFalse(backgrounds.exists())
+        paths[0].parent.mkdir(parents=True)
+        paths[0].write_bytes(b'original')
+        out = self.terminal(script, env=dict(self.env, TERM='dumb'), steps=((b'Save images?', b'y\r'),))
+        self.assertEqual(out.count(b'Save images?'), 1)
+        self.assertEqual(paths[0].read_bytes(), b'original')
+        saved = [paths[0].with_stem('reflect_1'), paths[1]]
+        for theme, path in zip(('nord', 'personal'), saved):
+            direct = self.root / (theme + '.jpg')
+            self.cli('patina', self.image, '--theme', theme, '--style', 'palette-blend', '--output', direct, '--yes')
+            self.assertEqual(path.read_bytes(), direct.read_bytes())
+        receipts = re.findall(rb'dots files undo ([a-f0-9]{32})', out)
+        self.assertEqual(len(set(receipts)), 2)
+        with self.author() as author:
+            store = author.store()
+            ops, guards, catalogs = store.inverse(receipts[0].decode())
+            store.apply('undo', ops, guards, catalogs=catalogs)
+        self.assertFalse(saved[0].exists())
+        self.assertTrue(saved[1].is_file())
+        self.assertFalse(self.active.exists())
+
+    def test_patina_batch_styles_collisions_and_partial_failure(self):
+        import patina_batch as batch
+        flags = ['patina', str(self.image), '--all-themes', '--yes', '--all-styles',
+                 '--stops', 'red,blue', '--mode', 'pastel', '--light']
+        args = parser().parse_args(flags)
+        present = mock.Mock()
+        with self.author() as author, mock.patch.object(author, 'identities', return_value=['broken', 'nord']), \
+                mock.patch.object(batch, 'confirm_batch', return_value=True) as confirm, \
+                mock.patch.object(batch, 'theme_palettes', wraps=batch.theme_palettes) as palettes:
+            save = batch.save_image
+            def race(author, stage, target, guards):
+                if target.stem.endswith('_gradient'):
+                    target.parent.mkdir(parents=True)
+                    target.write_bytes(b'concurrent export')
+                return save(author, stage, target, guards)
+            with mock.patch.object(batch, 'save_image', side_effect=race), self.assertRaises(SystemExit) as status:
+                batch.save_all_themes(author, args, present)
+            self.assertEqual(status.exception.code, 1)
+        confirm.assert_called_once()
+        self.assertEqual(palettes.call_count, 2)
+        summary = present.call_args.args[0]
+        self.assertEqual((summary['saved'], summary['failed'], summary['remaining']), (2, 2, 0))
+        first, second, gradient, duotone = summary['outputs']
+        self.assertTrue(all(row['error'] and row['id'] == 'broken' for row in (first, second)))
+        base = self.home / 'config/dots/backgrounds/nord' / self.image.name
+        self.assertEqual(Path(gradient['target']), base.with_stem(base.stem + '_gradient_1'))
+        self.assertEqual(base.with_stem(base.stem + '_gradient').read_bytes(), b'concurrent export')
+        self.assertEqual(Path(duotone['target']), base.with_stem(base.stem + '_duotone'))
+        self.assertTrue(Path(duotone['target']).is_file())
+
+    def test_patina_batch_all_styles_continues_after_one_render_fails(self):
+        import patina
+        import patina_batch as batch
+        args = parser().parse_args(['patina', str(self.image), '--all-themes', '--yes', '--all-styles',
+                                    '--output', 'unused/../gallery/portrait', '--format', 'gif'])
+        present = mock.Mock()
+        stage = batch.staged_image
+        def render(author, directory, request, options, encoding):
+            if options['style'] == 'exact':
+                raise ValueError('fixture render failure')
+            return stage(author, directory, request, options, encoding)
+        with self.author() as author, mock.patch.object(author, 'identities', return_value=['nord']), \
+                mock.patch.object(batch, 'theme_palettes', wraps=batch.theme_palettes) as palettes, \
+                mock.patch.object(batch, 'confirm_batch', return_value=True), \
+                mock.patch.object(batch, 'staged_image', side_effect=render), self.assertRaises(SystemExit):
+            batch.save_all_themes(author, args, present)
+        palettes.assert_called_once()
+        report = present.call_args.args[0]
+        self.assertEqual((report['saved'], report['failed'], report['remaining']), (len(patina.STYLES) - 1, 1, 0))
+        self.assertEqual([row['style'] for row in report['outputs']], list(patina.PICKER_STYLES))
+        for row in report['outputs']:
+            target = self.home / 'config/dots/backgrounds/nord/gallery' / f"portrait_{row['style']}.gif"
+            self.assertEqual(row['target'], str(target))
+            if row['style'] == 'exact':
+                self.assertFalse(target.exists())
+                self.assertEqual(row['error'], 'fixture render failure')
+            else:
+                self.assertTrue(target.read_bytes().startswith(b'GIF'))
+
+    def test_patina_batch_drift_and_invalid_paths(self):
+        import patina_batch as batch
+        flags = ['patina', str(self.image), '--all-themes', '--yes']
+        for template in ('../escape.png', str(self.root/'absolute.png'), r'C:\outside.png', r'..\escape.png'):
+            self.cli(*flags, '--dry-run', '--output', template, code=1)
+        self.cli(*flags, '--dry-run', '--mode', 'unknown-mode', code=1)
+        self.cli(*flags, '--dry-run', '--all-styles', '--style', 'exact', code=2)
+        self.cli(*flags, '--dry-run', '--quality', '70', code=1)
+        backgrounds = self.home / 'config/dots/backgrounds'
+        backgrounds.mkdir(parents=True)
+        (backgrounds/'nord').symlink_to(self.home)
+        preview = self.cli(*flags, '--output', 'escape.png', '--dry-run', '--json', code=1)
+        row = next(row for row in json.loads(preview.stdout)['outputs'] if row['id'] == 'nord')
+        self.assertIn('symlink', row['error'])
+        self.assertFalse((self.home/'escape.png').exists())
+        args = parser().parse_args(flags)
+        present = mock.Mock()
+        save = batch.save_image
+        def edit_after_first(*params):
+            receipt = save(*params)
+            self.image.write_bytes(b'changed')
+            return receipt
+        with self.author() as author, mock.patch.object(author, 'identities', return_value=['gruvbox-dark', 'kanagawa-wave', 'nord']), \
+                mock.patch.object(batch, 'confirm_batch', return_value=True), \
+                mock.patch.object(batch, 'save_image', side_effect=edit_after_first), self.assertRaises(SystemExit):
+            batch.save_all_themes(author, args, present)
+        summary = present.call_args.args[0]
+        self.assertIn('input changed', summary['stopped'])
+        self.assertEqual((summary['saved'], summary['remaining'], summary['failed']), (1, 1, 1))
+        self.assertTrue(Path(summary['outputs'][0]['target']).is_file())
+        self.assertFalse(Path(summary['outputs'][1]['target']).exists())
+
     def test_extraction_review_saves_exact_draft_and_reviews_activation(self):
         import cli
         opts = ['extract', str(self.image), '--all-modes']

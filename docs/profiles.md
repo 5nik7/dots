@@ -79,7 +79,7 @@ A profile's `profile.json` stores `files` alongside `environment` and profile id
 Shell `settings`, behavior and formatting live in adjacent `config.json`; colors
 and icons live in `colors.toml` and `icons.toml`. Legacy inline preferences remain
 readable until an explicit [layout migration](configuration.md#preference-files-and-appearance-import).
-The `files` object maps repository IDs to complete resource lists using profile implementation fields and explicit resource `replaces` declarations. Replacing a whole application directory must
+The `files` array lists source and target mappings and supports explicit resource `replaces` declarations. Each source starts with `${DOTS}`, `${PROFILE}`, or `${THEME}`. Replacing a whole application directory must
 use an explicit directory mapping; there is no automatic file-format or tree
 merge. Installation, backups and undo stay in the managed-files workflow.
 Windows destinations remain native app mappings, separately from WSL state.
@@ -159,7 +159,7 @@ dots config list --profile windows --json
 
 Bare `dots config` browses in a terminal and lists when redirected. Use explicit `list` for a noninteractive report. `get KEY` prints an undecorated scalar, or a styled report for a structured value; `--json` selects structured output. `list` and `get` merge configured values from the active inheritance layers; they do not substitute process overrides or built-in defaults. Use `dots env` for effective settings and their origins. `path [NAME]` prints the destination inside the selected profile; `path themes` retains the user theme directory. Every route accepts `--json` and `--profile`.
 
-`set KEY VALUE` and `unset KEY` save immediately through a retained file transaction. Both accept `--dry-run`; `set --json-value` parses the value as JSON. Bare `DOTS_*` names select `settings`; explicit names use `settings.NAME`, `environment.NAME`, `files.REPOSITORY`, or `profile.alias`. Shell settings use their existing string values (`0`/`1`, for example); `settings.files.backup` is a JSON boolean. Environment strings remain literal templates. Sensitive declarations must reference an environment variable, and their values are redacted in inspection. An explicit `--profile NAME` unset removes that profile's override and reveals inherited values; unqualified writes target shared preferences. Saving does not reload shells, install files, publish themes, or run hooks.
+`set KEY VALUE` and `unset KEY` save immediately through a retained file transaction. Both accept `--dry-run`; `set --json-value` parses the value as JSON. Bare `DOTS_*` names select `settings`; explicit names use `settings.NAME`, `environment.NAME`, `files`, or `profile.alias`. Shell settings use their existing string values (`0`/`1`, for example); `settings.files.backup` is a JSON boolean. Environment strings remain literal templates. Sensitive declarations must reference an environment variable, and their values are redacted in inspection. An explicit `--profile NAME` unset removes that profile's override and reveals inherited values; unqualified writes target shared preferences. Saving does not reload shells, install files, publish themes, or run hooks.
 
 ### Configuration popup
 
@@ -229,24 +229,22 @@ JSON-value calls still require explicit values and never launch a popup.
 
 ### Manifest fields
 
-The additive schema-1 fields look like this:
+A profile can declare repository and generated sources together.
 
 ```json
 {
   "schema": 1,
   "id": "linux",
-  "settings": {"DOTS_INIT_THEME": "0", "files.backup": true},
-  "environment": {"EDITOR": "nvim"},
-  "files": {
-    "dots": [{
-      "id": "example", "source": "config/example", "target": "${CONFIG}/example",
-      "strategy": "link", "app": "example", "category": "config"
-    }]
-  }
+  "files": [
+    {"id": "example", "source": "${PROFILE}/config/example", "target": "${CONFIG}/example",
+     "strategy": "directory-link", "app": "example", "category": "config"},
+    {"id": "yazi", "source": "${THEME}/yazi", "target": "${CONFIG}/yazi/flavors/dots.yazi",
+     "strategy": "directory-link", "app": "yazi", "category": "theme"}
+  ]
 }
 ```
 
-This is a format example: the source must exist before installation and `dots:example` must be registered in the core `.dots/files.json`. Each `files.REPOSITORY` value replaces that repository's entire inherited resource list. Source paths remain relative to the owner in `.dots/sources.json`. The most specific list wins. The core registry always retains qualified resource IDs and platform eligibility; profiles own implementation details and a single target, without `platforms` or `targets`. An empty or absent effective list installs nothing for that owner. Independent sources such as Neovim have explicit profile mappings; legacy source catalogs remain readable in older schema-1 compositions. File editors save into the active leaf profile. `files edit --platform windows` explicitly edits the Windows base profile; live apply requires the active profile. Registry and profile changes are guarded and journaled together, including tracking.
+Rows take effect directly. A child inherits individual qualified IDs and may override or disable them. Inherited `${PROFILE}` paths stay anchored to the declaring layer. Grouped legacy manifests keep their original whole-owner replacement behavior. File editors save to the active leaf by default. Explicit `files edit --platform windows` edits the Windows base profile. See [file ownership and formats](files.md#ownership-and-formats).
 
 Format-specific configuration lives beside `profile.json`: `file-colors.toml`, `git.conf`, `theme-plugins.json`, `hooks/`, `file-colors/`, `themed/`, `backgrounds/`, and `projects.json`. Readers choose the most specific existing profile input, then fall back to the legacy Dots config directory. File-style and plugin-selection edits write the current profile. These inherited files are selected as a whole; parent and child documents are not recursively merged. The visual preference files `icons.toml` and `colors.toml` use per-key inheritance as described below. The files retain their existing format-specific validation. `themes/` continues under the platform user configuration directory.
 
@@ -418,8 +416,8 @@ For startup sequence, timing, PATH and command diagnostics, see
 `default/icons.toml` and `default/colors.toml` hold shared visual defaults. Every base profile has `icons.toml` and `colors.toml` beside `profile.json`; empty files inherit defaults. Resolution folds shared defaults, inherited parents and the selected profile in that order. Within each layer, a general value is applied before that layer’s app override; a general child-profile value therefore beats an app-specific parent/default value. Color fields inherit independently, and empty icons and false attributes remain intentional. `unset` removes a profile override and exposes its inherited value. Shared defaults remain defined and are changed with `set --defaults`.
 
 ```sh
-dots config get files.termux
-dots config get files.termux --json
+dots config get files
+dots config get files --json
 dots config get icons.git
 dots config set icons.git.branch ''
 dots config set colors.ui.heading.fg cyan

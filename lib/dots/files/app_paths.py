@@ -129,6 +129,31 @@ def config_directory(app):
     return default
 
 
+def connector_directory(app, platform):
+    """Resolve application destinations shared by profiles and theme publication."""
+    windows = platform == 'windows'
+    if app in ('codex', 'pi'):
+        home = Path(os.environ.get('HOME') or Path.home())
+        if app == 'codex':
+            value = os.environ.get('CODEX_HOME') or str(home / '.codex')
+        else:
+            value = os.environ.get('PI_CODING_AGENT_DIR') or str(home / '.pi/agent')
+            if value == '~' or value.startswith('~/'):
+                value = str(home) + value[1:]
+        parts = value.replace('\\', '/').split('/') if windows else value.split('/')
+        if (not Path(value).is_absolute() or any(ord(c) < 32 or ord(c) == 127 for c in value)
+                or any(p in ('.', '..') for p in parts)):
+            raise ValueError(app + ' home must be an absolute path without control characters or dot components')
+        return Path(value)
+    if app == 'windows-terminal':
+        return terminal_fragment_directory(windows=windows)
+    resolvers = {'eza': eza_config_directory, 'television': television_config_directory,
+                 'leaf': leaf_config_directory}
+    if app in resolvers:
+        return resolvers[app](windows=windows)
+    return config_directory(app) if windows else None
+
+
 if __name__ == '__main__':
     import sys
     try:

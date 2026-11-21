@@ -153,7 +153,9 @@ def parser():
             q.add_argument('--reference-wallpaper', action='store_true', help='Keep an absolute external wallpaper reference')
         if action in ('create', 'import', 'edit', 'export', 'apply', 'promote', 'patina'):
             q.add_argument('--dry-run', action='store_true', help='Preview without changes; takes precedence over --yes')
-            q.add_argument('--yes', action='store_true', help='Apply the preview without prompting')
+            yes_help = ('Save the image, or confirm one batch with --all-themes'
+                        if action == 'patina' else 'Apply the preview without prompting')
+            q.add_argument('--yes', action='store_true', help=yes_help)
         if action == 'import':
             q.add_argument('--name', metavar='ID', help='Save under this new theme identifier')
             q.add_argument('--format', choices=['anodize', 'aether', 'base16', 'colors'], help='Input format')
@@ -164,8 +166,8 @@ def parser():
             q.add_argument('--name', metavar='ID', help='New theme identifier for the repository copy')
         if action == 'patina':
             source = q.add_mutually_exclusive_group()
-            source.add_argument('--all-themes', action='store_true', help='Browse recolorings across available themes')
-            q.add_argument('--all-styles', action='store_true', help='Browse compatible styles for one palette or every theme')
+            source.add_argument('--all-themes', action='store_true', help='Browse themes, or add --yes to save images for every theme')
+            q.add_argument('--all-styles', action='store_true', help='Include every compatible style')
             source.add_argument('--theme', metavar='ID', help='Use the rendered colors of this Dots theme')
             source.add_argument('--palette-image', metavar='FILE', help='Extract the palette from this reference image')
             from patina import DEFAULT_STYLE, STYLES, HARMONIES, FORMATS, percent, stop_names
@@ -173,7 +175,7 @@ def parser():
             q.add_argument('--harmony', choices=HARMONIES, help='Missing-hue rule for alloy, harmonize or natural (default: auto)')
             q.add_argument('--strength', type=percent, metavar='0–100', help='Effect strength (except exact and shaded) (default: 100)')
             q.add_argument('--stops', type=stop_names, metavar='NAME,NAME,…', help='Ordered palette colors for gradient or duotone')
-            q.add_argument('--output', metavar='FILE', help='New image path. Its extension selects the encoder')
+            q.add_argument('--output', metavar='FILE', help='Image filename or path. For batch saves it is relative to each theme background folder. Its extension selects the encoder')
             q.add_argument('--format', choices=FORMATS, type=str.lower, help='Output type for automatic or extensionless names (default: png)')
             q.add_argument('--quality', type=int, metavar='1–100', help='JPEG/WebP quality (default 90) or AVIF quality (default 80)')
             q.add_argument('--lossless', action='store_true', help='Use lossless WebP compression')
@@ -222,6 +224,29 @@ def present(result, use_json=False, palette=None, *, pending_choice=False):
             ui.resource_detail(label, value, **kwargs)
 
     render_logo(ui, colors=palette, view=view)
+    if 'theme_count' in result:
+        ui.heading('Patina batch')
+        resource('Source', result['source'])
+        detail('Themes', result['theme_count'])
+        detail('Styles', f"{len(result['styles'])} ({', '.join(result['styles'])})")
+        detail('Images', result['total'])
+        resource('Destination', result['destination'])
+        if 'saved' in result:
+            detail('Saved', result['saved'])
+            detail('Failed', result['failed'])
+            if result['remaining']:
+                detail('Remaining', result['remaining'])
+        if 'stopped' in result:
+            detail('Stopped', result['stopped'])
+        for row in result.get('outputs', []):
+            if row['status'] == 'failed':
+                detail('Failed', f"{row['id']} / {row['style']}  {row['error']}")
+            elif row['status'] == 'saved':
+                resource('Saved', row['target'])
+                detail('Undo', 'dots files undo ' + row['transaction'])
+            elif result['status'] == 'preview':
+                resource('Planned', row['target'])
+        return
     (view.title if view is not None else ui.heading)('Anodize')
     if 'modes' in result:
         for mode in result['modes']:

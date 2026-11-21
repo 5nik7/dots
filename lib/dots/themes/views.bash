@@ -11,7 +11,19 @@ dt_init() {
     file=$DT_STATE/generations/$DT_GENERATION/init.zsh
     [[ $shell != fish ]] || file=$DT_STATE/generations/$DT_GENERATION/init.fish
     [[ -f $file && ! -L $file ]] || { dt_error 'missing generated initialization; run theme refresh'; return 1; }
-    cat "$file"
+    cat "$file" || return
+    # Old generation initializers export the family as THEME. Upgrade their
+    # public shell output without editing immutable data or publishing a theme.
+    if ! grep -qE '^(export|set -gx) DOTS_THEME_FAMILY[ =]' "$file"; then
+      if [[ $shell == fish ]]; then
+        printf '%s\n' 'set -gx DOTS_THEME_FAMILY "$THEME"'
+        local active=${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme
+        active=${active//\\/\\\\}; active=${active//\'/\\\'}
+        printf "set -gx THEME '%s'\n" "$active"
+      else
+        printf '%s\n' 'export DOTS_THEME_FAMILY="$THEME" THEME="${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme"'
+      fi
+    fi
   else dt_cached_init "$shell"; fi
 }
 

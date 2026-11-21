@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# dots:summary=Alias for files list
+# dots:usage=[--short | --default | --verbose | --view VIEW] [OPTIONS]
+# dots:option=--short|-s|flag|Show a compact file list
+# dots:option=--default||flag|Show the standard file summary
+# dots:option=--verbose|-v|flag|Show detailed file mappings
+# dots:option=--view||choice:short,default,verbose|Select the human output view
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--all-platforms||flag|Include inactive platforms
+# dots:option=--repo||file-repository|Repository ID
+# dots:option=--app||file-app|Filter by application
+# dots:option=--category||file-category|Filter by category
+# dots:option=--status||string|Filter by observed status
+# dots:option=--platform||choice:termux,linux,wsl,windows|Observe a platform
+# dots:option=--sort||choice:id,app,repository,source,status|Sort by id, app, repository, source or status
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/catalog.py" list "$@"

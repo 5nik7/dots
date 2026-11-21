@@ -95,12 +95,49 @@ def read_env(path):
     return values
 
 
+def file_rows(root, selected):
+    """Yield effective mappings with their qualified ID and declaring profile."""
+    if any(isinstance(layer.get('files'), list) for layer in selected['layers']):
+        from files.catalog import Catalog
+        catalog = Catalog(checkout(root), selected['facts']['platform'], profile=selected)
+        owners = {s['id']: s for s in catalog.sources}
+        for layer in selected['layers']:
+            declarations = layer.get('files', {})
+            if isinstance(declarations, list):
+                checked = {}
+                pairs = ((row, *catalog.source_location(row['source'], layer, checked))
+                         for row in declarations)
+            else:
+                pairs = ((row, Path(owners[owner]['root']) / row['source'], owners[owner])
+                         for owner, rows in catalog.layer_groups(layer).items() for row in rows)
+            for row, path, source in pairs:
+                key = source['id'], row['id']
+                if catalog.mapping_layers.get(key, {}).get('id') != layer['id']:
+                    continue
+                spec = row['source']
+                if not isinstance(declarations, list) or (spec.startswith('${PROFILE}/') and
+                                                         layer['id'] != selected['current']):
+                    # The effective list must remain portable if saved into the leaf.
+                    spec = catalog.source_spec(path)
+                yield ':'.join(key), layer, dict(row, source=spec)
+        return
+    groups = {}
+    for layer in selected['layers']:
+        groups.update({owner: (layer, rows) for owner, rows in layer.get('files', {}).items()})
+    for owner, (layer, rows) in groups.items():
+        for row in rows:
+            yield owner + ':' + row['id'], layer, row
+
+
 def keys(root=None, identity=None):
     result = set(schema()) | {'settings.files.backup', 'profile.alias'}
     selected = context(root, identity or None)
     for layer in selected['layers']:
-        for group in ('settings', 'environment', 'files'):
+        for group in ('settings', 'environment'):
             result.update(group + '.' + key for key in layer.get(group, {}))
+        if isinstance(layer.get('files'), dict):
+            result.update('files.' + owner for owner in layer['files'])
+    result.add('files')
     from style_config import Styles, APPS
     from style_catalog import supported,known_keys
     styles=Styles(root,selected)

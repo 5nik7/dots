@@ -97,6 +97,7 @@ class Pickers(unittest.TestCase):
             self.assertEqual(call.kwargs['env']['FZF_DEFAULT_OPTS'], '')
             self.assertEqual(call.kwargs['env']['FZF_DEFAULT_OPTS_FILE'], '')
             self.assertEqual(call.kwargs['env']['BASH_ENV'], '')
+
         for output in (b'99\0', b'-1\0', b'$(touch x)\0', b'01\0', b'0\0' + b'1\0'):
             with self.subTest(output=output), patch('interaction.subprocess.run', return_value=subprocess.CompletedProcess([], 0, output)):
                 with self.assertRaises(ValueError):
@@ -110,6 +111,63 @@ class Pickers(unittest.TestCase):
                 else:
                     with self.assertRaisesRegex(ValueError, 'selector failed'):
                         selector.fzf('Files', labels, False, None, False, False, '')
+
+    def test_add_groups_are_contiguous_with_full_previews_and_exact_choices(self):
+        self.configure()
+        owner = self.repo/'config/owned file'
+        live = self.home/'.config/live'
+        initial = [
+            dict(status='needs-target', candidate=str(owner), source=str(owner),
+                 source_spec='${PROFILE}/config/owned file', repository='dots', target=None, id='dots:pending'),
+            dict(status='register-existing-link', candidate=str(live), source=str(owner),
+                 target=str(live), repository='dots', id='dots:linked'),
+            dict(status='candidate', candidate=str(self.path), source=str(owner),
+                 target=str(self.path), repository='dots'),
+            dict(status='register-and-link', candidate=str(owner), source=str(owner),
+                 target=str(live), repository='dots', id='dots:ready'),
+        ]
+        class Inspect:
+            def pick(inner, title, labels, multi, preview, *rest):
+                self.assertTrue(multi)
+                snapshot = preview[2]['DOTS_PICKER_SNAPSHOT']
+                items = json.loads(Path(snapshot).read_text())['rows']
+                self.assertEqual([r['status'] for r in items], ['candidate','register-existing-link',
+                                                               'register-and-link','needs-target'])
+                self.assertEqual([' '.join(label.split()) for label in labels], [
+                    'Import ~/.config/example/settings ü', 'Existing link ~/.config/live',
+                    'Link source dots/config/owned file', 'Set target ${PROFILE}/config/owned file'])
+                details = io.StringIO()
+                with redirect_stdout(details):
+                    picker.preview(snapshot, '1')
+                for s in ('dots:linked','Source','Target','owned file','~/.config/live'):
+                    self.assertIn(s, details.getvalue())
+                return [3, 1]
+        selected = picker.select(initial, 'add', True, selector=Inspect(),
+                                 owners=[dict(id='dots', root=str(self.repo))])
+        self.assertEqual([r['id'] for r in selected], ['dots:pending','dots:linked'])
+        with patch('interaction.terminal', return_value=True), patch('interaction.shutil.which', return_value=None), \
+             patch('builtins.input', side_effect=['3','5','2']), redirect_stdout(io.StringIO()) as plain:
+            selected = picker.select(initial,'add',True,selector=RichSelector('plain'),
+                                     owners=[dict(id='dots', root=str(self.repo))])
+        self.assertIn('Existing link', plain.getvalue())
+        self.assertIn('Review selected', plain.getvalue())
+        self.assertEqual([r['id'] for r in selected], ['dots:linked','dots:pending'])
+
+    def test_flat_import_preview_uses_chosen_storage_scope(self):
+        self.configure()
+        from catalog import platform
+        selected = platform()
+        profile = self.repo/'profiles'/selected
+        profile.mkdir(parents=True)
+        self.write('profiles/'+selected+'/profile.json', dict(schema=1,id=selected,files=[]))
+        self.write('.dots/files.json', dict(schema=3, resources=[], renames={}))
+        manager = manage.Manager()
+        for global_files, root in ((False, profile), (True, self.repo)):
+            rows = picker.candidates(manager,'add',global_files=global_files)
+            imported = next(r for r in rows if r.get('kind') == 'import' and r['candidate'] == str(self.path))
+            self.assertEqual(imported['source'], str(root/'config/example/settings ü'))
+            self.assertEqual(imported['target'], str(self.path))
+            self.assertEqual(imported['target_spec'], '${CONFIG}/example/settings ü')
 
     def test_private_snapshot_cleanup_exact_values_and_no_content(self):
         self.configure()
@@ -323,6 +381,27 @@ class Native(browser_tests.Terminal):
         self.assertEqual(before,(target.lstat().st_ino,os.readlink(target),digest(source)))
         self.assertFalse(self.state.exists())
 
+    def test_bare_add_grouped_scan_widths_and_cancel(self):
+        config = self.home/'config'
+        config.mkdir(exist_ok=True)
+        (config/'import.conf').write_text('keep this configuration')
+        owned = self.repo/'config/source.conf'
+        owned.write_text('existing source')
+        (config/'linked.conf').symlink_to(owned)
+        (self.repo/'.dots/file-locations.json').write_text(json.dumps(dict(schema=1,repository='dots',locations=[
+            dict(id='config',kind='root',target='${CONFIG}',source='config',platforms=['termux','linux','wsl'])])))
+        before = digest(config), digest(owned)
+        for width in (40, 80, 120):
+            with self.subTest(width=width):
+                out = self.terminal('"$DOTS/bin/dots" files add', steps=((b'Details', b'\x1b'),),
+                                    width=width, code=130)
+                clean = browser_tests.picker.ANSI.sub(b'', out)
+                for value in (b'Import', b'import.conf', b'Existing link', b'linked.conf'):
+                    self.assertIn(value, clean)
+                self.assertNotIn(b'keep this configuration', clean)
+                self.assertEqual((digest(config), digest(owned)), before)
+                self.assertFalse(self.state.exists())
+
     def test_multiselect_keys_dry_run_and_cancel(self):
         out = self.terminal('"$DOTS/bin/dots" files link --pick --dry-run',
                             steps=((b'Details', b'\x01\x04\t\r'),))
@@ -338,7 +417,7 @@ class Native(browser_tests.Terminal):
         doc['resources'].append(dict(doc['resources'][0], id='second', target='${CONFIG}/second'))
         catalog.write_text(json.dumps(doc))
         out = self.terminal('"$DOTS/bin/dots" files link --pick --dry-run',
-                            steps=((b'Details', b"'dots:app"), (b'1/2', b'\x01\x15\r')))
+                            steps=((b'Details', b"'dots:app"), (b"'dots:app", b'\x01\x15\r')))
         clean = browser_tests.picker.ANSI.sub(b'', out).split(b'File operation preview')[-1]
         self.assertIn(b'dots:app', clean)
         self.assertNotIn(b'dots:second', clean)

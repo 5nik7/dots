@@ -346,7 +346,8 @@ raise SystemExit(mappings.main(sys.argv[2:]))
                     else:
                         self.assertIn('cancelled',plain)
                         self.assertIn('\r',text.replace('\r\n','\n'))
-                        self.assertNotIn('\x1b[',text)
+                        # Plain progress still uses cursor movement to redraw.
+                        self.assertNotRegex(text, r'\x1b\[[0-9;]*m')
                     self.assertFalse((self.home/'.state').exists())
                 finally:
                     os.close(master)

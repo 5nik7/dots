@@ -17,7 +17,8 @@ class Build:
         self.source = installation.root/'plugins/anodize/engine'
         self.inputs = sorted(p for p in self.source.rglob('*')
                              if '.build' not in p.parts and '.git' not in p.parts
-                             and p.is_file() and (p.suffix == '.go' or p.name in ('go.mod', 'go.sum')))
+                             and p.is_file() and (p.suffix == '.go' or p.name in ('go.mod', 'go.sum')
+                                                  or p == self.source/'modes.json'))
         signature = hashlib.sha256()
         for path in self.inputs:
             if path.is_symlink(): raise ValueError('Anodize source must be regular: '+str(path))

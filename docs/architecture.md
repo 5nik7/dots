@@ -174,7 +174,7 @@ Neovim gitlink at `config/nvim`; Neovim retains independent Git history.
 `tools/migrate_config_paths.py` previews and journals identity-preserving retargeting
 of existing home links. It is separate from a future general installation engine.
 
-`.dots/sources.json` owns repository composition and exclusions. Every base platform profile owns its complete `files.dots` inventory in `profile.json`, alongside bundled platform mappings. Independent repositories may retain `.dots/files.json` catalogs. `style_config.py` resolves shared/default and per-profile visual preferences; `theme_styles.py` produces inert native consumer data during explicit theme publication. `lib/dots/files/catalog.py` owns terminal presentation using the Bash UI color/icon policy, validation,
+`.dots/sources.json` owns repository composition and exclusions. Each profile owns a flat `files` array in `profile.json`. The catalog resolves its three source roots and merges inherited qualified IDs. Independent repositories may retain `.dots/files.json` catalogs. `style_config.py` resolves shared/default and per-profile visual preferences; `theme_styles.py` produces inert native consumer data during explicit theme publication. `lib/dots/files/catalog.py` owns terminal presentation using the Bash UI color/icon policy, validation,
 read-only observation/discovery, classification and atomic metadata tracking. Thin
 `bin/dots-files-*` commands expose this through the Bash dispatcher; completion uses
 the same data reader directly without extension execution. See [files](files.md).
@@ -184,6 +184,8 @@ removal. It consumes the same catalog, resource presentation and optional Gum
 confirmation helpers, and submits guarded metadata operations to the existing
 transaction Store. Bash and native PowerShell delegate to this controller; no
 target mutation or separate recovery engine is introduced.
+
+`lib/dots/files/maintenance.py` coordinates active-profile relink, prune and sync. It reuses source inspection, destination repair and the file transaction store. Both shell frontends call this controller.
 
 `lib/dots/files/repair.py` owns current-platform destination inspection, automatic eligibility, prepared decisions and batch application. `repair_picker.py` supplies the optional terminal issue helper and inert metadata previews through the shared FZF/Gum/numbered selector. Internal issue/action identities are separate from display text. Repair composes catalog ownership, receipt/latest-transaction evidence and existing installation receipt updates, then delegates replacement and recovery to the shared Store. It never calls the installation/theme planner, edits source catalogs or recursively discovers repair targets; selected objects are hashed for drift protection. Both Bash and native PowerShell route to this controller.
 
@@ -346,7 +348,7 @@ The Yazi color-reference namespace preserves tokens through configuration clonin
 
 The Starship/Blastoff integration uses the default palette template and bundled theme-plugin lifecycle. `starship.py` owns TOML section scanning, configuration-path resolution, palette-only edits and Blastoff lock coordination; the shared file transaction store owns backups/replacement/recovery. The saved personal `dots` theme owns module styles independently of generated palette values. No Blastoff core dependency or prompt-time palette process is added.
 
-The Git theme consumer uses a generated include and the fixed connector table.
+The Git theme consumer uses a generated include and a profile-declared connector.
 Git's Delta processes read generation-local bat assets through an isolated XDG
 cache root. The file manager's `git_platform.py` owns the bounded platform-selector
 plan shared by install, direct link and mapping apply/restore; generic catalog
@@ -401,7 +403,7 @@ undecorated.
 
 ### Generated theme inspection
 
-`lib/dots/themes/inspection.py` owns read-only active-generation inventory, current template resolution, connector observation, content views and browsing for both shell frontends. It consumes the fixed connector registry, existing app path adapters and bounded completed file-transaction metadata. Its `consumer_checks.py` helper reads bounded evidence, and `file_preview.py` owns directory listings and optional bounded bat rendering without cache generation. It never calls preparation, publication, recovery or plugin execution. Generic views use shared Python resource presentation and optional selectors; completion invokes only data readers. No new persistent state is introduced. See [theme files](themes.md#generated-theme-files).
+`lib/dots/themes/inspection.py` owns read-only active-generation inventory, current template resolution, connector observation, content views and browsing for both shell frontends. It consumes the effective profile theme mappings, native app path adapters and bounded completed file-transaction metadata. Its `consumer_checks.py` helper reads bounded evidence, and `file_preview.py` owns directory listings and optional bounded bat rendering without cache generation. It never calls preparation, publication, recovery or plugin execution. Generic views use shared Python resource presentation and optional selectors; completion invokes only data readers. No new persistent state is introduced. See [theme files](themes.md#generated-theme-files).
 
 ## Platform profile resolution
 

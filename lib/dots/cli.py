@@ -189,11 +189,20 @@ def complete(root, directories, words):
             from wiki import Reader, manifest
             pages=manifest(Reader(root))['pages']
             for value in dict.fromkeys(row['id' if kind=='wiki-page' else 'section'] for row in pages): add(value)
-        elif kind in ('file-resource', 'file-repository'):
+        elif kind in ('file-resource', 'file-repository', 'file-resource-or-path', 'file-app', 'file-category'):
+            if kind == 'file-resource-or-path':
+                paths = int(any(flag in option_values for flag in ('-s','--source'))) + int(any(flag in option_values for flag in ('-t','--target')))
+                if paths or not positionals or not re.fullmatch(r'[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*', positionals[0]):
+                    if paths + len(positionals) < 2:
+                        suggestions.append(('file', '', ''))
+                    if paths or positionals:
+                        return
             sys.path.insert(0, str(LIB / 'files'))
-            from catalog import Catalog, platform
-            source = Catalog(root, platform())
-            for row in source.sources if kind == 'file-repository' else source.records(): add(row['id'])
+            from catalog import completion_ids
+            for value in completion_ids(root, kind, option_values.get('--platform'),
+                                        '--all-platforms' in option_values or stem == 'files-sources',
+                                        option_values.get('--repo')):
+                add(value)
         elif kind == 'git-submodule':
             base = option_values.get('--directory') or option_values.get('-C') or root
             result = subprocess.run([sys.executable, '-B', str(LIB / 'git/inspection.py'), '_complete', '-C', str(base)],
@@ -462,12 +471,13 @@ def main(argv=None):
             return controller('files/install.py', ['migrate-apps', *rest])
         action = '-'.join(parts[1:])
         if not action or action == 'backups': return help_view(directories, parts)
+        action = {'rm': 'remove', 'ln': 'link', 'fd': 'find', 'ls': 'list'}.get(action, action)
         if action in ('install', 'uninstall'): target = 'install'
+        elif action in ('relink', 'prune', 'sync'): target = 'maintenance'
         elif action in ('stash', 'edit'): target = 'mappings'
         elif action in ('browse', 'check', 'repair'): return controller('files/' + action.replace('browse', 'browser') + '.py', rest)
         elif action in ('list', 'sources', 'source', 'target', 'show', 'track', 'locate', 'discover'): target = 'catalog'
         else: target = 'manage'
-        if action == 'rm': action = 'remove'
         if action == 'discover' and '--system' in rest:
             target, action = 'manage', 'system'
             rest = [a for a in rest if a != '--system']

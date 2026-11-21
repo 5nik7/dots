@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Stop managing configurations and retain local copies
+# dots:summary=Remove selected mappings and preserve usable local configurations
 # dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
 # dots:usage=[RESOURCE...] [OPTIONS]
 # dots:option=--pick||flag|Select interactively; combine with --dry-run to preview

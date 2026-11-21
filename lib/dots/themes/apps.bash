@@ -17,6 +17,19 @@ dt_connector_staging_owned() {
 dt_apps_plan() {
   DT_CONNECT_TARGETS=() DT_CONNECT_SOURCES=()
   DT_CONNECT_CREATE_DIRS=()
+  local profile_plan mode value artifact
+  DT_CONNECTOR_INPUTS=''
+  profile_plan=$(python3 -B "$DT_LIB/connector_paths.py" plan) || return
+  if [[ $profile_plan == profile$'\t'* ]]; then
+    while IFS=$'\t' read -r mode value artifact; do
+      if [[ $mode == profile ]]; then
+        DT_CONNECTOR_INPUTS=$value DT_CONNECTOR_STATUS=$artifact
+      else
+        DT_CONNECT_TARGETS+=("$value") DT_CONNECT_SOURCES+=("$DT_ACTIVE/$artifact")
+      fi
+    done <<< "$profile_plan"
+    return
+  fi
   local config=${XDG_CONFIG_HOME:-$HOME/.config} path name
   local codex_home=${CODEX_HOME:-$HOME/.codex}
   [[ $codex_home == /* && ! $codex_home =~ [[:cntrl:]] && /$codex_home/ != */../* && /$codex_home/ != */./* ]] || {
@@ -78,6 +91,10 @@ dt_apps_plan() {
 }
 dt_apps_connect() {
   local dir=$1 index target source entry parent
+  if [[ -n ${DT_CONNECTOR_INPUTS:-} ]]; then
+    DOTS_OPERATION_VERBOSE=${DOTS_OPERATION_VERBOSE:-0} python3 -B "$DT_LIB/connector_paths.py" apply "$dir" "$DT_CONNECTOR_INPUTS"
+    return
+  fi
   mkdir "$dir/connectors" || return
   for ((index=0;index<${#DT_CONNECT_TARGETS[@]};index++)); do
     target=${DT_CONNECT_TARGETS[index]} source=${DT_CONNECT_SOURCES[index]}
@@ -125,6 +142,7 @@ dt_apps_connect() {
   done
 }
 dt_apps_current() {
+  if [[ -n ${DT_CONNECTOR_INPUTS:-} ]]; then [[ $DT_CONNECTOR_STATUS == current ]]; return; fi
   local index
   for ((index=0;index<${#DT_CONNECT_TARGETS[@]};index++)); do
     [[ -L ${DT_CONNECT_TARGETS[index]} && $(readlink -- "${DT_CONNECT_TARGETS[index]}") == "${DT_CONNECT_SOURCES[index]}" ]] || return 1
@@ -132,6 +150,10 @@ dt_apps_current() {
 }
 dt_apps_restore() {
   local dir=$1 entry target source prior parent identity
+  if [[ -f $dir/connectors/transaction.json ]]; then
+    python3 -B "$DT_LIB/connector_paths.py" restore "$dir"
+    return
+  fi
   local -a entries=("$dir/connectors/"*)
   local index
   for ((index=${#entries[@]}-1;index>=0;index--)); do

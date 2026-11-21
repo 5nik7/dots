@@ -14,6 +14,7 @@ import sys
 from catalog import Catalog, Presentation, platform
 from events import OperationOutput
 from file_platform import check_object
+from managed_destination import physical, points_to, theme_artifact, yazi_migration_reason
 from identities import canonical, validate_cli
 from install import Installation
 from transactions import digest, parents_safe
@@ -21,7 +22,7 @@ from interaction import SelectionEnded, gum_confirm
 from progress import Progress, configure, sequence, permanent_output
 
 
-LINK_ACTIONS = {'add', 'link', 'install', 'edit', 'restore', 'repair'}
+LINK_ACTIONS = {'add', 'link', 'install', 'edit', 'restore', 'repair', 'relink', 'sync'}
 REPAIR_ACTIONS = ('link', 'relink', 'replace-with-backup')
 
 
@@ -90,6 +91,7 @@ class Repair:
             self.receipt_paths[key] = path
         self.items = []
         self.rows = {}
+        self.endpoints = {}
         self.findings = {}
         self.choices = {}
         self.skipped = set()
@@ -133,6 +135,7 @@ class Repair:
             journal = self.install.store.root / record['id'] / 'journal.json'
             self.install.guard(journal)
             record = self.install.store.load(record['id'])
+            metadata = set(record.get('catalogs', ())) | {str(self.install.receipt_path)}
             for op in record['operations']:
                 if not Path(op['path']).is_absolute():
                     raise ValueError('transaction path must be absolute')
@@ -140,7 +143,10 @@ class Repair:
                 stamp = (record['created'], record['id'])
                 previous = self.history.get(key)
                 if previous is None or stamp > previous[0]:
-                    self.history[key] = (stamp, record['action'], op['after'])
+                    action = record['action']
+                    if action in ('sync', 'relink') and (op['path'] in metadata or 'before_data' in op):
+                        action = 'metadata'
+                    self.history[key] = (stamp, action, op['after'])
 
     def history_owner(self, target, current):
         if self.history is None:
@@ -148,7 +154,7 @@ class Repair:
         evidence = self.history.get(os.path.normcase(str(target)))
         return bool(evidence and evidence[1] in LINK_ACTIONS and evidence[2] == current)
 
-    def classify(self, row):
+    def classify(self, row, *, planned=(), planned_parents=()):
         def blocked(issue, reason):
             return Finding('unresolved', reason, issue)
         if not row['enabled']:
@@ -167,6 +173,7 @@ class Repair:
             return blocked('mapping', 'Copy repair is unsupported; review the mapping explicitly.')
 
         source, target = Path(row['source']), Path(row['target'])
+        generated = row['repository'] == 'theme'
         if overlaps(target, self.install.state) or overlaps(source, target):
             return blocked('unsafe-path', 'Source, target or state paths overlap.')
         for owner in self.catalog.sources:
@@ -178,6 +185,17 @@ class Repair:
                 if root.is_relative_to(own_root):
                     return blocked('mapping', 'Source belongs to a nested repository.')
 
+        if generated:
+            artifact = theme_artifact(source, self.catalog.theme_root, self.install.guards, required=False)
+            if artifact is None:
+                return Finding('skipped', 'Generated artifact is unavailable; publish a theme to supply it.')
+            target = physical(target, self.all_rows, self.install.guards, planned=planned)
+            if reason := yazi_migration_reason(row, target, self.install.entries, self.install.guards):
+                return blocked('protected-theme', reason)
+            if not target.parent.is_dir() and target.parent not in planned_parents:
+                return Finding('skipped', 'Application destination directory is absent.')
+            source = artifact
+        self.endpoints[row['id']] = (source, target)
         recorded = self.receipt_paths.get(os.path.normcase(str(target)), str(target))
         if recorded != str(target):
             return blocked('mapping', 'Destination spelling differs from its installation receipt; review the mapping.')
@@ -191,7 +209,7 @@ class Repair:
             raise ValueError('destination changed during inspection; retry the preview')
         current_link = os.readlink(target) if target_kind == 'link' else ''
         linked = Path(os.path.abspath(target.parent / current_link)) if current_link else None
-        if linked is not None and (linked.is_relative_to(self.install.state) or '/dots/current/theme/' in linked.as_posix()):
+        if not generated and linked is not None and (linked.is_relative_to(self.install.state) or '/dots/current/theme/' in linked.as_posix()):
             return Finding('unresolved', 'Generated-state link is protected; inspect dots theme files check.',
                            'protected-theme', target_kind=target_kind, current_link=current_link)
         source_kind = object_kind(source)
@@ -213,7 +231,8 @@ class Repair:
             except FileNotFoundError:
                 pass
             else:
-                if target.resolve() == source.resolve():
+                correct = points_to(target, row['source']) if generated else target.resolve() == source.resolve()
+                if correct:
                     return finding('unchanged', 'Link already points to the catalogued source.')
                 return finding('unresolved', 'Working link points elsewhere; review before replacing it.',
                                'foreign-link', 'replace-with-backup')
@@ -246,11 +265,12 @@ class Repair:
             if signature(Path(path)) != observed:
                 raise ValueError('changed after preview: ' + path)
         row = self.rows[identity]
-        if (object_kind(Path(row['source'])) != ('directory' if row['strategy'] == 'directory-link' else 'file')
-                or object_kind(Path(row['target'])) != finding.target_kind):
+        source, target = self.endpoints[identity]
+        if (object_kind(source) != ('directory' if row['strategy'] == 'directory-link' else 'file')
+                or object_kind(target) != finding.target_kind):
             raise ValueError('object type changed after preview; run dots files repair again')
         # Guard the destination before hashing a source or occupied directory.
-        for path in (row['target'], row['source']):
+        for path in (target, source):
             self.install.guard(path)
         for path, observed in finding.observations.items():
             if signature(Path(path)) != observed:
@@ -291,7 +311,7 @@ class Repair:
                     raise ValueError('repair choice has not been prepared')
                 # Only automatic eligibility or an explicit helper choice can
                 # reach this override. General installation rules are unchanged.
-                self.install.add(identity, Path(row['target']), link=Path(row['source']),
+                self.install.add(identity, self.endpoints[identity][1], link=Path(row['source']),
                                  directory=row['strategy'] == 'directory-link', managed=True)
                 action = selected
                 if finding.action == 'unresolved':
@@ -307,14 +327,15 @@ class Repair:
                     raise ValueError('overlapping repair operations')
         self.verify()
 
-    def inspect(self):
+    def inspect(self, *, catalog=None, include=None, select=None):
         self.install.guard(self.root / '.dots/sources.json')
-        self.catalog = Catalog(self.root, self.install.platform)
+        self.catalog = catalog if catalog is not None else Catalog(self.root, self.install.platform)
         if self.args.repo and not any(s['id'] == self.args.repo for s in self.catalog.sources):
             raise ValueError('unknown repository: ' + self.args.repo)
         for path in self.catalog.input_paths():
             self.install.guard(path)
         rows = self.catalog.records()
+        self.all_rows = rows
         ids = set(self.args.values)
         unknown = ids - {r['id'] for r in rows}
         if unknown:
@@ -322,13 +343,18 @@ class Repair:
         rows = [r for r in rows if (not ids or r['id'] in ids) and (r['applicable'] or r['id'] in ids)
                 and all(getattr(self.args, flag) is None or r[field] == getattr(self.args, flag)
                         for flag, field in (('repo', 'repository'), ('app', 'app'), ('category', 'category')))]
+        if include is not None:
+            rows = [r for r in rows if include(r)]
         if any(r['status'] == 'broken-link' for r in rows):
             self.load_history()
+        planned = set()
+        planned_parents = set()
         with sequence('Inspecting managed files', 1) as steps, steps.step('Inspecting managed files') as progress:
-            for index, row in enumerate(sorted(rows, key=lambda r: r['id'])):
+            for index, row in enumerate(sorted(rows, key=lambda r: (select is not None and r['repository'] == 'theme', r['id']))):
                 identity = row['id']
                 try:
-                    finding = self.classify(row)
+                    finding = (self.classify(row, planned=planned, planned_parents=planned_parents)
+                               if select is not None else self.classify(row))
                 except (OSError, ValueError, RuntimeError) as error:
                     finding = Finding('unresolved', str(error), 'inspection-error')
                 self.rows[identity] = row
@@ -336,8 +362,15 @@ class Repair:
                 if finding.action in REPAIR_ACTIONS:
                     # The initial batch is verified once by build(), avoiding
                     # repeated hashing of every prior source during the scan.
-                    self.prepare(identity, inspecting=True)
-                    self.choices[identity] = finding.action
+                    if select is None or select(row, finding):
+                        self.prepare(identity, inspecting=True)
+                        self.choices[identity] = finding.action
+                        if select is not None and row['repository'] != 'theme':
+                            planned_parents.update(self.endpoints[identity][1].parents)
+                            if row['strategy'] == 'directory-link':
+                                planned.add(row['target'])
+                    else:
+                        self.skipped.add(identity)
                 progress.update('Inspecting managed files', index + 1, len(rows))
         self.build()
         return self.items

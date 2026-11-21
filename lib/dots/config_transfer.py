@@ -18,6 +18,7 @@ DISPLAY_KEYS = {
     'apps.cli.markdown_viewer',
     'apps.fonts.list_details', 'apps.fonts.provenance', 'apps.fonts.menu_descriptions',
     'apps.fonts.preview.enabled', 'apps.fonts.preview.sample',
+    'apps.files.list_view', 'apps.files.group_by_status',
     'apps.wiki.list_details', 'apps.wiki.search_snippets', 'apps.wiki.search_urls',
     'apps.wiki.menu_descriptions', 'apps.wiki.section_breadcrumbs', 'apps.wiki.reader',
     'apps.tmux.clock.icon_mode', 'apps.tmux.battery.charging_style',

@@ -751,7 +751,7 @@ LS_COLORS='*.custom=01;35'
 set_theme catppuccin-mocha
 [[ $LS_COLORS == *'*.custom=01;35'* ]] || exit 6
 change_theme rose-pine-dawn >/dev/null
-[[ $THEME == rose-pine && $FLAVOR == dawn && ${dots_palette[base]} == '#faf4ed' ]] || exit 1
+[[ $THEME == "$_DOTS_THEME_ACTIVE" && $DOTS_THEME_FAMILY == rose-pine && $FLAVOR == dawn && ${dots_palette[base]} == '#faf4ed' ]] || exit 1
 [[ $LS_COLORS == *'*.custom=0;1;38;2;128;0;128'* ]] || exit 2
 [[ $LS_COLORS == "$(<"$_DOTS_THEME_ACTIVE/ls_colors")" ]] || exit 7
 before=$FZF_DEFAULT_OPTS
@@ -759,7 +759,7 @@ set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 3
 has_theme rose-pine || exit 4
 change_theme catppuccin-mocha >/dev/null
-[[ $THEME == catppuccin && ${blue[hex]} == '#89b4fa' ]] || exit 5
+[[ $THEME == "$_DOTS_THEME_ACTIVE" && $DOTS_THEME_FAMILY == catppuccin && ${blue[hex]} == '#89b4fa' ]] || exit 5
 ''',ZSH)
 
     def test_failed_vivid_retains_previous_publication(self):

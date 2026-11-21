@@ -63,7 +63,7 @@ class Registry:
         if not isinstance(value,list) or not value or any(not isinstance(v,str) for v in value) or not set(value) <= PLATFORMS or len(set(value)) != len(value):
             raise ValueError('registry platforms must be a nonempty unique platform list')
 
-    def join(self, owner, rows, *, candidate=False):
+    def join(self, owner, rows, *, candidate=False, fallback=None):
         result = []
         for raw in rows:
             if not isinstance(raw,dict): raise ValueError('profile mapping must be an object')
@@ -71,9 +71,13 @@ class Registry:
             identity = owner+':'+str(row.get('id',''))
             self.require_current(identity)
             for replacement in row.get('replaces', []): self.require_current(replacement)
-            if identity not in self.entries and not candidate:
-                raise ValueError('profile mapping is absent from the core registry: '+identity)
-            platforms = row.get('platforms') if candidate and 'platforms' in row else self.entries.get(identity)
+            platforms = self.entries.get(identity)
+            if candidate and 'platforms' in row:
+                platforms = row['platforms']
+            elif platforms is None:
+                platforms = fallback(row['id']) if fallback else None
+                if platforms is None and not candidate:
+                    raise ValueError('profile mapping is absent from the core registry: '+identity)
             self.validate_platforms(platforms)
             row['platforms'] = list(platforms)
             result.append(row)

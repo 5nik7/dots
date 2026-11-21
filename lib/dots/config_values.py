@@ -10,6 +10,7 @@ IDENTIFIER = re.compile(r'[A-Za-z_][A-Za-z0-9_-]*')
 MISSING = object()
 GROUPS = ('formatting', 'apps')
 ENUMS = {'list_type': ('tree', 'regular'), 'indent_style': ('spaces', 'tabs'),
+         'list_view': ('short', 'default', 'verbose'),
          'alignment': ('left', 'right', 'center'), 'position': ('top', 'bottom'),
          'signcolumn': ('auto', 'yes', 'no', 'number')}
 DYNAMIC = {('apps','fzf','bindings'): 'string', ('apps','nvim','highlights'): 'highlights',

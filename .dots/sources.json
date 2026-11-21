@@ -34,6 +34,37 @@
       "bundled": true
     },
     {
+      "id": "wsl",
+      "path": "profiles/wsl",
+      "platforms": [
+        "wsl"
+      ],
+      "roots": [
+        "config",
+        "shells",
+        "scripts",
+        "bin",
+        "fonts"
+      ],
+      "bundled": true
+    },
+    {
+      "id": "linux",
+      "path": "profiles/linux",
+      "platforms": [
+        "linux",
+        "wsl"
+      ],
+      "roots": [
+        "config",
+        "shells",
+        "scripts",
+        "bin",
+        "fonts"
+      ],
+      "bundled": true
+    },
+    {
       "id": "windows",
       "path": "profiles/windows",
       "platforms": [

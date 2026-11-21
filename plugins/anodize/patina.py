@@ -3,7 +3,8 @@ import argparse
 import base64
 import copy
 import json
-from pathlib import Path
+import os
+from pathlib import Path, PureWindowsPath
 import shutil
 import stat
 import sys
@@ -47,7 +48,7 @@ def stop_names(value):
 
 def available_styles(args):
     guided = args.interactive and '--style' not in getattr(args, '_provided', ())
-    styles = PICKER_STYLES if guided and (not args.all_themes or args.all_styles) else (args.style,)
+    styles = PICKER_STYLES if args.all_styles or (guided and not args.all_themes) else (args.style,)
     return [style for style in styles
             if (args.harmony is None or style in (DEFAULT_STYLE, 'harmonize', 'natural'))
             and (args.strength is None or style not in ('exact', 'shaded'))
@@ -127,11 +128,23 @@ def thumbnail_lines(thumbnail, colored, max_width=None, max_lines=None):
         yield ''.join(line) + ('\033[0m' if colored else '')
 
 
-def output_settings(args, source):
+def relative_output(value):
+    path = PureWindowsPath(value)
+    # Check drives and both native separators before joining anything to a theme root.
+    if (path.anchor or any(PureWindowsPath(part).drive for part in path.parts)
+            or value.replace('\\', '/').split('/')[-1] in ('', '.', '..')):
+        raise ValueError('batch --output requires a relative filename inside each theme background folder')
+    relative = Path(os.path.normpath(Path(*path.parts)))
+    if '..' in relative.parts:
+        raise ValueError('batch --output must stay inside each theme background folder')
+    return relative
+
+
+def output_settings(args, source, *, batch=False):
     sheet = args.compare or args.compare_modes
     extension = args.format or 'png'
-    if args.output:
-        base = Path(args.output).absolute()
+    if args.output or (batch and args.output is not None):
+        base = relative_output(args.output) if batch else Path(args.output).absolute()
         if base.suffix:
             extension = base.suffix[1:].lower()
             if extension not in FORMATS:
@@ -141,9 +154,9 @@ def output_settings(args, source):
     elif sheet:
         label = 'styles' if args.compare else 'modes'
         base = source.with_name(f'{source.stem}_{label}.{extension}')
-    elif args.theme:
+    elif args.theme or batch:
         filename = source.name if source.suffix.lower() == '.' + extension else source.stem + '.' + extension
-        base = config_root() / 'dots/backgrounds' / args.theme / filename
+        base = Path(filename) if batch else config_root() / 'dots/backgrounds' / args.theme / filename
     else:
         raise ValueError('--output is required with --palette-image')
     fmt = {'jpg': 'jpeg', 'tif': 'tiff'}.get(extension, extension)
@@ -275,24 +288,54 @@ def compare_interactively(author, args, present):
 
 
 def run(author, args, confirm, present):
+    if args.all_themes and args.yes:
+        from patina_batch import save_all_themes
+        return save_all_themes(author, args, present)
     if args.all_themes or args.all_styles:
         return compare_interactively(author, args, present)
     return render_selected(author, args, confirm, present)
+
+
+def theme_guards(author, theme):
+    directory = author.target(theme)
+    return {str(directory / name): digest(directory / name)
+            for name in ('anodize.json', 'theme.toml', 'colors.toml', 'palette.toml')}
+
+
+def staged_image(author, directory, request, options, encoding, preview=False):
+    fmt = encoding['format']
+    payload = dict(request, format='png' if fmt in ('webp', 'tiff', 'avif') else fmt,
+                   quality=encoding.get('quality', 0))
+    stage = directory / 'render'
+    meta = render(author, payload, options, stage, preview)
+    if meta.pop('patina_version', None) != 2:
+        raise ValueError('Patina requires an updated engine; run python3 -B tools/verify_anodize.py build in Dots')
+    if fmt in OPTIONAL_CODECS:
+        from PIL import Image
+        final = directory / ('image.' + fmt)
+        with Image.open(stage) as img:
+            img.save(final, format=OPTIONAL_CODECS[fmt], **{k: v for k, v in encoding.items() if k != 'format'})
+        stage = final
+    return stage, meta
+
+
+def save_image(author, stage, target, guards):
+    return author.store().apply('anodize-patina',
+        [dict(path=str(target), source=str(stage), create_only=True)],
+        {**guards, str(target): None}, retain=True)
 
 
 def render_selected(author, args, confirm, present, preview_colors=None, preview_guards=None):
     source = Path(args.file).absolute()
     guards = {str(source): image_guard(source)}
     automatic = args.output is None
-    theme_dir = author.target(args.theme) if args.theme else None
+    if args.theme:
+        guards.update(theme_guards(author, args.theme))
     base, encoding = output_settings(args, source)
     target = destination(base, automatic)
     pick_mode = args.interactive and args.palette_image and not (args.mode or args.compare_modes)
     mode_ids = author.call('modes')['modes'] if args.compare_modes or pick_mode else []
     if args.theme:
-        for name in ('anodize.json', 'theme.toml', 'colors.toml', 'palette.toml'):
-            path = theme_dir / name
-            guards[str(path)] = digest(path)
         ids = mode_ids or ([args.mode] if args.mode else [])
         authored, palettes, light = theme_palettes(author, args.theme, ids, args.light, args.dark)
         colors = palettes[args.mode] if args.mode else authored
@@ -348,20 +391,8 @@ def render_selected(author, args, confirm, present, preview_colors=None, preview
         request.update(sheet=True, candidates=candidates)
         selection['comparison'] = 'modes'
     with tempfile.TemporaryDirectory(prefix='anodize-patina-') as tmp:
-        fmt = encoding['format']
-        request.update(format='png' if fmt in ('webp', 'tiff', 'avif') else fmt,
-                       quality=encoding.get('quality', 0))
-        stage = Path(tmp) / 'render'
-        meta = render(author, request, options, stage, preview)
+        stage, meta = staged_image(author, Path(tmp), request, options, encoding, preview)
         del request
-        if meta.pop('patina_version', None) != 2:
-            raise ValueError('Patina requires an updated engine; run python3 -B tools/verify_anodize.py build in Dots')
-        if fmt in OPTIONAL_CODECS:
-            from PIL import Image
-            final = Path(tmp) / ('image.' + fmt)
-            with Image.open(stage) as img:
-                img.save(final, format=OPTIONAL_CODECS[fmt], **{k: v for k, v in encoding.items() if k != 'format'})
-            stage = final
         if any(digest(path) != expected for path, expected in guards.items()):
             raise ValueError('Patina input changed during render')
         effective = meta.pop('settings')
@@ -373,9 +404,7 @@ def render_selected(author, args, confirm, present, preview_colors=None, preview
             if args.theme and author.render(author.load(args.theme))['colors'] != authored:
                 raise ValueError('theme colors changed after preview')
             try:
-                result = author.store().apply('anodize-patina',
-                    [dict(path=str(target), source=str(stage), create_only=True)],
-                    {**guards, str(target): None}, retain=True)
+                result = save_image(author, stage, target, guards)
             except DestinationOccupied:
                 if not automatic:
                     raise

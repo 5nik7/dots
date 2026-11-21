@@ -241,11 +241,7 @@ may populate a separately documented disposable cache. Tests use owned roots onl
 
 ## File Catalog and Configuration Migration
 
-File reads expose metadata and observed links, never source contents. Explicit
-private-source exclusions apply to discovery and inspection. `files track` writes
-only the owning repository catalog with locking, fsync and atomic replacement;
-identical records are a no-op and existing IDs need `--update`. It does not install
-anything. Catalog updates are source edits recovered through version control.
+File reads expose metadata and observed links. Private-source exclusions apply to discovery and inspection. Tracking and mapping changes guard and journal the selected profile and any changed registry data together. A correct pre-existing link registered by Find keeps its exact object and remains outside installation ownership. Unpublished theme artifacts retain their declarations during missing-source checks.
 
 The scoped config-path migration helper defaults to preview. Apply preflights every
 link and confirms old/new paths resolve to the same existing source. An exclusive
@@ -256,6 +252,8 @@ directory trees, replace files or initialize submodules.
 
 ## Managed destination repair
 
+The active-profile `files relink` and `files sync` routes may also replace a regular file at a link destination when its contents match the declared source. Apply retains a verified backup and rechecks the reviewed source and destination. Working symlinks, changed files and occupied directories are preserved. `files prune` checks repository source absence again before writing the profile. A combined sync journals the selected links, profile edits, backups and receipt updates together. [Profile maintenance](files.md#relink-and-prune-the-active-profile)
+
 `files repair` automatically queues only absent catalog destinations or broken links with verified Dots ownership. Its terminal helper may explicitly queue an ordinary unverified broken link, occupied file/directory or working foreign link for retained backup and replacement with the catalog source. `--yes` never supplies that choice. Generated-state connections, another resource's receipt, true catalog conflicts, unsafe paths, special objects and unsupported source/strategy combinations remain blocked. Missing sources are reported without removing their catalog entries. Repair cannot change sources, retire old mapping targets, initialize repositories or publish themes.
 
 Receipt identity/digest evidence overrides older journals; otherwise only the latest completed catalog-link transaction at a destination establishes automatic ownership. Interactive choices capture source/destination identity and content guards before action review. Reappearing targets, source changes, composition/catalog changes, receipt drift and changes to ownership evidence refuse apply and require a new review. Approval applies the prepared queue without rebuilding it. Selected repairs and their receipt update share a retained Store transaction with complete preflight, reverse rollback, interruption recovery and drift-aware undo. Original installation backup pointers remain intact even after explicit same-resource drift replacement; undo restores the immediate pre-repair object. General install/link drift protection is unchanged. No-op, cancellation and preview create no managed state. See [repair behavior](files.md#repair-managed-destinations).
@@ -263,9 +261,7 @@ Receipt identity/digest evidence overrides older journals; otherwise only the la
 ## Theme Application and Source Expansion
 
 Decision 0008 expands the earlier theme-state publisher to the stable active link
-and fixed application connectors documented in [themes](themes.md). Complete app
-outputs and bat caches are generated before pointer publication. Preflight refuses
-unexpected state objects and real connector directories. Existing connector files
+and application connectors documented in [themes](themes.md). Flat profiles declare generated sources and eligible destinations. A correct Yazi flavor directory link stays in place. To migrate an earlier split flavor, preflight checks that the directory contains only `flavor.toml` and `tmtheme.xml` and both point to their expected stable artifacts. A changed child or an additional entry blocks replacement. The transaction retains the previous layout for rollback. Complete app outputs and bat caches are generated before pointer publication. Preflight refuses unexpected state objects and other real connector directories. Existing connector files
 or links are backed up in the generation journal, flushed and rechecked before
 replacement. Failure restores connectors in reverse order and both selection
 pointers. Known staged links from prepared transactions are recovered on the next
@@ -395,6 +391,8 @@ guard the approved batch. The transaction engine distinguishes ENOENT from other
 object-inspection errors when checking guards. One transaction journals all changed
 catalogs; prior catalog metadata supports undo without retained payload snapshots.
 
+An explicit `files remove` of a replaced mapping or a manually deleted repository source edits only the selected profile mapping. The operation preserves the destination, existing receipts and reserved identities. If removal depends on the source being absent, apply rechecks that absence. Undo restores the mapping metadata.
+
 Adoption uses registered roots, excludes known credentials and local/generated
 state, and rejects recognizable credential material without printing content.
 The shared discovery/adoption exclusions prune known cache/session/dependency
@@ -436,7 +434,9 @@ have their own external effects.
 
 ## Anodize authoring and apply
 
-Patina stages the encoded image or comparison sheet before approval and publishes it as a create-only transaction. The store serializes concurrent saves and publishes the staged sibling with an atomic no-replace operation. An occupied automatic name advances to the next free suffix and prompts again during interactive saves. An occupied explicit target fails. Dry-run leaves no background directory or journal. Undo verifies the saved image before removing it.
+For a single image or comparison sheet, Patina stages the encode before approval and publishes it as a create-only transaction. The store serializes concurrent saves and publishes the staged sibling with an atomic no-replace operation. An occupied automatic name advances to the next free suffix and prompts again during interactive single-image saves. An occupied explicit single-image target fails. Dry-run leaves no background directory or journal. Undo verifies the saved image before removing it.
+
+With `--all-themes --yes`, one terminal approval covers every listed theme and selected style, including collision numbering. Each output is relative to its personal theme backgrounds folder. Patina stages one result at a time after approval and retains a separate create-only transaction for each success. A failed theme or style leaves earlier saves available to undo. If the input changes, Patina stops the batch and reports the remaining count.
 
 Interactive Extract keeps candidates in temporary storage. Saving an accepted candidate uses the normal theme-create transaction and checks the original image for drift. Save and apply performs the publication review after the theme is saved. Declining activation keeps that saved theme available.
 

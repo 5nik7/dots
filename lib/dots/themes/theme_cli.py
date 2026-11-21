@@ -41,8 +41,11 @@ def preview(themes, identity, native=False):
 
 
 def shell_init(palette, shell):
+    from file_platform import state_root
+    import shlex
+    active = str(state_root() / 'current/theme')
     if shell == 'powershell':
-        lines = ["$env:DOTS_THEME_ID = '" + palette['id'] + "'", "$env:THEME = '" + palette['theme'] + "'", "$env:FLAVOR = '" + palette['flavor'] + "'"]
+        lines = ["$env:DOTS_THEME_ID = '" + palette['id'] + "'", "$env:THEME = '" + active.replace("'", "''") + "'", "$env:DOTS_THEME_FAMILY = '" + palette['theme'] + "'", "$env:FLAVOR = '" + palette['flavor'] + "'"]
         for key, data in (('dots_palette', palette['palette']), ('dots_roles', palette['roles'])):
             lines.append('$global:' + key + ' = @{')
             lines += ["  '" + k + "' = '" + v + "'" for k, v in data.items()]
@@ -60,13 +63,13 @@ def shell_init(palette, shell):
         lines.append('}')
         return '\n'.join(lines) + '\n'
     if shell == 'fish':
-        lines = ['set -gx DOTS_THEME_ID ' + palette['id'], 'set -gx THEME ' + palette['theme'], 'set -gx FLAVOR ' + palette['flavor']]
+        value = active.replace('\\', '\\\\').replace("'", "\\'")
+        lines = ['set -gx DOTS_THEME_ID ' + palette['id'], "set -gx THEME '" + value + "'", 'set -gx DOTS_THEME_FAMILY ' + palette['theme'], 'set -gx FLAVOR ' + palette['flavor']]
         for key, value in palette['palette'].items(): lines.append("set -g dots_color_" + key + " '" + value + "'")
         for key, value in palette['roles'].items(): lines.append("set -g dots_role_" + key + " '" + value + "'")
         return '\n'.join(lines) + '\n'
     if shell not in ('bash', 'zsh'): raise ValueError('unknown initialization shell')
-    import shlex
-    lines = ['export DOTS_THEME_ID=' + palette['id'], 'export THEME=' + palette['theme'] + ' FLAVOR=' + palette['flavor']]
+    lines = ['export DOTS_THEME_ID=' + palette['id'], 'export THEME=' + shlex.quote(active), 'export DOTS_THEME_FAMILY=' + palette['theme'] + ' FLAVOR=' + palette['flavor']]
     for name, values in (('dots_palette', palette['palette']), ('dots_roles', palette['roles'])):
         lines.append('declare -gA ' + name + '=(' + ' '.join('[' + key + ']=' + shlex.quote(value) for key, value in values.items()) + ')')
     for name, value in {**palette['palette'], **palette['roles']}.items():
@@ -75,53 +78,15 @@ def shell_init(palette, shell):
 
 
 def connectors(themes):
-    home = Path(os.environ.get('HOME') or Path.home())
-    config = Path(os.environ.get('XDG_CONFIG_HOME') or home / '.config')
-    result = []
-    themes.connector_guards = {}
-    for line in (LIB / 'connectors.tsv').read_text().splitlines():
-        app, suffix, artifact = line.split('\t')
-        if app == 'windows-terminal':
-            from app_paths import terminal_fragment_directory
-            base = terminal_fragment_directory()
-            if base is None: continue
-        elif app == 'wezterm' and os.name == 'nt':
-            from app_paths import config_directory
-            base = config_directory('wezterm')
-        elif app == 'eza':
-            from app_paths import eza_config_directory
-            base = eza_config_directory()
-        elif app == 'leaf':
-            from app_paths import leaf_config_directory
-            base = leaf_config_directory()
-            if base is None: continue
-        elif app == 'television':
-            from app_paths import television_config_directory
-            base = television_config_directory()
-        elif os.name == 'nt':
-            if app not in ('yazi', 'git', 'vivid'): continue
-            from app_paths import config_directory
-            base = config_directory('yazi') if app == 'yazi' else config / app
-        else: base = config / app
-        target = base / suffix
-        if target.parent.is_dir() or (app in ('television', 'leaf') and base.is_dir()):
-            if base.is_symlink():
-                from catalog import Catalog, platform
-                owners = Catalog(themes.checkout, platform()).records()
-                owner = next((r for r in owners if r['app'] == app and r['enabled'] and r['applicable']
-                              and r['strategy'] == 'directory-link' and r['target'] == str(base)
-                              and base.resolve() == Path(r['source'])), None)
-                if not owner: raise ValueError('unmanaged application directory link: ' + str(base))
-                themes.connector_guards[str(base)] = digest(base)
-                target = Path(owner['source']) / suffix
-            result.append((target, artifact))
-    if os.name != 'nt' and os.environ.get('TERMUX_VERSION') and (home / '.termux').is_dir():
-        result.append((home / '.termux/colors.properties', 'termux.properties'))
-    for base, suffix, artifact in ((Path(os.environ.get('CODEX_HOME') or home / '.codex'), 'themes/dots.tmTheme', 'bat.tmTheme'),
-                                  (Path(os.environ.get('PI_CODING_AGENT_DIR') or home / '.pi/agent').expanduser(), 'themes/dots.json', 'pi.json')):
-        if not base.is_absolute(): raise ValueError('application home must be absolute')
-        if (base / suffix).parent.is_dir(): result.append((base / suffix, artifact))
-    return result
+    import connector_paths
+    from catalog import platform
+    selected = platform()
+    catalog = connector_paths.profile_catalog(themes.checkout, selected)
+    rows, guards = connector_paths.plan(themes.checkout, selected, catalog=catalog)
+    themes.connector_catalogs = catalog.lock_paths() if connector_paths.uses_profile(catalog) else []
+    themes.connector_guards = guards
+    themes.connector_rows = [r for r in rows if r.eligible]
+    return [(r.target, r.artifact) for r in themes.connector_rows]
 
 
 def generated_commands(themes, out, verbose=False):
@@ -231,14 +196,20 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
             parents_safe(active); parents_safe(token)
             for path in (themes.state / 'themes/generations').glob('*/status'):
                 if regular(path).decode().strip() == 'prepared': raise ValueError('legacy interrupted theme publication requires recovery before native publication')
+            import connector_paths
+            from managed_destination import points_to
             links = connectors(themes)
             # Capture every live input before rendering or any writes to managed state.
-            targets = [active, token, themes.state / 'themes/commands/current', *(p for p, _ in links)]
+            targets = [active, token, themes.state / 'themes/commands/current', *connector_paths.targets(themes.connector_rows)]
             guards = dict(getattr(themes, 'connector_guards', {}))
+            split = {row.target for row in themes.connector_rows if row.split_directory}
             for path in targets:
                 parents_safe(path)
-                if path.is_dir() and not path.is_symlink(): raise ValueError('cannot replace a real theme connector directory: ' + str(path))
-                guards[str(path)] = digest(path)
+                if path.is_dir() and not path.is_symlink() and path not in split:
+                    raise ValueError('cannot replace a real theme connector directory: ' + str(path))
+                before = digest(path)
+                if guards.setdefault(str(path), before) != before:
+                    raise ValueError('theme connector changed after preview: ' + str(path))
             bat_inputs = bat_cache.inputs()
             fingerprint = themes.publication_fingerprint(identity, bat_inputs)
             if token.is_file() and not token.is_symlink():
@@ -246,7 +217,7 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
                 if not re.fullmatch(r'g\.[a-zA-Z0-9]+', current): raise ValueError('invalid theme generation')
                 prior = themes.state / 'themes/generations' / current
                 if (prior / 'fingerprint').is_file() and (prior / 'id').is_file() and regular(prior / 'fingerprint').decode().strip() == fingerprint and regular(prior / 'id').decode().strip() == identity:
-                    if generation_complete(themes, prior) and active.is_symlink() and active.resolve() == prior and all(p.is_symlink() and p.resolve() == prior / artifact for p, artifact in links):
+                    if generation_complete(themes, prior) and active.is_symlink() and active.resolve() == prior and all(points_to(p, active / artifact) and (prior / artifact).exists() for p, artifact in links):
                         if not dry: commands_refresh(themes, verbose, announce=False)
                         events('Unchanged', prior, reason='theme and connectors match')
                         with permanent_output(): ui.emit('  Theme unchanged: ' + identity)
@@ -275,15 +246,14 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
                 (out / 'status').write_text('committed\n')
                 if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
             operations = [dict(path=str(destination), source=str(out))]
-            for target, artifact in links:
-                if not (out / artifact).exists(): raise ValueError('missing connector artifact: ' + artifact)
-                if link_target_matches(target, active / artifact) and artifact != 'pi.json': continue
-                operations.append(dict(path=str(target), link=str(active / artifact), directory=(out / artifact).is_dir()))
-            operations += [dict(path=str(themes.state / 'themes/commands/current'), link=str(destination / 'commands'), directory=True),
-                           dict(path=str(token), text=name + '\n'), dict(path=str(active), link=str(destination), directory=True)]
-            store = Store(themes.state, events)
-            with stages.step('Publish theme'):
-                result = store.apply('theme-set', operations, guards, retain=True)
+            connector_paths.validate_artifacts(themes.connector_rows, out)
+            with tempfile.TemporaryDirectory(prefix='dots-theme-links-') as staging:
+                operations.extend(connector_paths.operations(themes.connector_rows, active, Path(staging), guards, themes.checkout))
+                operations += [dict(path=str(themes.state / 'themes/commands/current'), link=str(destination / 'commands'), directory=True),
+                               dict(path=str(token), text=name + '\n'), dict(path=str(active), link=str(destination), directory=True)]
+                store = Store(themes.state, events)
+                with stages.step('Publish theme'):
+                    result = store.apply('theme-set', operations, guards, retain=True, catalogs=themes.connector_catalogs)
             with permanent_output():
                 ui.heading('Theme selected: ' + identity)
                 ui.detail('Transaction', result['id'])

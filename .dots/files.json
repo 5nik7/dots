@@ -1,5 +1,5 @@
 {
-  "schema": 2,
+  "schema": 3,
   "resources": [
     {
       "id": "dots:bash_profile",
@@ -80,22 +80,6 @@
       ]
     },
     {
-      "id": "dots:file-config-gitmux-gitmux-conf",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ]
-    },
-    {
-      "id": "dots:file-config-television-config-toml",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ]
-    },
-    {
       "id": "dots:fish",
       "platforms": [
         "termux",
@@ -139,6 +123,14 @@
     },
     {
       "id": "dots:git-prompt-string",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:gitmux",
       "platforms": [
         "termux",
         "linux",
@@ -294,6 +286,14 @@
       ]
     },
     {
+      "id": "dots:television",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
       "id": "dots:tmux",
       "platforms": [
         "termux",
@@ -396,13 +396,25 @@
       ]
     },
     {
-      "id": "termux:fastfetch",
+      "id": "termux:config",
       "platforms": [
         "termux"
       ]
     },
     {
-      "id": "termux:file-config-termux",
+      "id": "termux:config-json",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "termux:config-toml",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "termux:fastfetch",
       "platforms": [
         "termux"
       ]
@@ -414,7 +426,19 @@
       ]
     },
     {
+      "id": "termux:os-release",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
       "id": "termux:pip",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "termux:termux",
       "platforms": [
         "termux"
       ]
@@ -423,6 +447,164 @@
       "id": "termux:tmux",
       "platforms": [
         "termux"
+      ]
+    },
+    {
+      "id": "theme:bat",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "theme:btop",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "theme:codex",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:eza",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:fsh",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "theme:git",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:kitty",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "theme:leaf",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:leaf-syntax",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:pi",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:television",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:termux",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "theme:tmux",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "theme:vivid",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:wezterm",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:windows-terminal",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:yazi",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:yazi-flavor",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:yazi-syntax",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
       ]
     },
     {
@@ -563,5 +745,11 @@
         "windows"
       ]
     }
-  ]
+  ],
+  "renames": {
+    "dots:file-config-gitmux-gitmux-conf": "dots:gitmux",
+    "dots:file-config-television-config-toml": "dots:television",
+    "termux:file-config-termux": "termux:termux",
+    "termux:file-system-etc-os-release": "termux:os-release"
+  }
 }

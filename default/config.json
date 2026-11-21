@@ -30,6 +30,10 @@
     "git": {
       "view": "default"
     },
+    "files": {
+      "list_view": "short",
+      "group_by_status": true
+    },
     "bak": {
       "store": "~/.bakstore",
       "location": "store",

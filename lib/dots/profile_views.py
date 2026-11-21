@@ -27,16 +27,20 @@ def file_catalog(root, context):
     if (root / '.dots/sources.json').is_file():
         reader = Catalog(root, context['facts']['platform'], profile=context)
         active_roots = {str(root), *[r['root'] for r in context['layers']]}
-        overrides = {key for row in context['layers'] for key in row.get('files', {})}
+        groups = [(row, reader.layer_groups(row)) for row in context['layers']]
+        overrides = {owner for row, mapping in groups for owner in mapping}
         reader.sources = [s for s in reader.sources if s['status'] == 'available' and (s['root'] in active_roots or s['id'] in overrides)]
         for source in reader.sources:
-            source['profile'] = next((r['id'] for r in reversed(context['layers']) if source['id'] in r.get('files',{}) or r['root'] == source['root']), 'universal')
+            source['profile'] = next((r['id'] for r, mapping in reversed(groups)
+                                      if source['id'] in mapping or r['root'] == source['root']), 'universal')
     else:
         # Minimal definitions can still be inspected without source composition.
         reader = Catalog.__new__(Catalog)
         reader.root, reader.platform, reader.manifests, reader.sources = root, context['facts']['platform'], {}, []
         reader.profile = context
         reader.registry = None
+        reader.flat = False
+        reader.overrides = {}
         reader.registry_path = root/'.dots/files.json'
         seen = set()
         for owner, path in [('universal', root), *[(r['id'], Path(r['root'])) for r in context['layers']]]:
@@ -60,11 +64,16 @@ def manifests(root, context):
         path=Path(source['root']);owner=source['profile']
         for item in reader.manifest(source)['resources']:
             origin=path/item['source']
-            if not origin.resolve().is_relative_to(path.resolve()): raise ValueError('resource source escapes profile: '+item['id'])
+            if not source.get('virtual') and not origin.resolve().is_relative_to(path.resolve()):
+                raise ValueError('resource source escapes profile: '+item['id'])
             target=item.get('targets',{}).get(reader.platform,item.get('target'))
             if reader.platform=='wsl' and owner.startswith('linux'):
                 target=item.get('targets',{}).get('wsl',item.get('targets',{}).get('linux',item.get('target')))
-            rows.append(dict(item,id=source['id']+':'+item['id'],layer=owner,source=str(origin),target=target))
+            layer = getattr(reader, 'mapping_layers', {}).get((source['id'], item['id']), {})
+            row = dict(item,id=source['id']+':'+item['id'],layer=layer.get('id', owner),source=str(origin),target=target)
+            if reader.flat:
+                row['source_spec'] = reader.source_templates.get((source['id'], item['id'])) or reader.source_spec(origin, layer)
+            rows.append(row)
     return rows
 
 
@@ -197,7 +206,7 @@ def render(result, operation, verbose=False):
             continue
         for key, value in row.items():
             if key in ('files','settings'):
-                if key == 'files': ui.detail('Mappings', sum(len(items) for items in value.values()))
+                if key == 'files': ui.detail('Mappings', len(value) if isinstance(value,list) else sum(map(len,value.values())))
                 else: ui.detail('Saved settings', len(value))
                 continue
             if key == 'generated': continue

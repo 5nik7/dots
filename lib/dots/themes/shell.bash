@@ -9,6 +9,7 @@ themes[root]=${DOTHEMES:-$DOTS/themes}
 unset 'themes[default]' 'themes[global]' 'themes[local]'
 _DOTS_THEME_STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes
 _DOTS_THEME_ACTIVE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme
+export THEME=$_DOTS_THEME_ACTIVE
 themes[file]=$_DOTS_THEME_ACTIVE/selection
 
 # Existing shell helper APIs also accept a native family with its default flavor.
@@ -70,11 +71,13 @@ set_theme() {
     for colors in "${_DOTS_THEME_COLOR_NAMES[@]-}"; do [[ ! $colors ]] || unset "$colors"; done
     _DOTS_THEME_COLOR_NAMES=()
   fi
-  # THEME and FLAVOR are assigned by the generated palette above.
+  # Older immutable init files assign the family to THEME. Normalize after sourcing.
+  if [[ -n $THEME && $THEME != */* && $THEME != *\\* ]]; then DOTS_THEME_FAMILY=$THEME; fi
+  export DOTS_THEME_FAMILY THEME=$_DOTS_THEME_ACTIVE
   # shellcheck disable=SC2153
-  theme[current]=$THEME theme[flavor]=$FLAVOR
-  dot[theme]=${DOTS_THEME_ID:-$THEME${FLAVOR:+-$FLAVOR}}
-  export THEMEDIR=${themes[root]}/$THEME THEMESRC=${themes[root]}/$THEME/src
+  theme[current]=$DOTS_THEME_FAMILY theme[flavor]=$FLAVOR
+  dot[theme]=${DOTS_THEME_ID:-$DOTS_THEME_FAMILY${FLAVOR:+-$FLAVOR}}
+  export THEMEDIR=${themes[root]}/$DOTS_THEME_FAMILY THEMESRC=${themes[root]}/$DOTS_THEME_FAMILY/src
   _DOTS_THEME_GENERATION=$generation
   _DOTS_THEME_LOADED_DIR=$_DOTS_THEME_STATE/generations/$generation
   # Role-based rules also provide a fallback when Vivid is unavailable.
@@ -88,7 +91,7 @@ set_theme() {
     [[ ! -r $_DOTS_THEME_LOADED_DIR/fsh.ini ]] || _DOTS_THEME_FSH_FILE=$_DOTS_THEME_LOADED_DIR/fsh.ini
   fi
   # Preserve the legacy selection only for old generations/session-only palettes.
-  [[ -n $vivid_theme || $THEME != catppuccin ]] || vivid_theme=$THEME-$FLAVOR
+  [[ -n $vivid_theme || $DOTS_THEME_FAMILY != catppuccin ]] || vivid_theme=$DOTS_THEME_FAMILY-$FLAVOR
   if [[ -n $vivid_theme ]]; then
     if [[ -z $requested && -r $_DOTS_THEME_LOADED_DIR/ls_colors ]]; then
       IFS= read -r LS_COLORS < "$_DOTS_THEME_LOADED_DIR/ls_colors" && export LS_COLORS

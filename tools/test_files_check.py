@@ -328,7 +328,7 @@ raise SystemExit(check.main(sys.argv[2:]))
                         self.assertIn('\r', text.replace('\r\n','\n'))
                         self.assertIn('cancelled', plain)
                         self.assertNotRegex(text, r'\x1b\[[0-9;]*m')
-                        self.assertIn('Overall', plain)
+                        self.assertRegex(plain, r'\[[#=-]+\] +\d+%')
                     self.assertEqual(self.records(), [self.row])
                     self.assertFalse((self.home/'state').exists())
                 finally:

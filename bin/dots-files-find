@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# dots:summary=Find existing links into Dots and offer to register missing mappings
+# dots:usage=[PATH...] [--path DIR]... [OPTIONS]
+# dots:option=--path||directory|Recursively inspect this directory; repeat for additional roots
+# dots:option=--verbose|-v|flag|Show operation details
+# dots:option=--json||flag|Print discovered links or an explicitly applied result as JSON
+# dots:option=--dry-run||flag|Show missing mappings without adding them
+# dots:option=--yes||flag|Register eligible links without prompting
+# dots:argument=*|file|Directory or link to inspect
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/manage.py" find "$@"

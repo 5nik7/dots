@@ -114,6 +114,7 @@ if (-not $env:DOTS_CONFIG_FILE -and $dotsEnvironmentReady -and $global:DotsProfi
 }
 $stateRoot = if ($env:XDG_STATE_HOME) { $env:XDG_STATE_HOME } elseif ($IsWindows -or $env:OS -eq 'Windows_NT') { $env:LOCALAPPDATA } else { Join-Path $HOME '.local/state' }
 $global:dot.state = Join-Path $stateRoot 'dots'
+$env:THEME = Join-Path $dot.state 'current/theme'
 $env:THEMESCMD = Join-Path $dot.bin 'theme.ps1'
 $env:THEMESBIN = Join-Path $dot.state 'themes/commands/current/bin'
 $ownedEntries = @(foreach ($directory in @($env:DOTBIN, $env:DOTSCRIPTS)) {
@@ -168,7 +169,7 @@ if ($dotsInteractive) {
             }
         }
         $global:dots_palette = $data['@palette']; $global:dots_roles = $data['@role']
-        $env:THEME = $data['@theme']['family']; $env:FLAVOR = $data['@theme']['flavor']; $env:DOTS_THEME_ID = $data['@theme']['id']
+        $env:DOTS_THEME_FAMILY = $data['@theme']['family']; $env:FLAVOR = $data['@theme']['flavor']; $env:DOTS_THEME_ID = $data['@theme']['id']
         $global:dot.theme = $env:DOTS_THEME_ID
         $lsFile = Join-Path $dot.state "themes/generations/$generation/ls_colors"
         if (Test-Path -LiteralPath $lsFile -PathType Leaf) { $env:LS_COLORS = [IO.File]::ReadAllText($lsFile).TrimEnd("`r", "`n") }
