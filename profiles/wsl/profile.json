@@ -69,7 +69,8 @@
       "target": "${CONFIG}/eza/themes/catppuccin-mocha-mauve.yml",
       "app": "config",
       "category": "config",
-      "strategy": "link"
+      "strategy": "link",
+      "enabled": false
     },
     {
       "id": "gitmux",
@@ -293,7 +294,8 @@
       "app": "vivid",
       "category": "config",
       "target": "${CONFIG}/vivid",
-      "strategy": "directory-link"
+      "strategy": "directory-link",
+      "enabled": false
     },
     {
       "id": "wal",
