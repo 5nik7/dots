@@ -241,14 +241,14 @@
         },
         {
           "name": "calcurse",
-          "observed_version": "4.9.0",
+          "observed_version": "4.9.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "cargo-binstall",
-          "observed_version": "1.27.0",
+          "observed_version": "1.28.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -276,7 +276,7 @@
         },
         {
           "name": "chromium-host-tools",
-          "observed_version": "157.0.8103.78",
+          "observed_version": "158.0.8127.36",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -535,7 +535,7 @@
         },
         {
           "name": "ffmpeg",
-          "observed_version": "9.0.2-2",
+          "observed_version": "9.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -570,7 +570,7 @@
         },
         {
           "name": "flex",
-          "observed_version": "2.7.2",
+          "observed_version": "2.7.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1074,7 +1074,7 @@
         },
         {
           "name": "libgnutls",
-          "observed_version": "3.8.13-1",
+          "observed_version": "3.8.14",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1438,7 +1438,7 @@
         },
         {
           "name": "mpd",
-          "observed_version": "0.24.19",
+          "observed_version": "0.24.20",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1571,14 +1571,14 @@
         },
         {
           "name": "oh-my-posh",
-          "observed_version": "33.0.0",
+          "observed_version": "33.1.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "ollama",
-          "observed_version": "0.40.16",
+          "observed_version": "0.40.17",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1970,7 +1970,7 @@
         },
         {
           "name": "ruby",
-          "observed_version": "4.0.10",
+          "observed_version": "4.0.10-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2936,7 +2936,7 @@
         },
         {
           "name": "wezterm-nightly",
-          "observed_version": "20261026+ge68a8ec2",
+          "observed_version": "20261120+gee6f3044",
           "pin": null,
           "selection": "explicit",
           "enabled": true
