@@ -311,7 +311,7 @@
         },
         {
           "name": "command-not-found",
-          "observed_version": "3.5.0-20",
+          "observed_version": "3.5.0-21",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1424,7 +1424,7 @@
         },
         {
           "name": "mise",
-          "observed_version": "2026.11.11",
+          "observed_version": "2026.11.12",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1571,7 +1571,7 @@
         },
         {
           "name": "oh-my-posh",
-          "observed_version": "33.1.0",
+          "observed_version": "33.2.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2951,6 +2951,13 @@
         {
           "name": "cmake-glibc",
           "observed_version": "4.4.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "iproute2",
+          "observed_version": "7.3.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true

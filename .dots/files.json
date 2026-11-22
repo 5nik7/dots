@@ -52,6 +52,14 @@
       ]
     },
     {
+      "id": "dots:dots-toml",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
       "id": "dots:fastfetch",
       "platforms": [
         "termux",

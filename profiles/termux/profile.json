@@ -577,6 +577,14 @@
       "app": "config",
       "category": "config",
       "strategy": "link"
+    },
+    {
+      "id": "dots-toml",
+      "source": "${DOTS}/config/blastoff/themes/dots.toml",
+      "target": "${CONFIG}/starship.toml",
+      "strategy": "link",
+      "app": "blastoff",
+      "category": "config"
     }
   ]
 }
