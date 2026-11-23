@@ -38,6 +38,17 @@ The native test owns temporary home/config/state/cache/data/runtime roots, Git c
 
 The shared Lua option applies equally to Yazi launched from Bash or native PowerShell; CLI routes and Windows application destinations are unchanged. Native Linux, WSL and Windows checks remain pending. The relevant presentation gate is preserved semantic styling outside tmux and no orphaned separator/padding when hidden. CLI data/Gum cases do not apply. Existing unrelated Dots/wiki changes remain uncommitted.
 
+## Configurable tab bar
+
+The standalone plugin owns conditional header layout and tab labels. The Dots
+configuration supplies the four [tab bar settings](../docs/configuration.md#yazi-tab-bar)
+through its existing typed Config API and the managed Yazi setup. Config saves
+apply at the next launch. Bash and the native controller share the same keys,
+inheritance, destination and JSON interface. Config fixtures exercise validation,
+discovery, browser edits, reset and activation. Plugin rendering checks use the
+standalone source in a private Yazi configuration. Package installation follows
+the normal standalone release and `ya` upgrade workflow.
+
 ## Presentation gate
 
 Apply the [presentation contract](../docs/presentation.md#acceptance-gate) to the relevant application UI boundaries: retain existing styles, semantic colors, labels, icons, separators, and layout; test symlink fitting and control-character sanitization and native 40/80/160-column redraws. The application keeps Yazi's theme contract. CLI stdout/JSON/color-mode and Gum gates do not apply because no Dots CLI view or machine-output format changes. Interactive visual comparison is explicitly deferred above.

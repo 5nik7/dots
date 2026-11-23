@@ -5,7 +5,7 @@ param(
     [string[]] $WithSource = @(),
     [string] $Packages,
     [switch] $Interactive, [switch] $NonInteractive, [switch] $NoClear, [switch] $NoLogo,
-    [ValidateSet('core','files','themes','anodize','blastoff','pkgs','packages','fonts','leaf')][string[]] $Component = @(),
+    [ValidateSet('core','files','themes','anodize','blastoff','pkgs','git-it','packages','fonts','leaf')][string[]] $Component = @(),
     [string[]] $Resource = @(),
     [switch] $WithDependencies, [switch] $SaveChoices,
     [string] $Fonts, [string[]] $FontTarget = @(),

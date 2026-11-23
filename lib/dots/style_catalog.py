@@ -95,7 +95,9 @@ def consumers(group, name):
         if base not in icon_roles(): return []
         apps = [] if base in ('menu.profiles','menu.themes') else ['cli']
         if base.startswith('files.'): apps += ['yazi']
-        if base.startswith('git.') and not base.startswith('git.status.'): apps += ['yazi', 'gitmux', 'starship']
+        if (base.startswith('git.') and not base.startswith('git.status.') and
+                base not in ('git.submodule', 'git.submodule_github', 'git.wiki')):
+            apps += ['yazi', 'gitmux', 'starship']
         if base.startswith('hosts.') or base in ('git.repository','applications.codex', 'status.working', 'status.waiting', 'status.todo', 'navigation.separator'):
             apps += ['tmux']
     else:

@@ -293,6 +293,7 @@ class Draft:
             ('Effect', ('Restore the alert setting default' if self.reset and self.row.kind=='codex' else 'Remove this profile override' if self.reset else 'Save this value') +
              ('; automatic refresh disabled' if visual and self.inventory.no_refresh else
               '; '+__import__('codex_toast').ACTIVATION if self.row.kind=='codex' else
+              '; '+effect['reason'] if key.startswith('apps.yazi.tab_bar.') and effect else
               '; next Fonts invocation or popup' if key.startswith('apps.fonts.') else
               '; next dots files list invocation' if key == 'apps.files' or key.startswith('apps.files.') else
               '; next invocation; no theme refresh' if key in ('apps.cli.tagline','apps.cli.progress','apps.git.view') or key.startswith(('colors.apps.cli.help.','colors.apps.cli.progress.','icons.progress.bar.','icons.apps.cli.progress.bar.','icons.git.status.','icons.apps.cli.git.status.','colors.apps.pkgs.')) else

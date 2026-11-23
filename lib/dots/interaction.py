@@ -62,10 +62,11 @@ class SelectionEnded(Exception):
 
 class SelectionEvent(Exception):
     """Opt-in menu navigation; ordinary pickers retain their cancellation contract."""
-    def __init__(self, action, index=None, query=''):
+    def __init__(self, action, index=None, query='', *, indices=()):
         self.action = action
         self.index = index
         self.query = query
+        self.indices = indices
 
 
 class Selector:
@@ -168,7 +169,7 @@ class RichSelector:
             info=None, bindings=(), initial_indices=None, navigation=None,
             navigation_keys=None, hscroll=True, preview_position=None, event_selection=False,
             focus_index=None, preview_lines=None, preview_wrap=False, wrap=False,
-            disabled=False, header_row=None, popup_resolved=False, sort=None):
+            disabled=False, header_row=None, popup_resolved=False, sort=None, freeze_left=False):
         # Optional bindings are trusted controller code, never selected labels.
         indices = range(len(labels)) if initial_indices is None else list(initial_indices)
         if initial_indices is not None and (any(type(i) is not int or not 0 <= i < len(labels) for i in indices)
@@ -193,7 +194,7 @@ class RichSelector:
         if (navigation_keys is not None or event_selection) and navigation is None:
             raise ValueError('menu navigation keys require navigation state')
         if navigation is not None:
-            if (not isinstance(navigation, dict) or multi or not isinstance(events, dict) or not events
+            if (not isinstance(navigation, dict) or (multi and not event_selection) or not isinstance(events, dict) or not events
                     or any(not isinstance(key, str) or not re.fullmatch(r'[a-z0-9-]+', key)
                            or key in ('enter', 'ctrl-c') or not isinstance(action, str) or not action
                            for key, action in events.items())):
@@ -201,7 +202,9 @@ class RichSelector:
             flags.remove('--bind=esc:abort,ctrl-c:abort')
             flags += ['--bind=ctrl-c:abort,enter:accept-non-empty' + (',esc:abort' if 'esc' not in events else ''),
                       '--print-query', '--expect=' + ','.join(events)]
-        if not hscroll:
+        if freeze_left:
+            flags += ['--freeze-left=1', '--tabstop=2']
+        elif not hscroll:
             flags += ['--no-hscroll']
         if wrap:
             flags += ['--wrap', '--wrap-sign=']
@@ -345,7 +348,7 @@ class RichSelector:
             if selected:
                 raise ValueError('selector returned multiple resources')
         if event is not None:
-            raise SelectionEvent(event, selected[0] if selected else None, navigation['query'])
+            raise SelectionEvent(event, selected[0] if selected else None, navigation['query'], indices=selected)
         if not selected:
             raise SelectionEnded(130)
         return selected

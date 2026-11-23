@@ -118,6 +118,15 @@ def description(key):
         return 'Default level of detail in dots files list'
     if key == 'apps.files.group_by_status':
         return 'Group dots files list entries by their catalog status'
+    if key.startswith('apps.yazi.tab_bar.'):
+        purpose = {
+            'hide_in_tmux': 'Hide the Yazi header inside tmux',
+            'only_with_multiple_tabs': 'Show the Yazi header only while two or more tabs are open',
+            'labels': 'Choose when tab numbers include their directory or custom name',
+            'width': 'Maximum width of a numbered tab label in terminal cells',
+        }.get(key.rsplit('.', 1)[-1])
+        if purpose:
+            return purpose
     if key.startswith(('colors.apps.', 'icons.apps.', 'formatting.apps.')):
         _,_,app,*tail=key.split('.')
     elif key.startswith('apps.'):

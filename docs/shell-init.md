@@ -4,6 +4,11 @@
 
 Compiled Bash/Zsh settings include inert CLI row-formatting values. Changes to the contributing profile manifests or `default/config.json` invalidate the compiled generation; warm initialization reads the literals without invoking Python for row formatting. Ordinary Dots command invocations read current preferences independently. See [shared row alignment](profiles.md#shared-row-alignment).
 
+The repository Zsh fzf-tab integration supports `COMMAND nf<Tab>` for an exact,
+unquoted argument. Search the cached Nerd Fonts glyphs, mark choices with Tab,
+and press Enter to replace that argument in the editor. Escape keeps the original
+line. See [the icon picker](fonts.md#browser-and-icons).
+
 ## Using the hook
 
 For Bash and Zsh, put this in the interactive startup file once `dots` is on PATH:
@@ -48,6 +53,10 @@ source ($nu.default-config-dir | path join 'dots-init.nu')
 ```
 
 The generated file pins the checkout's path. Regenerate it after moving that checkout. Ordinary edits to the referenced configuration are picked up without regenerating it. The generated file is machine-local and must not be committed. See [Nushell's configuration rules](https://www.nushell.sh/book/configuration) for parse-time source paths.
+
+## User-local manuals
+
+On Termux, Linux and WSL, Dots-managed Bash, Zsh, Fish, Nushell and Xonsh include `~/.local/share/man` in `MANPATH` when that directory exists. This makes installed plugin manuals available through commands such as `man git-it`. Startup preserves existing search entries and their order. An initially empty or unset `MANPATH` retains the system manual directories through the trailing colon.
 
 ## Linked startup files and relocation
 

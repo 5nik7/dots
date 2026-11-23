@@ -9,6 +9,7 @@ import re
 IDENTIFIER = re.compile(r'[A-Za-z_][A-Za-z0-9_-]*')
 MISSING = object()
 GROUPS = ('formatting', 'apps')
+YAZI_TAB_LABELS = ('auto', 'name', 'number')
 ENUMS = {'list_type': ('tree', 'regular'), 'indent_style': ('spaces', 'tabs'),
          'list_view': ('short', 'default', 'verbose'),
          'alignment': ('left', 'right', 'center'), 'position': ('top', 'bottom'),
@@ -122,6 +123,10 @@ def style(value):
 def validate_value(defaults,path,value):
     if not recognized(defaults,path):raise ValueError('unknown configuration key: '+name(path))
     if value is None:return
+    if path == ('apps', 'yazi', 'tab_bar', 'labels'):
+        if value not in YAZI_TAB_LABELS:
+            raise ValueError('Yazi tab labels require ' + ', '.join(YAZI_TAB_LABELS))
+        return
     if path in (('apps','cli','progress'), ('apps','git','view')):
         from cli_preferences import PROGRESS_MODES, VIEWS
         allowed = PROGRESS_MODES if path[-1] == 'progress' else VIEWS
@@ -288,6 +293,10 @@ def validate_groups(root,data,defaults=None):
 def constraints(defaults, key):
     from config_keys import internal
     key=internal(key)
+    if key == 'apps.yazi.tab_bar.labels':
+        return dict(type='string', choices=list(YAZI_TAB_LABELS))
+    if key == 'apps.yazi.tab_bar.width':
+        return dict(type='integer', syntax='Maximum label width in cells, 0..4096. Values 0..2 show only the tab number.')
     if key == 'apps.cli.markdown_viewer':
         from markdown_viewer import CHOICES, PRIORITY
         return dict(type='string', choices=list(CHOICES),
@@ -392,6 +401,7 @@ def activation(key):
     path=parts(internal(key))
     app=path[1] if path[0]=='apps' else path[2] if path[:2]==('formatting','apps') else ''
     return (app, {'tmux':'visual publication; verified tmux servers receive owned controls',
+                  'yazi':'next Yazi launch',
                   'completion':'next Zsh prompt and completion',
                   'nvim':'visual publication; Neovim refreshes on focus',
                   'fzf':'visual publication; existing shells follow on the next prompt',

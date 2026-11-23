@@ -21,3 +21,8 @@ CLI rendering in `fonts/presentation.py`; selectors bind shared menu spans. Keep
 and menu links synchronized. Render preview metadata at the actual pane width.
 Use render-local preference snapshots for large catalogs; preserve plain captured
 human layout via `DOTS_MENU_CAPTURE` and exact redirected/JSON/path/glyph output.
+
+The `nf` shim delegates to `dots fonts icons`. Keep the first glyph column visible
+and preserve mark order across queries. Alt-I targets the verified tmux pane and
+clears marks on success. Exercise both the real picker and Zsh's argument-only
+`nf<Tab>` completion, which edits the command line through fzf-tab.

@@ -337,6 +337,8 @@ Standalone native launchers use `~/.local/bin/*.ps1`, with no registry or system
 
 Application plugins share native launchers and the combined installer. Legacy receipt migration supports known POSIX user-local and Termux layouts; former native PowerShell modules/profile edits require manual reconciliation. Native Windows pkgs has portable format/manifest support but no package backend; `-Packages FILE` setup refuses before configuration writes. Relocation and popup changes require separate native Windows/WSL acceptance. See [plugins](plugins.md).
 
+The optional `dots git it` plugin runs with Bash 5 on Termux, Linux and WSL. Native Windows exposes static help and completion. Setup installs its application assets only on the Bash targets. See [git-it](plugins.md#git-it).
+
 ### Codex attention notifications
 
 The `apps.codex.toast` and `apps.codex.vibrate` Config bindings share the Bash/native Python

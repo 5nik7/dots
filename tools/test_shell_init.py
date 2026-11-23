@@ -161,6 +161,30 @@ class InitTests(unittest.TestCase):
         self.assertNotIn('command not found', p.stderr)
 
     def test_bash_environment(self): self.assert_environment('bash')
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX manual lookup')
+    def test_user_local_manual_discovery(self):
+        manuals = self.home / '.local/share/man'
+        probe = """python3 -c 'import os; print(os.environ.get("MANPATH", "unset"))'"""
+        for shell in ('bash', 'zsh', 'fish', 'nu', 'xonsh'):
+            with self.subTest(shell=shell):
+                hook = self.generated(shell)
+                self.env.pop('MANPATH', None)
+                self.assertEqual(self.shell(shell, hook + probe).stdout.strip(), 'unset')
+                manuals.mkdir(parents=True, exist_ok=True)
+                try:
+                    for path, expected in ((None, f'{manuals}:'), ('', f'{manuals}:'),
+                                           ('/custom', f'{manuals}:/custom'),
+                                           ('/custom::/extra', f'{manuals}:/custom::/extra'),
+                                           (f'/before:{manuals}:', f'/before:{manuals}:')):
+                        if path is not None:
+                            self.env['MANPATH'] = path
+                        with self.subTest(path=path):
+                            output = self.shell(shell, hook + hook + probe)
+                            self.assertEqual(output.stdout.strip(), expected)
+                finally:
+                    manuals.rmdir()
+
     def test_zsh_environment(self): self.assert_environment('zsh')
     def test_fish_environment(self): self.assert_environment('fish')
     def test_nu_environment(self): self.assert_environment('nu')

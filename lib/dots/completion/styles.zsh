@@ -1,6 +1,6 @@
 # Interactive display only. Completion records and inserted words stay literal.
 # Input checks and warm refresh use Zsh builtins; no style query per candidate.
-typeset -g _DOTS_COMPLETION_PROVIDERS='(_dots|_anodize|_patina|_blastoff|_pkgs|_wttr)'
+typeset -g _DOTS_COMPLETION_PROVIDERS='(_dots|_git-it|_anodize|_patina|_blastoff|_pkgs|_wttr)'
 
 _dots_completion_owned_context() {
   local name=${service:-${words[1]:-}}
@@ -207,6 +207,20 @@ _dots_completion_ftb_capture() {
 }
 
 _dots_completion_ftb_complete() {
+  if [[ ${PREFIX:-} == nf && ${IN_FZF_TAB:-0} == 1 && ${_comps[nf]:-} == _dots &&
+        -z ${SUFFIX:-}${IPREFIX:-}${ISUFFIX:-}${compstate[quote]:-} &&
+        ${words[CURRENT]:-} == nf && ${compstate[context]:-} == command && ${LBUFFER:-} == *[[:space:]]nf &&
+        ( -z ${RBUFFER:-} || ${RBUFFER[1]} == [[:space:]\;\&\|\<\>\)] ) ]] &&
+     (( CURRENT > 1 )); then
+    setopt localoptions extendedglob
+    source "$DOTS/lib/dots/completion/nf.zsh"
+    return
+  fi
+  # The glyph frontend also works with a stock fzf-tab display.
+  if (( ! ${+functions[_dots_completion_original_capture]} )); then
+    _dots_completion_original_complete "$@"
+    return
+  fi
   _dots_completion_refresh
   local -A _dots_completion_groups
   local _dots_completion_display=0 _dots_completion_owned=0
@@ -350,14 +364,15 @@ _dots_completion_install_fzf() {
       _dots_completion_bind_fzf
       return 0
     fi
-    # Upgrade the earlier global adapter, which did not wrap -ftb-fzf. Recover
-    # its known native copies before checking/installing the new interface.
-    functions[-ftb-compadd]=$functions[_dots_completion_original_capture]
     functions[-ftb-complete]=$functions[_dots_completion_original_complete]
-    functions[-ftb-generate-complist]=$functions[_dots_completion_original_generate]
-    functions[-ftb-generate-header]=$functions[_dots_completion_original_header]
-    functions[-ftb-zstyle]=$functions[_dots_completion_original_style]
-    (( ! ${+_ftb_orig_widget} )) || functions[compadd]=$functions[-ftb-compadd]
+    if (( ${+functions[_dots_completion_original_capture]} )); then
+      # Restore older display adapters before rechecking their interface.
+      functions[-ftb-compadd]=$functions[_dots_completion_original_capture]
+      functions[-ftb-generate-complist]=$functions[_dots_completion_original_generate]
+      functions[-ftb-generate-header]=$functions[_dots_completion_original_header]
+      functions[-ftb-zstyle]=$functions[_dots_completion_original_style]
+      (( ! ${+_ftb_orig_widget} )) || functions[compadd]=$functions[-ftb-compadd]
+    fi
   fi
   local fn original_reload='$FZF_TAB_HOME/lib/ftb-switch-group' scoped_reload='$_dots_completion_group_helper'
   local -i load_failed=0
@@ -391,6 +406,13 @@ _dots_completion_install_fzf() {
      ${functions[-ftb-fzf]} == *'$FZF_TAB_HOME/lib/ftb-switch-group'* &&
      ${functions[-ftb-fzf]} == *'normalized_active_group_style'* &&
      ${functions[-ftb-generate-complist]} == *'_ftb_complist'* ]]; then
+    # Glyph rows use the native frontend directly. They do not require
+    # the custom group styling interface used for ordinary completions.
+    if (( ! load_failed )) && [[ ${functions[-ftb-complete]} == *'_ftb_finish'* &&
+        ${functions[-ftb-fzf]} == *'--print-query'* && ${functions[-ftb-fzf]} == *'--expect='* ]]; then
+      functions[_dots_completion_original_complete]=$functions[-ftb-complete]
+      functions[-ftb-complete]=$functions[_dots_completion_ftb_complete]
+    fi
     for fn in "${(@k)lazy}"; do functions[$fn]=$lazy[$fn]; done
     return 0
   fi

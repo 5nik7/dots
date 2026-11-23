@@ -8,6 +8,11 @@
       "clock": {
         "auto_location": true
       }
+    },
+    "yazi": {
+      "tab_bar": {
+        "hide_in_tmux": false
+      }
     }
   }
 }

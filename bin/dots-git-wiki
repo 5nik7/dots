@@ -7,5 +7,8 @@
 # dots:option=--view||choice:default,short,verbose|Select the human output view
 # dots:option=--short|-s|flag|Use compact human output
 # dots:option=--verbose|-v|flag|Show metadata and action details without patches
+# dots:option=--color||choice:auto,always,never|Select terminal colors
+# dots:option=--no-color||flag|Disable terminal colors
+# dots:option=--no-progress||flag|Disable terminal progress
 WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
 exec python3 -B "$WIKI_LIB/wiki_git.py" info "$@"

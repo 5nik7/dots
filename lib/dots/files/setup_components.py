@@ -1,8 +1,8 @@
 """Stable checkout component identities; selection never implies removal."""
 
-COMPONENTS = ('core', 'files', 'themes', 'anodize', 'blastoff', 'pkgs',
+COMPONENTS = ('core', 'files', 'themes', 'anodize', 'blastoff', 'pkgs', 'git-it',
               'packages', 'fonts', 'leaf')
-DEFAULTS = COMPONENTS[:6]
+DEFAULTS = COMPONENTS[:7]
 
 
 def component(identity):
@@ -12,11 +12,11 @@ def component(identity):
         return 'leaf'
     if identity.startswith('setup:font:'):
         return 'fonts'
-    if identity in ('dots:command', 'dots:todo:command', 'dots:fonts:command', 'dots:bak:command', 'dots:codex-usage:command', 'dots:dots-link:command', 'dots:manual'):
+    if identity in ('dots:command', 'dots:todo:command', 'dots:fonts:command', 'dots:nf:command', 'dots:bak:command', 'dots:codex-usage:command', 'dots:dots-link:command', 'dots:manual'):
         return 'core'
     if identity.startswith(('dots:bak:', 'dots:dots-link:')):
         return 'core'
-    for name in ('anodize', 'blastoff', 'pkgs'):
+    for name in ('anodize', 'blastoff', 'pkgs', 'git-it'):
         if identity.startswith('dots:' + name + ':'):
             return name
     return 'files'

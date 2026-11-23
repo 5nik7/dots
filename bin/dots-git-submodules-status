@@ -9,6 +9,9 @@
 # dots:option=--verbose|-v|flag|Show metadata and action details without patches
 # dots:argument=1|git-submodule|Registered submodule path relative to the selected repository
 # dots:option=--dirty||flag|Show local changes, pointer differences and blockers
+# dots:option=--color||choice:auto,always,never|Select terminal colors
+# dots:option=--no-color||flag|Disable terminal colors
+# dots:option=--no-progress||flag|Disable terminal progress
 GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
 command -v python3 >/dev/null 2>&1 || { printf 'dots git: Python 3 is required\n' >&2; exit 3; }
 exec python3 -B "$GIT_LIB/inspection.py" status "$@"

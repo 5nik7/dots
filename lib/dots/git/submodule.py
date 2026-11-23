@@ -150,8 +150,16 @@ def complete(words, *, display_types=False):
         names, action, tail, pending = route(positional, partial=True)
         if expected:
             if expected[2] in ('directory', 'file'): print(expected[2] + '\t\t')
+            elif expected[2].startswith('choice:'):
+                for value in expected[2][7:].split(','): emit(value)
             return 0
         if current.startswith('-') and '--' not in prior:
+            if '=' in current:
+                flag = current.split('=', 1)[0]
+                for long, short, kind, _ in metadata(action)['option']:
+                    if flag in (long, short) and kind.startswith('choice:'):
+                        for value in kind[7:].split(','): emit(flag + '=' + value)
+                return 0
             for long, short, _, description in metadata(action)['option']:
                 emit(long, description, 'option')
                 if short: emit(short, description, 'option')

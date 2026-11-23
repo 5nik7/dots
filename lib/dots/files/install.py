@@ -29,8 +29,9 @@ from identities import canonical, current_source
 from setup_components import DEFAULTS, component
 from managed_destination import physical, points_to, yazi_flavor_directory
 from backup_catalog import created_setup_parent, original_payload
+from plugin_paths import git_environment, recorded_submodule, submodule_initialized, submodule_worktree
 
-PUBLIC_SOURCES = ('termux', 'windows', 'nvim')
+PUBLIC_SOURCES = ('termux', 'windows', 'nvim', 'git-it')
 
 
 @contextmanager
@@ -70,7 +71,7 @@ def display(doc, args, final=False):
             continue
         ui.emit()
         ui.emit('  ' + ui.paint(row['id'], '1;94') + '  ' + ui.status(row['status']))
-        for field in ('source', 'target', 'root', 'ref', 'reason'):
+        for field in ('source', 'target', 'root', 'ref', 'pin', 'reason'):
             if row.get(field):
                 is_path = field in ('source', 'target', 'root')
                 if is_path:
@@ -286,6 +287,39 @@ class Installation:
             destination = home / '.local/share/man/man1/dots.1'
         self.add('dots:manual', destination, link=source)
 
+    def plan_submodule_app(self, home, data, name, definition):
+        source = self.root / 'plugins' / name
+        if self.platform not in definition['platforms']:
+            self.item('dots:' + name, 'skipped', reason='requires Bash on Termux, Linux or WSL')
+            return
+        if not submodule_initialized(source):
+            occupied = (source.is_symlink() or source.exists() and
+                        (not source.is_dir() or any(source.iterdir())))
+            self.item('dots:' + name, 'conflict', source,
+                      reason=('optional source destination is occupied' if occupied else
+                              'initialize the recorded submodule with --with-source ' + name))
+            return
+        destinations = [
+            ('command', definition['runtime'], home/'.local/bin'/name),
+            ('manual', definition['manual'], home/'.local/share/man/man1'/(name + '.1')),
+            ('completion:bash', definition['completions']['bash'], data/'bash-completion/completions'/name),
+            ('completion:zsh', definition['completions']['zsh'], data/'zsh/site-functions'/('_' + name)),
+            ('completion:fish', definition['completions']['fish'], data/'fish/vendor_completions.d'/(name + '.fish')),
+        ]
+        for role, relative, target in destinations:
+            asset = source / relative
+            identity = 'dots:' + name + ':' + role
+            if not asset.is_file() or asset.is_symlink() or (role == 'command' and not os.access(asset, os.X_OK)):
+                self.item(identity, 'conflict', asset, reason='plugin asset is missing or invalid')
+                continue
+            self.guard(asset)
+            owned = self.entries.get(str(target))
+            if ((owned and owned['id'] != identity) or
+                    (not owned and exists(target) and not points_to(target, asset))):
+                self.item(identity, 'conflict', target, reason='destination belongs to a separate installation')
+                continue
+            self.add(identity, target, link=asset)
+
     def plan_bundled_apps(self, home):
         # Minimal controller fixtures may omit bundled apps. A declared bundle
         # must be complete; missing runtime assets block the whole transaction.
@@ -301,6 +335,11 @@ class Installation:
             if self.components is not None and name not in self.components:
                 continue
             source = self.root / 'plugins' / name
+            if definition.get('source', {}).get('submodule'):
+                # Legacy application migration only manages the original bundles.
+                if self.components is not None:
+                    self.plan_submodule_app(home, data, name, definition)
+                continue
             manual = definition['manual']
             required = [source / definition['runtime'], source / manual,
                         *(source / value for value in definition['completions'].values()),
@@ -407,6 +446,8 @@ class Installation:
     def plan_install(self, components=None, resources=None, *, defer_theme=False):
         self.review_replacements = True
         self.components = set(DEFAULTS if components is None else components)
+        if components is None and (self.platform == 'windows' or not submodule_initialized(self.root/'plugins/git-it')):
+            self.components.discard('git-it')
         self.resources = None if resources is None else set(resources)
         catalog = Catalog(self.root, self.platform)
         for path in catalog.input_paths():
@@ -551,7 +592,7 @@ class Installation:
             else:
                 self.add('dots:fonts:command', home / '.local/bin/fonts', link=fonts)
         if 'core' in self.components:
-            for name in ('bak', 'codex-usage', 'dots-link'):
+            for name in ('nf', 'bak', 'codex-usage', 'dots-link'):
                 filename = name + ('.ps1' if self.platform == 'windows' else '')
                 source = self.root / ('scripts' if name == 'codex-usage' or filename == 'dots-link.ps1' else 'bin') / filename
                 if not source.is_file(): continue
@@ -823,16 +864,12 @@ class Installation:
                                  {str(path): digest(path)}, retain=True)
 
 
-def git(root, *args):
-    result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True, env=git_environment())
+def git(root, *args, local=True):
+    result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True,
+                            env=git_environment(local=local))
     if result.returncode:
         raise ValueError('Git operation failed: ' + result.stderr.strip())
     return result.stdout.rstrip('\r\n')
-
-
-def git_environment():
-    return {key: value for key, value in os.environ.items()
-            if key not in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE')}
 
 
 def protect_ignored(root, target):
@@ -845,6 +882,16 @@ def protect_ignored(root, target):
             raise ValueError('update would replace ignored local content: ' + name)
 
 
+def source_state(root, path, pin):
+    if submodule_worktree(root, path, pin):
+        if git(path, '-c', 'core.fsmonitor=false', 'status', '--porcelain', '--untracked-files=normal'):
+            raise ValueError('optional source has local changes: ' + str(path))
+        return True
+    if exists(path) and (path.is_symlink() or not path.is_dir() or any(path.iterdir())):
+        raise ValueError('optional source destination is occupied: ' + str(path))
+    return False
+
+
 def source_plan(root, args):
     if not args.update and not args.with_source:
         return []
@@ -854,7 +901,7 @@ def source_plan(root, args):
         raise ValueError('Git is required to update or acquire sources')
     result = []
     if args.update:
-        if git(root, 'status', '--porcelain', '--untracked-files=normal'):
+        if git(root, '-c', 'core.fsmonitor=false', 'status', '--porcelain', '--untracked-files=normal'):
             raise ValueError('update requires a clean checkout; preserve local changes before retrying')
         branch = git(root, 'symbolic-ref', '--quiet', '--short', 'HEAD')
         remote = git(root, 'config', 'branch.' + branch + '.remote')
@@ -874,12 +921,10 @@ def source_plan(root, args):
         initialized = (path / '.git').exists()
         if source['id'] not in args.with_source and not (args.update and initialized):
             continue
-        if not initialized and path.exists() and any(path.iterdir()):
-            raise ValueError('optional source destination is occupied: ' + source['id'])
-        if initialized and git(path, 'status', '--porcelain', '--untracked-files=normal'):
-            raise ValueError('optional source has local changes: ' + source['id'])
+        pin = recorded_submodule(root, source['path'])
+        initialized = source_state(root, path, pin)
         result.append(dict(id=source['id'], root=str(path), path=source['path'],
-                           status='recorded-commit', initialized=initialized))
+                           status='recorded-commit', pin=pin, initialized=initialized))
     selected = {r['id'] for r in result}
     if set(args.with_source) - selected:
         raise ValueError('requested source is unavailable or not applicable to this platform')
@@ -906,24 +951,29 @@ def update_sources(root, rows):
                 if git(root, 'rev-parse', 'HEAD') != row['head'] or git(root, 'status', '--porcelain'):
                     raise ValueError('repository changed during fetch')
                 protect_ignored(root, target)
-                git(root, '-c', 'submodule.recurse=false', 'merge', '--ff-only', '--no-overwrite-ignore', target)
+                git(root, '-c', 'submodule.recurse=false', 'merge', '--ff-only', '--no-overwrite-ignore', target, local=False)
         else:
+            pin = row['pin']
+            if (recorded_submodule(root, row['path']) != pin or
+                    source_state(root, path, pin) != row['initialized']):
+                raise ValueError('optional source changed after preview: ' + row['id'])
             if row['initialized']:
-                if git(path, 'status', '--porcelain'):
-                    raise ValueError('optional source changed after preview')
                 # Never abandon local commits when moving to the parent's pin.
-                pin = git(root, 'ls-tree', 'HEAD', '--', row['path']).split()[2]
                 known = subprocess.run(['git','-C',str(path),'cat-file','-e',pin+'^{commit}'],
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=git_environment()).returncode == 0
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=git_environment(local=True)).returncode == 0
                 if not known:
                     if subprocess.run(['git','-C',str(path),'fetch','--no-recurse-submodules','--no-tags','origin',pin], stdout=sys.stderr, env=git_environment()).returncode:
                         raise ValueError('cannot fetch recorded source commit: ' + row['id'])
                 git(path, 'merge-base', '--is-ancestor', 'HEAD', pin)
                 protect_ignored(path, pin)
+            if recorded_submodule(root, row['path']) != pin:
+                raise ValueError('recorded gitlink changed during source preparation: ' + row['id'])
             command = ['git', '-C', str(root), '-c', 'submodule.recurse=false',
                        'submodule', 'update', '--init', '--checkout', '--', row['path']]
             if subprocess.run(command, stdout=sys.stderr, env=git_environment()).returncode:
                 raise ValueError('optional source update failed: ' + row['id'])
+            if git(path, 'rev-parse', 'HEAD') != pin:
+                raise ValueError('optional source did not reach the reviewed gitlink: ' + row['id'])
 
 
 def main(argv=None):
@@ -983,7 +1033,27 @@ def main(argv=None):
         if not approve(args, 'Update these sources, then plan configuration setup?'):
             display(dict(source_doc, status='cancelled', items=[]), args, True)
             return 0
-        update_sources(root, rows)
+        if len(rows) > 1 and rows[0].get('id') == 'dots':
+            parent, remaining = rows[0], rows[1:]
+            update_sources(root, [parent])
+            if git(root, 'rev-parse', 'HEAD') != parent['head']:
+                # A successful parent fast-forward can intentionally change a
+                # child pin. Review newly resolved pins instead of using stale
+                # rows, retaining the original selection of optional sources.
+                selection = copy.copy(args)
+                selection.update = False
+                selection.with_source = [row['id'] for row in remaining]
+                current = source_plan(root, selection)
+                if current != remaining:
+                    source_doc.update(items=current, message='The updated checkout records new source revisions.')
+                    display(source_doc, args)
+                    if not approve(args, 'Update these sources to the new revisions?'):
+                        display(dict(source_doc, status='cancelled', message='Parent update retained.'), args, True)
+                        return 0
+                remaining = current
+            update_sources(root, remaining)
+        else:
+            update_sources(root, rows)
         # Load the newly checked-out implementation before planning file writes.
         forwarded = []
         skip = False

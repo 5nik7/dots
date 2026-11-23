@@ -5,6 +5,7 @@
 local toggle_pane = require(".toggle-pane")
 local palette_theme = require(".theme")
 local preview = require(".preview")
+local tab_bar_config = require(".tab-bar-config")
 local refresh_theme = ya.sync(function() require(".theme"):refresh() end)
 
 local function setup(_, options)
@@ -19,6 +20,10 @@ local function setup(_, options)
   require(".folder-rules"):setup(options.folder_rules or {})
   require(".projects"):setup(options.projects or {})
   require(".dotline"):setup(options.dotline or {})
+  local tab_bar = options.dotline and options.dotline.tab_bar
+  if type(tab_bar) == "table" and tab_bar.from_dots_config == true then
+    tab_bar_config:setup()
+  end
   require(".hover"):setup(options.hover or {})
   require(".githead"):setup(options.githead or {})
   require(".hostname-username"):setup(options.hostname_username or {})
@@ -27,7 +32,7 @@ local function setup(_, options)
     require(".git"):recolor(doc)
     if value.dotline then
       for key,item in pairs(value.dotline) do
-        if key ~= 'header_line' and key ~= 'status_line' then Dotline.config[key] = item end
+        if key ~= 'header_line' and key ~= 'status_line' and key ~= 'tab_bar' then Dotline.config[key] = item end
       end
     end
     if value.hover then require('.hover'):setup(value.hover) end
@@ -40,6 +45,7 @@ local function entry(_, job)
   local args = job.args or {}
   local action = args[1]
   if action == "theme-refresh" then refresh_theme(); return end
+  if action == "tab-bar-config" then return tab_bar_config:read() end
   local routes = { projects = "projects", githead = "githead", ["toggle-pane"] = "toggle-pane", preview = "preview" }
   if not routes[action] then
     return ya.notify({ title = "dots", content = "Unknown action. Use projects, toggle-pane or preview.", level = "warn", timeout = 3 })

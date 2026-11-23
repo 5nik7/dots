@@ -258,10 +258,18 @@ class Styles:
         self._codes[code] = result
         return result
 
+    def git_guide_foreground(self):
+        palette = self.palette
+        swatch = palette.get('dark_foreground') if isinstance(palette, dict) else None
+        if isinstance(swatch, str) and re.fullmatch('#[0-9a-fA-F]{6}', swatch):
+            return self.sgr_color(swatch)
+        return '90'
+
     def rows(self):
         for key in self.values['icons']:
             if not key.startswith('apps.'): yield '__icon.'+key, self.icon(key, app='cli'), 'style'
         for code in ROLES: yield '__color.'+code, self.code(code), 'style'
+        yield '__color.git_guide', self.git_guide_foreground(), 'style'
         from progress_preferences import ROLES as PROGRESS_ROLES, fields
         for role in PROGRESS_ROLES:
             yield '__color.progress.'+role, self.sgr_fields(fields(self, role)), 'style'

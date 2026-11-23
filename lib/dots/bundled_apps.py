@@ -31,32 +31,78 @@ def run(root, family, arguments):
     return status if status >= 0 else 128 - status
 
 
+def run_git_it(root, args, directories=None):
+    """Use the registered checkout while preserving the caller's directory and streams."""
+    from plugin_paths import submodule_initialized
+    source = Path(root) / 'plugins/git-it'
+    app = source / 'git-it'
+    if os.name != 'nt' and submodule_initialized(source) and not app.is_symlink() and app.is_file() and os.access(app, os.X_OK):
+        os.execve(app, [str(app), *args], dict(os.environ, DOTS=str(root)))
+    options = args[:args.index('--')] if '--' in args else args
+    if any(arg in ('--help', '-h') for arg in options):
+        from cli import help_view
+        from command_metadata import resolve, roots
+        directories = directories or roots(root, [])
+        stem, _, _ = resolve(directories, ['git', 'it', *args])
+        return help_view(directories, stem.split('-'))
+    if os.name == 'nt':
+        print('dots git it requires Bash 5 on Termux, Linux or WSL.', file=sys.stderr)
+    else:
+        print('dots git it requires the registered git-it plugin. Run dots files install --with-source git-it to initialize it.', file=sys.stderr)
+    return 3
+
+
 def complete(root, words, *, display_types=False):
     """Use generated metadata only; completion never launches an application."""
     from completion_records import candidate_record
-    if not words or words[0] not in FAMILIES:
+    if not words:
         return 0
-    rows = json.loads((Path(root)/'lib/dots/metadata/bundled-apps.json').read_text())
     family, *tail = words
+    if family == 'git-it':
+        from command_metadata import read
+        directory = Path(root)/'bin'
+        paths = [directory/'dots-git-it', *directory.glob('dots-git-it-*')]
+        rows = {path.name[5:]: read(path) for path in paths if path.is_file()}
+    elif family in FAMILIES:
+        rows = json.loads((Path(root)/'lib/dots/metadata/bundled-apps.json').read_text())
+    else:
+        return 0
     current = tail.pop() if tail else ''
     stem = family
     positionals = []
     expected = None
     literal = False
-    for word in tail:
+    directory = '.'
+    previous_option = ''
+    for index, word in enumerate(tail):
         if expected:
+            if previous_option in ('-C', '--directory'):
+                directory = word
             expected = None
             continue
         if word == '--':
             literal = True
             continue
-        option = next((r for r in rows[stem]['option'] if word in r[:2]), None)
+        if not literal and stem == 'git-it' and word in ('-s', '--status', '--sync'):
+            stem += '-sync' if word == '--sync' else '-status'
+            continue
+        flag, separator, value = word.partition('=')
+        option = next((r for r in rows[stem]['option'] if flag in r[:2]), None)
         if not literal and option:
-            if option[2] != 'flag': expected = option[2]
+            previous_option = flag
+            if flag in ('-C', '--directory') and separator: directory = value
+            if option[2] != 'flag' and not separator: expected = option[2]
         elif not literal and word.startswith('-'):
             continue
         elif not literal and not positionals and stem+'-'+word in rows:
             stem += '-'+word
+            if stem == 'git-it-submodule':
+                command = [sys.executable, '-B', str(Path(root)/'lib/dots/git/submodule.py'), '--complete',
+                           '-C', directory, *tail[index+1:], current]
+                env = dict(os.environ, _DOTS_COMPLETION_DISPLAY_TYPES='1' if display_types else '0')
+                result = subprocess.run(command, env=env, stdout=subprocess.PIPE, text=True)
+                sys.stdout.write(result.stdout)
+                return result.returncode
         else:
             positionals.append(word)
     suggestions = []
@@ -66,7 +112,12 @@ def complete(root, words, *, display_types=False):
     def values(kind, prefix=''):
         if kind.startswith('choice:'):
             for value in kind[7:].split(','): add(prefix+value)
-        elif kind in ('file', 'directory'): suggestions.append((kind, '', ''))
+        elif kind in ('file', 'directory'): suggestions.append((kind, prefix, ''))
+        elif kind == 'git-submodule':
+            result = subprocess.run([sys.executable, '-B', str(Path(root)/'lib/dots/git/inspection.py'),
+                                     '_complete', '-C', directory], capture_output=True, text=True)
+            if result.returncode == 0:
+                for path in result.stdout.splitlines(): add(path, 'Registered submodule')
     row = rows[stem]
     if expected:
         values(expected)
@@ -92,5 +143,7 @@ def complete(root, words, *, display_types=False):
 
 
 if __name__ == '__main__':
+    if sys.argv[1:2] == ['--run-git-it']:
+        sys.exit(run_git_it(ROOT, sys.argv[2:]))
     from completion_records import requested
     sys.exit(complete(ROOT, sys.argv[1:], display_types=requested()))

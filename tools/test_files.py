@@ -22,6 +22,30 @@ spec.loader.exec_module(migration)
 
 
 class Files(unittest.TestCase):
+    def test_large_journal_is_readable_and_still_blocks_unfinished_work(self):
+        from transactions import Store
+        store = Store(self.root/'state')
+        identity = 'a' * 32
+        folder = store.root/identity
+        folder.mkdir(parents=True)
+        existing = dict(schema=1, id=identity, action='fonts-update', status='recovery-required',
+                        created='2026-01-01', guards={}, operations=[{'text': 'x' * (4 * 1024 * 1024)}])
+        store.save(existing)
+        journal = folder/'journal.json'
+        with self.assertRaisesRegex(ValueError, 'invalid catalog'):
+            catalog.read_json(journal)
+        self.assertEqual(store.load(identity)['status'], 'recovery-required')
+        target = self.root/'page.md'
+        operation = [dict(path=str(target), text='page')]
+        with self.assertRaisesRegex(ValueError, 'unfinished transaction.*' + identity):
+            store.apply('wiki-build', operation, {str(target): None})
+        self.assertFalse(target.exists())
+        existing['status'] = 'complete'
+        store.save(existing)
+        self.assertEqual([r['id'] for r in store.records()], [identity])
+        store.apply('wiki-build', operation, {str(target): None})
+        self.assertEqual(target.read_text(), 'page')
+
     def test_termux_prefix_target_resolution_and_boundaries(self):
         from mappings import target_spec
         prefix = self.root / 'prefix space ü' / 'usr'

@@ -16,7 +16,7 @@ view_resolve() {
         [[ $terminal_columns =~ ^[1-9][0-9]*$ ]] && COLUMNS=$terminal_columns
     fi
     if [[ ${GIT_VIEW_EXPLICIT:-} ]]; then GIT_VIEW=$GIT_VIEW_EXPLICIT
-    elif [[ -t 1 || ${DOTS_MENU_CAPTURE:-} == 1 ]]; then GIT_VIEW=${_DOTS_GIT_VIEW:-default}; fi
+    elif [[ -t 1 || ${DOTS_MENU_CAPTURE:-} == 1 || ${DOTS_ICONS:-} == always || ${DOTS_COLOR:-} == always ]]; then GIT_VIEW=${_DOTS_GIT_VIEW:-default}; fi
 }
 view_file_label() {
     local xy=$1 view=${2:-$GIT_VIEW} marker state where index
@@ -44,14 +44,38 @@ view_file_icon() {
     # Match git_output.file_icon_role; stage affects the label/color, not type.
     case $1 in
         DD|AU|UD|UA|DU|AA|*U*) role=conflict; fallback='' ;;
-        '??') role=untracked; fallback='' ;; '!!') role=ignored; fallback='' ;;
-        *D*) role=deleted; fallback='󰆴' ;; *R*) role=renamed; fallback='' ;;
-        *C*) role=copied; fallback='' ;; *A*) role=added; fallback='󰐕' ;;
+        '??') role=untracked; fallback='' ;; '!!') role=ignored; fallback='' ;;
+        *D*) role=deleted; fallback='' ;; *R*) role=renamed; fallback='' ;;
+        *C*) role=copied; fallback='' ;; *A*) role=added; fallback='' ;;
         *T*) role=type_changed; fallback='󰑓' ;; *M*) role=modified; fallback='' ;;
         *) role=selected; fallback='' ;;
     esac
     dots::icon "git.status.$role" "$fallback"
 }
+# Git styles can include attributes and a background. Structural branches use
+# only the foreground of the complete XY group, including indexed/RGB colors.
+view_foreground() {
+    local style=${1#$'\e['} value part='' i width
+    local -a params=()
+    REPLY=''
+    [[ $1 ]] || return 0
+    IFS=';' read -ra params <<< "${style%m}"
+    for ((i=0; i<${#params[@]}; i++)); do
+        value=${params[i]}
+        case $value in
+            0|39) part=39 ;;
+            3[0-7]|9[0-7]) part=$value ;;
+            38|48|58)
+                case ${params[i+1]-} in 2) width=5 ;; 5) width=3 ;; *) continue ;; esac
+                if [[ $value == 38 ]] && ((i+width<=${#params[@]})); then
+                    local IFS=';'; part="${params[*]:i:width}"
+                fi
+                ((i+=width-1)) ;;
+        esac
+    done
+    printf -v REPLY '\e[%sm' "${part:-39}"
+}
+
 view_file() {
     local dir=$1 xy=$2 path=$3 old=${4:-} label display actual=$1/$3 code old_actual=''
     local changed=${5:-0} listed=${6:-}
@@ -67,7 +91,25 @@ view_file() {
     file_status_style "$xy"; code=$REPLY
     if [[ $changed == 1 && ( ${xy:0:1} == M || ${xy:0:1} == T ) ]]; then dots::git_style modified; code=$REPLY; fi
     if [[ $listed == list ]]; then
-        dots::resource_row '' "$actual" "$display" '' '' "$code" paths "$old_actual" "$old" list
+        local -a DOTS_RESOURCE_SPANS=()
+        local item shown item_style glyph
+        for item in "$old" "$display"; do
+            [[ $item ]] || continue
+            if [[ $item == "$display" ]]; then
+                [[ ! $old ]] || DOTS_RESOURCE_SPANS+=(' → ' "$DOTS_UI_DIM")
+                dots::resource "$actual" "$display"
+            else dots::resource "$old_actual" "$old"; fi
+            item_style=$DOTS_RESOURCE_STYLE
+            dots::text "$item"; shown=$REPLY; glyph=${DOTS_RESOURCE_TEXT%"$shown"}
+            [[ ! $glyph ]] || DOTS_RESOURCE_SPANS+=("$glyph" "$item_style")
+            dots::_resource_path_spans "$shown" "$item_style"
+        done
+        local VIEW_SPANS_INDENT=2 VIEW_SPANS_CONTINUATION=4 VIEW_WRAP_GUIDE='' group_fg
+        view_foreground "$code"; group_fg=$REPLY
+        [[ ${VIEW_FILE_EDGE:-} != '├' ]] || VIEW_WRAP_GUIDE="$group_fg│$DOTS_UI_RESET "
+        local -a guide=("${VIEW_FILE_EDGE:-└} " "$group_fg")
+        [[ $GIT_VIEW != short ]] || guide+=("[$xy] " "$code")
+        view_spans "${guide[@]}" "${DOTS_RESOURCE_SPANS[@]}"
     elif [[ $GIT_VIEW == short ]]; then
         dots::settings
         local old_width=${_DOTS_FORMATTING[label_width]-} old_gap=${_DOTS_FORMATTING[label_gap]-}
@@ -92,6 +134,8 @@ view_status_files() {
         members[$xy]+="$index "
         counts[$xy]=$((${counts[$xy]:-0}+1))
     done
+    dots::style
+    local final VIEW_FILE_EDGE
     for group in "${groups[@]}"; do
         # Verbose includes XY on every heading, including conflicts/untracked.
         view_file_label "$group" default; label=$REPLY
@@ -111,9 +155,11 @@ view_status_files() {
             view_file_icon "$group"
             [[ ! $REPLY ]] || label="$REPLY $label"
         fi
-        dots::line "$label" "$code" 4 "$columns"
+        dots::line "$label" "$code" 2 "$columns"
         # Membership consists only of integer array indexes, never path text.
+        final=${members[$group]% }; final=${final##* }
         for index in ${members[$group]}; do
+            VIEW_FILE_EDGE='├'; [[ $index != "$final" ]] || VIEW_FILE_EDGE='└'
             view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}" "$changed" list
         done
     done
@@ -121,7 +167,8 @@ view_status_files() {
         local VIEW_SPANS_INDENT=4 VIEW_SPANS_CONTINUATION=12
         view_spans "${spans[@]}"
         for ((index=0;index<${#paths[@]};index++)); do
-            view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}" "$changed"
+            VIEW_FILE_EDGE='├'; ((index+1 != ${#paths[@]})) || VIEW_FILE_EDGE='└'
+            view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}" "$changed" list
         done
     fi
 }
@@ -137,9 +184,12 @@ view_spans() {
         text=$1 code=$2; shift 2
         dots::text "$text"; text=$REPLY
         for ((i=0;i<${#text};i++)); do
-            char=${text:i:1}; size=1; [[ $char == [\ -~] ]] || size=2
+            char=${text:i:1}; size=1; [[ $char == [\ -~│├└] ]] || size=2
             if ((used+size > columns)); then
-                printf '%s\n%*s' "$DOTS_UI_RESET" "$continuation" ''; used=$continuation; active=''
+                if [[ ${VIEW_WRAP_GUIDE:-} ]]; then
+                    printf '%s\n%*s%s' "$DOTS_UI_RESET" "$((continuation-2))" '' "$VIEW_WRAP_GUIDE"
+                else printf '%s\n%*s' "$DOTS_UI_RESET" "$continuation" ''; fi
+                used=$continuation; active=''
             fi
             if [[ $code != "$active" ]]; then printf '%s%s' "$DOTS_UI_RESET" "$code"; active=$code; fi
             printf '%s' "$char"; ((used+=size))

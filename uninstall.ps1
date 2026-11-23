@@ -2,7 +2,7 @@
 param(
     [switch] $DryRun, [switch] $Yes, [switch] $Json,
     [switch] $Interactive, [switch] $NonInteractive, [switch] $NoClear, [switch] $NoLogo,
-    [ValidateSet('core','files','themes','anodize','blastoff','pkgs','packages','fonts','leaf')][string[]] $Component = @(),
+    [ValidateSet('core','files','themes','anodize','blastoff','pkgs','git-it','packages','fonts','leaf')][string[]] $Component = @(),
     [string[]] $Resource = @(),
     [ValidateSet('auto', 'always', 'never')][string] $Color,
     [ValidateSet('auto', 'always', 'never')][string] $Icons,

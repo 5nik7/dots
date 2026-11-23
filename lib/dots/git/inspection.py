@@ -6,10 +6,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import re
 import shutil
 import sys
-from urllib.parse import urlsplit
 
 # This directory is also prepended by the native controller bridge.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -123,8 +121,9 @@ def selection_hash(rows):
 
 
 class Inspection:
-    def __init__(self, base):
+    def __init__(self, base, selected_remote=None):
         self.base = base
+        self.selected_remote = selected_remote
         self.ui = core.Presentation()
         self.owners, self.aliases = set(), {}
         self.ownership = 'unconfigured'
@@ -148,31 +147,13 @@ class Inspection:
             self.owners, self.aliases = set(), {}
 
     def remote(self, path, branch):
-        remote = core.text(path, 'config', '--get', 'branch.' + branch + '.remote', required=False) if branch else ''
-        if not remote or remote == '.':
-            remote = 'origin'
-        url = core.text(path, 'remote', 'get-url', '--', remote, required=False)
-        if not url:
-            return dict(name=None, url=None, host=None, owner=None, owned=None, ownership=self.ownership)
-        safe, host, repo = url.split('?')[0].split('#')[0], '', ''
-        try:
-            if '://' in url:
-                parsed = urlsplit(url)
-                host, repo = parsed.hostname or '', parsed.path
-                authority = parsed.netloc.rsplit('@', 1)[-1]
-                safe = parsed.scheme + '://' + authority + parsed.path
-            elif re.match(r'^(?:[^/@:]+@)?[^/:]+:', url):
-                authority, repo = url.split(':', 1)
-                host = authority.rsplit('@', 1)[-1]
-                safe = host + ':' + repo.split('?')[0].split('#')[0]
-        except ValueError:
-            return dict(name=remote, url=None, host=None, owner=None, owned=None, ownership='unavailable')
-        host = self.aliases.get(host.lower(), host.lower())
-        owner = repo.split('?')[0].split('#')[0].strip('/').rpartition('/')[0] if host else ''
-        if url.lower().startswith('file://'):
-            owner = ''
+        from queries import remote_fields
+        fields = remote_fields(path, branch, self.selected_remote if path == self.base else None, self.aliases)
+        name, url, host = fields['remote'], fields['url'], fields['host']
+        owner = fields['owner'] if host and fields['protocol'] != 'file' else ''
         owned = host + '/' + owner in self.owners if host and owner and self.ownership == 'configured' else None
-        return dict(name=remote, url=safe, host=host or None, owner=owner or None, owned=owned, ownership=self.ownership)
+        return dict(name=name or None, url=url or None, host=host or None, owner=owner or None,
+                    owned=owned, ownership=self.ownership)
 
     def inspect(self, edge):
         row = dict(edge, branch=None, head=None, detached=False, status=edge['availability'],
@@ -375,7 +356,16 @@ class Parser(HelpArgumentParser):
         raise core.UsageError(message)
 
 
-def main(argv=None, info_edge=None):
+def main(argv=None, info_edge=None, report_kind=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ['info']:
+        from queries import is_field_query, main as query
+        if is_field_query(argv[1:]):
+            if info_edge is not None:
+                if info_edge['availability'] != 'available':
+                    raise core.GitError('selected submodule is unavailable')
+                argv.extend(('-C', info_edge['path']))
+            return query(argv)
     parser = Parser(description=__doc__)
     from git_output import GitView, arguments, resolve
     arguments(parser)
@@ -383,6 +373,7 @@ def main(argv=None, info_edge=None):
     parser.add_argument('-C', '--directory', default=os.environ.get('DOTS') or str(core.LIB.parents[1]))
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--full-paths', action='store_true')
+    parser.add_argument('--remote')
     parser.add_argument('--depth', type=positive)
     parser.add_argument('--details', action='store_true')
     parser.add_argument('--dirty', action='store_true')
@@ -400,6 +391,8 @@ def main(argv=None, info_edge=None):
         parser.error('this command does not accept a PATH')
     if args.command != '_select' and args.all_submodules:
         parser.error('--all-submodules requires git submodules publish')
+    if args.remote is not None and args.command != 'info':
+        parser.error('--remote NAME requires info')
     base = context(args.directory)
     if info_edge is not None:
         base = Path(info_edge['path'])
@@ -419,10 +412,10 @@ def main(argv=None, info_edge=None):
                 print('./' + value if value.startswith('-') else value)
         return 0
     core.configure(not args.json)
-    view = Inspection(base)
+    view = Inspection(base, args.remote)
     try: mode = resolve(args, view.ui)
     except ValueError as error: raise core.UsageError(str(error)) from None
-    output = GitView(view.ui, mode, args.full_paths) if mode else None
+    output = GitView(view.ui, mode, args.full_paths, root=base) if mode else None
     selected = selection(base, args.path)[0] if args.path is not None else None
     with core.sequence('Git inspection', 3 if args.command == 'info' and info_edge is None and not args.no_wiki else 2) as stages:
         with stages.step('Discover submodules'):
@@ -445,7 +438,7 @@ def main(argv=None, info_edge=None):
             root_row.update(availability=info_edge['availability'], reason=info_edge['reason'])
         with stages.step('Inspect repositories') as progress:
             inspected = []
-            inputs = [root_row] if args.command == 'info' else rows
+            inputs = ([root_row, *rows] if output and info_edge is None else [root_row]) if args.command == 'info' else rows
             for i, row in enumerate(inputs):
                 inspected.append(view.inspect(row))
                 progress.update('Inspecting repositories', i + 1, len(inputs))
@@ -471,6 +464,30 @@ def main(argv=None, info_edge=None):
         print(json.dumps(data, ensure_ascii=True))
         return int(not complete)
     ui = view.ui
+    if output:
+        output.forest({row['path']: row.get('parent') for row in inspected})
+        for i, row in enumerate(inspected):
+            if i:
+                output.position(row['path'])
+                output.separator()
+            if args.command == 'info' and i == 0 and (report_kind or info_edge is not None):
+                row = dict(row, kind=report_kind or 'submodule')
+            if args.command in ('info', 'submodules-info'): output.info(row)
+            elif args.command == 'status': output.status(row)
+            else:
+                output.header(row)
+                output.summary(row.get('files', []), label='Changes')
+                if args.details or mode == 'verbose': output.box(row)
+        for companion in companion_rows:
+            ui.emit(ui.paint_guide(output.vertical, output.guide))
+            row = companion.get('repository') or dict(path=companion['path'], status='missing', reason=companion.get('reason'))
+            output.info(dict(row, kind='wiki'))
+        if not inspected and not companion_rows:
+            ui.detail('Result', 'No matching submodule changes.' if args.dirty else 'No registered submodules.')
+        for error in errors: ui.detail('Blocked', error['path'] + ': ' + error['reason'], '91')
+        if args.depth: ui.detail('Depth', f'{args.depth} levels; counts cover this traversal only')
+        if not complete: ui.detail('Result', 'Incomplete; unavailable descendants remain unknown.', '93')
+        return int(not complete)
     ui.heading('Git info' if args.command == 'info' else 'Git submodule info' if args.command == 'submodules-info' else 'Git submodule status' if args.command == 'status' else 'Git submodules')
     if args.command == 'info':
         if output: output.info(inspected[0])

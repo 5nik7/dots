@@ -153,16 +153,36 @@ class Store:
                 # Observers are optional; they cannot change transaction outcomes.
                 pass
 
+    @staticmethod
+    def _read_journal(path):
+        # Store.save writes complete operation lists, which can exceed a catalog's size limit.
+        return read_json(path, max_bytes=None)
+
+    def _journal_paths(self):
+        return self.root.glob('*/journal.json')
+
     @tracked('Reading transaction history')
     def records(self):
-        if not self.root.exists():
-            return []
-        return sorted((read_json(p) for p in self.root.glob('*/journal.json')), key=lambda row: row.get('created', row['id']))
+        return sorted((self._read_journal(path) for path in self._journal_paths()),
+                      key=lambda row: row.get('created', row['id']))
+
+    @tracked('Checking unfinished transactions')
+    def _require_finished(self):
+        pending = []
+        for path in self._journal_paths():
+            record = self._read_journal(path)
+            identity = record['id']
+            if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
+                pending.append((record.get('created', identity), identity))
+            # Release large operation lists before decoding the next journal.
+            del record
+        if pending:
+            raise ValueError('unfinished transaction: run dots files recover ' + min(pending)[1])
 
     def load(self, identity):
         if not identity or any(c not in '0123456789abcdef' for c in identity) or len(identity) != 32:
             raise ValueError('invalid transaction or backup ID')
-        return read_json(self.root / identity / 'journal.json')
+        return self._read_journal(self.root / identity / 'journal.json')
 
     def payload(self, identity, index, phase, entry=None):
         """Resolve a journal payload, including original unsuffixed journals."""
@@ -241,9 +261,7 @@ class Store:
                 if len({spec['name'].casefold() for spec in registrations}) != len(registrations):
                     raise ValueError('duplicate font registration targets')
             with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs, blocking=bool(new_files)):
-                for record in self.records():
-                    if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
-                        raise ValueError('unfinished transaction: run dots files recover ' + record['id'])
+                self._require_finished()
                 for path, expected in guards.items():
                     parents_safe(path)
                     if before_digest(path) != expected:

@@ -2,13 +2,15 @@
 
 **Status: Implemented in Bash and the native Python/PowerShell controller; native Windows runtime and visual acceptance remain pending.**
 
-`dots git` shows static help for `info`, `submodule`, `submodules`, `status`, `publish`, and `sync`. These commands
+`dots git` shows static help for `info`, `path`, `wiki`, `submodule`, `submodules`, `status`, `publish`, and `sync`. These commands
 start at the dots repository regardless of cwd. `-C DIR` / `--directory DIR`
 selects the repository containing another directory, without climbing to its
 outermost parent. Registered submodules are traversed independently of the file catalog and its
 platform/private exclusions. A declared wiki is included as a separate associated
 repository; `--no-wiki` excludes it from top-level info/status/sync/publish. Missing repositories are never
 initialized by inspection or publication.
+
+Use `dots git -s` for status or `dots git status -s` for the short view. The root also accepts `-o/--owner`, `-H/--host`, `-r/--repo`, `-p/--protocol`, and `-R/--url` as scalar queries. Add `--https` to project a supported SSH fetch URL to HTTPS. `--remote NAME` selects the inspection remote. `dots git path` prints the repository root and supports the same `--get`, `--format` and `--list-fields` queries as git-it.
 
 ## Output views
 
@@ -22,15 +24,24 @@ Terminal reports use `apps.git.view`, initially `default`. Select a view for one
 
 Default and verbose status group matching full index/worktree states within each repository, keeping first-seen group order and file order inside each group. For example:
 
+
 ```text
-Git status
-   dots  main  modified  0 ahead / 0 behind (cached)
-     unstaged modified (2)
-       .dots-wiki.json
-       Command-reference.md
+󰊤 dots main 󱦲1󱦳2
+│┌───────────────────────┐
+││ Host      github.com  │
+││ Protocol  ssh         │
+││ Remote    origin      │
+││ Upstream  origin/main │
+││ Owner     5nik7       │
+││ Root      ~/dots      │
+│└───────────────────────┘
+│  unstaged modified (1)
+│ └  .dots/sources.json
+├  git-it main
+󱔘 dots.wiki master
 ```
 
-Each level adds two spaces: repository rows start at two, status headings at four, and files and wrapped continuation lines at six. A heading icon identifies the change type and shares its status color. Configure it with `icons.git.status.*`; [status icon settings](configuration.md#git-status-icons) lists defaults and examples. Disabled icons or an empty glyph leave the label at the same indentation without an extra separator. Combined states such as `staged modified + unstaged modified` remain a single heading. When types differ, the icon follows conflict, deleted, renamed, copied, added, type changed, then modified precedence; the full label always remains visible. Counts are files in that complete state within the current repository; a combined staged/unstaged state or rename pair counts once. A changed submodule entry counts once in its parent, with child files counted separately in the child repository. Verbose headings include XY, for example ` [ M] unstaged modified (2)`, with files nested beneath. Short retains individual XY rows beneath its compact count summary. Clean repositories omit empty groups, and unavailable inspection does not imply zero changes. This layout also applies to submodule/Wiki status and the mock Git gallery.
+The default info and status reports show the root metadata box. Repository headers show the branch or detached commit and nonzero cached tracking counts. Configured file colors and icons identify changed paths. A heading icon identifies the change type and shares its status color. Configure it with `icons.git.status.*`; [status icon settings](configuration.md#git-status-icons) lists defaults and examples. Disabled icons or an empty glyph leave the label at the same indentation without an extra separator. Combined states such as `staged modified + unstaged modified` remain a single heading. When types differ, the icon follows conflict, deleted, renamed, copied, added, type changed, then modified precedence; the full label always remains visible. Counts are files in that complete state within the current repository; a combined staged/unstaged state or rename pair counts once. A changed submodule entry counts once in its parent, with child files counted separately in the child repository. Verbose headings include XY, for example ` [ M] unstaged modified (2)`, with files nested beneath. Short retains individual XY rows beneath its compact count summary. Clean repositories omit empty groups, and unavailable inspection does not imply zero changes. This layout also applies to submodule/Wiki status and the mock Git gallery.
 
 Info and submodule trees keep their inspection structure and show the same per-state counts in compact change summaries, without file lists. Publish reviews selected paths once under counted headings (or a short summary and XY rows), then reports phases and outcomes; counts cover only selected paths, package-manifest notes remain visible, and prospective child-pointer staging stays explicit. Sync groups paths changed between the actual before/after commits after an update, using change-kind headings such as `modified (3)` rather than staging labels. Its dry-run does not invent an incoming file list before fetching. Every view retains blockers and recovery instructions.
 
@@ -125,7 +136,7 @@ recheck mutable inputs and use the compatible `git-it.lock` in each common Git
 directory. Ordinary Git does not honor this lock. Stale locks require manual
 review. Operations are incremental, not atomic transactions: completed work and
 local commits remain after failure. Nothing automatically stashes, resets, cleans,
-rebases, or force-pushes. Standalone git-it remains unchanged and is not required.
+rebases, or force-pushes. The optional `dots git it` route runs the standalone application in the caller’s worktree. See [the plugin guide](plugins.md#git-it) for remote shortcuts, status, and setup.
 
 `--json` emits one undecorated schema-1 object. Status contains `remote_state:
 "cached"`, `complete` and `repositories` with path, branch, status, nullable
@@ -303,10 +314,11 @@ apply. New views and Bash submodule selection require Python 3.9+ in addition to
 Git; named contextual help also requires Python but never queries Git.
 Basic group help remains dependency-light.
 
-Human tree connectors are muted and remain connected through header rows,
-separators, nested entries, wrapped names/status, reasons and `--details` fields.
-Intermediate siblings use `├──`, final siblings use `└──`, and `│` continues only
-while that branch remains open. Icon-disabled human views use ASCII equivalents.
+Outer repository guides and metadata box borders use the theme's
+`dark_foreground`. Each file's `├` or `└` uses its Git status foreground,
+including individual XY rows in the short view. A wrapped path keeps a
+matching inner `│` while another file follows. The final file wraps with a
+blank inner column. These tree guides stay Unicode when icons are disabled.
 Empty trees have no dangling guides; summary rows sit outside the tree. Ordinary
 redirected text retains its established layout.
 
@@ -338,5 +350,7 @@ for verification and remaining native acceptance.
 ## Associated wiki repository
 
 `dots git wiki` defaults to wiki info; `info`, `status`, `sync` and `publish` select only the associated checkout. Ordinary top-level Git operations include it when declared, with `--no-wiki` as an exclusion. It has no parent gitlink: its branch/upstream and index remain independent. Missing checkouts are visibly skipped; `dots wiki init` is the explicit acquisition route. Submodule-only routes retain their existing scopes.
+
+For a repository without a declaration, inspection recognizes a local sibling named `<worktree>.wiki` when its remote identifies the same host, namespace and Wiki repository. `wiki sync` and `wiki publish` explicitly select this sibling. Top-level sync and publish only include a declared Wiki. An unrelated sibling is ignored.
 
 Source/submodule synchronization precedes wiki synchronization; source publication precedes dependent wiki publication. A source failure blocks that dependent operation. Publication checks the selected index (or explicit `--all` working-tree content) against generated documentation for the selected/published source tree, and never builds or stages pages automatically. Wiki-only publication requires published source inputs. See [wiki commands](wiki.md) for generation, provenance, recovery and maintenance.

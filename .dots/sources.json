@@ -89,6 +89,16 @@
       ]
     },
     {
+      "id": "git-it",
+      "path": "plugins/git-it",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "roots": []
+    },
+    {
       "id": "secrets",
       "path": "secrets",
       "platforms": [

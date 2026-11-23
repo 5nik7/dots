@@ -592,6 +592,13 @@ def main(argv=None):
     is_setting = group=='settings' or (args.key or '').startswith('DOTS_')
     if args.defaults and args.action in ('get','set','unset') and not (is_style or is_control or is_setting):
         parser.error('--defaults supports colors, icons, formatting, apps and settings')
+    if args.action == 'get' and is_control and (args.key == 'apps.yazi.tab_bar' or args.key.startswith('apps.yazi.tab_bar.')):
+        # The managed Yazi setup only needs typed preferences at startup.
+        from config_values import Controls
+        resolved = Controls(root, selected, defaults=args.defaults).resolve(args.key)
+        result['path'] = resolved['source'] or str((root/'default' if args.defaults else Path(layer['root']))/'config.json')
+        print_value(result, args.key, resolved['value'], args.json)
+        return 0
     if args.action == 'path':
         if not args.key or is_control or is_setting:
             from preference_files import appearance_file

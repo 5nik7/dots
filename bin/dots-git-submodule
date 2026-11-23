@@ -4,5 +4,8 @@
 # dots:option=--directory|-C|directory|Initial repository directory
 # dots:example=dots git submodule nvim info
 # dots:example=dots git submodule 5ui7e status
+# dots:option=--color||choice:auto,always,never|Select terminal colors
+# dots:option=--no-color||flag|Disable terminal colors
+# dots:option=--no-progress||flag|Disable terminal progress
 GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
 exec python3 -B "$GIT_LIB/submodule.py" "$@"

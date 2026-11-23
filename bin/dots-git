@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
 # dots:summary=Inspect, publish and synchronize Git repositories recursively
-# dots:usage=[SUBCOMMAND]
+# dots:usage=[SUBCOMMAND] [OPTIONS]
+# dots:option=--directory|-C|directory|Select the target directory
+# dots:option=--status|-s|flag|Show recursive status
+# dots:option=--sync||flag|Synchronize the repository tree
+# dots:option=--remote||string|Select the inspection remote
+# dots:option=--icon|-i|flag|Print the host icon
+# dots:option=--owner|-o|flag|Print the owner or namespace
+# dots:option=--host|-H|flag|Print the host
+# dots:option=--repo|-r|flag|Print the repository name
+# dots:option=--protocol|-p|flag|Print the remote protocol
+# dots:option=--url|-R|flag|Print the sanitized fetch URL
+# dots:option=--https||flag|Print the selected remote as HTTPS
+# dots:option=--get||choice:root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule|Print one field
+# dots:option=--format|-f|string|Render a field format
+# dots:option=--list-fields||flag|List fields
+# dots:option=--no-newline|-n|flag|Suppress the final newline
+# dots:option=--color||choice:auto,always,never|Select terminal colors
+# dots:option=--no-color||flag|Disable terminal colors
+# dots:option=--no-progress||flag|Disable terminal progress
+# dots:option=--outermost||flag|Start at the outermost verified parent
+if (($#)); then exec python3 -B "${BASH_SOURCE[0]%/*}/../lib/dots/git/front.py" bash "$@"; fi
 exec "${BASH_SOURCE[0]%/*}/dots" help git

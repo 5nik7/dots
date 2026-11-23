@@ -90,6 +90,26 @@ class Fonts(unittest.TestCase):
             identity,version=ops.import_files(plan,self.source,tmp);plan.finish();result=plan.apply('import')
         return identity,version,result
 
+    def test_nf_shim_forwards_exact_icons_contract(self):
+        cache=self.library().catalog_path;cache.parent.mkdir(parents=True)
+        rows=[dict(name='fixture', glyph='\ue000', codepoint='U+E000', collection='fixture')]
+        cache.write_text(json.dumps(dict(schema=1, families={}, glyph_version='v', glyphs={'v':rows})))
+        if os.name=='nt':
+            engine=os.environ.get('DOTS_TEST_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell')
+            prefix=[engine,'-NoProfile','-File']
+            suffix='.ps1'
+        else:
+            prefix=[];suffix=''
+        def call(name,*words):
+            return subprocess.run([*prefix,str(self.fixture_root/'bin'/(name+suffix)),*words],
+                                  capture_output=True,timeout=15)
+        for args in (('--help',),('--json','--color','always'),('fixture','--format','glyph'),
+                     ('--print',),('missing','--format','glyph'),('--bad-option',)):
+            expected=call('dots','fonts','icons',*args);actual=call('nf',*args)
+            self.assertEqual((actual.returncode,actual.stdout,actual.stderr),
+                             (expected.returncode,expected.stdout,expected.stderr),args)
+        self.assertEqual(call('nf','fixture','--format','glyph').stdout,'\ue000'.encode())
+
     def test_readonly_cli_modes_and_frontend_parity(self):
         for argv in (('list','--json'),('search','--json'),('current','--json'),('update','--dry-run','--json')):
             first=self.execute(*argv).stdout
@@ -286,6 +306,12 @@ class Fonts(unittest.TestCase):
         self.assertIn(identity,result.stdout)
         result=subprocess.run([*command,'set',identity,'--face',''],capture_output=True,text=True,env=os.environ.copy())
         self.assertIn('-Fixture Regular.ttf',result.stdout)
+        for shell in ('bash','zsh','fish'):
+            args=[str(self.fixture_root/'bin/dots'),'__complete',shell]
+            nf=subprocess.check_output([*args,'2','--','nf','--format',''])
+            icons=subprocess.check_output([*args,'4','--','dots','fonts','icons','--format',''])
+            self.assertEqual(nf,icons)
+            self.assertIn(b'candidate\tglyph\t',nf)
         self.assertEqual(digest(self.library().path),before)
 
     def test_google_selective_download_and_two_nerd_archives(self):

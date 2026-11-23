@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# dots:summary=Fast-forward the repository and synchronize submodules
+# dots:usage=[OPTIONS]
+# dots:option=--directory|-C|directory|Select the working directory
+# dots:option=--config||file|Read a git-it configuration file
+# dots:option=--no-config||flag|Ignore git-it configuration
+# dots:option=--color||choice:auto,always,never|Select the color policy
+# dots:option=--no-color||flag|Disable color
+# dots:option=--verbose|-v|flag|Show additional repository details
+# dots:option=--no-progress||flag|Disable progress indicators
+# dots:option=--json||flag|Print structured output
+# dots:option=--help|-h|flag|Show help
+# dots:option=--version|-V|flag|Show the version
+# dots:option=--completion||choice:bash,zsh,fish|Print standalone shell completion
+# dots:option=--outermost||flag|Start at the outermost verified parent
+# dots:option=--dry-run||flag|Preview with local information
+# dots:option=--remote||flag|Advance configured submodule branches
+# dots:option=--init||flag|Initialize missing registered submodules
+# dots:option=--no-wiki||flag|Exclude the associated wiki
+# dots:option=--view||choice:default,short,verbose|Select the human output view
+# dots:option=--short|-s|flag|Show compact output
+exec "${BASH_SOURCE[0]%/*}/dots-git-it" sync "$@"

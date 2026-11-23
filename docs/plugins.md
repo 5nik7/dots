@@ -1,6 +1,43 @@
 # Application plugins
 
-Anodize, Blastoff and pkgs are first-party application plugins in `plugins/`. They install together with Dots and use the same standalone and Dots-prefixed commands. Plugins are source modules within the checkout, not separately downloaded distributions or an enable/disable system. This directory is distinct from theme hooks and editor plugins.
+Anodize, Blastoff and pkgs ship as source in the Dots checkout. The optional
+git-it application has its own upstream repository and a pinned submodule in
+`plugins/git-it`. Each application can run through a Dots command.
+
+## git-it
+
+Run `dots git it` from a worktree on Termux, Linux, or WSL. This invokes the
+pinned Bash 5 application with the caller’s directory, Git configuration,
+arguments, streams and exit status. For example:
+
+```sh
+dots git it
+dots git it -R --https
+dots git it -o
+dots git it -s --verbose
+dots git it -C ~/repos/project status --json
+```
+
+`dots git it` and `git-it` show usage in the caller’s worktree. Outside a worktree they print a warning and usage to stderr and exit 3. Use `git-it --help` anywhere. Run `git-it info` for the repository summary or `git-it -s` for its status tree. The same Git commands under `dots git` default to the Dots checkout. Zsh tabs use the active Dots completion colors and group headings when the Dots shell integration is loaded.
+The plugin reads git-it’s own owner rules and uses the active Dots profile for
+human presentation. `dots help git it` and contextual completion read local
+metadata even in a checkout without the submodule. Native Windows PowerShell
+provides discovery and help. Running the plugin requires Bash on a supported
+platform.
+
+Normal setup includes git-it when initialized and selected by the active setup
+defaults. On a fresh checkout, use `dots files install --with-source git-it
+--component git-it --dry-run` to preview acquisition. Remove `--dry-run` to
+review the recorded commit and install its launcher, manual and Bash, Zsh and
+Fish completions. The source step initializes only this submodule. To install
+from an already initialized checkout, use `dots files install --component
+git-it`. The executable in `~/.local/bin`, its manual and three completion files link directly into `$DOTS/plugins/git-it`. Edits there are live for both command names.
+
+On Termux, a previous standalone installation in `$PREFIX` can take precedence on `PATH`. Install the Dots component first and check `~/.local/bin/git-it --help`. From the git-it source checkout, preview the old installation’s removal with `bash uninstall.sh --prefix "$PREFIX" --dry-run`, then run the same command without `--dry-run` to remove its checksum-matched files. In a fresh shell, `command -v git-it` and `man -w git-it` identify the active command and manual.
+
+`dots files uninstall --component git-it` removes the Dots-managed assets
+and retains the source checkout. The upstream standalone installer also works
+independently of Dots.
 
 ## Ownership and portability
 

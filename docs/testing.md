@@ -55,6 +55,8 @@ extensionless completion loader. Missing engines are pending, not passes. Linux
 and WSL runs use their own shell syntax and owned roots. Clipboard, network,
 editor/browser launches and visible interactive acceptance remain separate.
 
+`python3 -B tools/test_git_queries.py` exercises the Git root shortcuts, HTTPS conversion, field and path output, status alias, and declared-versus-inferred Wiki selection through the public frontends. `python3 -B tools/test_wiki_git.py` also checks source and Wiki publication against test-owned remotes, including explicit sibling Wiki actions.
+
 `python3 -B tools/test_git_output.py` covers explicit human views, combined file states, configured directory/basename colors, renames, sync before/after paths, publication deduplication, named inspection routes, unchanged JSON, argument conflicts and 40/80/120-column owned PTYs against both Git controllers. Run it alongside the Git safety suites. `tools/test_progress.py` covers configured/explicit progress modes, known/unknown counts, nesting, terminal gates and interruptions; `tools/test_config_values.py` covers preference validation/reset and activation. These Termux fixtures do not establish native Windows terminal behavior.
 
 `python3 -B -m unittest discover -s plugins/pkgs/tests -p test_progress_counts.py` verifies equal manager shares, nested command budgets, activity-only native byte/package measurements, partial failures, cancellation, display modes, prompt suspension and data gates using fake managers. Font provider and workflow suites cover optional download totals and deduplicated batch counts in owned fixtures. These checks never upgrade host packages or download real fonts.
@@ -104,8 +106,13 @@ With `tools/requirements-fonts.txt` available in the test Python environment, ru
 archive/digest refusal, lifecycle drift, pins, retained versions, configuration
 preservation, managed link/copy ownership and registry rollback.
 `python3 -B tools/test_fonts_browser.py` uses private tmux clients for 40/80/120
-column layouts and copy/print/literal insertion, without real clipboard/font
-changes. Optional ImageMagick/Chafa checks render a synthetic font.
+column layouts, long-name glyph visibility and ordered copy/print/insertion.
+It checks repeated Alt-I from foreground `nf`, retry after a clipboard failure
+and large literal batches on a private server. Zsh tests in
+`tools/test_config_completion.py` and `tools/test_completion_colors.py` check
+argument replacement, cancellation and startup with real fzf-tab. Clipboard
+providers and font caches are test-owned. Optional ImageMagick/Chafa checks
+render a synthetic font.
 `python3 -B tools/generate_fonts_commands.py --check` checks generated adapters.
 Run file-platform checks before affected transaction/installation suites, then
 Bash/native controller, completion and launcher tests sequentially. Native Windows
@@ -1128,6 +1135,8 @@ roots. Integration checks cover both dispatch surfaces and static menu/completio
 Run `python3 -B tools/test_plugin_reports.py -v` for report presentation and capture integration. It covers independent color/icon controls, precedence, plain popup layouts, shared resource styles, width-safe values, unchanged JSON/raw/completion bytes, frontend equivalence, and save success/cancellation using disposable configurations. Package inventories and diagnostics use mocked managers. Native private tmux clients exercise report capture, exact-client ownership and scrolling at 40/80/120 columns. Run the application core suites and affected menu/pager/resource suites alongside it; native Windows PowerShell 5.1/7 and Linux/WSL visual checks remain separate acceptance evidence.
 
 `python3 -B tools/test_app_migration.py` uses synthetic legacy installations to verify preview/apply, constrained receipt paths, guarded content, retained unknown data, rollback, exact baseline restoration, drift and no-op repetition. `tools/test_bundled_apps.py` checks all plugin installation assets and dual application routes; `tools/test_menu_launcher.py` covers the application families. Continue using `tools/verify_anodize.py check` and `tools/test_bundled_app_cores.py` for application behavior. All package backends remain isolated/mocked; live migration verification must use read-only command and asset inspection.
+
+Run `python3 -B tools/test_git_it_plugin.py` for optional submodule acquisition, checkout-relative dispatch, collision handling and installation receipt coverage in a disposable clone. The standalone suite runs from the initialized plugin with `python3 -m unittest discover -s tests -v`. Native Windows execution is outside the plugin’s supported platforms.
 
 ### Codex attention bridge
 

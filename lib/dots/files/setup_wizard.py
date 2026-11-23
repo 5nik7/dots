@@ -61,6 +61,10 @@ def defaults(root, installation, args):
                           else sorted({entry.get('component', component(entry['id']))
                                        for entry in installation.entries.values()}))
     args.component = validate(args.component)
+    if component_defaults and args.action == 'install' and 'git-it' in args.component:
+        from plugin_paths import submodule_initialized
+        if installation.platform == 'windows' or not submodule_initialized(root/'plugins/git-it'):
+            args.component.remove('git-it')
     if args.action == 'uninstall' and installation.receipt.get('font_targets') and 'fonts' not in args.component:
         # Receipt metadata can own a selection even when the app bytes matched.
         if component_defaults:

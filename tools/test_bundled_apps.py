@@ -201,8 +201,10 @@ class BundledApps(unittest.TestCase):
             plan = Installation(self.repo)
             plan.platform = 'windows'
             plan.plan_bundled_apps(self.home)
-            self.assertEqual(len(plan.operations), 3)
-            for app, operation in zip(('anodize', 'blastoff', 'pkgs'), plan.operations):
+            apps = ('anodize', 'blastoff', 'patina', 'pkgs')
+            operations = sorted(plan.operations, key=lambda item: item['path'])
+            self.assertEqual(len(operations), len(apps))
+            for app, operation in zip(apps, operations):
                 self.assertEqual(operation['path'], str(self.home/'.local/bin'/(app+'.ps1')))
                 self.assertIn(app+'.ps1', operation['text'])
                 self.assertNotIn('bash', operation['text'])

@@ -15,7 +15,7 @@ sys.path.insert(0, str(LIB))
 STANDALONE = {
     'dots': (), 'theme': ('theme',), 'anodize': ('anodize',), 'patina': ('anodize', 'patina'),
     'blastoff': ('blastoff',), 'pkgs': ('pkgs',),
-    'todo': ('__todo_standalone',), 'fonts': ('fonts',),
+    'todo': ('__todo_standalone',), 'fonts': ('fonts',), 'nf': ('fonts', 'icons'),
     'bak': ('bak',), 'dots-bak': ('bak',), 'wttr': ('wttr',),
     'cpy': None, 'pst': None,
 }
@@ -33,7 +33,14 @@ def command_names():
 def environment(root, env=None):
     from native_environment import document
     from shell.runtime import paths
+    env = os.environ if env is None else env
     result = document(root, env)
+    exports = result['exports']
+    if exports['DOTS_PLATFORM'] != 'windows' and env.get('HOME'):
+        manuals = Path(env['HOME']) / '.local/share/man'
+        search = exports.get('MANPATH', env.get('MANPATH', ''))
+        if manuals.is_dir() and str(manuals) not in search.split(':'):
+            exports['MANPATH'] = f'{manuals}:{search}'
     result['shell_paths'] = paths(root, env)
     result['completion_commands'] = command_names()
     return result

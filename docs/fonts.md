@@ -262,13 +262,35 @@ Ctrl-C cancels. Optional ImageMagick and Chafa render samples from the actual
 downloaded font; otherwise the preview clearly identifies metadata-only content.
 The glyph preview uses the terminal's current font, which may lack that glyph.
 
-`fonts icons` uses cached release-matched Nerd Fonts glyph metadata. Its default
-index matches a single installed Nerd Fonts version, otherwise the last refreshed
-index; `--version` chooses explicitly. Enter or Alt-Y copies and closes. Alt-I
-inserts a literal glyph into the verified originating tmux pane without sending
-Enter. Alt-P prints the glyph and closes. Outside tmux, use copy or print.
-Clipboard failures remain visible and leave the browser open. No global keybinding
-or shell insertion widget is installed.
+Run `nf` or `dots fonts icons` to search the cached Nerd Fonts glyph index.
+Both accept the same options. The index matches the installed Nerd Fonts version
+when there is a single version, otherwise it uses the last refreshed index.
+Use `--version` to choose one explicitly.
+
+| Picker key | Action |
+|---|---|
+| Tab / Shift-Tab | Toggle the focused glyph and move down / up. Marks survive a change of query. |
+| Enter / Alt-Y | Copy and close. A clipboard failure leaves the marks available for retry. |
+| Alt-I (tmux) | Insert literally into the originating pane without submitting. Keep the query and focus, and clear marks after success. |
+| Alt-P | Print and close. |
+| Esc | Leave the picker and discard pending marks. |
+
+Copy, insert and print use the marked glyphs in **mark order**, joined without
+spaces or a newline. With an empty selection they use the focused glyph.
+The first column stays visible as you search long names. Its foreground inherits
+the theme accent and can be changed with `dots config set colors.apps.fonts.glyph.fg bright_cyan`.
+The terminal font must contain the glyph to render its shape.
+
+With the Dots Zsh fzf-tab integration, type `echo nf` and press Tab immediately
+after `nf` to open glyph search. Search by name, codepoint or collection. Mark
+multiple glyphs with Tab and press Enter to replace the `nf` argument. Esc
+preserves the original command line. This works in the middle of a line and
+outside tmux. A bare `nf` at command position runs the picker when you press Enter.
+
+The completion menu uses your usual fzf-tab frontend, prompt, markers and theme.
+The glyph keeps its Fonts foreground when focused. Generic file previews are
+disabled for glyph rows. Use the `:fzf-tab:complete:nf:icons` Zsh style context
+for appearance overrides specific to this menu.
 
 For scripts, `fonts icons SEARCH --format glyph|name|codepoint` requires one match
 and prints exactly that value without a newline. `--copy`/`--insert` also require

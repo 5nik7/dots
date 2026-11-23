@@ -15,5 +15,9 @@
 # dots:option=--message|-m|string|Commit message
 # dots:option=--config||file|Owner configuration file
 # dots:option=--no-config||flag|Ignore owner configuration
+# dots:option=--color||choice:auto,always,never|Select terminal colors
+# dots:option=--no-color||flag|Disable terminal colors
+# dots:option=--no-progress||flag|Disable terminal progress
+# dots:option=--outermost||flag|Start at the outermost verified parent
 GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
 exec bash "$GIT_LIB/main.bash" publish "$@"

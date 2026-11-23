@@ -69,6 +69,7 @@ local builtin={peek=function() builtin_calls[#builtin_calls+1]='image' end}
 local saved_require=require
 require=function(name)
  if name=='.preview-config' then return cfg elseif name=='.preview-process' then return proc
+ elseif name=='.process' then return dofile('process.lua')
  elseif name=='code' then return code elseif name=='image' or name=='svg' or name=='magick' then return builtin end
  return saved_require(name)
 end

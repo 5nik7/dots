@@ -145,6 +145,9 @@ def complete(root, directories, words):
         from fonts.completion import complete as fonts_complete
         fonts_complete([*previous[1:], current])
         return 0
+    if previous[:2] == ['git', 'it']:
+        from bundled_apps import complete as bundled_complete
+        return bundled_complete(root, ['git-it', *previous[2:], current])
     if previous[:1] in (['blastoff'], ['pkgs']):
         from bundled_apps import complete as bundled_complete
         return bundled_complete(root, [*previous, current])
@@ -357,6 +360,7 @@ def complete(root, directories, words):
 
 
 def main(argv=None):
+    git_options_parsed = os.environ.pop('DOTS_GIT_OPTIONS_PARSED', None)
     args = list(sys.argv[1:] if argv is None else argv)
     root = Path(os.environ.get('DOTS') or LIB.parents[1]).resolve()
     extras = []
@@ -435,6 +439,13 @@ def main(argv=None):
     stem, path, count = resolve(directories, args)
     if not path:
         return help_view(directories, args)
+    if (stem.startswith('git-') and stem != 'git-it' and not stem.startswith('git-it-')
+            and git_options_parsed != '1' and path.parent.resolve() == (root/'bin').resolve()
+            and any(x.split('=', 1)[0] in ('--color', '--no-color', '--no-progress', '--outermost') for x in args[1:])):
+        return controller('git/front.py', ['native', *args[1:]])
+    if (stem == 'git-it' or stem.startswith('git-it-')) and path.parent.resolve() == (root/'bin').resolve():
+        from bundled_apps import run_git_it
+        return run_git_it(root, args[2:], directories)
     if stem.split('-')[0] in ('blastoff', 'pkgs') and path.parent.resolve() == (root / 'bin').resolve():
         from bundled_apps import run
         return run(root, args[0], args[1:])
@@ -464,6 +475,8 @@ def main(argv=None):
         else: raise ValueError('extension has no native Windows entry point: ' + stem)
         return subprocess.call([*command, *rest])
     parts = stem.split('-')
+    if parts == ['git'] and rest:
+        return controller('git/front.py', ['native', *rest])
     if parts in (['git'], ['theme', 'plugins']):
         return help_view(directories, parts)
     if parts[0] == 'files':
@@ -501,6 +514,8 @@ def main(argv=None):
     if parts[0] == 'debug': return controller('debug_cli.py', [*parts[1:], *rest])
     if parts[0] == 'env': return controller('environment.py', rest)
     if parts[0] == 'git':
+        if parts[1:] == ['path']:
+            return controller('git/queries.py', ['path', *rest])
         if parts[1:] == ['submodule']:
             return controller('git/submodule.py', ['--frontend=native', *rest])
         if parts[1:] in (['info'], ['submodules'], ['submodules', 'status'], ['submodules', 'info']):

@@ -26,7 +26,7 @@ class CompletionColors(unittest.TestCase):
     def setUp(self):
         fixtures.ProfileConfig.setUp(self)
         shutil.copytree(ROOT/'default', self.root/'default')
-        for name in ('dots', 'todo', 'theme', 'fonts', 'bak'):
+        for name in ('dots', 'todo', 'theme', 'fonts', 'nf', 'bak'):
             source = ROOT/'bin'/name
             if source.exists(): shutil.copy2(source, self.root/'bin'/name)
         for source in ROOT.glob('bin/dots-*'):
@@ -80,7 +80,7 @@ class CompletionColors(unittest.TestCase):
 
     def test_native_style_scope_tracks_registered_providers_and_preserves_user_styles(self):
         result=self.zsh(r'''
-typeset -gA _comps=(dots _dots shortcut _dots anodize _anodize git _git foreign _foreign)
+typeset -gA _comps=(dots _dots shortcut _dots anodize _anodize git-it _git-it git _git foreign _foreign)
 zstyle ':completion:*' list-colors 'di=35' 'fi=31'
 zstyle ':completion:*:descriptions' format 'Native %d'
 zstyle ':completion:*' group-name native
@@ -93,6 +93,8 @@ zstyle -s ':completion::complete:foreign:options' group-name result
 print -r -- "GROUP:$result"
 zstyle -a ':completion::complete:shortcut:commands' list-colors result
 print -r -- "OWNED:${(j:,:)result}"
+zstyle -a ':completion::complete:git-it:options' list-colors result
+print -r -- "PLUGIN:${(j:,:)result}"
 _comps[shortcut]=_foreign
 _dots_completion_native_styles
 zstyle -a ':completion::complete:shortcut:commands' list-colors result
@@ -105,6 +107,7 @@ print -r -- "HOOKS:${#hooks}"
         self.assertIn(b'FORMAT:Native %d',result.stdout)
         self.assertIn(b'GROUP:native',result.stdout)
         self.assertRegex(result.stdout,rb'OWNED:[^\n]*\(commands')
+        self.assertRegex(result.stdout,rb'PLUGIN:[^\n]*\(options')
         self.assertIn(b'REPLACED:di=35,fi=31',result.stdout)
         self.assertIn(b'HOOKS:1',result.stdout)
         self.assertEqual(result.stderr,b'')
@@ -312,6 +315,41 @@ print -r -- "REMOVED:${_DOTS_COMPLETION_STYLES[command]}"
         finally:terminal.close()
 
     @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
+    def test_git_it_tab_colors_and_literal_insertion(self):
+        project = Path(os.environ.get('DOTS_TEST_GIT_IT_ROOT', ROOT/'plugins/git-it'))
+        provider = project/'completion/zsh'
+        if not provider.is_file():
+            self.skipTest('git-it submodule unavailable')
+        completions = self.home/'site-functions'
+        completions.mkdir()
+        (completions/'_git-it').symlink_to(provider)
+        (self.root/'bin/git-it').symlink_to(project/'git-it')
+        setup = 'fpath=(' + shlex.quote(str(completions)) + ' $fpath); autoload -Uz _git-it; compdef _git-it git-it; alias gi=git-it'
+        self.run_config('set', 'colors.apps.completion.command.fg', '#123456')
+        terminal = self.terminal()
+        try:
+            self.command(terminal, setup)
+            for typed, query, expected, sgr in (
+                    ('git-it ', "'publish", 'git-it publish ', b'38;2;18;52;86'),
+                    ('git-it --', "'--protocol", 'git-it --protocol ', b'33'),
+                    ('git-it wiki ', "'publish", 'git-it wiki publish ', b'38;2;18;52;86'),
+                    ('git-it submodule demo publish --', "'--yes", 'git-it submodule demo publish --yes ', b'33'),
+                    ('gi --color ', "'always", 'gi --color always ', b'32')):
+                terminal.send(typed+'\t')
+                terminal.wait(b'\x1b[?1000h')
+                self.drain(terminal)
+                self.assertIn(b'\x1b[0;'+sgr+b'm', (self.home/'menu-data').read_bytes(), typed)
+                self.assertIn(b'--nth=1\0', (self.home/'menu-args').read_bytes())
+                if typed == 'git-it ':
+                    self.assertIn(b'registered descendants', (self.home/'menu-data').read_bytes())
+                    self.assertEqual(self.filtered_menu('descendants').returncode, 1)
+                self.finish(terminal, query, expected)
+                terminal.send('\x03')
+                self.drain(terminal)
+        finally:
+            terminal.close()
+
+    @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
     def test_adapter_installs_once_and_reconnects(self):
         result=self.zsh(r'''
 print -r -- "INSTALLED:${+functions[_dots_completion_original_capture]}"
@@ -356,6 +394,11 @@ zstyle -s ':completion:*' group-name value || exit 10
         for source in (ROOT/'bin').glob('dots-*'):
             if source.is_file(): shutil.copy2(source,repo/'bin'/source.name)
         self.home=Path(env['HOME'])
+        cache=Path(env.get('XDG_CACHE_HOME',self.home/'.cache'))/'dots/fonts/catalog.json'
+        cache.parent.mkdir(parents=True,exist_ok=True)
+        rows=[dict(name=name,collection='fixture',codepoint=f'U+{point:X}',glyph=chr(point))
+              for name,point in [('battery',0xE001),('clock',0xE002)]]
+        cache.write_text(json.dumps(dict(schema=1,families={},glyph_version='v',glyphs={'v':rows})))
         rc=repo/'shells/zsh/zshrc'
         rc.write_text(rc.read_text()+r'''
 capture_fzf() { command cat >| "$HOME/menu-data"; printf '%s\0' "$@" >| "$HOME/menu-args"; command fzf "$@" < "$HOME/menu-data"; }
@@ -403,10 +446,77 @@ add-zle-hook-widget line-init fixture_ready
             # Reload through the real entry point too: Zinit may have already
             # materialized its helpers, and compinit can reconnect widgets.
             self.command(terminal,'source "$DOTS/shells/zsh/zshrc"')
+            start=len(terminal.output)
+            terminal.send('echo nf\t')
+            deadline=time.monotonic()+20
+            while b'Tab: mark' not in terminal.output[start:]:
+                self.assertLess(time.monotonic(),deadline,terminal.output[-1500:])
+                self.drain(terminal,.1)
+            terminal.send('clock');self.drain(terminal,.25)
+            terminal.send('\t\x15battery');self.drain(terminal,.25)
+            terminal.send('\t\r');self.drain(terminal,.3)
+            terminal.send('\x18')
+            self.assertEqual(self.await_buffer(terminal).read_text(),'echo \ue002\ue001')
+            (self.home/'buffer').unlink()
+            terminal.send('\x03');self.drain(terminal)
             terminal.send('dots debug ');self.drain(terminal,.2);menu()
             self.assertIn(b'\x1b[0;34m',(self.home/'menu-data').read_bytes())
             self.finish(terminal,"'startup",'dots debug startup ')
         finally:terminal.close()
+
+    @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
+    def test_nf_tab_inherits_fzf_theme_options_and_frontend(self):
+        cache = Path(self.env['XDG_CACHE_HOME'])/'dots/fonts/catalog.json'
+        cache.parent.mkdir(parents=True)
+        rows = [dict(name=name, collection='test', glyph=chr(point), codepoint=f'U+{point:X}')
+                for name, point in [('battery', 0xE001), ('clock', 0xE002)]]
+        cache.write_text(json.dumps(dict(schema=1, families={}, glyph_version='v', glyphs={'v': rows})))
+        self.run_config('set', 'colors.apps.fonts.glyph.fg', '#bb7733')
+        opts = self.home/'fzf options'
+        opts.write_text('--marker=MM\n--color=marker:#6789ab\n')
+        terminal = self.terminal(COLORTERM='truecolor', DOTS_COLOR='auto', FZF_DEFAULT_OPTS_FILE=str(opts),
+                                 FZF_DEFAULT_OPTS="--prompt='Find icon> ' --pointer=PP "
+                                 "--color=pointer:#123456,fg:regular,fg+:strip:#789abc:bold,bg+:#203040 "
+                                 "--preview='touch \"$HOME/file-preview-ran\"'")
+        try:
+            self.command(terminal, 'source '+shlex.quote(str(ROOT/'shells/zsh/completions.zsh'))+
+                         "; zstyle ':fzf-tab:complete:*:*' fzf-flags --border=rounded --color=prompt:#456789"+
+                         "; zstyle ':fzf-tab:*' fzf-min-height 12")
+            terminal.output.clear()
+            terminal.send('echo nf\t')
+            terminal.wait(b'\x1b[?1000h')
+            self.drain(terminal)
+            data = terminal.output
+            self.assertRegex(data, rb'38;2;69;103;137[;\d]*mFind icon>')
+            self.assertRegex(data, rb'38;2;18;52;86[;\d]*mPP')
+            glyph_color = rb'38;2;187;119;51[;\d]*m'
+            for row in rows:
+                self.assertRegex(data, glyph_color + row['glyph'].encode())
+            self.assertIn(b'48;2;32;48;64', data)
+            args = (self.home/'menu-args').read_bytes().split(b'\0')
+            self.assertIn(b'--border=rounded', args)
+            self.assertIn(b'--height=12', args)
+            terminal.send('\t')
+            self.drain(terminal)
+            self.assertRegex(data, rb'38;2;103;137;171[;\d]*mMM')
+            terminal.send('\t\r')
+            self.drain(terminal)
+            terminal.send('\x18')
+            self.assertEqual(self.await_buffer(terminal).read_text(), 'echo \ue001\ue002')
+            self.assertFalse((self.home/'file-preview-ran').exists())
+            terminal.send('\x03')
+            self.drain(terminal)
+            self.command(terminal, 'export NO_COLOR=1')
+            terminal.output.clear()
+            terminal.send('echo nf\t')
+            terminal.wait(b'clock')
+            self.drain(terminal)
+            self.assertIn(b'Find icon>', terminal.output)
+            self.assertNotIn(b'38;2;', terminal.output)
+            self.assertNotIn(b'48;2;', terminal.output)
+            terminal.send('\x1b')
+        finally:
+            terminal.close()
 
     def test_incompatible_plugin_keeps_original_and_native_unknown_fallback(self):
         code=r'''

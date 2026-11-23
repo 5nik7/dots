@@ -46,7 +46,8 @@ class FontsPresentation(unittest.TestCase):
         out=io.StringIO();render(data or dict(items=[ROW]),out,**kwargs);return out.getvalue()
 
     def test_human_summary_full_provenance_and_width(self):
-        self.configure(formatting=dict(apps=dict(cli=dict(indent=2,label_width='25%',label_gap=2,alignment='right'))))
+        self.configure(apps=dict(fonts=dict(list_details='summary')),
+                       formatting=dict(apps=dict(cli=dict(indent=2,label_width='25%',label_gap=2,alignment='right'))))
         for width in (40,80,120):
             text=self.report(human=True,width=width,action='list')
             self.assertIn('Matches',text);self.assertIn('Faces',text)
@@ -158,6 +159,30 @@ class FontsPresentation(unittest.TestCase):
             self.assertEqual(select('Face',[('-font ü.ttf','Family','Regular')]),'-font ü.ttf')
             self.assertEqual(choose.call_args.args[0].entries[0].description,'')
             self.assertNotIn('compact',choose.call_args.kwargs)
+
+    def test_literal_glyph_column_uses_font_style_with_icons_disabled(self):
+        from files.catalog import Presentation
+        from fonts.glyphs import labels
+        (self.path.parent/'colors.toml').write_text('[apps.fonts.glyph]\nfg="#aabbcc"\n')
+        self.clear()
+        row = dict(name='very-long-name', glyph='\ue000', codepoint='U+E000', collection='fixture')
+        with patch.dict(os.environ, DOTS_ICONS='never', DOTS_COLOR='always'):
+            colored = labels([row], Presentation(terminal=True), styles(), {})[0]
+            self.assertRegex(colored.split('\t')[0], r'38;2;170;187;204m\ue000\x1b\[0m$')
+            self.assertNotIn('170;187;204', colored.split('\t')[1])
+        with patch.dict(os.environ, DOTS_COLOR='never'):
+            plain = labels([row], Presentation(terminal=True), styles(), {})[0]
+            self.assertEqual(plain, ANSI.sub('', colored))
+
+    def test_older_fzf_keeps_leading_glyph_by_disabling_horizontal_scroll(self):
+        from fonts.browser import picker
+        row = dict(name='long-name', glyph='\ue000', codepoint='U+E000')
+        with patch('fonts.browser.rich_fzf_available', return_value=True), \
+                patch('fonts.browser.subprocess.run', return_value=subprocess.CompletedProcess([], 0, b'--popup')), \
+                patch('fonts.browser.RichSelector.fzf', return_value=[0]) as choose:
+            self.assertIs(picker([row], [], {}, None, icons=True), row)
+        self.assertFalse(choose.call_args.kwargs['freeze_left'])
+        self.assertFalse(choose.call_args.kwargs['hscroll'])
 
     def test_preview_renders_at_actual_width_and_can_skip_optional_tools(self):
         from fonts.preview import main

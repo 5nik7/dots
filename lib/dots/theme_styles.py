@@ -34,6 +34,9 @@ def snapshot(palette, root=None, *, styles=None,controls=None):
             if resolved: target['colors'][role] = resolved
         if app:
             target['options']=controls.get('apps',{}).get(app,{})
+            if app == 'yazi':
+                # Dotline reads tab policy from Config when Yazi starts.
+                target['options'] = {k:v for k,v in target['options'].items() if k != 'tab_bar'}
             target['formatting']=controls.get('formatting',{}).get('apps',{}).get(app,{})
     result['config']=controls
     native=result['apps']['nvim']['options']

@@ -118,6 +118,84 @@ class Values(fixtures.ProfileConfig):
         self.assertFalse((self.home/'state/dots/current/theme').is_symlink())
         self.assertFalse((self.home/'state/dots/themes/generations').exists())
 
+    def test_yazi_tab_bar_controls_and_next_launch(self):
+        import io
+        from contextlib import redirect_stdout
+        from config_cli import main
+        from config_menu import Draft, Inventory
+        from config_refresh import affected, effective
+        from config_values import candidates, validate_value
+
+        branch = 'apps.yazi.tab_bar'
+        expected = dict(hide_in_tmux=True, only_with_multiple_tabs=True, labels='auto', width=20)
+        self.assertEqual(json.loads(self.run_config('get', branch, '--json').stdout)['value'], expected)
+        output = io.StringIO()
+        with patch('config_cli.Styles', side_effect=AssertionError('Yazi setup read loaded unrelated styles')), \
+             patch('profile_config.file_rows', side_effect=AssertionError('Yazi setup read inventoried files')), \
+             redirect_stdout(output):
+            self.assertEqual(main(['get', branch, '--json']), 0)
+        self.assertEqual(json.loads(output.getvalue()), dict(schema=1, key=branch, value=expected,
+                         path=str(self.root/'default/config.json'), profile=self.platform))
+        inventory = Inventory(self.root, self.platform)
+        for field, default in expected.items():
+            self.assertEqual(inventory.find(branch + '.' + field).value, default)
+        labels = branch + '.labels'
+        self.assertEqual(candidates(self.root, labels), ['auto', 'name', 'number'])
+        explained = json.loads(self.run_config('explain', labels, '--json').stdout)
+        self.assertEqual((explained['consumer'], explained['activation']), ('yazi', 'next Yazi launch'))
+        self.assertEqual(explained['constraints']['choices'], ['auto', 'name', 'number'])
+        defaults = Controls(self.root).defaults
+        for field, invalid in [('labels', 'full'), ('width', -1), ('width', 4097),
+                               ('width', True), ('hide_in_tmux', 0), ('only_with_multiple_tabs', 'true')]:
+            with self.subTest(field=field, value=invalid), self.assertRaises(ValueError):
+                validate_value(defaults, parts(branch + '.' + field), invalid)
+        for width in (0, 4096):
+            validate_value(defaults, parts(branch + '.width'), width)
+
+        before = effective(self.root)
+        draft = Draft(inventory, inventory.find(labels)).prepare('number')
+        self.assertIn('Next Yazi launch', draft.review())
+        with patch('config_refresh.refresh', side_effect=AssertionError('unexpected theme publication')):
+            saved = draft.save()
+        self.assertEqual(saved['refresh']['consumers'], [dict(app='yazi', status='next Yazi launch')])
+        after = effective(self.root)
+        self.assertEqual(affected(before, after), [])
+        after['apps']['yazi']['icons']['sample'] = 'X'
+        self.assertIn('yazi', affected(before, after))
+
+        self.run_config('set', branch + '.width', '0', '--defaults')
+        self.run_config('set', branch + '.hide_in_tmux', 'false')
+        expected.update(labels='number', width=0, hide_in_tmux=False)
+        self.assertEqual(json.loads(self.run_config('get', branch, '--json', native=True).stdout)['value'], expected)
+        self.run_config('unset', labels)
+        self.assertEqual(self.run_config('get', labels).stdout, 'auto\n')
+        noop = json.loads(self.run_config('set', branch + '.width', '0', '--json').stdout)
+        self.assertEqual(noop['refresh']['status'], 'unchanged')
+        self.assertFalse((self.home/'state/dots/themes/generations').exists())
+
+    def test_yazi_tab_bar_parent_and_selected_profile(self):
+        branch = 'apps.yazi.tab_bar'
+        parent = self.root/'profiles/linux'
+        leaf = parent/'distros/fixture'
+        leaf.mkdir(parents=True)
+        (leaf/'profile.json').write_text(json.dumps(dict(schema=1, id='linux/fixture', extends=['linux'])))
+        (parent/'config.json').write_text(json.dumps(dict(schema=1, apps=dict(yazi=dict(tab_bar=dict(labels='name'))))))
+        (leaf/'config.json').write_text(json.dumps(dict(schema=1, apps=dict(yazi=dict(tab_bar=dict(width=0, hide_in_tmux=False))))))
+        resolved = json.loads(self.run_config('get', branch, '--profile', 'linux/fixture', '--json').stdout)
+        self.assertEqual(resolved, dict(schema=1, profile='linux/fixture', key=branch, path=str(leaf/'config.json'),
+                         value=dict(labels='name', width=0, hide_in_tmux=False, only_with_multiple_tabs=True)))
+        self.assertEqual(self.run_config('get', branch + '.labels', '--profile', 'linux/fixture').stdout, 'name\n')
+
+    def test_mixed_yazi_activation_preserves_existing_consumer_priority(self):
+        from config_refresh import after_save
+        before = {'config': {'apps': {}}, 'apps': {}}
+        after = {'config': {'apps': {'wiki': {'reader': 'plain'}, 'setup': {'logo': True}}}, 'apps': {}}
+        expected = [dict(app='wiki', status='next invocation or popup')]
+        with patch('config_refresh.effective', return_value=after):
+            self.assertEqual(after_save(self.root, before)['consumers'], expected)
+            after['config']['apps']['yazi'] = {'tab_bar': {'labels': 'name'}}
+            self.assertEqual(after_save(self.root, before)['consumers'], [*expected, dict(app='yazi', status='next Yazi launch')])
+
     def test_files_list_profile_inheritance_and_reset(self):
         base = self.root/'profiles/linux'
         leaf = base/'distros/fixture'

@@ -19,6 +19,8 @@ DISPLAY_KEYS = {
     'apps.fonts.list_details', 'apps.fonts.provenance', 'apps.fonts.menu_descriptions',
     'apps.fonts.preview.enabled', 'apps.fonts.preview.sample',
     'apps.files.list_view', 'apps.files.group_by_status',
+    'apps.yazi.tab_bar.hide_in_tmux', 'apps.yazi.tab_bar.only_with_multiple_tabs',
+    'apps.yazi.tab_bar.labels', 'apps.yazi.tab_bar.width',
     'apps.wiki.list_details', 'apps.wiki.search_snippets', 'apps.wiki.search_urls',
     'apps.wiki.menu_descriptions', 'apps.wiki.section_breadcrumbs', 'apps.wiki.reader',
     'apps.tmux.clock.icon_mode', 'apps.tmux.battery.charging_style',

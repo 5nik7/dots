@@ -24,6 +24,7 @@ require("dots"):setup({
     save = { method = "yazi", yazi_load_event = "@projects-load" },
   },
   dotline = {
+    tab_bar = { hide_in_tmux = true, only_with_multiple_tabs = true, labels = "auto", width = 20 },
     header_line = {
       left = {
         section_a = { { type = "line", name = "tabs" } },
@@ -93,6 +94,22 @@ The optional `dots.preview` component adds platform-specific image rendering and
 [toggle-pane.lua](toggle-pane.lua) is command-driven and needs no setup section. It restores the previous pane ratios when toggled again.
 
 For `folder_rules`, add one table per folder to the list shown above. `name` is a literal directory name, matched at any location when changing directories; rules are checked in order and the first match wins. Omitted options default to `sort = "alphabetical"`, `reverse = false`, and `dir_first = true`. Unmatched folders use those same defaults, as does an empty or omitted rule list. The Downloads rule belongs to `init.lua`, so you can change or remove it there.
+
+### Tab bar
+
+The example above shows the whole header outside tmux when at least two tabs are open. Opening or closing a tab immediately makes room for the header or returns that row to the file panes. The bottom status line keeps its own visibility setting.
+
+| `dotline.tab_bar` option | Standalone default | Effect |
+| --- | --- | --- |
+| `hide_in_tmux` | `false` | Hide the header when Yazi starts with a nonempty `TMUX`. |
+| `only_with_multiple_tabs` | `false` | Show the header only with two or more open tabs. |
+| `labels` | Existing `tab_width` behavior | `"auto"` adds names when tabs differ, `"name"` uses each tab’s Yazi name, and `"number"` uses its current position alone. |
+| `width` | Inherits `dotline.tab_width` (normally 20) | Maximum cells per numbered label before padding. Values 0–2 show just the number. Accepts integers from 0 to 4096. |
+| `from_dots_config` | `false` | Once per launch, read the effective `apps.yazi.tab_bar` options from Dots Config. |
+
+With `labels = "auto"`, two tabs visiting the same `src` directory display `1` and `2`. Add a tab visiting `docs` and the labels become `1 src`, `2 src`, and `3 docs`. Different directories named `api` use as much parent path as needed, such as `1 work/api` and `2 home/api`. Renaming one of two tabs in the same directory to `review` gives `1 api` and `2 review`. Numbers follow the displayed order when you move a tab. A header disabled with `display_header_line = false` stays hidden.
+
+For Dots-managed setups, set `from_dots_config = true` in the table above. Yazi starts with the Lua settings and applies the resolved profile values when the startup read succeeds. Use `dots config browse --query apps.yazi.tab_bar` to edit them, then start a new Yazi instance.
 
 ### Hover styling and layout
 
@@ -249,6 +266,7 @@ From this directory:
 
 ```sh
 lua test.lua
+lua test-tab-bar.lua
 lua test-color-refs.lua
 lua test-git-colors.lua
 lua test-githead.lua
@@ -257,6 +275,7 @@ lua test-ls-colors.lua
 python3 -B test-ls-colors.py
 python3 -B test-native.py
 python3 -B test-githead-native.py
+python3 -B test-tab-bar-native.py
 ```
 
 The Lua fixtures check setup order, dispatcher arguments, fetch forwarding, pane restoration, combined Git refresh/stale-result rejection, host metadata validation and failure fallbacks, independent repository/branch colors, command-free redraws, responsive hover formatting, per-part sources/overrides/visibility and style isolation, and LS_COLORS parsing, precedence, resets, and hook fallback. The GNU ls comparison runner uses disposable filesystem fixtures and reports unsupported native hard-link creation separately; its matching remains covered by Lua fixtures. The Unix PTY test uses the included fixture config (or an explicit `--config-dir`) without replacing its hover settings and a temporary home/config/state/cache/runtime, isolated Git repository, and DDS socket directory. Only `dots.yazi` and a test probe are installed there. It checks real loader state, Git fetching and callbacks, installed git-it host/ownership rendering with test-owned GitHub/GitLab/Bitbucket/unknown/no-remote fixtures and host aliases, project save/load/deletion and merge event dispatch, folder rules, pane shortcuts, ANSI/indexed/RGB styles, separate symlink/target styles, reset-background preview spacing, filled cursor caps, native-style fallback, independent icon overrides, attribute removal, current-directory styling, and 40/80/160-column redraws. It requires Python, Git, git-it, and Yazi and does not install dependencies.
@@ -327,5 +346,7 @@ independent. See [architecture](docs/architecture.md), [testing](docs/testing.md
 and [contributing](CONTRIBUTING.md). Repository workflows are in [.codex](.codex/README.md).
 
 With Dots enabled, omitted Githead colors follow shared roles for repository, owned repository, branch, ahead/behind, staged/modified/untracked and conflict state. Ownership still comes from the existing git-it integration and its configuration. Per-file Git indicators use complete Dots Git styles, including backgrounds, resets and explicit false attributes; `th.git` overrides win. Signs and hovered-row styling are preserved, and file names keep their file-type/MIME styling.
+
+Githead also follows published Dots icon preferences for branch, ahead, behind, stash, staged, modified and untracked markers. For example, a change to `icons.apps.yazi.git.branch` updates the symbol beside the current branch when the running plugin receives the Dots theme notification.
 
 For remote installations, publish source changes first and update with `ya pkg upgrade 5nik7/dots`. Do not patch installed package files or edit their manifest hash. Restart Yazi once to load new plugin code; subsequent Dots palette publications update the running UI.

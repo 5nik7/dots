@@ -111,6 +111,11 @@ class Presentation:
                     value=re.sub(pattern,lambda m:'\033['+self._icon_paints[m[1]]+'m'+m[1]+'\033['+str(code)+'m',value)
         return f"\033[{code}m{value}\033[0m" if self.color else value
 
+    def paint_guide(self, value, foreground):
+        """A structural prefix already has its final foreground and no icon style."""
+        value = self.clean(value)
+        return f"\033[{foreground}m{value}\033[0m" if self.color and foreground and value.strip() else value
+
     def emit(self, value=""):
         print(value, file=self.stream)
 
@@ -183,11 +188,22 @@ class Presentation:
         paint_options = {} if icon_styles else {'icon_styles': False}
         spans = [(self.clean(text), code) for text, code in spans if str(text)]
         index, offset = 0, 0
-        continuation = ' ' * resource_cells(prefix) if continuation_prefix is None else self.clean(continuation_prefix)
-        width = max(1, self.width - max(resource_cells(prefix), resource_cells(continuation)))
+        def margin(value, code):
+            # A tree can have two guide colors on the same physical line.
+            if isinstance(value, list):
+                text = ''.join(self.clean(part) for part, _ in value)
+                return resource_cells(text), ''.join(self.paint_guide(part, fg) for part, fg in value)
+            value = self.clean(value)
+            return resource_cells(value), self.paint(value, code, **paint_options) if code else value
+
+        first_width, first = margin(prefix, prefix_code)
+        if continuation_prefix is None:
+            next_width, following = first_width, ' ' * first_width
+        else:
+            next_width, following = margin(continuation_prefix, prefix_code)
+        width = max(1, self.width - max(first_width, next_width))
         for number, part in enumerate(resource_wrap(''.join(text for text, _ in spans), width)):
-            lead = prefix if number == 0 else continuation
-            line = self.paint(lead, prefix_code, **paint_options) if prefix_code and (number == 0 or continuation_prefix is not None) else lead
+            line = following if number else first
             remaining = len(part)
             while remaining:
                 text, code = spans[index]
@@ -349,7 +365,7 @@ class Presentation:
             self.emit("\n  Catalog metadata saved; no files installed.")
 
 
-def read_json(path, schemas=(1,)):
+def read_json(path, schemas=(1,), *, max_bytes=4 * 1024 * 1024):
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -357,7 +373,7 @@ def read_json(path, schemas=(1,)):
                 raise ValueError(f"duplicate JSON key: {key}")
             result[key] = value
         return result
-    if path.is_symlink() or not path.is_file() or path.stat().st_size > 4 * 1024 * 1024:
+    if path.is_symlink() or not path.is_file() or (max_bytes is not None and path.stat().st_size > max_bytes):
         raise ValueError(f"invalid catalog file: {path}")
     result = json.loads(path.read_text(), object_pairs_hook=unique)
     if not isinstance(result, dict) or type(result.get("schema")) is not int or result.get("schema") not in schemas:

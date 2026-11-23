@@ -75,12 +75,12 @@ class StatusIcons(unittest.TestCase):
         # Mixed states must retain their complete label, with one dominant icon.
         cases = [(' M', 'EDIT', 'unstaged modified'), ('M ', 'EDIT', 'staged modified'),
                  ('MM', 'EDIT', 'staged modified + unstaged modified'),
-                 ('A ', '󰐕', 'staged added'), (' D', '󰆴', 'unstaged deleted'),
+                 ('A ', '', 'staged added'), (' D', '', 'unstaged deleted'),
                  ('RM', '', 'staged renamed + unstaged modified'), ('C ', 'COPY', 'staged copied'),
-                 (' T', '󰑓', 'unstaged type changed'), ('??', '', 'untracked'),
+                 (' T', '󰑓', 'unstaged type changed'), ('??', '', 'untracked'),
                  ('!!', '', 'ignored'), ('  ', '', 'selected'),
-                 ('AM', '󰐕', 'staged added + unstaged modified'),
-                 ('RD', '󰆴', 'staged renamed + unstaged deleted'),
+                 ('AM', '', 'staged added + unstaged modified'),
+                 ('RD', '', 'staged renamed + unstaged deleted'),
                  ('TM', '󰑓', 'staged type changed + unstaged modified')]
         conflicts = {'DD':'both deleted', 'AU':'added by us', 'UD':'deleted by them',
                      'UA':'added by them', 'DU':'deleted by us', 'AA':'both added', 'UU':'both modified'}
@@ -105,26 +105,70 @@ class StatusIcons(unittest.TestCase):
                 projected = '_DOTS_PROFILE_SETTINGS_CHECKOUT="$DOTS"\n_DOTS_PROFILE_SETTING_ROWS=(' + ' '.join(map(shlex.quote, rows)) + ')\n'
                 output = io.StringIO()
                 view = GitView(Presentation(output, terminal=True), mode)
-                with patch.object(view, 'header'), patch.object(view, 'metadata'):
+                with patch.object(view, 'header'), patch.object(view, 'box'):
                     view.status(dict(path=str(self.home), files=files))
                 python_output = output.getvalue()
             result = subprocess.run([shutil.which('bash'), '--noprofile', '--norc', '-c', projected + shell.replace('GIT_VIEW=default', 'GIT_VIEW=' + mode)], env=env,
                                     text=True, capture_output=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stderr)
-            expected = ['    ' + (glyph + ' ' if glyph and icons == 'always' else '') + ('[' + xy + '] ' if mode == 'verbose' else '') + label + ' (1)'
+            expected = ['  ' + (glyph + ' ' if glyph and icons == 'always' else '') + ('[' + xy + '] ' if mode == 'verbose' else '') + label + ' (1)'
                         for xy, glyph, label in cases]
             for frontend, text in (('Python', python_output), ('Bash', result.stdout)):
                 lines = text.splitlines()
-                headings = [ANSI.sub('', line) for line in lines if ANSI.sub('', line).startswith('    ')
-                            and not ANSI.sub('', line).startswith('     ')]
+                headings = [ANSI.sub('', line) for line in lines if ANSI.sub('', line).startswith('  ')
+                            and ANSI.sub('', line).endswith(' (1)')]
                 self.assertEqual(headings, expected, frontend)
                 self.assertEqual('\x1b[' in text, color == 'always')
                 for file in files:
                     line = next(line for line in ANSI.sub('', text).splitlines() if line.endswith(file['path']))
-                    self.assertTrue(line.startswith('      ') and not line.startswith('       '), line)
+                    self.assertTrue(line.startswith('  └ '), line)
                 if color == 'always':
                     label = ('EDIT ' if icons == 'always' else '') + ('[ M] ' if mode == 'verbose' else '') + 'unstaged modified (1)'
                     self.assertRegex(text, r'\x1b\[[0-9;]+m' + re.escape(label) + r'\x1b\[0m')
+
+    def test_tree_guides_and_wrapped_operation_rows_use_foregrounds_only(self):
+        theme = Path(self.env['XDG_STATE_HOME']) / 'dots/current/theme'
+        theme.mkdir(parents=True, exist_ok=True)
+        theme.joinpath('palette.json').write_text(json.dumps({'colors': {'dark_foreground': '#345678'}}))
+        staged = '1;38;5;173;48;2;31;32;33'
+        modified = '4;38;2;10;20;30;48;5;94'
+        deleted = '3;91;48;5;90'
+        theme.joinpath('git-styles.tsv').write_text(f'dots-git-styles\t1\nstaged\t{staged}\nmodified\t{modified}\ndeleted\t{deleted}\n')
+        theme.joinpath('file-styles.tsv').write_text('dots-file-styles\t1\nsuffix\t.py\t38;5;121\tfold\n')
+        env = dict(self.env, DOTS_ICONS='never', DOTS_COLOR='always', TERM='xterm-256color', COLUMNS='40')
+        names = ['a' * 68 + '.py', 'b.py', 'gone.py']
+        for name in names[:2]: (self.home / name).touch()
+        codes = ['M ', 'M ', 'D ']
+        box = None
+        for mode, changed, expected in [('default', False, '38;5;173'), ('short', True, '38;2;10;20;30')]:
+            rows = [dict(path=name, xy=xy, changed=changed) for name, xy in zip(names, codes)]
+            with patch.dict(os.environ, env, clear=True):
+                current.cache_clear()
+                output = io.StringIO()
+                view = GitView(Presentation(output, terminal=True), mode, root=self.home)
+                view.status(dict(path=str(self.home), branch='main', status='modified', files=rows))
+                python = output.getvalue()
+            if mode == 'default': box = python
+            shell = '\n'.join(['DOTS_LIB_DIR="$DOTS/lib/dots"', 'source "$DOTS_LIB_DIR/git/ui.bash"',
+                               'source "$DOTS_LIB_DIR/git/views.bash"', 'FULL_PATHS=0 GIT_VIEW=' + mode,
+                               'codes=(' + shlex.join(codes) + ')', 'paths=(' + shlex.join(names) + ')',
+                               "oldpaths=('' '' '')", 'view_status_files "$HOME" ' + str(int(changed))])
+            bash = subprocess.run([shutil.which('bash'), '--noprofile', '--norc', '-c', shell],
+                                  env=env, text=True, capture_output=True, timeout=20)
+            self.assertEqual(bash.returncode, 0, bash.stderr)
+            for output in (python, bash.stdout):
+                self.assertIn('\x1b[' + expected + 'm├ ', output)
+                self.assertIn('\x1b[' + expected + 'm│', output)
+                self.assertIn('\x1b[91m└ ', output)
+                self.assertIn('\x1b[38;5;121m', output)
+                self.assertTrue(all(len(line) <= 40 for line in ANSI.sub('', output).splitlines()))
+        guide = '\x1b[38;2;52;86;120m'
+        self.assertIn(guide + '│┌', box)
+        self.assertIn(guide + '│└', box)
+        self.assertIn(guide + '││ ', box)
+        self.assertIn(guide + '│\x1b[0m', box)
+        self.assertIn(guide + '│ \x1b[0m' + '\x1b[38;5;173m├ ', box)
+        self.assertNotIn(guide + 'Host', box)
 
     def test_batch_preview_and_save_apply_without_publishing(self):
         import config_refresh

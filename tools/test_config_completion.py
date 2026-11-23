@@ -106,7 +106,10 @@ class Completion(unittest.TestCase):
             dict(name='fixture-battery',glyph='\ue000',codepoint='U+E000',collection='test'),
             dict(name='fixture-clock',glyph='\ue001',codepoint='U+E001',collection='test')]})))
         preview=self.home/'preview';preview.write_text('#!/bin/sh\ntouch "$HOME/generic-preview-called"\n');preview.chmod(0o755)
-        cases=[('dots config set ..',"'colors.",'dots config set colors.'),
+        cases=[('echo nf',"'fixture-clock",'echo \ue001'),
+               ('printf pre nf post'+'\x02'*5,"'fixture-battery",'printf pre \ue000 post'),
+               ('echo nf',None,'echo nf'),
+               ('dots config set ..',"'colors.",'dots config set colors.'),
                ('dots config set colors..',"'colors.icons.",'dots config set colors.icons.'),
                ('dots config set colors.icons.',"'colors.icons.git.",'dots config set colors.icons.git.'),
                ('dots --color=never config set --profile windows ..',None,'dots --color=never config set --profile windows ..'),
@@ -122,9 +125,9 @@ class Completion(unittest.TestCase):
                 setup='autoload -Uz compinit; compinit -D; source "$DOTS/lib/dots/completion/zsh"; source '+shlex.quote(str(plugin/'fzf-tab.plugin.zsh'))
                 setup+='; source '+shlex.quote(str(Path(__file__).resolve().parents[1]/'shells/zsh/completions.zsh'))
                 setup+='; record_fzf() { printf "%s\\0" "$@" > "$HOME/fzf-args"; command fzf "$@"; }; zstyle ":fzf-tab:complete:__dots_preview_fallback__:" fzf-command record_fzf'
-                setup+='; PROMPT="READY> "; dots() { print BAD > "$HOME/command-executed"; }; cap() { print -rn -- "$BUFFER" > "$HOME/fzf-buffer"; }; zle -N cap; bindkey "^X" cap; print INITIALIZED\r'
+                setup+='; PROMPT="READY> "; dots() { print BAD > "$HOME/command-executed"; }; cap() { print -rn -- "$BUFFER" > "$HOME/fzf-buffer"; }; zle -N cap; bindkey "^X" cap; print INIT"I"ALIZED\r'
                 terminal.send(setup);terminal.wait(b'INITIALIZED\r\n')
-                terminal.send(typed+'\t');terminal.wait(b'\x1b[?1000h')
+                terminal.send(typed+'\t');terminal.wait(b'\x1b[?1000h',timeout=40)
                 if typed.endswith('.'):
                     arguments=(self.home/'fzf-args').read_bytes().decode().split('\0')
                     queries=[arg.split('=',1)[1] for arg in arguments if arg.startswith('--query=')]

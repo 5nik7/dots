@@ -1,5 +1,6 @@
 """Font and glyph browsers using pinned menu context and inert preview snapshots."""
 from contextlib import nullcontext
+from dataclasses import asdict
 import io
 import json
 import os
@@ -8,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import uuid
 
 from fonts.model import Library, sha
 from interaction import RichSelector, SelectionEnded, SelectionEvent, rich_fzf_available, terminal
@@ -43,9 +45,11 @@ def select(title, pairs, context=None, *, frame=None):
 
 def picker(rows, previews, frame, context, *, icons=False, select_only=False):
     if not rich_fzf_available(): return None
-    if context:
+    freeze_left = False
+    if context or icons:
         probe=subprocess.run(['fzf','--help'],capture_output=True,timeout=5)
-        if probe.returncode or b'--popup' not in probe.stdout: return None
+        if context and (probe.returncode or b'--popup' not in probe.stdout): return None
+        freeze_left = icons and b'--freeze-left' in probe.stdout
     ui=Presentation(terminal=True)
     columns,lines=context.verify() if context else shutil.get_terminal_size((80,24))
     width,height=max(1,columns-2),max(1,lines-2)
@@ -58,18 +62,30 @@ def picker(rows, previews, frame, context, *, icons=False, select_only=False):
     prefs=current();formatting=value('formatting.apps.menu',{})
     descriptions=preference('menu_descriptions',True)
     glyph=prefs.icon('menu.fonts',app='cli') if prefs else ''
-    entries=tuple(Entry(r['name'],r['glyph']+' '+r['name'],r['codepoint'] if descriptions else '') if icons else
-                  Entry(r['id'],r['id'],(r.get('name','')+(' · installed '+r['installed']['version'] if r.get('installed') else '')) if descriptions else '',
-                        icon=glyph,icon_role='menu.fonts') for r in rows)
-    menu=Menu('fonts:icons' if icons else 'fonts:catalog','Fonts',entries)
-    labels=[styled_label(menu,entry,ui,preferences=prefs,formatting=formatting) for entry in entries]
-    keys={'esc':'back','f1':'help'}
-    if not select_only:keys['alt-o']='configuration'
-    keys.update({} if select_only else {'alt-y':'copy','alt-i':'insert','alt-p':'print'} if icons else
-                {'alt-u':'update','alt-n':'import','alt-t':'targets','alt-g':'icons','alt-l':'local','alt-s':'catalog','alt-d':'directory'})
-    header=('Enter: select glyph  Esc: back' if select_only else 'Enter/Alt-Y: copy  Alt-I: insert  Alt-P: print' if icons else
-            'Enter: actions  Alt-U: catalogs  Alt-N: import\nAlt-D: directory  Alt-L: local  Alt-S: catalog\nAlt-T: targets  Alt-G: icons')
-    header+='\n'+('' if select_only else 'Alt-O: config  ')+'Esc: back  F1: help  Ctrl-C: cancel'
+    def render_labels():
+        if icons:
+            from fonts.glyphs import labels as glyph_labels
+            return glyph_labels(rows, ui, prefs, formatting, descriptions=descriptions)
+        entries=tuple(Entry(r['id'],r['id'],(r.get('name','')+(' · installed '+r['installed']['version'] if r.get('installed') else '')) if descriptions else '',
+                            icon=glyph,icon_role='menu.fonts') for r in rows)
+        menu=Menu('fonts:catalog','Fonts',entries)
+        return [styled_label(menu,entry,ui,preferences=prefs,formatting=formatting) for entry in entries]
+    labels=render_labels()
+    multi = icons and not select_only
+    keys = {'esc': 'back', 'f1': 'help'}
+    if not select_only:
+        keys['alt-o'] = 'configuration'
+    if multi:
+        keys['alt-p'] = 'print'
+        header = 'Tab: mark  Enter/Alt-Y: copy\n' + ('Alt-I: insert  ' if context else '') + 'Alt-P: print'
+    elif icons:
+        header = 'Enter: select glyph'
+    else:
+        keys.update({'alt-u':'update','alt-n':'import','alt-t':'targets','alt-g':'icons',
+                     'alt-l':'local','alt-s':'catalog','alt-d':'directory'})
+        header = ('Enter: actions  Alt-U: catalogs  Alt-N: import\nAlt-D: directory  Alt-L: local  Alt-S: catalog'
+                  '\nAlt-T: targets  Alt-G: icons')
+    header += '\n' + ('' if select_only else 'Alt-O: config  ') + 'Esc: back  F1: help  Ctrl-C: cancel'
     if frame.get('notice'): header+='\n'+frame['notice']
     preview_enabled=preference('preview.enabled',True)
     if context and not preview_enabled and 'fit' in (options.get('width'),options.get('height')):
@@ -78,8 +94,10 @@ def picker(rows, previews, frame, context, *, icons=False, select_only=False):
         content=content_size(labels,'fonts·icons' if icons else 'fonts',header,(columns,lines),options,automatic=automatic)
         width,height=popup_dimensions(options,automatic,(columns,lines),content)
         ui.width=max(1,width-6)
-        labels=[styled_label(menu,entry,ui,preferences=prefs,formatting=formatting) for entry in entries]
-    with request_file(dict(schema=1,previews=previews,color=ui.color,icons=ui.icons,sample=preference('preview.sample',True),wrap=preference('preview.wrap',True))) as path:
+        labels=render_labels()
+    actions = request_file(dict(schema=1, glyphs=[r['glyph'] for r in rows],
+                                context=asdict(context) if context else None)) if multi else nullcontext(None)
+    with actions as action_path, request_file(dict(schema=1,previews=previews,color=ui.color,icons=ui.icons,sample=preference('preview.sample',True),wrap=preference('preview.wrap',True))) as path:
         command=('& $env:DOTS_FONTS_PYTHON -B $env:DOTS_FONTS_PREVIEW $env:DOTS_FONTS_REQUEST {1}' if os.name=='nt'
                  else '"$DOTS_FONTS_PYTHON" -B "$DOTS_FONTS_PREVIEW" "$DOTS_FONTS_REQUEST" {1}')
         preview=(command,'',dict(DOTS_FONTS_PYTHON=sys.executable,
@@ -87,9 +105,20 @@ def picker(rows, previews, frame, context, *, icons=False, select_only=False):
         if not preview_enabled:preview=None
         from progress import permanent_output
         with permanent_output(), context.selector_environment() if context else nullcontext(None) as environment:
+            colors = fzf_colors(ui)
+            bindings = []
+            if icons:
+                from picker_style import picker_colors
+                colors = picker_colors(colors, preserve_unfocused=True)
+            if multi:
+                from fonts.glyphs import action_bindings
+                environment = dict(environment or {}, DOTS_GLYPH_ACTION=str(Path(__file__).with_name('glyphs.py')),
+                                   DOTS_GLYPH_REQUEST=str(action_path), DOTS_GLYPH_PYTHON=sys.executable,
+                                   TMPDIR=str(action_path.parent), TMP=str(action_path.parent), TEMP=str(action_path.parent))
+                bindings = action_bindings(action_path, insert_available=context is not None)
             try:
-                result=RichSelector(backend='fzf').fzf('fonts·icons' if icons else 'fonts',labels,False,preview,
-                    ui.color,ui.icons,fzf_colors(ui),popup=f'center,{width},{height}' if context else False,
+                result=RichSelector(backend='fzf').fzf('fonts·icons' if icons else 'fonts',labels,multi,preview,
+                    ui.color,ui.icons,colors,bindings=bindings,hscroll=not icons,freeze_left=freeze_left,popup=f'center,{width},{height}' if context else False,
                     height=height,preview_position=preference('preview.position','down'),preview_size=preference('preview.size',33),
                     preview_wrap=preference('preview.wrap',True),popup_resolved=context is not None,
                     query=frame.get('query',''),header=header,navigation=frame,navigation_keys=keys,event_selection=True,
@@ -240,12 +269,30 @@ def browse(args):
             show_message(clean(str(error)),context=context,title='Fonts',code=1)
 
 
-def insert(glyph,context):
-    if context is None:raise ValueError('icon insertion requires tmux; use copy or print here')
-    if len(glyph)!=1 or ord(glyph)<32 or ord(glyph)==127:raise ValueError('expected one printable glyph')
+def insert(glyphs, context):
+    if context is None:
+        raise ValueError('icon insertion requires tmux; use copy or print here')
+    if not glyphs or clean(glyphs) != glyphs:
+        raise ValueError('expected printable glyphs')
     context.verify()
-    result=subprocess.run(context.command('send-keys','-t',context.pane,'-l','--',glyph),capture_output=True,timeout=5)
-    if result.returncode:raise ValueError('icon insertion failed; the originating pane was not replaced with another target')
+    if len(glyphs) == 1:
+        result = subprocess.run(context.command('send-keys', '-t', context.pane, '-l', '--', glyphs),
+                                capture_output=True, timeout=5)
+        if result.returncode:
+            raise ValueError('icon insertion failed; the originating pane was not replaced with another target')
+        return
+    # A whole catalog exceeds tmux's command argument limit. Stage it on stdin
+    # and paste once so a failed preparation never delivers a partial batch.
+    name = 'dots-fonts-' + uuid.uuid4().hex
+    try:
+        result = subprocess.run(context.command('load-buffer', '-b', name, '-'),
+                                input=glyphs.encode('utf-8'), capture_output=True, timeout=5)
+        if result.returncode:
+            raise ValueError('could not prepare selected glyphs for insertion')
+        context.verify()
+        context.observe('paste-buffer', '-d', '-b', name, '-t', context.pane)
+    finally:
+        subprocess.run(context.command('delete-buffer', '-b', name), capture_output=True, timeout=5)
 
 
 def copy(glyph):
@@ -270,8 +317,10 @@ def icons(library,args,*,context=None):
     if args.copy and args.insert:raise ValueError('--copy and --insert are mutually exclusive')
     if args.copy or args.insert:
         if len(filtered)!=1:raise ValueError('copy/insert requires one exact search result')
-        if args.copy:copy(filtered[0]['glyph'])
-        else:insert(filtered[0]['glyph'],context or context_for(args))
+        from fonts.glyphs import literal
+        glyph = literal(filtered[0]['glyph'])
+        if args.copy:copy(glyph)
+        else:insert(glyph,context or context_for(args))
         if args.json:emit(dict(schema=1,status='copied' if args.copy else 'inserted',version=version,items=filtered),args)
         return 0
     if args.format:
@@ -284,24 +333,23 @@ def icons(library,args,*,context=None):
     preview=[dict(kind='glyph',report=dict(items=[dict(r,version=version)])) for r in rows]
     while True:
         try:
-            try:
-                selected=picker(rows,preview,frame,context,icons=True);action='copy'
-                if selected is None:emit(dict(schema=1,version=version,items=filtered),args);return 0
-            except SelectionEvent as event:
-                action=event.action
-                if action=='back':return 0
-                if action=='configuration':
-                    from fonts.menus import configuration
-                    configuration(context);continue
-                if action=='help':
-                    show_message('Enter / Alt-Y: copy glyph and close\nAlt-I: insert in the originating tmux pane, without Enter\nAlt-P: print glyph and close\nOutside tmux use clipboard or stdout.',context=context,title='Icon search');continue
-                if event.index is None:continue
-                selected=rows[event.index]
-            if action=='copy':copy(selected['glyph'])
-            elif action=='insert':insert(selected['glyph'],context)
-            elif action=='print':print(selected['glyph'],end='')
+            selected=picker(rows,preview,frame,context,icons=True)
+            if selected is None:emit(dict(schema=1,version=version,items=filtered),args)
             return 0
-        except (ValueError,OSError,subprocess.SubprocessError) as error:frame['notice']=clean(str(error))
+        except SelectionEvent as event:
+            if event.action=='back':return 0
+            if event.action=='configuration':
+                from fonts.menus import configuration
+                configuration(context)
+            elif event.action=='help':
+                show_message('Tab / Shift-Tab: mark glyphs in order\nEnter / Alt-Y: copy and close\n'
+                             'Alt-I: insert in the originating tmux pane and keep searching\n'
+                             'Alt-P: print and close\nOutside tmux use clipboard or stdout.',
+                             context=context,title='Icon search')
+            elif event.action=='print' and event.indices:
+                from fonts.glyphs import literal
+                print(''.join(literal(rows[i]['glyph']) for i in event.indices),end='')
+                return 0
 
 
 def select_icon(context=None):

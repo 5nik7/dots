@@ -84,6 +84,10 @@ for entry in $owned_path $profile_entries $PATH
     contains -- "$entry" $ordered_path; or set -a ordered_path "$entry"
 end
 set -gx PATH $ordered_path
+set -l manuals "$HOME/.local/share/man"
+if test "$DOTS_PLATFORM" != windows; and test -d "$manuals"; and not contains -- "$manuals" $MANPATH
+    set -gx --path MANPATH "$manuals:$MANPATH"
+end
 status is-interactive; or return 0
 source "$DOTS/lib/dots/shell/less.fish"
 set -g esc (printf '\033')
@@ -216,7 +220,7 @@ _dots_fish_theme; or printf 'dots: theme artifact unavailable; run theme refresh
 if test $_dots_option_DOTS_INIT_COMPLETION = 1
     source "$DOTS/lib/dots/completion/fish"
 else
-    set -l names dots theme todo fonts bak dots-bak
+    set -l names dots theme todo fonts nf bak dots-bak
     if test -r "$_DOTS_STATE/themes/commands/current/names"
         while read -l name
             set -a names "$name"

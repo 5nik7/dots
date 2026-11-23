@@ -105,7 +105,14 @@ dots:setup({
     permissions_x_fg = dots.colors.green,
     permissions_s_fg = dots.colors.background,
 
-    tab_width = 0,
+    tab_width = 0, -- Numbered tabs on older dots.yazi releases.
+    tab_bar = {
+      from_dots_config = true,
+      hide_in_tmux = true,
+      only_with_multiple_tabs = true,
+      labels = "auto",
+      width = 20,
+    },
 
     selected = { icon = "󰻭", fg = dots.colors.yellow },
     copied = { icon = "", fg = dots.colors.green },

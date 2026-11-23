@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Navigate a registered submodule by name
+# dots:usage=NAME [info|status|publish|submodules|submodule CHILD] [OPTIONS]
+# dots:option=--directory|-C|directory|Initial repository directory
+# dots:example=dots git submodule nvim info
+# dots:example=dots git submodule 5ui7e status
+# dots:option=--color||choice:auto,always,never|Select terminal colors
+# dots:option=--no-color||flag|Disable terminal colors
+# dots:option=--no-progress||flag|Disable terminal progress
+exec "${BASH_SOURCE[0]%/*}/dots-git-it" submodule "$@"

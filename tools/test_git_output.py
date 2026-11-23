@@ -60,10 +60,10 @@ class Views(unittest.TestCase):
         self.git(repo, 'add', 'b.txt', 'd.txt')
         (repo/'d.txt').write_text('partially staged\n')
         (repo/'-literal ü [x].txt').write_text('untracked\n')
-        expected = ('    unstaged modified (2)\n      a.txt\n      c.txt\n'
-                    '    staged modified (1)\n      b.txt\n'
-                    '    staged modified + unstaged modified (1)\n      d.txt\n'
-                    '    untracked (1)\n      -literal ü [x].txt\n')
+        expected = ('│ unstaged modified (2)\n│ ├ a.txt\n│ └ c.txt\n'
+                    '│ staged modified (1)\n│ └ b.txt\n'
+                    '│ staged modified + unstaged modified (1)\n│ └ d.txt\n'
+                    '│ untracked (1)\n│ └ -literal ü [x].txt\n')
         index = (repo/'.git/index').read_bytes()
         for native in (False, True):
             command = self.command(native, repo, 'status')
@@ -72,14 +72,14 @@ class Views(unittest.TestCase):
                 env = dict(self.env, DOTS_PROGRESS='none', DOTS_MENU_CAPTURE='1' if capture else '0')
                 output = self.run_cmd([*command, '--view', 'default'], env=env).stdout
                 self.assertIn(expected, output)
-                self.assertEqual(output.splitlines().count('    unstaged modified (2)'), 1)
+                self.assertEqual(output.splitlines().count('│ unstaged modified (2)'), 1)
                 self.assertEqual(self.run_cmd([*command, '--view', 'default', '--json'], env=env).stdout, data)
             short = self.run_cmd([*command, '--short'], env=dict(self.env, COLUMNS='160')).stdout
             self.assertIn('States  [ M] (2) / [M ] (1) / [MM] (1) / [??] (1)', short)
             verbose = self.run_cmd([*command, '--verbose'], env=dict(self.env, COLUMNS='160')).stdout
-            self.assertIn('    [ M] unstaged modified (2)\n      a.txt\n      c.txt', verbose)
-            self.assertIn('    [MM] staged modified + unstaged modified (1)', verbose)
-            self.assertIn('    [??] untracked (1)', verbose)
+            self.assertIn('│ [ M] unstaged modified (2)\n│ ├ a.txt\n│ └ c.txt', verbose)
+            self.assertIn('│ [MM] staged modified + unstaged modified (1)', verbose)
+            self.assertIn('│ [??] untracked (1)', verbose)
             self.assertIn('HEAD', verbose)
         # Automatic terminal default still groups with icons and wraps safely.
         ansi = re.compile(rb'\x1b\[[0-?]*[ -/]*[@-~]')
@@ -89,10 +89,10 @@ class Views(unittest.TestCase):
                     dict(self.env, DOTS_PROGRESS='none', DOTS_COLOR='always', DOTS_ICONS='always', TERM='xterm-256color'), width)
                 self.assertEqual(code, 0, data)
                 lines = ansi.sub(b'', data).decode().splitlines()
-                self.assertEqual(lines.count('     unstaged modified (2)'), 1)
+                self.assertEqual(lines.count('│  unstaged modified (2)'), 1)
                 for name in ('a.txt', 'c.txt'):
                     line = next(line for line in lines if line.endswith(name))
-                    self.assertTrue(line.startswith('      ') and not line.startswith('       '), line)
+                    self.assertTrue(line.startswith(('│ ├ ', '│ └ ')), line)
                 self.assertTrue(all(len(line) <= width for line in lines), lines)
         self.assertEqual((repo/'.git/index').read_bytes(), index)
 
@@ -103,9 +103,10 @@ class Views(unittest.TestCase):
         (child/'file').write_text('child changed\n')
         for native in (False, True):
             output = self.run_cmd(self.command(native, repo, 'status', '--view', 'default')).stdout
-            self.assertIn('    unstaged modified (2)', output)
-            self.assertIn('    unstaged modified (1)', output)
-            self.assertEqual(output.splitlines().count('      file'), 2, output)
+            self.assertIn('│ unstaged modified (2)', output)
+            self.assertIn('   unstaged modified (1)', output)
+            self.assertEqual(sum(line.endswith(('├ file', '└ file')) for line in output.splitlines()), 2, output)
+            self.assertEqual(output.count('Protocol '), 1, output)
 
     def test_sync_reports_only_actual_changed_paths(self):
         for native in (False, True):
@@ -310,7 +311,7 @@ class Views(unittest.TestCase):
                 self.assertRegex(data.decode(),r'\x1b\[38;2;77;88;99m[^\x1b]+ \x1b\[0m\x1b\[38;2;11;22;33mbin/')
                 plain=ansi.sub(b'',data).decode()
                 self.assertTrue(all(len(line)<=width for line in plain.splitlines()),plain)
-                self.assertIn('bin/'+name,''.join(line.strip() for line in plain.splitlines()))
+                self.assertIn('bin/'+name,''.join(line.lstrip('│ ├└') for line in plain.splitlines()))
 
     def test_view_completion_records_for_all_shells(self):
         repo=self.repo('completion')

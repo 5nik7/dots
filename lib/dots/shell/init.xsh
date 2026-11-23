@@ -21,7 +21,9 @@ __xonsh__.ctx.update(_dots_profile_document['maps'])
 __xonsh__.ctx['_dots_profile_map_names'] = list(_dots_profile_document['maps'])
 __xonsh__.env['PATH'] = _dots_profile_environment['PATH'].split(__import__('os').pathsep)
 for _dots_key, _dots_value in _dots_profile_environment.items():
-    if _dots_key != 'PATH' and (_dots_key in _dots_profile_document['generated'] or _dots_key.startswith('DOTS_') or not __xonsh__.env.get(_dots_key)):
+    if _dots_key == 'MANPATH' and _dots_profile_environment['DOTS_PLATFORM'] != 'windows':
+        __xonsh__.env['MANPATH'] = _dots_value
+    elif _dots_key != 'PATH' and (_dots_key in _dots_profile_document['generated'] or _dots_key.startswith('DOTS_') or not __xonsh__.env.get(_dots_key)):
         __xonsh__.env[_dots_key] = _dots_value
 
 dots_options, dots_option_sources, _dots_config = _dots_runtime.settings($DOTS, __xonsh__.env)

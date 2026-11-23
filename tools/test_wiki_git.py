@@ -56,6 +56,28 @@ class WikiGitTests(WikiFixture):
             self.assertEqual(data['repositories'][0]['kind'],'wiki')
         self.assertEqual(self.git(self.root,'ls-files','--stage').count('160000'),0)
 
+    def test_inferred_sibling_requires_explicit_verified_mutation(self):
+        (self.root/'.dots/wiki.json').unlink()
+        self.git(self.root, 'commit', '-am', 'Use sibling Wiki')
+        self.target = self.target.rename(self.root.with_name(self.root.name + '.wiki'))
+        self.wiki_remote = self.wiki_remote.rename(self.base/'source.wiki.git')
+        self.git(self.target, 'remote', 'set-url', 'origin', 'ssh://git@example.invalid' + str(self.wiki_remote))
+        self.git(self.target, 'commit', '--allow-empty', '-m', 'Wiki only')
+        pending = self.git(self.target, 'rev-parse', 'HEAD')
+        before = self.git(self.wiki_remote, 'rev-parse', 'master')
+        self.assertNotEqual(before, pending)
+        for action in ('sync', 'publish'):
+            preview = self.run_git(action, '--dry-run', '--json')
+            self.assertNotIn(str(self.target), [r['path'] for r in preview['events']])
+        self.run_git('sync', only=True)
+        self.git(self.target, 'remote', 'set-url', '--push', 'origin', 'ssh://git@example.invalid' + str(self.source_remote))
+        refused = self.run_git('publish', '--yes', '--json', only=True, code=1)
+        self.assertFalse(refused['complete'])
+        self.assertEqual(self.git(self.wiki_remote, 'rev-parse', 'master'), before)
+        self.git(self.target, 'config', '--unset', 'remote.origin.pushurl')
+        self.run_git('publish', '--yes', '--json', only=True)
+        self.assertEqual(self.git(self.wiki_remote, 'rev-parse', 'master'), pending)
+
     def test_info_and_missing_companion(self):
         command=[sys.executable,'-B',str(ROOT/'lib/dots/git/inspection.py'),'info','-C',str(self.root),'--json']
         result=subprocess.run(command,env=self.env,text=True,capture_output=True);self.assertEqual(result.returncode,0,result.stderr)

@@ -50,17 +50,17 @@ CLI Git view flags override the saved view. `DOTS_PROGRESS=auto` follows Config;
 
 ### Git status icons
 
-Default and verbose Git file reports use two spaces per level: repository, counted status heading, then files. Status, selected publication paths and completed sync changes share these icons. Edit heading icons with `dots config browse --query icons.git.status`. Each key below is prefixed by `icons.git.status.`:
+Git repository rows use `icons.git.ahead` (󱦲), `icons.git.behind` (󱦳), `icons.git.submodule_github` (), `icons.git.submodule` () and `icons.git.wiki` (󱔘). Default reports show nonzero tracking counts. Default and verbose Git file reports nest counted status headings and files under each repository. Status, selected publication paths and completed sync changes share these icons. Edit heading icons with `dots config browse --query icons.git.status`. Each key below is prefixed by `icons.git.status.`:
 
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `modified` | `` | Modified file, staged or unstaged |
-| `added` | `󰐕` | Plus: added file |
-| `deleted` | `󰆴` | Trash: deleted file |
+| `added` | `` | Added file |
+| `deleted` | `` | Removed file |
 | `renamed` | `` | Arrow: renamed file |
 | `copied` | `` | Copy: copied file |
 | `type_changed` | `󰑓` | Change arrows: file type changed |
-| `untracked` | `` | Question mark: untracked file |
+| `untracked` | `` | Untracked file |
 | `ignored` | `` | Hidden eye: ignored file, when present in a report |
 | `conflict` | `` | Warning triangle: any unmerged/conflicting state |
 | `selected` | `` | Check: fallback for a selected file without a status code |
@@ -321,10 +321,40 @@ Use `dots config explain KEY` to check the actual consumer and activation rule. 
 | Font output and previews | `apps.fonts.list_details`, `formatting.apps.fonts.preview.position`, `colors.apps.fonts.version.fg` | [Font output preferences](fonts.md#output-preferences) |
 | Root help logo | `apps.cli.logo_gradient` (`classic` or `installer`) | [Application controls](profiles.md#application-and-formatting-controls) |
 | Neovim editor and highlights | `apps.nvim`, `formatting.apps.nvim.lualine.sections` | [Neovim integration](neovim.md) |
+| Yazi header and tab names | `apps.yazi.tab_bar` | [Yazi tab bar](#yazi-tab-bar) |
 | Weather | `apps.wttr` | [Native weather configuration](profiles.md#native-weather-configuration) |
 | Files and source mappings | `files` in the selected profile | [Managed files](files.md) |
 
 This is a starting map, not a second settings catalog. Completion, Config details and `config explain` read the implemented declarations. The [profile reference](profiles.md#application-and-formatting-controls) documents supported controls and platform limits.
+
+### Yazi tab bar
+
+The managed Yazi setup reads `apps.yazi.tab_bar` once per launch. The standalone
+`dots.yazi` plugin must support configurable tab bars. Package revision
+`637f869` predates this feature. Use `dots config browse --query apps.yazi.tab_bar`
+to edit the four settings, or `dots config get apps.yazi.tab_bar --json` to see
+the values inherited by the current profile.
+
+| Setting under `apps.yazi.tab_bar` | Default | Effect |
+| --- | --- | --- |
+| `hide_in_tmux` | `true` | Hide the whole header when Yazi starts inside tmux. |
+| `only_with_multiple_tabs` | `true` | Show the header when a second tab opens and return its row to the panes when one tab remains. |
+| `labels` | `auto` | Choose `auto`, `name` to always include names, or `number` for tab numbers alone. |
+| `width` | `20` | Maximum cells for the whole number and name. Values from 0 to 2 show just the full tab number. The maximum is 4096. |
+
+With both visibility options enabled, the header appears only outside tmux and
+only with multiple tabs. In `auto` mode, tabs that all share the same directory
+and name show just their numbers. With two tabs in `src` and another in `docs`,
+the labels are `1 src`, `2 src`, and `3 docs`. Different directories named
+`api` get enough parent context to distinguish them, such as `1 work/api`
+and `2 home/api`. Renaming one tab to `review` in the same directory gives
+`1 api` and `2 review`.
+
+For example, `dots config set apps.yazi.tab_bar.labels number --profile termux`
+selects numbers on Termux. `dots config unset apps.yazi.tab_bar.labels --profile termux`
+restores the inherited choice. A save takes effect on the next Yazi launch
+without theme publication. While Yazi is open, tab creation, closure, renaming
+and navigation update the bar immediately.
 
 ## Recovery and troubleshooting
 

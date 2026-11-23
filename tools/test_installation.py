@@ -281,23 +281,24 @@ with patch.object(install, 'source_plan', return_value=[{}]), patch.object(insta
         self.assertFalse(self.receipt()['entries'])
 
     def test_fonts_command_install_and_restore(self):
-        for name in ('fonts', 'fonts.ps1'):
+        for name in ('fonts', 'fonts.ps1', 'nf', 'nf.ps1'):
             shutil.copy2(ROOT/'bin'/name, self.repo/'bin'/name)
         with mock.patch.dict(os.environ, self.env), mock.patch('install.platform', return_value='windows'):
             native = Installation(self.repo)
             native.plan_install()
-            operation = next(op for op in native.operations if Path(op['path']).name == 'fonts.ps1')
-            self.assertIn(str(self.repo/'bin/fonts.ps1').replace("'", "''"), operation['text'])
-            self.assertNotIn('bash', operation['text'])
-        name = 'fonts.ps1' if os.name == 'nt' else 'fonts'
-        command = self.home/'.local/bin'/name
-        command.parent.mkdir(parents=True)
-        command.write_text('Previous fonts command\n')
-        self.cli('install', '--yes')
-        if os.name != 'nt': self.assertEqual(command.resolve(), self.repo/'bin/fonts')
-        self.assertEqual(json.loads(self.cli('install','--yes','--json').stdout)['status'],'unchanged')
-        self.cli('uninstall','--yes')
-        self.assertEqual(command.read_text(),'Previous fonts command\n')
+            for name in ('fonts.ps1','nf.ps1'):
+                operation = next(op for op in native.operations if Path(op['path']).name == name)
+                self.assertIn(str(self.repo/'bin'/name).replace("'", "''"), operation['text'])
+                self.assertNotIn('bash', operation['text'])
+        commands = [self.home/'.local/bin'/(name + ('.ps1' if os.name=='nt' else '')) for name in ('fonts','nf')]
+        commands[0].parent.mkdir(parents=True)
+        for command in commands:command.write_text('Previous ' + command.name)
+        self.cli('install', '--yes', '--component','core')
+        if os.name != 'nt':
+            for command in commands:self.assertEqual(command.resolve(),self.repo/'bin'/command.name)
+        self.assertEqual(json.loads(self.cli('install','--yes','--json','--component','core').stdout)['status'],'unchanged')
+        self.cli('uninstall','--yes','--component','core')
+        for command in commands:self.assertEqual(command.read_text(),'Previous ' + command.name)
 
     def test_codex_usage_core_launcher_lifecycle(self):
         (self.repo/'scripts').mkdir()
@@ -470,7 +471,7 @@ with patch.object(install, 'source_plan', return_value=[{}]), patch.object(insta
         # The updated child controller must have its full dependency closure.
         # Omit publishers so this fixture cannot activate application themes.
         shutil.copytree(ROOT/'lib/dots', self.repo/'lib/dots',
-                        ignore=shutil.ignore_patterns('themes','__pycache__','*.pyc'))
+                        ignore=shutil.ignore_patterns('setup.bash','setup.py','__pycache__','*.pyc'))
         self.git(self.repo,'init','--initial-branch=main')
         self.git(self.repo,'config','user.email','fixture@example.invalid')
         self.git(self.repo,'config','user.name','Fixture')

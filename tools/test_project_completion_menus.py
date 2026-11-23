@@ -33,7 +33,6 @@ class ProjectMenus(unittest.TestCase):
     def test_project_source_menus_and_literal_insertion(self):
         sources = [
             ('battery','battery','generate_zsh_completion() {','EOF'),
-            ('git-it','lib/completion.bash',"        zsh) cat <<'EOF'",'EOF'),
             ('gitsub','gitsub','print_zsh_completion() {','EOF'),
             ('paint','paint','print_completion_zsh() {','ZSH'),
             ('leaf','completions/leaf.zsh',None,None),
@@ -44,11 +43,7 @@ class ProjectMenus(unittest.TestCase):
         for name, relative, marker, delimiter in sources:
             source = REPOS/name/relative
             if not source.is_file(): continue
-            if name == 'git-it':
-                # Keep the heredoc opener available to the bounded extractor.
-                text = embedded(source,'        zsh)',delimiter)
-            else:
-                text = embedded(source,marker,delimiter) if marker else source.read_text()
+            text = embedded(source,marker,delimiter) if marker else source.read_text()
             (target/('_'+name)).write_text(text)
             loaded.add(name)
         if not loaded: self.skipTest('Associated project source checkouts unavailable')
@@ -67,8 +62,6 @@ class ProjectMenus(unittest.TestCase):
             cases = [
                 ('battery --',"'--backend",'battery --backend='),
                 ('battery --backend ',"'wrapper",'battery --backend wrapper '),
-                ('git-it ',"'publish",'git-it publish '),
-                ('git-it --color ',"'always",'git-it --color always '),
                 ('gitsub --',"'--quiet",'gitsub --quiet '),
                 ('gitsub --completion ',"'zsh",'gitsub --completion zsh '),
                 ('leaf --',"'--watch",'leaf --watch '),

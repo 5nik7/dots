@@ -8,11 +8,11 @@
 # dots:option=--offline||flag|Refuse network preparation; use available inputs
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--update||flag|Fast-forward clean sources before setup
-# dots:option=--with-source||choice:termux,windows,nvim|Select a bundled platform source or initialize nvim
+# dots:option=--with-source||choice:termux,windows,nvim,git-it|Select a bundled platform source or initialize a public submodule
 # dots:option=--packages||file|Restore a package manifest before configuration
 # dots:option=--interactive||flag|Open the setup wizard
 # dots:option=--non-interactive||flag|Skip the wizard; writes require --yes
-# dots:option=--component||choice:core,files,themes,anodize,blastoff,pkgs,packages,fonts,leaf|Select components instead of defaults; repeat
+# dots:option=--component||choice:core,files,themes,anodize,blastoff,pkgs,git-it,packages,fonts,leaf|Select components instead of defaults; repeat
 # dots:option=--resource||file-resource|Select enabled catalog IDs within Files; repeat
 # dots:option=--no-clear||flag|Retain the visible screen on wizard entry
 # dots:option=--no-logo||flag|Omit the wizard logo

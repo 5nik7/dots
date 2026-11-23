@@ -1,6 +1,6 @@
 # Command Model
 
-Git report and operation routes accept `--view default|short|verbose`, `-s`/`--short` and `-v`/`--verbose`; tree `--details` aliases verbose. Named submodules and Wiki routes forward the same view options. Saved `apps.git.view` applies to terminal/menu reports; explicit flags can also format redirected human output. Default and verbose file reports print each distinct state and its file count once per repository, with repository rows at two spaces, status headings at four and file rows at six. Verbose includes bracketed XY codes; short adds a state-count summary above XY rows. Publish counts selected paths, sync groups actual changed paths, and info/tree reports retain compact state summaries. Heading icons use the configurable `icons.git.status.*` glyphs and their existing status colors. JSON/events remain unchanged. See [Git output views](git.md#output-views).
+Git report and operation routes accept `--view default|short|verbose`, `-s`/`--short` and `-v`/`--verbose`; tree `--details` aliases verbose. Named submodules and Wiki routes forward the same view options. Saved `apps.git.view` applies to terminal/menu reports; explicit flags can also format redirected human output. Default and verbose file reports print each distinct state and its file count once per repository, with file guides in each row’s Git status color and outer repository guides in the theme’s `dark_foreground`. Verbose includes bracketed XY codes; short adds a state-count summary above XY rows. Publish counts selected paths, sync groups actual changed paths, and info/tree reports retain compact state summaries. Heading icons use the configurable `icons.git.status.*` glyphs and their existing status colors. JSON/events remain unchanged. See [Git output views](git.md#output-views).
 
 
 ## Cleanup
@@ -41,7 +41,7 @@ Use `--color=never`, `--icons=never` and `DOTS_PROGRESS=never` independently whe
 ## Personal font commands
 
 `dots fonts` and `fonts` expose the same controller and flags through Bash and
-native PowerShell. The [fonts guide](fonts.md) defines library lifecycle, exact
+native PowerShell. The standalone `nf [QUERY] [OPTIONS]` shim invokes `dots fonts icons`. The [fonts guide](fonts.md) defines library lifecycle, exact
 version selection, application targets, compatibility wrappers and glyph actions.
 `fonts installed` browses installed fonts; `--json` and `--print` list them without interaction. `copy INSTALLED_ID... --directory NAME` and `migrate INSTALLED_ID... --directory NAME` transfer selections. `install FONT... --from SOURCE [--directory DESTINATION]` supports batches. Plain interactive `fonts` opens the action menu; `set` without operands opens its app-first selector. `browse --downloaded` selects retained fonts across stores. `defaults` reports active-profile preferences and `restore [TARGET...]` reapplies exact saved choices after review.
 
@@ -145,6 +145,8 @@ The [Git reference](git.md) defines `dots git info|submodule|submodules|status|p
 semantics, configuration, compact views and JSON. Git synchronization now belongs
 to `dots git sync`; the former proposed `dots repo pull` spelling is superseded.
 This remains distinct from future bootstrap and optional-source resolution.
+
+Run `dots git` for help, `dots git path` for the selected worktree root, and `dots git -R --https` for its HTTPS URL. Use `dots git it info` to inspect the caller’s worktree. Use `dots git it -s` for the complete status or `dots git it -R --https` for the HTTPS remote URL. See the [git-it plugin](plugins.md#git-it).
 
 Implemented routes: `dots git info`, `dots git submodules`,
 `dots git submodules info`,

@@ -270,8 +270,9 @@ class Workflow:
         self.locks.append(common)
 
     def status(self):
-        rows, reasons = [], {}
-        def visit(path):
+        rows, reasons, parents = [], {}, {}
+        def visit(path, parent=None):
+            parents[str(path)] = str(parent) if parent else None
             with sequence('Inspect '+path.name, 2) as phases:
                 with phases.step('Inspect repository'):
                     report('Inspecting repositories · ' + path.name)
@@ -298,10 +299,11 @@ class Workflow:
                     for relative, _ in links:
                         with descendants.step(relative):
                             child = path / relative
+                            parents[str(child)] = str(path)
                             try: child_name(path, relative)
                             except (GitError, ValueError):
                                 rows.append(dict(path=str(child), branch='', status='blocked', ahead=None, behind=None, files=[])); self.failed = True; continue
-                            visit(child)
+                            visit(child, path)
         with sequence('Git status', 2 if self.wiki and self.wiki.row and not self.wiki.only else 1, unit='repo') as repositories:
             with repositories.step(self.root.name): visit(self.root)
             if self.wiki and self.wiki.only:
@@ -315,16 +317,24 @@ class Workflow:
         if self.args.json:
             print(json.dumps(dict(schema=1, remote_state='cached', repositories=rows, complete=not self.failed), ensure_ascii=True))
         else:
-            self.ui.heading('Git status')
-            for row in rows:
+            if self.output:
+                self.output.root = self.root
+                self.output.forest(parents)
+            else: self.ui.heading('Git status')
+            for index, row in enumerate(rows):
                 path = Path(row['path'])
                 label = str(path) if self.args.full_paths else path.name
                 if not self.args.full_paths and sum(Path(r['path']).name == path.name for r in rows) > 1:
                     label = (str(path.relative_to(self.root)) if path.is_relative_to(self.root) else str(path)) if path != self.root else path.name + ' (root)'
                 if self.output:
-                    display = dict(row, reason=reasons.get(str(path),''), remote={'owned':self.owned(path)})
-                    if self.view == 'verbose' and row['status'] not in ('missing','blocked'):
+                    display = dict(row)
+                    reason = reasons.get(str(path), '')
+                    if reason and reason != 'Associated wiki repository': display['reason'] = reason
+                    if row['status'] not in ('missing', 'blocked'):
                         display.update(self.metadata(path))
+                    if index:
+                        self.output.position(str(path), row.get('kind') == 'wiki')
+                        self.output.separator()
                     self.output.status(display, label)
                     continue
                 self.ui.emit()
@@ -344,6 +354,7 @@ class Workflow:
                                                 display=str(path / file['old_path']) if self.args.full_paths else file['old_path'], path_components=True)
             changed = sum(r['status'] != 'clean' for r in rows)
             summary = f'{len(rows)} repositories / {changed} changed or unavailable / {len(rows)-changed} clean'
+            if self.output and self.view != 'verbose': return
             if self.output:
                 self.ui._spans([(summary, '')], prefix='  ')
                 self.ui._spans([('Remote state uses local tracking refs; no fetch performed.', '')], prefix='  ')
@@ -713,7 +724,10 @@ class Workflow:
                 if not self.args.json: self.ui.heading('Git ' + command)
                 if self.args.command == 'sync':
                     with sequence('Synchronize repositories', 2 if self.wiki and self.wiki.row and not self.wiki.only else 1, unit='repo') as roots:
-                        with roots.step(self.root.name): self.sync(self.root)
+                        with roots.step(self.root.name):
+                            if self.wiki and self.wiki.only:
+                                self.wiki.recheck()
+                            self.sync(self.root)
                         if self.wiki and self.wiki.row and not self.wiki.only:
                             with roots.step('Wiki'):
                                 if self.wiki.row['availability']=='available':
@@ -774,7 +788,8 @@ def main():
     if hasattr(signal, 'SIGBREAK'): signal.signal(signal.SIGBREAK, interrupted)
     workflow=Workflow(args)
     if args.wiki_only and (args.no_wiki or args.scoped_publish): parser.error('wiki-only scope conflicts with submodule/exclusion scope')
-    if not args.no_wiki and not args.scoped_publish and (args.wiki_only or (workflow.root/'.dots/wiki.json').is_file()):
+    if not args.no_wiki and not args.scoped_publish and (args.wiki_only or os.path.lexists(workflow.root/'.dots/wiki.json')
+            or args.command == 'status' and workflow.root.name and workflow.root.with_name(workflow.root.name + '.wiki').is_dir()):
         from wiki_git import Companion
         workflow.wiki=Companion(workflow)
     return workflow.run()

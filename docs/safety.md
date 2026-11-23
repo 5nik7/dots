@@ -59,6 +59,10 @@ source/copy/receipt updates in one transaction. Post-commit cache refresh and ap
 notification failures are reported separately; recovery cannot establish that a
 running application has reloaded. See [fonts](fonts.md).
 
+In the glyph picker, Alt-I verifies the originating tmux client, session and
+pane before inserting printable glyphs. Each press inserts immediately without
+submitting the command line. Esc discards only the marks still in the picker.
+
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
 ## Repository Editing Boundary
@@ -505,6 +509,8 @@ Git catalog/import mappings and verified legacy links, including matching dangli
 retains historical receipt baselines, verifies effective configuration without
 printing values or executing credential helpers, and undoes failed verification.
 It never removes moved platform source files.
+
+A conventionally named sibling Wiki is included in read-only Git reports after matching its remote identity. Top-level sync and publish include declared Wikis only. Explicit Wiki synchronization or publication rechecks the sibling association. Publication also checks the effective push destination.
 
 ## File-picker previews
 

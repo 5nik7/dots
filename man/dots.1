@@ -3210,8 +3210,8 @@ Emit versioned JSON
 .B "\-\-update"
 Fast\-forward clean sources before setup
 .TP
-.B "\-\-with\-source termux,windows,nvim"
-Select a bundled platform source or initialize nvim
+.B "\-\-with\-source termux,windows,nvim,git\-it"
+Select a bundled platform source or initialize a public submodule
 .TP
 .B "\-\-packages VALUE"
 Restore a package manifest before configuration
@@ -3222,7 +3222,7 @@ Open the setup wizard
 .B "\-\-non\-interactive"
 Skip the wizard; writes require \-\-yes
 .TP
-.B "\-\-component core,files,themes,anodize,blastoff,pkgs,packages,fonts,leaf"
+.B "\-\-component core,files,themes,anodize,blastoff,pkgs,git\-it,packages,fonts,leaf"
 Select components instead of defaults; repeat
 .TP
 .B "\-\-resource VALUE"
@@ -3811,7 +3811,7 @@ Open the setup wizard
 .B "\-\-non\-interactive"
 Skip the wizard; writes require \-\-yes
 .TP
-.B "\-\-component core,files,themes,anodize,blastoff,pkgs,packages,fonts,leaf"
+.B "\-\-component core,files,themes,anodize,blastoff,pkgs,git\-it,packages,fonts,leaf"
 Select components instead of defaults; repeat
 .TP
 .B "\-\-resource VALUE"
@@ -4787,6 +4787,378 @@ Use compact human output
 .TP
 .B "\-\-verbose, \-v"
 Show metadata and action details without patches
+.SS "dots git it"
+Run standalone git\-it in the current working directory
+.PP
+.B "dots git it [COMMAND] [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the working directory
+.TP
+.B "\-\-config VALUE"
+Read a git\-it configuration file
+.TP
+.B "\-\-no\-config"
+Ignore git\-it configuration
+.TP
+.B "\-\-color auto,always,never"
+Select the color policy
+.TP
+.B "\-\-no\-color"
+Disable color
+.TP
+.B "\-\-verbose, \-v"
+Show additional repository details
+.TP
+.B "\-\-no\-progress"
+Disable progress indicators
+.TP
+.B "\-\-json"
+Print structured output
+.TP
+.B "\-\-help, \-h"
+Show help
+.TP
+.B "\-\-version, \-V"
+Show the version
+.TP
+.B "\-\-completion bash,zsh,fish"
+Print standalone shell completion
+.TP
+.B "\-\-status, \-s"
+Show recursive local status
+.TP
+.B "\-\-sync"
+Synchronize repositories
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.SS "dots git it info"
+Inspect repository and remote metadata
+.PP
+.B "dots git it info [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the working directory
+.TP
+.B "\-\-config VALUE"
+Read a git\-it configuration file
+.TP
+.B "\-\-no\-config"
+Ignore git\-it configuration
+.TP
+.B "\-\-color auto,always,never"
+Select the color policy
+.TP
+.B "\-\-no\-color"
+Disable color
+.TP
+.B "\-\-verbose, \-v"
+Show additional repository details
+.TP
+.B "\-\-no\-progress"
+Disable progress indicators
+.TP
+.B "\-\-json"
+Print structured output
+.TP
+.B "\-\-help, \-h"
+Show help
+.TP
+.B "\-\-version, \-V"
+Show the version
+.TP
+.B "\-\-completion bash,zsh,fish"
+Print standalone shell completion
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.SS "dots git it path"
+Show the worktree path and verified ancestry
+.PP
+.B "dots git it path [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the working directory
+.TP
+.B "\-\-config VALUE"
+Read a git\-it configuration file
+.TP
+.B "\-\-no\-config"
+Ignore git\-it configuration
+.TP
+.B "\-\-color auto,always,never"
+Select the color policy
+.TP
+.B "\-\-no\-color"
+Disable color
+.TP
+.B "\-\-verbose, \-v"
+Show additional repository details
+.TP
+.B "\-\-no\-progress"
+Disable progress indicators
+.TP
+.B "\-\-json"
+Print structured output
+.TP
+.B "\-\-help, \-h"
+Show help
+.TP
+.B "\-\-version, \-V"
+Show the version
+.TP
+.B "\-\-completion bash,zsh,fish"
+Print standalone shell completion
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.SS "dots git it publish"
+Preview and publish selected Git changes
+.PP
+.B "dots git it publish [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the working directory
+.TP
+.B "\-\-config VALUE"
+Read a git\-it configuration file
+.TP
+.B "\-\-no\-config"
+Ignore git\-it configuration
+.TP
+.B "\-\-color auto,always,never"
+Select the color policy
+.TP
+.B "\-\-no\-color"
+Disable color
+.TP
+.B "\-\-verbose, \-v"
+Show additional repository details
+.TP
+.B "\-\-no\-progress"
+Disable progress indicators
+.TP
+.B "\-\-json"
+Print structured output
+.TP
+.B "\-\-help, \-h"
+Show help
+.TP
+.B "\-\-version, \-V"
+Show the version
+.TP
+.B "\-\-completion bash,zsh,fish"
+Print standalone shell completion
+.TP
+.B "\-\-outermost"
+Start at the outermost verified parent
+.TP
+.B "\-\-dry\-run"
+Preview with local information
+.TP
+.B "\-\-all"
+Select tracked and untracked changes
+.TP
+.B "\-\-message, \-m VALUE"
+Set the commit message
+.TP
+.B "\-\-yes"
+Accept the publication preview
+.SS "dots git it status"
+Show recursive local worktree and cached tracking status
+.PP
+.B "dots git it status [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the working directory
+.TP
+.B "\-\-config VALUE"
+Read a git\-it configuration file
+.TP
+.B "\-\-no\-config"
+Ignore git\-it configuration
+.TP
+.B "\-\-color auto,always,never"
+Select the color policy
+.TP
+.B "\-\-no\-color"
+Disable color
+.TP
+.B "\-\-verbose, \-v"
+Show additional repository details
+.TP
+.B "\-\-no\-progress"
+Disable progress indicators
+.TP
+.B "\-\-json"
+Print structured output
+.TP
+.B "\-\-help, \-h"
+Show help
+.TP
+.B "\-\-version, \-V"
+Show the version
+.TP
+.B "\-\-completion bash,zsh,fish"
+Print standalone shell completion
+.TP
+.B "\-\-outermost"
+Start at the outermost verified parent
+.TP
+.B "\-\-view default,short,verbose"
+Select the status view
+.TP
+.B "\-\-short"
+Use compact status
+.TP
+.B "\-\-full\-paths"
+Show absolute status paths
+.SS "dots git it sync"
+Fast\-forward the repository and synchronize submodules
+.PP
+.B "dots git it sync [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the working directory
+.TP
+.B "\-\-config VALUE"
+Read a git\-it configuration file
+.TP
+.B "\-\-no\-config"
+Ignore git\-it configuration
+.TP
+.B "\-\-color auto,always,never"
+Select the color policy
+.TP
+.B "\-\-no\-color"
+Disable color
+.TP
+.B "\-\-verbose, \-v"
+Show additional repository details
+.TP
+.B "\-\-no\-progress"
+Disable progress indicators
+.TP
+.B "\-\-json"
+Print structured output
+.TP
+.B "\-\-help, \-h"
+Show help
+.TP
+.B "\-\-version, \-V"
+Show the version
+.TP
+.B "\-\-completion bash,zsh,fish"
+Print standalone shell completion
+.TP
+.B "\-\-outermost"
+Start at the outermost verified parent
+.TP
+.B "\-\-dry\-run"
+Preview with local information
+.TP
+.B "\-\-remote"
+Advance configured submodule branches
 .SS "dots git publish"
 Preview and publish children before parents
 .PP
@@ -8573,8 +8945,8 @@ Emit setup JSON
 .B "\-\-update"
 Update clean sources before setup
 .TP
-.B "\-\-with\-source termux,windows,nvim"
-Select a bundled platform source or initialize nvim
+.B "\-\-with\-source termux,windows,nvim,git\-it"
+Select a bundled platform source or initialize a public submodule
 .TP
 .B "\-\-packages VALUE"
 Restore a package manifest during explicit setup
@@ -8585,7 +8957,7 @@ Open the setup wizard
 .B "\-\-non\-interactive"
 Skip the wizard; writes require \-\-yes
 .TP
-.B "\-\-component core,files,themes,anodize,blastoff,pkgs,packages,fonts,leaf"
+.B "\-\-component core,files,themes,anodize,blastoff,pkgs,git\-it,packages,fonts,leaf"
 Select components instead of defaults; repeat
 .TP
 .B "\-\-resource VALUE"

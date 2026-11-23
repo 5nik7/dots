@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Installed launchers live beside dots, including when both are symlinks.
+source_path=${BASH_SOURCE[0]}
+[[ $source_path == /* ]] || source_path=$PWD/$source_path
+exec "${source_path%/*}/dots" fonts icons "$@"

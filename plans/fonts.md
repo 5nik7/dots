@@ -1,5 +1,20 @@
 # Personal font management
 
+## Icon picker and standalone nf
+
+**Implemented.** The core installer supplies the `nf` forwarding shim with
+six-shell option completion. The Fonts menu now supports ordered Tab marks,
+persistent tmux insertion and a fixed first column. The glyph foreground uses
+the existing Fonts glyph style with a theme accent fallback. Zsh fzf-tab
+replaces an exact `nf` argument from the cached glyph index. The completion
+inherits the fzf-tab frontend, options and palette under `:fzf-tab:complete:nf:icons`.
+Config's glyph editor still selects one value. The Fonts and shell guides cover both pickers.
+The root README's setup and first commands are unaffected.
+
+Termux checks use real FZF at 40, 80 and 120 columns, two private tmux clients
+and the normal Zsh fzf-tab startup. Native Windows PowerShell 5.1/7 and desktop
+Linux/WSL terminal checks remain pending.
+
 ## Fonts output and configuration pass
 
 **Status: Implemented; native desktop visual checks pending.** Owner: `dots-fonts-maintenance`. Review every Fonts

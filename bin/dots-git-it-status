@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# dots:summary=Show recursive local worktree and cached tracking status
+# dots:usage=[OPTIONS]
+# dots:option=--directory|-C|directory|Select the working directory
+# dots:option=--config||file|Read a git-it configuration file
+# dots:option=--no-config||flag|Ignore git-it configuration
+# dots:option=--color||choice:auto,always,never|Select the color policy
+# dots:option=--no-color||flag|Disable color
+# dots:option=--verbose|-v|flag|Show additional repository details
+# dots:option=--no-progress||flag|Disable progress indicators
+# dots:option=--json||flag|Print structured output
+# dots:option=--help|-h|flag|Show help
+# dots:option=--version|-V|flag|Show the version
+# dots:option=--completion||choice:bash,zsh,fish|Print standalone shell completion
+# dots:option=--outermost||flag|Start at the outermost verified parent
+# dots:option=--view||choice:default,short,verbose|Select the status view
+# dots:option=--short||flag|Use compact status
+# dots:option=--full-paths||flag|Show absolute status paths
+# dots:option=--no-wiki||flag|Exclude the associated wiki
+exec "${BASH_SOURCE[0]%/*}/dots-git-it" status "$@"

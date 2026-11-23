@@ -371,6 +371,7 @@ class GitOperations(unittest.TestCase):
 
     def test_sync_preserves_ignored_file_collision(self):
         source, bare, repo = self.remote_repo("ignored")
+        (repo / ".git/info").mkdir(exist_ok=True)
         (repo / ".git/info/exclude").write_text("collision\n")
         (repo / "collision").write_text("precious ignored contents\n")
         (source / "collision").write_text("upstream\n")

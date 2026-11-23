@@ -441,7 +441,9 @@ The optional less standout style is owned by `lib/dots/less_style.py` for Python
 
 ## Application plugin ownership
 
-The three first-party application source trees live under `plugins/`, declared by its manifest. Anodize owns its Python adapters and independent Go engine there; shared Dots services remain in `lib/dots`. Static launchers resolve one selected plugin without discovery. The installation controller owns combined assets and receipt-led legacy migration through the existing Store. See [application plugins](plugins.md).
+The three bundled first-party application source trees live under `plugins/`, declared by its manifest. Anodize owns its Python adapters and independent Go engine there; shared Dots services remain in `lib/dots`. Static launchers resolve one selected plugin without discovery. The installation controller owns combined assets and receipt-led legacy migration through the existing Store. See [application plugins](plugins.md).
+
+The git-it application is independently versioned and pinned at `plugins/git-it`. The Dots Git family owns static integration metadata. `dots git it` dispatches directly to the selected checkout. Standalone code, logo, man page and completions live in the submodule. See [plugin ownership](plugins.md#git-it).
 
 ### Codex attention bridge
 

@@ -219,6 +219,10 @@ dots_complete() {
     python3 -B "$DOTS_LIB_DIR/bak_completion.py" "$shell" "${words[@]:1:cursor}"
     return
   fi
+  if [[ $command_name == nf ]]; then
+    python3 -B "$DOTS_LIB_DIR/fonts/completion.py" icons "${words[@]:1:cursor}"
+    return
+  fi
   if [[ $command_name == fonts ]]; then
     python3 -B "$DOTS_LIB_DIR/fonts/completion.py" "${words[@]:1:cursor}"
     return
@@ -285,6 +289,10 @@ dots_complete() {
     (( ++index ))
   done
   dots_roots
+  if (( index+1 < cursor )) && [[ ${words[index]} == git && ${words[index+1]} == it ]]; then
+    python3 -B "$DOTS_LIB_DIR/bundled_apps.py" git-it "${words[@]:index+2:cursor-index-1}"
+    return
+  fi
   if (( index < cursor )) && [[ ${words[index]} == blastoff || ${words[index]} == pkgs ]]; then
     python3 -B "$DOTS_LIB_DIR/bundled_apps.py" "${words[@]:index:cursor-index+1}"
     return

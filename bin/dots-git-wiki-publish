@@ -13,5 +13,8 @@
 # dots:option=--message|-m|string|Commit message
 # dots:option=--config||file|Owner configuration file
 # dots:option=--no-config||flag|Ignore owner configuration
+# dots:option=--color||choice:auto,always,never|Select terminal colors
+# dots:option=--no-color||flag|Disable terminal colors
+# dots:option=--no-progress||flag|Disable terminal progress
 WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
 exec python3 -B "$WIKI_LIB/wiki_git.py" publish "$@"

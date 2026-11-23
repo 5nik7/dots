@@ -1,8 +1,10 @@
 """Git human views over existing records. Never discovers or mutates a repository."""
+from functools import lru_cache
 from pathlib import Path
 import os
 
 from cli_preferences import VIEWS, git_view
+from resources import cells, wrap
 
 
 def arguments(parser):
@@ -15,15 +17,15 @@ def resolve(args, ui):
     modes = set(getattr(args, '_views', None) or [])
     if getattr(args, 'details', False): modes.add('verbose')
     if len(modes) > 1: raise ValueError('conflicting Git views; select default, short or verbose')
-    return git_view(next(iter(modes), None), human=ui.stream.isatty() or os.environ.get('DOTS_MENU_CAPTURE') == '1', data=args.json)
+    return git_view(next(iter(modes), None), human=ui.human or os.environ.get('DOTS_MENU_CAPTURE') == '1', data=args.json)
 
 
 STATES = {'M': 'modified', 'A': 'added', 'D': 'deleted', 'R': 'renamed',
           'C': 'copied', 'T': 'type changed', 'U': 'unmerged'}
 CONFLICTS = {'DD': 'both deleted', 'AU': 'added by us', 'UD': 'deleted by them',
              'UA': 'added by them', 'DU': 'deleted by us', 'AA': 'both added', 'UU': 'both modified'}
-STATUS_ICONS = dict(modified='', added='󰐕', deleted='󰆴', renamed='', copied='',
-                    type_changed='󰑓', untracked='', ignored='', conflict='', selected='')
+STATUS_ICONS = dict(modified='', added='', deleted='', renamed='', copied='',
+                    type_changed='󰑓', untracked='', ignored='', conflict='', selected='')
 
 
 def file_icon_role(xy):
@@ -57,6 +59,33 @@ def file_role(xy):
     return 'modified' if len(xy) > 1 and xy[1] != ' ' else 'staged'
 
 
+def guide_foreground(ui):
+    from style_config import current
+    styles = current() if ui.color else None
+    return styles.git_guide_foreground() if styles else '90'
+
+
+@lru_cache(maxsize=128)
+def foreground_only(sgr):
+    """Keep the final SGR foreground, skipping complete background RGB/index values."""
+    params = sgr.split(';')
+    result = '39'
+    i = 0
+    while i < len(params):
+        param = params[i]
+        if param in ('38', '48', '58') and i + 1 < len(params):
+            length = {'2': 5, '5': 3}.get(params[i+1], 1)
+            if param == '38' and length > 1 and i + length <= len(params):
+                result = ';'.join(params[i:i+length])
+            i += length
+        else:
+            if param == '0': result = '39'
+            elif param.isdecimal() and (30 <= int(param) <= 37 or 90 <= int(param) <= 97 or param == '39'):
+                result = param
+            i += 1
+    return result
+
+
 class GitView:
     def __init__(self, ui, mode, full_paths=False, root=None):
         self.ui, self.mode, self.full_paths = ui, mode, full_paths
@@ -66,40 +95,130 @@ class GitView:
         self.previews = set()
         self.renames = {}
         self.selections = {}
+        self.parents = {}
+        self.last_child = {}
+        self.gutter = ' '
+        self.header_prefix = ''
+        self.vertical, self.fork, self.end = '│', '├', '└'
+        self.guide = guide_foreground(ui)
 
     def role(self, name):
         return self.ui.resources.git_style(name)
+
+    def forest(self, parents):
+        self.parents = parents
+        self.last_child = {parent: path for path, parent in parents.items() if parent}
+
+    def position(self, path, wiki=False):
+        parent = self.parents.get(path)
+        if not parent:
+            self.header_prefix = ''
+            self.gutter = '  ' if wiki else self.vertical
+            return
+        ancestors = []
+        ancestor = parent
+        while self.parents.get(ancestor):
+            grand = self.parents[ancestor]
+            ancestors.append('  ' if self.last_child[grand] == ancestor else self.vertical + ' ')
+            ancestor = grand
+        column = ''.join(reversed(ancestors))
+        limit = max(4, self.ui.width // 3)
+        if len(column) > limit: column = '... ' + column[-(limit-4):] if limit > 4 else '... '
+        last = self.last_child[parent] == path
+        self.header_prefix = column + (self.end if last else self.fork) + ' '
+        self.gutter = column + ('  ' if last else self.vertical + ' ')
+
+    def separator(self):
+        self.ui.emit(self.ui.paint_guide(self.header_prefix[:-2] + self.vertical, self.guide))
 
     def header(self, row, label=None):
         ui = self.ui
         path = Path(row['path'])
         label = str(path) if self.full_paths else label or path.name
         remote = row.get('remote') or {}
-        identity = ui.repository_label(path, label, remote.get('host'))
-        branch = row.get('branch') or ('detached ' + row['head'][:8] if row.get('head') else 'unborn' if row.get('status') not in ('missing','blocked') else 'unavailable')
+        kind = row.get('kind') or ('submodule' if row.get('parent') or self.parents.get(str(path)) else 'root')
+        self.position(str(path), kind == 'wiki')
+        icon = ''
+        if ui.icons:
+            if kind == 'wiki': icon = ui.icon('git.wiki', '󱔘')
+            elif kind == 'submodule':
+                icon = ui.icon('git.submodule_github', '') if remote.get('host') == 'github.com' else ui.icon('git.submodule', '')
+            else:
+                from git_identity import host_icon
+                icon = host_icon(remote.get('host'))
+        identity = (icon + ' ' if icon else '') + label
         state = row.get('status', '')
+        branch = row.get('branch') or ('detached ' + row['head'][:8] if row.get('head') else 'unavailable' if state in ('missing','blocked') else 'unborn')
+        detached = branch.startswith('detached ')
+        branch = branch.removeprefix('detached ')
         spans = [(identity, self.role('repo_owned' if remote.get('owned') else 'repo')),
-                 ('  ' + ui.branch_label(branch), self.role('detached' if branch.startswith('detached ') else 'branch')),
-                 ('  ' + state, self.role(state))]
-        if row.get('ahead') is not None:
-            spans += [('  ' + str(row['ahead']) + ' ahead', self.role('ahead')),
-                      (' / ' + str(row['behind']) + ' behind (cached)', self.role('behind'))]
-        else: spans += [('  tracking unknown (cached)', '2')]
-        ui._spans(spans, prefix='  ')
+                 (' ' + ui.branch_label(branch), self.role('detached' if detached else 'branch'))]
+        for role, fallback in (('ahead', '󱦲'), ('behind', '󱦳')):
+            count = row.get(role)
+            if count:
+                glyph = ui.icon('git.' + role, fallback) if ui.icons else ''
+                space = '' if glyph and role == 'behind' and row.get('ahead') else ' '
+                spans.append((space + (glyph or role + ' ') + str(count), self.role(role)))
+        if state and (self.mode == 'verbose' or state in ('missing', 'blocked', 'conflict')):
+            spans.append(('  ' + state, self.role(state)))
+        ui._spans(spans, prefix=[(self.header_prefix, self.guide)],
+                  continuation_prefix=[(self.gutter + ' ', self.guide)])
         if row.get('pointer_changed'): ui.detail('Pointer', 'differs from parent index', self.role('modified'))
-        if row.get('reason'): ui.detail('Reason', row['reason'], self.role('blocked'))
+        if row.get('reason'): ui._spans([('Reason  ', '93'), (row['reason'], None)], [(self.gutter + ' ', self.guide)],
+                                         continuation_prefix=[(self.gutter + ' ', self.guide)])
+
+    def box(self, row):
+        ui = self.ui
+        remote = row.get('remote') or {}
+        url = remote.get('url') or ''
+        protocol = url.split('://', 1)[0] if '://' in url else 'ssh' if remote.get('host') else 'local' if url else ''
+        fields = [('Host', remote.get('host')), ('Protocol', protocol), ('Remote', remote.get('name')),
+                  ('Upstream', (row.get('upstream') or '').removeprefix('refs/remotes/')), ('Owner', remote.get('owner')),
+                  ('Root', row['path'] if self.full_paths else ui.path(row['path']))]
+        if self.mode == 'verbose':
+            fields.extend([('HEAD', row.get('head') or 'unborn'), ('URL', url), ('Tracking', row.get('upstream'))])
+            if row.get('recorded_commit'): fields.append(('Recorded', row['recorded_commit']))
+            if remote.get('owned') is not None: fields.append(('Owned', 'yes' if remote['owned'] else 'no'))
+        fields = [(key, ui.clean(value or 'unavailable')) for key, value in fields]
+        labels = max(len(key) for key, _ in fields)
+        available = ui.width - cells(self.gutter) - labels - 6
+        if available < 2:
+            for key, value in fields: ui._spans([(key + ' ', '94'), (value, None)], [(self.gutter, self.guide)],
+                                                 continuation_prefix=[(self.gutter, self.guide)])
+            return
+        width = min(available, max(cells(value) for _, value in fields))
+        tl, tr, bl, br, rule = '┌', '┐', '└', '┘', '─'
+        edge = rule * (labels + width + 4)
+        ui.emit(ui.paint_guide(self.gutter + tl + edge + tr, self.guide))
+        for key, value in fields:
+            path_style = ui.resources.match_style('', kind='dir')[0] if key == 'Root' else None
+            for line in wrap(value, width):
+                ui.emit(ui.paint_guide(self.gutter + self.vertical + ' ', self.guide) + ui.paint(key.ljust(labels), '94') +
+                        '  ' + (ui.paint(line, path_style) if path_style else line) + ' ' * (width - cells(line) + 1) + ui.paint_guide(self.vertical, self.guide))
+                key = ''
+        ui.emit(ui.paint_guide(self.gutter + bl + edge + br, self.guide))
 
     def file(self, repo, row, ui=None, *, listed=False):
-        path = row['path']; old = row.get('old_path', '')
-        xy = row.get('xy', '')
-        label = xy if self.mode == 'short' else file_label(xy, self.mode == 'verbose')
-        display = str(Path(repo) / path) if self.full_paths else path
-        previous = (Path(repo) / old, str(Path(repo) / old) if self.full_paths else old) if old else None
-        if row.get('changed') and self.mode != 'short': label = STATES.get(xy.strip(), xy.strip())
-        role = 'modified' if row.get('changed') and xy[:1] in ('M','T') else file_role(xy)
-        (ui or self.ui).resource_detail('' if listed else label, Path(repo) / path, display=display,
-                                       label_code=self.role(role), label_width=2 if self.mode == 'short' else None,
-                                       path_components=True, previous=previous, listed=listed)
+        target = ui or self.ui
+        name = row['path']
+        def resource(name):
+            actual = Path(repo) / name
+            return target.path_spans(actual, str(actual) if self.full_paths else name)
+        from style_config import code as style_code
+        xy = row.get('xy') or ''
+        code = self.state_role(xy, row.get('changed', False))
+        group_fg = foreground_only(style_code(code)) if target.color else None
+        spans = []
+        if not listed and xy: spans.append(('[' + xy + '] ', code))
+        if row.get('old_path'):
+            spans.extend(resource(row['old_path']))
+            spans.append((' → ', None))
+        spans.extend(resource(name))
+        last = row.get('_last')
+        outer = (self.gutter + ' ', self.guide)
+        prefix = [outer, ((self.end if last else self.fork) + ' ', group_fg)]
+        continued = [outer, ('  ' if last else self.vertical + ' ', group_fg)]
+        target._spans(spans, prefix, continuation_prefix=continued)
 
     def metadata(self, row):
         ui = self.ui
@@ -118,7 +237,8 @@ class GitView:
 
     def status(self, row, label=None):
         self.header(row, label)
-        if self.mode == 'verbose': self.metadata(row)
+        if self.mode != 'short' and (self.mode == 'verbose' or Path(row['path']) == self.root) and row.get('status') not in ('missing', 'blocked'):
+            self.box(row)
         self.file_list(row['path'], row.get('files', []))
 
     @staticmethod
@@ -143,9 +263,9 @@ class GitView:
             if spans: spans.append((' / ', None))
             spans.append((f'{self.state_label(xy, changed)} ({len(entries)})', self.state_role(xy, changed)))
         if spans:
-            if label == 'States':
-                target._spans([('States  ', '94'), *spans], prefix='    ',
-                              continuation_prefix='            ', icon_styles=False)
+            if label in ('States', 'Changes'):
+                target._spans([(label + '  ', '94'), *spans], prefix=[(self.gutter + ' ', self.guide)],
+                              continuation_prefix=[(self.gutter + '   ', self.guide)], icon_styles=False)
             else: target.detail_spans(label, spans)
         elif empty is not None: target.detail(label, empty)
 
@@ -153,29 +273,25 @@ class GitView:
         target = ui or self.ui
         if self.mode == 'short':
             self.summary(files, ui=target)
-            for file in files: self.file(repo, file, ui=target)
+            for i, file in enumerate(files): self.file(repo, dict(file, _last=i == len(files)-1), ui=target)
             return
         for (xy, changed), entries in self.groups(files).items():
             role = file_icon_role(xy)
             icon = target.icon('git.status.' + role, STATUS_ICONS[role]) if target.icons else ''
             label = (icon + ' ' if icon else '') + self.state_label(xy, changed) + f' ({len(entries)})'
             # A shared glyph must not inherit another surface's icon override.
-            target._spans([(label, self.state_role(xy, changed))], prefix='    ', icon_styles=False)
-            for file in entries: self.file(repo, file, ui=target, listed=True)
+            target._spans([(label, self.state_role(xy, changed))], prefix=[(self.gutter + ' ', self.guide)],
+                          continuation_prefix=[(self.gutter + ' ', self.guide)], icon_styles=False)
+            for i, file in enumerate(entries): self.file(repo, dict(file, _last=i == len(entries)-1), ui=target, listed=True)
 
     def info(self, row, label=None):
         self.header(row, label)
-        self.summary(row.get('files', []), label='Changes',
-                     empty='none' if row.get('status') == 'clean' else 'unavailable')
-        if self.mode == 'short': return
-        remote = row.get('remote') or {}
-        self.ui.detail('Remote', remote.get('name') or 'unavailable')
-        self.ui.detail('Upstream', row.get('upstream') or 'unavailable')
+        if (self.mode == 'verbose' or self.mode != 'short' and Path(row['path']) == self.root) and row.get('status') not in ('missing', 'blocked'): self.box(row)
+        self.summary(row.get('files', []), label='Changes')
         if row.get('selector'): self.ui.detail('Selector', row['selector'])
         if row.get('submodules'):
             counts = row['submodules']
             self.ui.detail('Submodules', f"{counts['total']} discovered / {counts['available']} available / {counts['missing']} missing / {counts['blocked']} blocked")
-        if self.mode == 'verbose': self.metadata(row)
 
     def identity(self, path, target):
         identity = str(path) if self.full_paths else Path(path).name

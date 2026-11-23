@@ -265,6 +265,8 @@ resolve per theme, and explicit false attributes override inherited true values.
 
 ## Implemented checkout installation boundary
 
+The 4 MiB catalog input limit applies to catalogs. The transaction store reads its own schema-1 journals at the size written, including large file or font operations. Apply checks every historical journal for unfinished work under the state lock, releasing each operation list before reading the next journal.
+
 Native Windows transaction operations may carry an optional `payload_suffix`
 field: empty, `.exe`, `.com`, `.bat`, or `.cmd`. Payload readers validate this
 closed set before deriving `<index>-before<suffix>` or `<index>-after<suffix>`.
@@ -518,6 +520,13 @@ See [controls and native weather](profiles.md#application-and-formatting-control
 `formatting.apps.menu.popup` and `colors.apps.menu.popup` declares dedicated Dots popup position, border style and nullable native color slots in the separated typed defaults/profile preference files. The shared selector applies these after generic FZF presentation preferences; shell border defaults cannot suppress a Dots frame. Position changes retain controller-owned dimensions. FZF selectors and native tmux terminal hosts read effective settings at invocation, without publication, global tmux option changes or a second configuration store. See [popup controls](profiles.md#dots-popup-appearance) for accepted fields and defaults.
 
 Popup `width`/`height` are string-or-integer controls: `auto`, `fit`, `fill`, integer percentages 1%–100%, or integer cells 1–10000. Both default to `auto`. Resolution uses the addressed client's viewport; explicit overrides are bounded, while inline width remains owned by its terminal. Typed explain data includes `constraints` (`type`, optional finite `choices`, `syntax`, `examples`) from the validation declarations. Choices are exhaustive only for finite enums; examples do not restrict custom syntax. Profile null/reset semantics and exact scalar get output are unchanged.
+
+The four [Yazi tab bar controls](configuration.md#yazi-tab-bar) use
+`apps.yazi.tab_bar` in shared and profile `config.json`. The Yazi setup reads
+the resolved object from the schema-1 `config get --json` response. Visibility
+values are booleans, labels are a finite string choice, and width is an integer
+from 0 through 4096. These settings apply at launch independently of the
+published Yazi color and icon projection.
 
 ## Existing-source registration inputs
 

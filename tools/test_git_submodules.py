@@ -45,7 +45,7 @@ class Cases:
             args[2:2] = ['--config', str(self.config)]
         return self.run_cmd(
             [*self.prefix(), 'git', *args, *([] if '--' in args else ['-C', str(repo)])],
-            ok=ok, env=env or dict(self.env, DOTS=str(PROJECT)))
+            ok=ok, env=env or self.env)
 
     def data(self, repo, *args, ok=True):
         result = self.call(repo, *args, '--json', ok=ok)
@@ -65,6 +65,16 @@ class Cases:
         return top, child, child / 'leaf'
 
     def test_info_remote_identity_redaction_and_unborn(self):
+        # Use the fixture owner rules even when the development checkout has
+        # a platform profile with its own git.conf.
+        checkout = self.base/'dots'
+        checkout.mkdir()
+        for name in ('bin', 'lib', 'default'):
+            if os.name == 'nt':
+                shutil.copytree(PROJECT/name, checkout/name)
+            else:
+                (checkout/name).symlink_to(PROJECT/name, target_is_directory=True)
+        self.env['DOTS'] = str(checkout)
         repo = self.repo('identity')
         self.git(repo, 'remote', 'add', 'origin', 'https://user:password@github.com/mine/project.git?secret=value#token')
         conf = self.home / '.config/dots/git.conf'
@@ -75,7 +85,7 @@ class Cases:
         self.assertEqual(remote['url'], 'https://github.com/mine/project.git')
         self.assertEqual(remote['owner'], 'mine')
         self.assertTrue(remote['owned'])
-        output = self.call(repo, 'info', env=dict(self.env, DOTS=str(PROJECT), DOTS_COLOR='always', DOTS_ICONS='always')).stdout
+        output = self.call(repo, 'info', env=dict(self.env, DOTS_COLOR='always', DOTS_ICONS='always')).stdout
         self.assertIn('󰊤', output)
         for secret in ('password', 'secret=value', '#token'):
             self.assertNotIn(secret, output + json.dumps(data))
@@ -102,20 +112,18 @@ class Cases:
         rich = dict(self.env, DOTS_COLOR='never', DOTS_ICONS='always', COLUMNS='120')
         output = self.call(top, 'submodules', env=rich).stdout
         lines = output.splitlines()
-        self.assertTrue(lines[1].startswith('│   Repository '), output)
-        self.assertEqual(lines[2], '│')
-        self.assertIn('\n├──  modules/child ', output)
-        self.assertIn('\n│   │\n│   └──  modules/child/leaf ', output)
-        self.assertIn('\n│\n└──  z-last ', output)
+        self.assertTrue(lines[0].startswith('├  child '), output)
+        self.assertIn('\n│ │\n│ └  leaf ', output)
+        self.assertIn('\n│\n└  z-last ', output)
         detailed = self.call(top, 'submodules', '--details', env=rich).stdout
-        section = detailed[detailed.index('├── '):detailed.index('└──  z-last')].splitlines()
+        section = detailed[detailed.index('├ '):detailed.index('└  z-last')].splitlines()
         self.assertTrue(all(line.startswith('│') for line in section[1:]), detailed)
         narrow = self.call(top, 'submodules', '--details', '--full-paths', env=dict(rich, COLUMNS='40')).stdout
         self.assertTrue(all(len(line) <= 40 for line in narrow.splitlines()), narrow)
-        ascii_view = self.call(top, 'submodules', env=dict(rich, DOTS_ICONS='never', DOTS_COLOR='always')).stdout
-        ascii_view = re.sub(r'\x1b\[[0-9;]*m', '', ascii_view)
-        self.assertIn('\n|   Repository ', ascii_view)
-        self.assertIn('\n|   |\n|   `-- ', ascii_view)
+        without_icons = self.call(top, 'submodules', env=dict(rich, DOTS_ICONS='never', DOTS_COLOR='always')).stdout
+        without_icons = re.sub(r'\x1b\[[0-9;]*m', '', without_icons)
+        self.assertTrue(without_icons.startswith('├ child '), without_icons)
+        self.assertIn('\n│ │\n│ └ leaf ', without_icons)
         redirected = self.call(top, 'submodules').stdout
         self.assertTrue(redirected.splitlines()[1].startswith('    Repository '))
         self.assertEqual(redirected.splitlines()[2], '')
@@ -123,24 +131,22 @@ class Cases:
         self.assertEqual(self.call(top, 'submodules', '--json').stdout,
                          self.call(top, 'submodules', '--json', env=rich).stdout)
         short = self.call(top, 'submodules', '--depth', '1', env=rich).stdout
-        self.assertNotIn('│   │', short)
+        self.assertNotIn(' leaf', short)
         empty = self.call(self.repo('empty-tree'), 'submodules', env=rich).stdout
         self.assertNotIn('│', empty)
         theme = Path(self.env.get('XDG_STATE_HOME', self.home / '.local/state')) / 'dots/current/theme'
         theme.mkdir(parents=True, exist_ok=True)
         theme.joinpath('file-styles.tsv').write_text('dots-file-styles\t1\ntype\tdir\t38;2;17;34;51\t-\n')
-        icon = next(line.split('\t')[4] for line in (PROJECT / 'lib/dots/resources.tsv').read_text().splitlines()
-                    if line.startswith('kind\tdir\t'))
         for route in (('info',), ('submodules', 'info'), ('submodule', 'child', 'info')):
-            text = self.call(top, *route, env=dict(rich, DOTS_COLOR='always')).stdout
-            paths = [line for line in text.splitlines() if 'Path ' in line]
+            text = self.call(top, *route, '--verbose', env=dict(rich, DOTS_COLOR='always')).stdout
+            paths = [line for line in text.splitlines() if 'Root ' in line]
             self.assertTrue(paths)
             for line in paths:
-                self.assertIn('\x1b[38;2;17;34;51m' + icon + ' ', line)
+                self.assertIn('\x1b[38;2;17;34;51m', line)
                 self.assertNotIn('', line)
         self.git(mid, 'submodule', 'deinit', '-f', '--', 'leaf')
         missing = self.call(top, 'submodules', '--details', env=rich, ok=False).stdout
-        self.assertIn('│           Reason', missing)
+        self.assertRegex(missing, r'(?m)^│ +Reason  .*not initialized')
         self.assertIn('not initialized', missing)
 
     def test_tree_depth_status_filter_and_missing(self):
@@ -473,12 +479,12 @@ class Cases:
                         self.assertEqual(proc.returncode, 0, error)
                         self.assertIn(('\x1b[' + code + 'm').encode(), output)
                         if route[:1] == ['submodules'] and '--details' in route:
-                            self.assertIn('󰊤'.encode(), output)
+                            self.assertIn(''.encode(), output)
                         plain = re.sub(rb'\x1b\[[0-9;]*m', b'', output).decode()
                         self.assertNotIn('\x1b', plain)
                         self.assertTrue(all(len(line) <= width for line in plain.splitlines()), (width, plain))
                         if width == 40 and route[:1] == ['submodules'] and '--details' in route:
-                            self.assertIn('        detached ', plain)
+                            self.assertRegex(plain, r'(?m)^\s*[│└├ ]* leaf [0-9a-f]{7,}')
                     finally:
                         if proc.poll() is None: proc.kill()
                         proc.communicate(timeout=10); os.close(master)

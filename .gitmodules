@@ -11,3 +11,6 @@
 [submodule "profiles/windows/rainmeter/5ui7e"]
 	path = profiles/windows/rainmeter/5ui7e
 	url = https://github.com/5nik7/5ui7e.git
+[submodule "plugins/git-it"]
+	path = plugins/git-it
+	url = https://github.com/5nik7/git-it.git

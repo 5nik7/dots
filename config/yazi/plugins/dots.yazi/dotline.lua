@@ -43,6 +43,10 @@ local ComponentType = {
 --- @field coloreds? {} Table that stores Coloreds components.
 Dotline = {}
 
+local tab_bar = require(".tab-bar")
+local tab_options = {}
+local in_tmux
+
 --- @class (exact) ComponentConfig
 --- @field type string Defines the type of the component (T).
 --- @field custom? boolean Toggles the usage of a function defined or name field.
@@ -72,6 +76,7 @@ Dotline = {}
 --- @field permissions_x_fg Color Foreground color of the execute permission.
 --- @field permissions_s_fg Color Foreground color of the separators between permission.
 --- @field tab_width integer Maximum tab width of the tabs component.
+--- @field tab_bar? table Header visibility and tab label settings.
 --- @field selected {icon: string, fg: Color} Configuration for the count of files that selected.
 --- @field copied {icon: string, fg: Color} Configuration for the count of files that copied.
 --- @field cut {icon: string, fg: Color} Configuration for the count of files that cut.
@@ -820,7 +825,7 @@ end
 function Dotline.line.get:tabs(side)
   side = side or "left"
 
-  local tabs = #cx.tabs
+  local labels = tab_bar.labels(cx.tabs, tab_options.labels, tab_options.width or Dotline.config.tab_width)
   local lines = {}
 
   local in_side
@@ -830,12 +835,7 @@ function Dotline.line.get:tabs(side)
     in_side = Side.RIGHT
   end
 
-  for i = 1, tabs do
-    local text = tostring(i)
-    if Dotline.config.tab_width > 2 then
-      text = ui.truncate(text .. " " .. cx.tabs[i].name, { max = Dotline.config.tab_width })
-    end
-
+  for i, text in ipairs(labels) do
     local separator_style = { bg = nil, fg = nil }
     if i == cx.tabs.idx then
       local tab = connect_padding(text, ComponentType.A, in_side)
@@ -1336,7 +1336,12 @@ local function config_paragraph(area, line)
 end
 
 return {
+  set_tab_bar = function(_, overrides)
+    return tab_bar.update(tab_options, overrides)
+  end,
   setup = function(_, config, pre_theme)
+    in_tmux = (os.getenv("TMUX") or "") ~= ""
+    tab_options = { hide_in_tmux = false, only_with_multiple_tabs = false }
     if config then
       -- Fills the sections that are not given if the line exists.
       for _, line in ipairs({ "header_line", "status_line" }) do
@@ -1362,7 +1367,7 @@ return {
       -- Extracts theme fields to the config unless that fields does not exists.
       if config.theme then
         for key, value in pairs(config.theme) do
-          if not config[key] then
+          if config[key] == nil then
             config[key] = value
           end
         end
@@ -1370,7 +1375,7 @@ return {
 
       -- Extracts config fields to the DotlineConfig if that fields exists.
       for key, value in pairs(config) do
-        if Dotline.config[key] then
+        if Dotline.config[key] ~= nil then
           Dotline.config[key] = value
         end
       end
@@ -1379,11 +1384,17 @@ return {
     -- Extracts pre_theme fields to the DotlineConfig if that fields exists.
     if pre_theme then
       for key, value in pairs(pre_theme) do
-        if Dotline.config[key] then
+        if Dotline.config[key] ~= nil then
           Dotline.config[key] = value
         end
       end
     end
+
+    if type(config and config.tab_bar) == "table" or type(pre_theme and pre_theme.tab_bar) == "table" then
+      tab_options.labels = "name"
+    end
+    tab_bar.update(tab_options, config and config.tab_bar)
+    tab_bar.update(tab_options, pre_theme and pre_theme.tab_bar)
 
     if Dotline.config.display_header_line then -- Controls displaying header-line.
       if show_line(Dotline.config.header_line) then -- Controls recoding of header-line.
@@ -1444,10 +1455,13 @@ return {
 
     Root.layout = function(self)
       local constraints = {}
+      self._dots_show_header = Dotline.config.display_header_line
+        and not (tab_options.hide_in_tmux and in_tmux)
+        and (not tab_options.only_with_multiple_tabs or #cx.tabs > 1)
       -- Sets Yazi layout according to the given positions.
       for _, component in ipairs(Dotline.config.component_positions) do
         if
-          (component == "header" and Dotline.config.display_header_line)
+          (component == "header" and self._dots_show_header)
           or (component == "status" and Dotline.config.display_status_line)
         then
           table.insert(constraints, ui.Constraint.Length(1))
@@ -1464,7 +1478,7 @@ return {
       -- Fills the layout according to the given positions.
       local i = 1
       for _, component in ipairs(Dotline.config.component_positions) do
-        if component == "header" and Dotline.config.display_header_line then
+        if component == "header" and self._dots_show_header then
           table.insert(childrens, Header:new(self._chunks[i], cx.active))
           i = i + 1
         elseif component == "tab" then

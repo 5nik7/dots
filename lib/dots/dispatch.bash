@@ -86,6 +86,8 @@ dots_resolve() {
 
 dots_main() {
   local raw=0 mode option word want_help=0 resolved
+  local git_options_parsed=${DOTS_GIT_OPTIONS_PARSED:-}
+  unset DOTS_GIT_OPTIONS_PARSED
   local -a DOTS_EXTRA_ROOTS=() DOTS_ROOTS=()
   while (($#)); do
     case $1 in
@@ -192,6 +194,19 @@ dots_main() {
   dots_resolve "${help_args[@]}"; resolved=$?
   if (( resolved == 1 )); then return 1; fi
   if (( resolved == 0 )); then
+    if [[ $DOTS_ROUTE == 'git '* && $DOTS_ROUTE != 'git it'* && $git_options_parsed != 1 &&
+          $DOTS_EXECUTABLE == "$DOTS/bin/dots-${DOTS_ROUTE// /-}" ]]; then
+      for word in "${@:2}"; do
+        case $word in --color|--color=*|--no-color|--no-progress|--outermost)
+          exec python3 -B "$DOTS_LIB_DIR/git/front.py" bash "${@:2}" ;;
+        esac
+      done
+    fi
+    if [[ $DOTS_ROUTE == 'git it' || $DOTS_ROUTE == 'git it '* ]] &&
+       [[ $DOTS_EXECUTABLE == "$DOTS/bin/dots-${DOTS_ROUTE// /-}" ]]; then
+      shift "$DOTS_CONSUMED"
+      exec "$DOTS_EXECUTABLE" "$@"
+    fi
     if [[ $DOTS_EXECUTABLE == "$DOTS/bin/dots-blastoff"* && $1 == blastoff || $DOTS_EXECUTABLE == "$DOTS/bin/dots-pkgs"* && $1 == pkgs ]]; then
       # Preserve the application's grammar and help at every argument position.
       shift "$DOTS_CONSUMED"

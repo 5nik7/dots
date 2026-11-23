@@ -55,3 +55,23 @@ Verify populated/empty/error reports, exact versus modified provenance, malforme
 - Reviewed fixture layouts at 40/80 columns and enforced display-cell bounds at 40/80/120. Long values remain complete; concise doctor labels align with resource fields. Published file-style fixtures are used without querying tools per row. The relocated asset-free fixture includes the shared Dots runtime.
 - Termux timing: 15 samples after three warmups, interleaved `current` subprocesses, median 408.725 ms plain redirected versus 516.144 ms styled. The additional shared renderer/resource path costs about 107 ms in this fixture; this is a same-tree mode comparison, not a pristine pre-change baseline. Rendering 1,000 mocked package rows has a 276.794 ms median with exactly one inventory request and no backend subprocesses. No cache or extra discovery was introduced.
 - Canonical Markdown links, generated metadata and both command validators pass. Task-scoped whitespace passes; the full checkout check retains the pre-existing extra EOF blank line in `config/blastoff/themes/dots.toml`. Blastoff manual lint is clean; pkgs retains its imported date/long-line lint warnings. The local wiki is rebuilt and checked after canonical updates; no publication, installation, active configuration change or package transaction is performed.
+
+
+## Independently versioned git-it plugin
+
+The `dots git it` route forwards the standalone grammar on Termux, Linux and
+WSL. The parent owns the recorded Git revision, inert command metadata and
+managed installation targets. git-it owns its runtime, tests and assets.
+Default setup includes the initialized plugin. Explicit source acquisition
+uses the existing recorded-commit workflow. Native Windows offers static
+discovery and help.
+
+Configuration uses the existing Dots Git/CLI presentation controls and
+git-it’s own Git ownership rules. The existing Git menu already covers
+interactive status, sync and publish. Remote field queries use the CLI for
+exact script output. The Git maintenance skill owns the Dots route. The root
+README continues to cover essential setup and Wiki navigation. Plugin setup
+and examples live in the canonical plugin guide.
+
+The user-local git-it launcher, manual and completions link directly into the
+submodule. Both bare Git commands open help. The standalone command checks the caller’s worktree and returns 3 with warning and usage outside it. Shared Git reports use Dots Git colors, configurable tracking/submodule/Wiki icons, and the existing Git menu readers. Direct queries and path output remain CLI actions for scripts. Static command metadata and Dots-owned Zsh styling expose the same actions through completion. Changes to the plugin use its existing local links and recorded revision.

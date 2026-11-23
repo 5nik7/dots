@@ -71,6 +71,11 @@ _dots_shell_paths() {
     case :$PATH: in *":$directory:"*) ;; *) PATH="$directory${PATH:+:$PATH}" ;; esac
   done
   export PATH
+  local manuals=$HOME/.local/share/man
+  if [[ ${DOTS_PLATFORM:-} != windows && -d $manuals && :${MANPATH-}: != *":$manuals:"* ]]; then
+    # An empty component asks man to keep its system search path.
+    export MANPATH="$manuals:${MANPATH-}"
+  fi
 }
 _dots_shell_paths
 if [[ ${dots_options[DOTS_INIT_COMMANDS]} == 1 ]]; then

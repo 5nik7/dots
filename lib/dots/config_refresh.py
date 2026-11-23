@@ -386,20 +386,17 @@ def after_save(root, before):
         if not changed:
             old_apps = before.get('config', {}).get('apps', {})
             new_apps = after.get('config', {}).get('apps', {})
-            listings = [app for app in ('git','files') if old_apps.get(app) != new_apps.get(app)]
-            if listings:
-                return dict(schema=1,status='complete',consumers=[dict(app=app,status='next invocation') for app in listings])
-            if before.get('config',{}).get('apps',{}).get('clipboard') != after.get('config',{}).get('apps',{}).get('clipboard'):
-                return dict(schema=1,status='complete',consumers=[dict(app='clipboard',status='next invocation or watcher poll')])
-            if before.get('config',{}).get('apps',{}).get('wiki') != after.get('config',{}).get('apps',{}).get('wiki'):
-                return dict(schema=1,status='complete',consumers=[dict(app='wiki',status='next invocation or popup')])
-            if before.get('config',{}).get('apps',{}).get('fonts') != after.get('config',{}).get('apps',{}).get('fonts'):
-                return dict(schema=1,status='complete',consumers=[dict(app='fonts',status='next invocation or popup')])
-            if before.get('config',{}).get('apps',{}).get('setup') != after.get('config',{}).get('apps',{}).get('setup'):
-                return dict(schema=1,status='complete',consumers=[dict(app='setup',status='next invocation')])
-            if before.get('config',{}).get('apps',{}).get('menu') != after.get('config',{}).get('apps',{}).get('menu'):
-                return dict(schema=1,status='complete',consumers=[dict(app='menu',status='next popup')])
-            return dict(schema=1,status='unchanged',consumers=[])
+            invocation = [dict(app=app, status='next invocation') for app in ('git','files')
+                          if old_apps.get(app) != new_apps.get(app)]
+            if not invocation:
+                for app, status in (('clipboard','next invocation or watcher poll'), ('wiki','next invocation or popup'),
+                                    ('fonts','next invocation or popup'), ('setup','next invocation'), ('menu','next popup')):
+                    if old_apps.get(app) != new_apps.get(app):
+                        invocation.append(dict(app=app, status=status))
+                        break
+            if old_apps.get('yazi', {}).get('tab_bar') != new_apps.get('yazi', {}).get('tab_bar'):
+                invocation.append(dict(app='yazi', status='next Yazi launch'))
+            return dict(schema=1, status='complete' if invocation else 'unchanged', consumers=invocation)
         if invocation_visuals_only(before,after):
             return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         return refresh(root,before=before,retry=False)
@@ -422,6 +419,13 @@ def preview_save(root, plan):
         for app in ('git','files'):
             if before['config'].get('apps',{}).get(app) != after['config'].get('apps',{}).get(app):
                 changes.append(app)
+        old_bar = before['config'].get('apps', {}).get('yazi', {}).get('tab_bar')
+        new_bar = after['config'].get('apps', {}).get('yazi', {}).get('tab_bar')
+        if old_bar != new_bar:
+            if not changes and all(item.get('key', '').startswith('apps.yazi') for item in plan.items):
+                return dict(schema=1, status='preview', consumers=['yazi'], reason='Next Yazi launch')
+            if 'yazi' not in changes:
+                changes.append('yazi')
         immediate = ('apps.cli.progress','apps.cli.markdown_viewer','apps.git.view',
                      'apps.files','apps.files.list_view','apps.files.group_by_status')
         if plan.items and all(item.get('key') in immediate for item in plan.items):

@@ -71,6 +71,25 @@
           "untracked and ignored machine-local files"
         ]
       }
+    },
+    "git-it": {
+      "runtime": "git-it",
+      "manual": "git-it.1",
+      "completions": {
+        "bash": "completion/bash",
+        "zsh": "completion/zsh",
+        "fish": "completion/fish"
+      },
+      "bash": "5",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "source": {
+        "submodule": "plugins/git-it",
+        "repository": "https://github.com/5nik7/git-it.git"
+      }
     }
   }
 }

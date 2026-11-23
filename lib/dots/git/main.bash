@@ -90,12 +90,15 @@ source "$LIB/inspect.bash"
 text_cmd canonical_dir "$TARGET" 2>/dev/null || die 3 'target must be an existing directory'
 repo_root "$REPLY" || die 3 'not inside a Git worktree'
 ROOT=$REPLY
-if (( ! SCOPED_PUBLISH && ! NO_WIKI )) && [[ -f $ROOT/.dots/wiki.json ]]; then
+if (( ! SCOPED_PUBLISH && ! NO_WIKI )) && [[ -e $ROOT/.dots/wiki.json || -L $ROOT/.dots/wiki.json || $CMD == status && -d $ROOT.wiki ]]; then
     command -v python3 >/dev/null 2>&1 || die 3 'Python 3 is required for associated wiki operations'
     exec python3 -B "$LIB/cli.py" "$CMD" "${WIKI_ARGS[@]}"
 fi
 colors
 view_resolve
+# Both CLI frontends share the same human status tree, including --no-wiki.
+# Redirected and machine reports retain their original controller and schema.
+if [[ $CMD == status && $GIT_VIEW ]]; then exec python3 -B "$LIB/cli.py" "$CMD" "${WIKI_ARGS[@]}"; fi
 source "$LIB/../progress.bash"
 DOTS_PROGRESS_HUMAN=0
 ((JSON || DRY_RUN)) || DOTS_PROGRESS_HUMAN=1

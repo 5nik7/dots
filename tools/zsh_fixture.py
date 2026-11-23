@@ -23,6 +23,10 @@ def fixture(source=REPO, plugins=True):
     for name in ('shells/zsh', 'themes', 'config/starship', 'config/vivid', 'default/themed'):
         # A linked installation's generated theme belongs to live XDG state.
         # Tests publish their own connector instead of copying that link.
+        if name == 'config/vivid' and not (source / name).is_dir():
+            # Current checkouts generate Vivid configuration during publication.
+            (repo / name).mkdir(parents=True)
+            continue
         excluded = ('themes/dots.yml',) if name == 'config/vivid' else ()
         copy_public_tree(source / name, repo / name, repo=source, fixture=repo,
                          aliases=(REPO,), exclude=excluded)

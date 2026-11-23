@@ -26,7 +26,7 @@ OWNERS = {
     'codex-termux': (('completions/_codex-termux',),
                      ('python3 -B tools/build.py --check', 'python3 -B tools/verify.py')),
     'battery': (('battery', 'maintenance.sh'), ('python3 -B -m unittest discover -s tests',)),
-    'git-it': (('lib/completion.bash',),
+    'git-it': (('completion/zsh',),
                ('python3 -B -m unittest discover -s tests',)),
     'gitsub': (('gitsub',), ()),
     'paint': (('paint',), ('python3 -B tests/test_completion.py -v',)),
@@ -117,7 +117,7 @@ def inventory(repos_root, dots_root=ROOT):
     paths = [p for p in sorted(repos_root.iterdir()) if not p.name.startswith('.') and (p.is_dir() or p.is_symlink())]
     seen = {}
     # Dots and its bundled source owners take precedence over historical copies.
-    for name, path in [('dots', dots_root), *[(n, dots_root/'plugins'/n) for n in ('anodize','pkgs','blastoff')]]:
+    for name, path in [('dots', dots_root), *[(n, dots_root/'plugins'/n) for n in ('anodize','pkgs','blastoff','git-it')]]:
         if path.is_dir():
             canonical = path.resolve()
             record = describe_owner(name, canonical)
