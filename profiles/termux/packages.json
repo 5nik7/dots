@@ -479,7 +479,7 @@
         },
         {
           "name": "emscripten",
-          "observed_version": "7.0.0",
+          "observed_version": "7.0.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -570,7 +570,7 @@
         },
         {
           "name": "flex",
-          "observed_version": "2.7.3",
+          "observed_version": "2.7.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -654,7 +654,7 @@
         },
         {
           "name": "git-delta",
-          "observed_version": "0.21.2",
+          "observed_version": "0.22.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -745,7 +745,7 @@
         },
         {
           "name": "gopass",
-          "observed_version": "1.17.4-1",
+          "observed_version": "1.17.5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -955,7 +955,7 @@
         },
         {
           "name": "kitty",
-          "observed_version": "0.51.0",
+          "observed_version": "0.51.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1515,7 +1515,7 @@
         },
         {
           "name": "net-tools",
-          "observed_version": "2.10.0-1",
+          "observed_version": "2.10.0-2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1571,7 +1571,7 @@
         },
         {
           "name": "oh-my-posh",
-          "observed_version": "33.2.0",
+          "observed_version": "33.3.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1949,7 +1949,7 @@
         },
         {
           "name": "ripgrep",
-          "observed_version": "15.2.0",
+          "observed_version": "16.0.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1998,7 +1998,7 @@
         },
         {
           "name": "rust-analyzer",
-          "observed_version": "20261116",
+          "observed_version": "20261123",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2537,7 +2537,7 @@
         },
         {
           "name": "unzip",
-          "observed_version": "6.0-10",
+          "observed_version": "6.0-11",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3052,7 +3052,7 @@
         },
         {
           "name": "context-mode",
-          "observed_version": "2.2.1",
+          "observed_version": "2.2.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3210,7 +3210,7 @@
         },
         {
           "name": "ipython",
-          "observed_version": "9.18.1",
+          "observed_version": "9.19.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3377,7 +3377,7 @@
         },
         {
           "name": "charset-normalizer",
-          "observed_version": "3.5.2",
+          "observed_version": "3.5.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true

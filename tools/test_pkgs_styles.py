@@ -34,7 +34,7 @@ class PackageStyles(unittest.TestCase):
 
     def test_canonical_config_save_get_explain_reset_and_no_publication(self):
         key='colors.apps.pkgs.package.fg'
-        self.assertEqual(self.run_config('get',key).stdout,'accent\n')
+        self.assertEqual(self.run_config('get',key).stdout,'bright_magenta\n')
         before=self.path.read_bytes()
         self.run_config('set',key,'#123456','--dry-run','--json')
         self.assertEqual(self.path.read_bytes(),before)
@@ -45,18 +45,22 @@ class PackageStyles(unittest.TestCase):
         self.assertEqual(explained['consumers'][0]['refresh'],'next invocation')
         self.assertEqual(explained['consumers'][0]['resolved_color'],'#123456')
         self.run_config('unset',key)
-        self.assertEqual(self.run_config('get',key).stdout,'accent\n')
+        self.assertEqual(self.run_config('get',key).stdout,'bright_magenta\n')
         self.run_config('set','colors.apps.pkgs.progress.bg','#010203',native=True)
-        self.run_config('set','colors.apps.pkgs.package.bold','true')
+        for role in ('manager','package'):
+            self.assertEqual(self.run_config('get','colors.apps.pkgs.'+role+'.bold').stdout,'true\n')
+        self.run_config('set','colors.apps.pkgs.package.bold','false')
         key='colors.apps.pkgs.manager.fg'
-        self.assertEqual(self.run_config('get',key).stdout,'magenta\n')
+        self.assertEqual(self.run_config('get',key).stdout,'accent\n')
         self.run_config('set',key,'#234567','--json')
         self.assertEqual(self.run_config('get',key,native=True).stdout,'#234567\n')
         explained=json.loads(self.run_config('explain',key,'--json').stdout)
         self.assertEqual(explained['consumers'][0]['refresh'],'next invocation')
         self.assertEqual(explained['consumers'][0]['resolved_color'],'#234567')
         self.run_config('unset',key)
-        self.assertEqual(self.run_config('get',key).stdout,'magenta\n')
+        self.assertEqual(self.run_config('get',key).stdout,'accent\n')
+        self.assertEqual(self.run_config('get','colors.apps.pkgs.picker.description.fg',native=True).stdout,
+                         'light_foreground\n')
         self.run_config('check',native=True)
 
     def test_every_role_reaches_reports_previews_streams_and_progress(self):
@@ -66,6 +70,7 @@ class PackageStyles(unittest.TestCase):
         expected='0;1;38;2;18;52;86;48;2;101;67;33'
         with patch.object(style_config,'current',return_value=prefs):
             for role in PKGS:self.assertEqual(presentation.styles()[role],expected,role)
+            self.assertEqual(presentation.styles()['picker.muted'],expected)
             for width in (40,80,120):
                 for mode in ('always','never','auto'):
                     out,err=Terminal(),Terminal()
@@ -93,27 +98,61 @@ class PackageStyles(unittest.TestCase):
         parent=self.home/'parent';parent.mkdir()
         (parent/'colors.toml').write_text('[apps.pkgs.package]\nfg="#111111"\n[apps.pkgs.error]\nfg="#222222"\n')
         child=self.path.parent
-        (child/'colors.toml').write_text('[apps.pkgs.package]\nbold=true\n')
+        (child/'colors.toml').write_text('[apps.pkgs.package]\nbold=false\n')
         prefs=Styles(self.root,selected={'layers':[{'root':str(parent)},{'root':str(child)}]},palette={'accent':'#abcdef'})
         with patch.object(style_config,'current',return_value=prefs):
-            self.assertEqual(presentation.styles()['package'],'0;1;38;2;17;17;17')
+            self.assertEqual(presentation.styles()['package'],'0;38;2;17;17;17')
             self.assertIn('38;2;34;34;34',presentation.styles()['error'])
         with patch.object(style_config,'current',return_value=None):
             self.assertEqual(presentation.styles()['heading'],'0;1;96')
-            self.assertEqual(presentation.styles()['package'],'0;34')
-            self.assertEqual(presentation.styles()['manager'],'0;35')
+            self.assertEqual(presentation.styles()['package'],'0;1;95')
+            self.assertEqual(presentation.styles()['manager'],'0;1;34')
+            self.assertEqual(presentation.styles()['picker.description'],'0;39')
+            self.assertEqual(presentation.styles()['picker.muted'],'0;90')
             self.assertEqual(presentation.styles()['preview.label'],'0;36')
 
     def test_manager_palette_is_independent_of_package_and_identity(self):
         prefs=Styles(self.root,selected={'layers':[]},
-                     palette={'accent':'#abcdef','magenta':'#123456','blue':'#987654'})
+                     palette={'accent':'#abcdef','bright_magenta':'#123456','blue':'#987654','muted':'#654321'})
         with patch.object(style_config,'current',return_value=prefs):
-            self.assertEqual(presentation.styles()['manager'],'0;38;2;18;52;86')
-            self.assertEqual(presentation.styles()['package'],'0;38;2;171;205;239')
+            self.assertEqual(presentation.styles()['manager'],'0;1;38;2;171;205;239')
+            self.assertEqual(presentation.styles()['package'],'0;1;38;2;18;52;86')
+            self.assertEqual(presentation.styles()['picker.muted'],'0;38;2;101;67;33')
+            self.assertEqual(presentation.styles()['muted'],'0;2;39')
             self.assertNotEqual(presentation.styles()['manager'],presentation.styles()['identity'])
-        # A retained installation without Dots keeps an ANSI magenta fallback.
+        # A retained installation without Dots uses the matching ANSI fallbacks.
         with patch.dict(sys.modules, {'pkgs_lib.presentation':None}):
-            self.assertEqual(ui.colored('uv','manager','always',True),'\x1b[35muv\x1b[0m')
+            for kind, code in (('manager','1;34'), ('title','1;95'), ('picker.description','39'), ('picker.muted','90')):
+                self.assertEqual(ui.colored('uv',kind,'always',True),'\x1b['+code+'muv\x1b[0m')
+
+    def test_picker_description_uses_its_own_theme_and_profile_style(self):
+        palette = {'light_foreground': '#abcdef', 'muted': '#654321'}
+        profile = self.path.parent / 'colors.toml'
+        package = Package('example', description='demo')
+        setting = '[apps.pkgs.picker.description]\nfg="#123456"\nunderline=true\n'
+        for config, expected in (('', '38;2;171;205;239'), (setting, '4;38;2;18;52;86')):
+            profile.write_text(config)
+            prefs = Styles(self.root, selected={'layers': [{'root': str(profile.parent)}]}, palette=palette)
+            with self.subTest(config=config), patch.object(style_config, 'current', return_value=prefs):
+                row = ui.row(package, 0, ui.colorizer('always', True), show_installed_marker=True)
+                self.assertTrue(row.endswith('\x1b[0;38;2;101;67;33m · \x1b[0m\x1b[0;' + expected + 'mdemo\x1b[0m'), row)
+                preview = ui.render(package, Backend('npm'), 'always', preview=True)
+                self.assertIn('\x1b[0;39mdemo\x1b[0m', preview)
+
+    def test_preview_version_inherits_version_style_and_honors_its_own_override(self):
+        profile = self.path.parent / 'colors.toml'
+        general = '[apps.pkgs.version]\nfg="cyan"\nbold=true\n'
+        override = '[apps.pkgs.preview.version]\nfg="yellow"\n'
+        package = Package('fixture', '2.1', installed=True, installed_version='1.7')
+        for config, preview_color in ((general, '36'), (general + override, '33')):
+            profile.write_text(config)
+            prefs = Styles(self.root, selected={'layers': [{'root': str(profile.parent)}]}, palette={})
+            with self.subTest(config=config), patch.object(style_config, 'current', return_value=prefs):
+                preview = ui.render(package, Backend('npm'), 'always', preview=True)
+                info = ui.render(package, Backend('npm'), 'always')
+                for version in ('2.1', '1.7'):
+                    self.assertIn(f'\x1b[0;1;{preview_color}m{version}\x1b[0m', preview)
+                    self.assertIn(f'\x1b[0;1;36m{version}\x1b[0m', info)
 
     def test_manager_spans_cover_human_surfaces_without_recoloring_packages(self):
         profile=self.path.parent/'colors.toml'

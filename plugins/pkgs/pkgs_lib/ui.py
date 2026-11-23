@@ -16,19 +16,32 @@ from .catalog import external, EvidenceCache
 from .fzf import invocation, PROTOCOL
 from .detect import termux
 
-PALETTE = {'title': '1;35', 'heading': '1;36', 'good': '32', 'warn': '33', 'dim': '2', 'label': '36', 'manager': '35'}
+PREVIEW_ROLES = {'title': 'package', 'heading': 'preview.heading', 'good': 'preview.success',
+                 'warn': 'preview.warning', 'dim': 'muted', 'label': 'preview.label'}
+PALETTE = {'package': '1;95', 'manager': '1;34', 'picker.description': '39', 'picker.muted': '90', 'muted': '2',
+           'preview.heading': '1;36', 'preview.success': '32', 'preview.warning': '33',
+           'preview.label': '36'}
 
-def colored(text, kind, mode='auto', preview=False):
+
+def colorizer(mode, preview=False):
     enabled = mode == 'always' or (mode == 'auto' and 'NO_COLOR' not in os.environ and (preview or sys.stdout.isatty()))
-    if not enabled: return str(text)
-    role={'title':'package','heading':'preview.heading','good':'preview.success','warn':'preview.warning','dim':'muted','label':'preview.label'}.get(kind,kind)
+    if not enabled:
+        return lambda text, kind: str(text)
     try:
         from .presentation import styles
-        code=styles()[role]
+        palette = styles()
     except ImportError:
         # Retained source-only installations have no shared Dots modules.
-        code='34' if kind=='title' else PALETTE.get(kind, '2' if kind=='preview.version' else '0')
-    return '\x1b[' + code + 'm' + str(text) + '\x1b[0m'
+        palette = PALETTE
+
+    def paint(text, kind):
+        code = palette.get(PREVIEW_ROLES.get(kind, kind), '0')
+        return '\x1b[' + code + 'm' + str(text) + '\x1b[0m'
+    return paint
+
+
+def colored(text, kind, mode='auto', preview=False):
+    return colorizer(mode, preview)(text, kind)
 
 
 def render(p, backend, color='auto', preview=False, message=''):
@@ -37,7 +50,7 @@ def render(p, backend, color='auto', preview=False, message=''):
     except ValueError:
         width = 78
     out = []
-    def c(s, k): return colored(s, k, color, preview)
+    c = colorizer(color, preview)
     def wrap(value, indent=''):
         for para in str(value).splitlines() or ['']:
             out.extend(c(line,'value') for line in (textwrap.wrap(clean(para), width=width, initial_indent=indent,
@@ -58,8 +71,9 @@ def render(p, backend, color='auto', preview=False, message=''):
     field('Manager', backend.name, 'manager')
     field('Scope', backend.scope)
     field('Status', 'Installed [i]' if p.installed else 'Not installed', 'good' if p.installed else 'dim')
-    field('Version', p.version, 'version')
-    field('Installed', p.installed_version, 'version')
+    version_role = 'preview.version' if preview else 'version'
+    field('Version', p.version, version_role)
+    field('Installed', p.installed_version, version_role)
     field('Repository', p.repo)
     heading('Description')
     wrap(p.description or 'No description supplied by this package source.')
@@ -111,21 +125,25 @@ def opener(url):
     raise Error('No supported URL opener found (termux-open-url, termux-open, open, wslview, xdg-open, gio).')
 
 
-def row(p, index, color):
-    marker = (colored('[i]', 'good', color, True) if p.installed else '   ')
-    marker += colored('[e]', 'warn', color, True) if p.external else '   '
-    text = marker + ' ' + colored(clean(p.name), 'title', color, True)
-    if p.version:
-        text += ' ' + colored(clean(p.version), 'preview.version', color, True)
-    if p.repo:
-        text += colored(' [' + clean(p.repo) + ']', 'value', color, True)
-    if p.description:
-        text += colored(' — ' + clean(p.description), 'value', color, True)
-    return str(index) + '\t' + text
+def row(p, index, paint, *, show_installed_marker):
+    fields = [paint(clean(p.name), 'title')]
+    markers = ''
+    if show_installed_marker and p.installed:
+        markers += paint('[i]', 'good')
+    if p.external:
+        markers += paint('[e]', 'warn')
+    if markers:
+        fields.append(markers)
+    description = clean(p.description or '')
+    if description:
+        fields.append(paint(description, 'picker.description'))
+    return str(index) + '\t' + paint(' · ', 'picker.muted').join(fields)
 
 
-def pick(rows, backend, cfg, query='', completion=False):
-    if os.name == 'nt': return native_pick(rows,backend,cfg,query)
+def pick(rows, backend, cfg, query='', completion=False, *, command=None, installed_only=False):
+    install = command == 'install'
+    if os.name == 'nt':
+        return native_pick(rows, backend, cfg, query, install=install, installed_only=installed_only)
     fzf = which('fzf')
     if not fzf:
         raise Error('fzf is required for the picker. Install fzf or add ~/.fzf/bin to PATH.')
@@ -143,9 +161,15 @@ def pick(rows, backend, cfg, query='', completion=False):
         state = {'backend': backend.name, 'global': backend.global_scope, 'cfg': cfg,
                  'packages': [asdict(p) for p in rows]}
         atomic(root / 'state.json', json.dumps(state))
-        atomic(root / 'all', '\n'.join(row(p, i, cfg['color']) for i, p in enumerate(rows)) + '\n')
-        hidden_rows = [row(p, i, cfg['color']) for i, p in enumerate(rows) if not p.installed]
+        paint = colorizer(cfg['color'], preview=True)
+        records = [row(p, i, paint, show_installed_marker=command != 'uninstall') for i, p in enumerate(rows)]
+        atomic(root / 'all', '\n'.join(records) + '\n')
+        hidden_rows = [record for record, p in zip(records, rows) if not p.installed]
         atomic(root / 'hide', '\n'.join(hidden_rows) + ('\n' if hidden_rows else ''))
+        initial = root / 'all'
+        if install and not installed_only:
+            (root / 'hidden').touch()
+            initial = root / 'hide'
         env.update(PKGS_SESSION=tmp, PKGS_MAIN=str(ROOT / 'main.py'), PKGS_PYTHON=sys.executable)
         helper = 'exec "$PKGS_PYTHON" "$PKGS_MAIN" __session '
         binds = ['ctrl-x:toggle-preview', 'alt-i:reload(' + helper + 'toggle)',
@@ -154,13 +178,13 @@ def pick(rows, backend, cfg, query='', completion=False):
         args += ['--ansi', '--multi', '--cycle', '+e', '--no-hscroll',
                 '--delimiter=\t', '--with-nth=2..', '--preview=' + helper + 'preview {1}',
                 '--preview-window=' + cfg['preview'], '--query=' + query,
-                '--header=' + colored(backend.name, 'manager', cfg['color'], True) + ' · ' + backend.scope + '\nTab select · Ctrl-X preview · Alt-I installed · Alt-O URL\nEnter ' + ('insert names' if completion else 'accept') + ' · Esc cancel · [e] cached; highlight for current evidence',
+                '--header=' + paint(backend.name, 'manager') + ' · ' + backend.scope + '\nAlt-I show/hide installed · Tab select · Ctrl-X preview · Alt-O URL\nEnter ' + ('insert names' if completion else 'accept') + ' · Esc cancel · [e] cached; highlight for current evidence',
                 '--bind=' + ','.join(binds)]
         if cfg['color'] == 'never' or (cfg['color'] == 'auto' and 'NO_COLOR' in os.environ):
             args += ['--color=bw']
         # Preserve FZF_DEFAULT_OPTS/FILE (including colors); override record/output settings only.
         args += PROTOCOL
-        with (root / 'all').open() as stream:
+        with initial.open() as stream:
             diagnostic('Launching fzf: ' + fzf)
             proc = subprocess.run(args, stdin=stream, stdout=subprocess.PIPE, text=True, env=env)
         if proc.returncode in (1, 130):
@@ -179,18 +203,30 @@ def pick(rows, backend, cfg, query='', completion=False):
         return selected
 
 
-def native_pick(rows, backend, cfg, query=''):
+def native_pick(rows, backend, cfg, query='', *, install=False, installed_only=False):
     """Native shared selector; no POSIX preview shell is required on Windows."""
     sys.path.insert(0,str(ROOT.parent.parent/'lib/dots'))
     from interaction import Selector, SelectionEnded
     selector = Selector('gum' if which('gum') else 'plain')
     rows = [p for p in rows if query.casefold() in (p.name+' '+p.description).casefold()]
+    toggle_installed = install and any(p.installed for p in rows)
+    hidden = install and not installed_only
     selected = set()
     try:
         while True:
             labels = {str(i+1)+'. ['+('x' if i in selected else ' ')+'] '+clean(p.name)+
-                (' — '+p.details['disabled_reason'] if p.details.get('disabled_reason') else ''):i for i,p in enumerate(rows)}
-            choice = selector.pick('filter',backend.scope,['Accept selection','Details','Clear selection','Cancel',*labels])
+                (' — '+p.details['disabled_reason'] if p.details.get('disabled_reason') else ''):i
+                for i,p in enumerate(rows) if not (hidden and p.installed)}
+            actions = ['Accept selection','Details','Clear selection','Cancel']
+            toggle = 'Show installed packages' if hidden else 'Hide installed packages'
+            if toggle_installed:
+                actions.append(toggle)
+            choice = selector.pick('filter',backend.scope,[*actions,*labels])
+            if choice == toggle:
+                hidden = not hidden
+                if hidden:
+                    selected = {i for i in selected if not rows[i].installed}
+                continue
             if choice == 'Cancel': return []
             if choice == 'Accept selection': return [p for i,p in enumerate(rows) if i in selected]
             if choice == 'Clear selection': selected.clear();continue

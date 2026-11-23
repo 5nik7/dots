@@ -13,7 +13,7 @@ HELP = ('executable','command','subcommand','option','argument','heading','descr
 CLIPBOARD = ('heading','label','identity','text','source','timestamp','pinned','error')
 WIKI = ('heading','label','page','section','snippet','url')
 PKGS = ('heading','label','identity','manager','package','version','value','count','muted','skipped',
-        'success','warning','error','progress','spinner','preview.heading','preview.label',
+        'success','warning','error','progress','spinner','picker.description','preview.heading','preview.label',
         'preview.success','preview.warning','preview.version')
 TMUX = ('window.active', 'window.inactive', 'window.attention', 'pane.active_border', 'pane.inactive_border')
 

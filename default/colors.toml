@@ -119,10 +119,15 @@ fg = "cyan"
 fg = "warning"
 
 [apps.pkgs.manager]
-fg = "magenta"
+bold = true
+fg = "accent"
 
 [apps.pkgs.package]
-fg = "accent"
+bold = true
+fg = "bright_magenta"
+
+[apps.pkgs.picker.description]
+fg = "light_foreground"
 
 [apps.tmux.battery.icon]
 bg = "dark_background"

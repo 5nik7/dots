@@ -5,8 +5,9 @@ pkgs \- fuzzy package management for Termux and Linux
 .B pkgs
 [COMMAND] [OPTIONS] [NAMES...]
 .SH DESCRIPTION
-Bare invocation displays help. Install and uninstall open an fzf multi-select
-picker when package names are omitted. Exact names bypass the picker.
+Bare invocation displays help. Without package names, install and uninstall
+open an fzf multi-select picker on Termux, Linux and WSL, or the native picker
+on Windows. Exact names bypass the picker.
 Transaction previews show manager, scope and commands. Install, upgrade and refresh authorize unattended
 execution with native confirmation flags; remove/restore retain confirmation.
 Accepting an install-picker selection authorizes installation; cancelling installs nothing.
@@ -26,7 +27,7 @@ No changes reports Updated none; inventory failure reports Updated unavailable
 without blocking execution or altering native status. Each inventory read has a
 15-second budget; raw/redirected/dry-run paths do not add these reads.
 The skipped suffix uses the theme's muted foreground, independently of status.
-Package names in results and progress default to the theme accent.
+Manager names default to bold theme accent and package names to bold theme bright_magenta.
 All owned package colors use colors.apps.pkgs controls with existing CLI/preview
 fallbacks; changes apply on the next invocation without theme publication.
 Compact npm output hides deprecation notices and the exact routine force and
@@ -238,11 +239,17 @@ foreign or edited completions are left untouched and reported.
 .SH PICKER
 Tab/Shift-Tab select packages. Enter accepts. Ctrl-X toggles the preview.
 Alt-I hides/shows installed packages. Alt-O opens the highlighted homepage.
-Esc/Ctrl-C cancel. [i] marks installed packages; [e] marks an unowned related
-executable (same-name matches are candidates, not proof). Rows and list use
-cached external evidence. A blank marker does not prove no external command
-exists. Highlighting a package fetches current evidence in the preview without
-blocking initial picker startup. Source-built ~/.fzf/bin/fzf remains supported.
+Esc/Ctrl-C cancel. The FZF install picker (install, in) and its fuzzy package
+completion start with installed packages hidden. Press Alt-I to show them or use
+pkgs in \-\-installed to open an installed-only picker. Exact names bypass the picker.
+With installed packages visible, FZF shows "ripgrep · [i] · Fast text search".
+The uninstall picker (uninstall, un, remove)
+contains only installed packages and omits [i], giving "ripgrep · Fast text search".
+Rows show [e] when cached evidence identifies a related external executable,
+including during uninstall. Descriptions use the theme's light_foreground by
+default through colors.apps.pkgs.picker.description.fg. Dots use the muted foreground.
+Missing fields take no space. Version and repository details appear in the preview.
+Highlighting a package fetches current external evidence. Source-built ~/.fzf/bin/fzf remains supported.
 .br
 Read-only preparation queries have a 45-second budget; preview enrichment has
 five seconds and individual ownership queries at most three seconds. Slow work
@@ -264,7 +271,7 @@ stderr diagnostics. FPATH may be supplied by the invoking Zsh for one command.
 Picker helpers use a controlled noninteractive Bash child without startup hooks.
 .SH LIMITATIONS
 Registry catalogs are not exhaustive. pip/uv queries use exact PyPI names.
-Completion never searches remote registries. Native Windows is not supported.
+Completion uses local inventories and caches.
 .SH SEE ALSO
 fzf(1), apt(8), pacman(8), dnf(8), xbps-query(1)
 
@@ -274,4 +281,6 @@ Use --manager winget with --scope user (default) or explicit --scope machine.
 Machine mutations require an already elevated shell. Package IDs and versions are exact.
 Ambiguous or uncorrelated installed entries remain disabled. No implicit source agreement,
 provider bootstrap, trust change, reboot or WSL invocation occurs.
-Native pickers use shared Gum or numbered selection; PowerShell completion is provided by Dots.
+Native pickers use shared Gum or numbered selection. The install picker initially
+hides installed packages and offers a show/hide action. Passing \-\-installed
+opens the installed-only inventory. PowerShell completion is provided by Dots.

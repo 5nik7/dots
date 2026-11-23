@@ -59,7 +59,7 @@ def help_report(parser, argv, stream=None):
     help_ui.text('Install, upgrade and refresh run without an extra confirmation flag.', indent=2)
     help_ui.text('Install, uninstall and upgrade show brief results; --raw shows full manager output.', indent=2)
     help_ui.text('Pip upgrades continue after package failures; global npm scripts need separate approval.', indent=2)
-    help_ui.text('Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.', indent=2)
+    help_ui.text('FZF: Tab select, Ctrl-X preview, Alt-I show/hide installed, Alt-O homepage.', indent=2)
     return True
 
 

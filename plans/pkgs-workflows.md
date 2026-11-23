@@ -1,5 +1,15 @@
 # Package workflows
 
+## Package picker rows and colors (2026-11-23)
+
+Show `package · [i] · description` for visible installed packages in the FZF search and install pickers, and `package · description` in the installed-only uninstall view. Preserve cached `[e]` in both and omit empty fields and their separators. Keep versions and repository names available in the preview. Manager names use bold theme `accent`, package names use bold `bright_magenta`, descriptions use `light_foreground`, and separators use the theme's muted foreground. See [package picker rows](../docs/packages.md#package-picker-rows).
+
+**Configuration update.** Add `colors.apps.pkgs.picker.description` to the existing style catalog so descriptions and separators can be styled independently. **Menu update.** Open the install picker with installed candidates hidden. Alt-I switches between available and all candidates. The native Windows install selector provides a show/hide action. Explicit `--installed` opens the installed-only inventory visibly. Apply the same initial state to fuzzy install completion. Search and uninstall retain their existing initial candidate sets. The owning skill is `dots-pkgs-maintenance`. Existing aliases, completion records, launcher actions, installer/bootstrap assets and Windows destinations already deliver the routes. No root README change is needed because setup and first commands are the same.
+
+**Verification.** On Termux, real FZF displayed the expected search and uninstall rows through `pkgs` and `dots pkgs` at 40, 80 and 120 columns. The fixture palette reached the manager header, package name, descriptions and separators. Isolated tests covered both markers, empty descriptions, removal aliases, literal selection and fuzzy completion, `NO_COLOR`, and explicit Config overrides. Linux and WSL use the shared FZF picker. Native Windows uses the shared package styles and its Gum or numbered selector. Native Linux, WSL and Windows PowerShell 5.1/7 visual checks remain pending.
+
+On Termux, `pkgs in` and `dots pkgs install` opened with only uninstalled packages visible at all three widths. Alt-I revealed and hid the installed rows. Real FZF also revealed packages from an empty initial view, and `--installed` opened the installed-only view. Captured rows showed separate theme colors for descriptions and separators. Isolated completion and native selector fixtures checked candidate visibility and exact selection.
+
 ## uv hardlink fallback notice (2026-11-21)
 
 Implemented in the compact upgrade summary. It suppresses uv's hardlink-to-copy performance notice and its two advice lines. The standalone, Dots and Python entry points passed with an isolated uv fixture on Termux at 40, 80 and 120 columns. The fixture verified the native failure message and exit status, and the complete notice under `--raw` and ordinary redirection.
@@ -66,9 +76,9 @@ boundaries and truthful before/after RubyGems versions. Add a native
 
 Expose consumer-backed `colors.apps.pkgs` styles for reports, identities,
 packages, values, statuses, skip counts, previews, streams and progress through
-the existing style catalog and Config browser. Preserve current fallbacks except
-package names default to theme accent; save accent explicitly in the active
-Termux profile. Precedence remains shared defaults, parents, then profile;
+the existing style catalog and Config browser. This revision introduced the original
+package accent and an explicit Termux profile setting, superseded by the
+[package picker update](#package-picker-rows-and-colors-2026-11-23). Precedence remains shared defaults, parents, then profile;
 activation is next invocation. Keep raw/JSON/completion and resource/FZF chrome
 contracts. Configuration: **add** these bindings, **update** package accent.
 Menu: **no new menu**, existing Config and package routes reach the consumers.
@@ -97,9 +107,7 @@ passes with its native PowerShell case skipped on Termux. Coverage includes real
 pip with local fixture wheels, independent package failures, protected RubyGems
 self-update with empty inventory, npm completion-receipt invalidation, 40/80/120
 column output, plain/raw data and native Bash/Zsh/Fish/FZF completion. No host
-packages or npm scripts were changed/run. The active Termux profile explicitly
-sets package foreground to accent, verified through Config provenance and its
-current resolved palette color. Command validation (245 routes), generated
+packages or npm scripts were changed/run. At verification time the active Termux profile explicitly set the package foreground to accent, confirmed through Config provenance and its resolved palette color. Command validation (245 routes), generated
 adapters, shell syntax, skill validation, relative links (1296 across 162 files),
 diff checks and local wiki generation/check pass. The completed 10-goal Todo tree
 retains its IDs, parent relationships, criteria and statuses; only root notes are

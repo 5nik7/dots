@@ -105,6 +105,52 @@ class WinGetTests(unittest.TestCase):
         self.assertEqual(selected,[valid]);self.assertIn('fixture notice',out.getvalue())
         self.assertIn('unproven scope',err.getvalue())
 
+    def test_native_install_picker_show_hide_keeps_available_selection_and_disabled_reason(self):
+        import io
+        from contextlib import redirect_stderr
+        from pkgs_lib import ui
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]/'lib/dots'))
+        from interaction import Selector
+        installed = Package('Old.App', installed=True)
+        available = Package('New.App')
+        disabled = Package('Unknown', installed=True, details={'disabled_reason': 'unproven scope'})
+        installed_label = '1. [ ] Old.App'
+        available_label = '2. [ ] New.App'
+        disabled_label = '3. [ ] Unknown — unproven scope'
+        choices = [available_label, 'Show installed packages', installed_label,
+                   disabled_label, 'Hide installed packages', 'Accept selection']
+        err = io.StringIO()
+        with patch.object(Selector, 'pick', side_effect=choices) as picker, patch.object(ui, 'which', return_value=None), \
+             redirect_stderr(err):
+            selected = ui.native_pick([installed, available, disabled], self.backend(), {'color': 'never'}, install=True)
+        self.assertEqual(selected, [available])
+        self.assertIn('unproven scope', err.getvalue())
+        menus = [call.args[2] for call in picker.call_args_list]
+        self.assertIn('Show installed packages', menus[0])
+        self.assertNotIn(installed_label, menus[0])
+        self.assertNotIn(disabled_label, menus[0])
+        self.assertIn(installed_label, menus[2])
+        self.assertIn(disabled_label, menus[2])
+        self.assertIn('1. [x] Old.App', menus[4])
+        self.assertIn('2. [x] New.App', menus[-1])
+        self.assertNotIn('1. [x] Old.App', menus[-1])
+
+    def test_native_install_all_installed_can_reveal_or_request_installed_inventory(self):
+        from pkgs_lib import ui
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]/'lib/dots'))
+        from interaction import Selector
+        package = Package('Old.App', installed=True)
+        for installed_only in (False, True):
+            choices = [] if installed_only else ['Show installed packages']
+            choices.extend(['1. [ ] Old.App', 'Accept selection'])
+            with self.subTest(installed_only=installed_only), patch.object(Selector, 'pick', side_effect=choices) as picker, \
+                 patch.object(ui, 'which', return_value=None):
+                selected = ui.native_pick([package], self.backend(), {'color':'never'}, install=True, installed_only=installed_only)
+                initial = picker.call_args_list[0].args[2]
+                self.assertEqual('1. [ ] Old.App' in initial, installed_only)
+                self.assertEqual('Show installed packages' in initial, not installed_only)
+                self.assertEqual(selected, [package])
+
     def test_shared_export_restore_and_upgrade_preserve_scope_and_pins(self):
         import io, os, tempfile
         from contextlib import redirect_stdout

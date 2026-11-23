@@ -99,6 +99,8 @@ def _complete(words, cfg, fuzzy=False, *, display_types=False):
         name = default_manager() if manager == 'auto' else manager
         if name not in MANAGERS or not available(name): return []
         backend = Backend(name, global_scope)
+        installed_filter = fuzzy and command == 'install' and '--installed' in before
+        installed_only = installed_filter or command in ('uninstall', 'remove', 'upgrade')
         if name == 'winget':
             # Completion never queries remote sources or refreshes WinGet state.
             from .common import Cache
@@ -106,12 +108,14 @@ def _complete(words, cfg, fuzzy=False, *, display_types=False):
             scope = next((before[i+1] for i, w in enumerate(before[:-1]) if w == '--scope'), 'user')
             backend = make(name, scope)
             rows = Cache(backend.cache_key).load(None) or []
-            if command in ('uninstall', 'remove', 'upgrade'): rows = [p for p in rows if p.installed]
+            if installed_only: rows = [p for p in rows if p.installed]
         else:
-            rows = inventory(backend, cfg, installed_only=command in ('uninstall', 'remove', 'upgrade'), offline=True)
+            rows = inventory(backend, cfg, installed_only=installed_only, offline=True)
         rows = [p for p in rows if p.name not in used]
         if fuzzy:
-            return [(p.name, '') for p in pick(rows, backend, cfg, current, completion=True)]
+            selected = pick(rows, backend, cfg, current, completion=True, command=command,
+                            installed_only=installed_only)
+            return [(p.name, '') for p in selected]
         candidates = [(p.name, ('[i] ' if p.installed else '') + (p.description or p.version)) for p in rows]
         if command == 'upgrade' and not used:
             candidates.insert(0, ('ls', 'List available upgrades without installing'))

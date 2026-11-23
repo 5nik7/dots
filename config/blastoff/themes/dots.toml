@@ -128,8 +128,8 @@ disabled = false
 style = "fg:cyan"
 format = '([$ahead_behind]($style) )([$all_status]($style) )'
 stashed = "*${count}"
-ahead = "⇡${count}"
-behind = "⇣${count}"
+ahead = "󱦲${count}"
+behind = "󱦳${count}"
 up_to_date = ""
 diverged = "⇡${ahead_count}⇣${behind_count}"
 conflicted = "=${count}"

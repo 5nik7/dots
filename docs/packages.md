@@ -197,9 +197,7 @@ that key replaces its object. Recipe changes take effect on the next invocation.
 
 ## Output colors
 
-All Dots-owned package views use `colors.apps.pkgs` through the existing Config
-browser and profile color files. Package names default to `accent`; manager names use `colors.apps.pkgs.manager`, defaulting to `magenta` (pink in the current theme). Other roles
-fall back to their existing CLI or preview colors. Fields support foreground (`fg`),
+Dots-owned package views use `colors.apps.pkgs` through the Config browser and profile color files. Manager names default to bold `accent` and package names to bold `bright_magenta` from the active theme. Fields support foreground (`fg`),
 background (`bg`) and shared text attributes. Unset/reset inherits; defaults,
 parent profiles and the selected profile resolve field by field. Changes apply on
 the next invocation or popup without publishing a theme.
@@ -207,15 +205,18 @@ the next invocation or popup without publishing a theme.
 | Roles | Consumer |
 | --- | --- |
 | `heading`, `label`, `identity`, `count`, `value`, `version` | Help, lists, plans, manifests and reports |
-| `package` | Package names in results, inventories, previews and progress |
+| `package` | Package names in results, inventories, picker rows, previews and progress |
 | `manager` | Manager labels in reports, plans, results, diagnostics, help, pickers and progress |
-| `success`, `warning`, `error`, `muted`, `skipped` | Statuses, diagnostics, secondary text and skip counts |
+| `success`, `warning`, `error`, `muted`, `skipped` | Statuses, diagnostics, secondary text and skip counts. FZF middle dots use `muted` and default to the theme's muted foreground. |
+| `picker.description` | FZF package descriptions. The default foreground is the theme's `light_foreground`. |
 | `progress`, `spinner` | Transient activity text and marker |
-| `preview.heading`, `preview.label`, `preview.success`, `preview.warning`, `preview.version` | Package information and picker previews/rows |
+| `preview.heading`, `preview.label`, `preview.success`, `preview.warning` | Package information, picker previews and row markers |
+| `preview.version` | Version and installed-version fields in the FZF preview. Inherits `version` unless a preview field overrides it. |
 
 ```sh
 dots config browse --query colors.apps.pkgs
-dots config set colors.apps.pkgs.package.fg accent
+dots config set colors.apps.pkgs.package.fg bright_magenta
+dots config set colors.apps.pkgs.picker.description.fg light_foreground
 dots config set colors.apps.pkgs.error.fg red
 dots config unset colors.apps.pkgs.error.fg
 ```
@@ -224,6 +225,20 @@ Resource paths retain file-type styles, and FZF/menu chrome retains its existing
 configuration. Explicit color modes and NO_COLOR still apply. JSON, completion,
 raw manager bytes and ordinary redirected data remain undecorated. Native package
 output is only themed in the owned formatted view, never in `--raw`.
+
+## Package picker rows
+
+On Termux, Linux and WSL, `pkgs install` and `pkgs in` open FZF with installed packages hidden. Press **Alt-I** to show them, then press it again to hide them. Run `pkgs in --installed` to start with only installed packages visible. If you supply an exact package name, the command skips the picker.
+
+| Command | Example row |
+| --- | --- |
+| `pkgs in` when ripgrep is available to install | `ripgrep · Fast text search` |
+| `pkgs in` after Alt-I, or `pkgs search`, when ripgrep is installed | `ripgrep · [i] · Fast text search` |
+| `pkgs un`, `pkgs uninstall` or `pkgs remove` when ripgrep is installed | `ripgrep · Fast text search` |
+
+`[i]` marks a package installed in the selected manager and scope. The uninstall picker lists only installed packages, so it omits that marker. A cached match for an external executable adds `[e]`, including during uninstall. When both markers apply in install or search, they appear together as `[i][e]`. Rows omit empty fields and their separators. An available package with no description or markers shows just its name. Version and repository details appear in the preview.
+
+The same rows and initial filter apply through `dots pkgs` and the bundled fuzzy package completion. Turning colors off preserves the row text. On native Windows, the Gum or numbered install selector also starts with installed packages hidden. Use its show/hide action to change the view, or pass `--installed` to open an installed-only selection.
 
 ## Output
 
@@ -277,7 +292,7 @@ The ` · N skipped` suffix uses the theme's muted foreground through
 error color. Plain output retains the same text. Compact npm output hides native
 deprecation notices plus the exact native `using --force Recommended protections disabled.` and `.npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line` notices. Compact uv-tool upgrades also omit uv’s warning and advice when it falls back from hardlinks to a full copy. These notices do not consume diagnostic counts or failure tails. Other warnings and errors remain visible; `--raw` and ordinary redirected output retain all native notices.
 
-Package identities in Installed, Removed, Updated, Failed and script results, and in transient progress, use the active palette's accent by default. Labels, punctuation, exit codes and the `none`/`unavailable` placeholders keep their own styles. Plain/NO_COLOR output retains the same text.
+Package names in Installed, Removed, Updated, Failed and script results, and in transient progress, use the `package` style. Labels, punctuation, exit codes and the `none`/`unavailable` placeholders keep their own styles. Plain/NO_COLOR output retains the same text.
 
 Repeated native pip dependency-conflict blocks become one notice per manager:
 `pip: dependency conflicts; run python -m pip check`. A successful command can emit these blocks; they do not displace a failed package's actual error. The Failed field and up to two useful failure details remain visible, while independent packages continue. This summarizes existing conflicts; it does not repair or remove installed dependencies.

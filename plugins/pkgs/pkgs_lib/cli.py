@@ -236,9 +236,10 @@ def _main(argv=None):
             return 1 if metadata_failed else 0
         if command in ('upgrade', 'refresh') or (command in ('install', 'uninstall') and args.names):
             return execute(backend, command, args.names, args, cfg)
+        installed_only = args.installed or command == 'uninstall'
         with budget(max(0, 45 - (time.monotonic() - preparation_started))):
             rows = inventory(backend, cfg, args.query if command != 'uninstall' else '',
-                             installed_only=args.installed or command == 'uninstall')
+                             installed_only=installed_only)
         if command == 'list':
             if args.query:
                 rows = [p for p in rows if args.query.lower() in (p.name + ' ' + p.description).lower()]
@@ -252,7 +253,7 @@ def _main(argv=None):
                     markers = ('[i]' if item.installed else '   ') + ('[e]' if item.external else '   ')
                     print(colored(markers, 'good' if item.installed else 'warn', cfg['color']) + ' ' + colored(item.name, 'title', cfg['color']) + ' ' + clean(item.version) + '  ' + clean(item.description))
             return 0
-        selected = pick(rows, backend, cfg, args.query)
+        selected = pick(rows, backend, cfg, args.query, command=command, installed_only=installed_only)
         if not selected: return 0
         if command == 'search':
             metadata_failed = False

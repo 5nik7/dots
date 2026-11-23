@@ -158,7 +158,7 @@ snapshots, omitting unchanged/skipped packages and newly added dependencies.
 No changes reports Updated none; an inventory failure reports Updated unavailable
 without blocking the transaction or changing its exit status. These reads apply
 only to compact upgrades. The skipped suffix uses the theme's muted foreground.
-Package identities in results and progress default to the active palette's accent through `colors.apps.pkgs`. Manager labels use `colors.apps.pkgs.manager`, defaulting to magenta (pink in the current theme), across owned help, reports, previews, diagnostics and progress.
+Manager labels default to bold theme `accent` and package names to bold theme `bright_magenta` across package views. Customize them through `colors.apps.pkgs.manager` and `colors.apps.pkgs.package`.
 Compact npm output hides deprecations and the two routine force/allow-scripts
 notices described in [package output](../../docs/packages.md#output). Compact uv-tool upgrades also hide the hardlink-to-copy performance notice. Other warnings/errors
 remain visible; raw and ordinary redirected output retain all notices.
@@ -220,6 +220,10 @@ disable progress; `spinner` and `both` are also available.
 
 ## Picker and preview
 
+The FZF install picker (`install`, `in`) opens with installed packages hidden, including in bundled fuzzy package completion. Press Alt-I to show them. Use `pkgs in --installed` to open an installed-only picker. Native Windows offers a show/hide action in its Gum or numbered install selector. Exact-name installs bypass the picker.
+
+Search and install with installed packages visible show rows such as `ripgrep · [i] · Fast text search`. The uninstall picker (`uninstall`, `un`, `remove`) lists only installed packages and shows `ripgrep · Fast text search`. Both layouts show `[e]` when cached external evidence is available. Descriptions default to the theme's `light_foreground` through `colors.apps.pkgs.picker.description.fg`. Middle dots use the theme's muted foreground. Missing fields and their separators disappear, so a row can consist of just the package name. Open the preview for version and repository details.
+
 | Key | Action |
 |---|---|
 | Tab / Shift-Tab | Toggle selection and move down/up |
@@ -238,7 +242,7 @@ Use `--preview 'right:55%:wrap'` for a wide terminal or
 `--preview 'bottom:hidden:55%:wrap'` to start hidden. The preview uses terminal
 palette colors and does not require bat or change `BAT_THEME`.
 
-The `list`, `managers` and `doctor` reports use [Dots presentation](../../docs/presentation.md#application-reports) in terminals and popup readers. They share semantic headings/statuses, wrapped resource paths and independent `DOTS_ICONS` settings; doctor expands nested FZF/completion details into sections. Report color precedence is explicit `--color`, then `DOTS_COLOR`, then this application's configured `color`, then `auto`. Ordinary redirected formats and JSON remain unchanged. Picker styling retains its behavior. Package subprocesses use styled streams in terminals/menu readers, raw bytes on ordinary redirection, and explicit `--raw` passthrough; see [output](../../docs/packages.md#output).
+The `list`, `managers` and `doctor` reports use [Dots presentation](../../docs/presentation.md#application-reports) in terminals and popup readers. They share semantic headings/statuses, wrapped resource paths and independent `DOTS_ICONS` settings; doctor expands nested FZF/completion details into sections. Report color precedence is explicit `--color`, then `DOTS_COLOR`, then this application's configured `color`, then `auto`. Ordinary redirected formats and JSON remain unchanged. Package subprocesses use styled streams in terminals/menu readers, raw bytes on ordinary redirection, and explicit `--raw` passthrough; see [output](../../docs/packages.md#output).
 
 `--color auto` respects `NO_COLOR`; `--color never` disables pkgs colors;
 `--color always` explicitly enables them. Your fzf colors and compatible
@@ -258,12 +262,12 @@ preview. A missing homepage produces a notice.
 | `[i]` | Installed in the selected manager and scope |
 | `[e]` | Related executable found outside the selected system database's ownership |
 | `[i][e]` | Installed package plus an unowned executable copy |
-| Blank | Not recorded as installed; no cached external evidence is available |
+| No marker | No applicable marker for this picker view |
 
 Installed state is read fresh. External-command checks happen lazily in previews,
 without scanning ownership for the entire catalog. Initial rows and `list` use
 valid cached evidence; new evidence appears in the preview and on later picker
-opens. A blank marker does not mean an exhaustive external check was performed.
+opens. The preview checks for current external evidence even when the row has no marker.
 
 For example, pkgs can detect `~/.fzf/bin/fzf` even when APT does not own it.
 The preview identifies paths, ownership, and whether an association comes from

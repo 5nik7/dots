@@ -215,13 +215,13 @@ class UpgradeSummary(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             for line in notices: self.assertEqual(line in result.stderr, bool(options) or mode=='auto')
 
-    def test_accent_is_palette_color_only_for_package_identities(self):
+    def test_bold_bright_magenta_is_used_only_for_package_identities(self):
         import style_config
         from resources import cells
         from progress import Progress
         root = self.home/'theme'; (root/'default').mkdir(parents=True)
         (root/'default/colors.toml').write_text('[status.warning]\nfg="#aa0000"\n[ui.identity]\nfg="#00aa00"\n')
-        for palette, expected in (({'accent':'#abcd12'}, '38;2;171;205;18'), ({}, '34')):
+        for palette, expected in (({'bright_magenta':'#abcd12'}, '1;38;2;171;205;18'), ({}, '1;95')):
             prefs = style_config.Styles(root, selected={'layers':[]}, palette=palette)
             cfg = dict(self.cfg)
             with patch.object(style_config, 'current', return_value=prefs):
@@ -246,7 +246,7 @@ class UpgradeSummary(unittest.TestCase):
                 summary.package='package'; summary.stage='Building'; summary.last_activity=0
                 with patch.object(style_config,'current',side_effect=AssertionError('theme read during tick')):
                     summary.tick(now=65)
-                    self.assertEqual(meter.state[0], (('pip','0;35'),(' · 1:05 · Building','0;94'),(' · ','0;94'),('package','0;'+expected)))
+                    self.assertEqual(meter.state[0], (('pip','0;1;34'),(' · 1:05 · Building','0;94'),(' · ','0;94'),('package','0;'+expected)))
                     summary.last_activity=65; summary.tick(now=65)
                     self.assertNotIn('1:05',str(meter.state))
 

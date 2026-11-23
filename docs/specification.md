@@ -547,10 +547,7 @@ active leaf profile root's `packages.json`; it does not inherit a parent's file.
 uses existing schema-1 Git events to report manifest selection and update;
 ordinary export/restore and Git data schemas are unchanged.
 
-Package color controls `colors.apps.pkgs.*` use the existing visual catalog,
-fieldwise profile inheritance and nullable reset behavior. Package names default
-to theme accent; other roles retain runtime CLI/preview fallbacks. Saves affect
-the next invocation without theme publication; see [output colors](packages.md#output-colors).
+Package color controls `colors.apps.pkgs.*` use the existing visual catalog, fieldwise profile inheritance and nullable reset behavior. Manager names default to bold theme `accent` and package names to bold theme `bright_magenta`. FZF package descriptions use `colors.apps.pkgs.picker.description`, defaulting to theme `light_foreground`. Separators use `colors.apps.pkgs.muted` with the theme's muted foreground as their fallback. Saves take effect on the next invocation. See [package output colors](packages.md#output-colors).
 `upgrade.gem_system` is a native boolean defaulting to true; it does not inherit
 through profile JSON. Script-completion receipts use schema-1 JSON with only a
 SHA-256 fingerprint under the package state directory, keyed by hashed exact

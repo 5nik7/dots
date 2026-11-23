@@ -377,6 +377,8 @@ For less style changes, run `python3 -B tools/test_less_style.py` and affected s
 
 For Blastoff/pkgs absorption, run `python3 -B tools/test_bundled_apps.py -v`, the metadata generator with `--check`, and the affected dispatcher/native/installation suites sequentially. Keep original application release/installer evidence separate from combined Dots lifecycle checks; see [bundled verification](../../docs/testing.md#bundled-applications).
 
+For package picker styling, run `python3 -B tools/test_pkgs_styles.py` and `python3 -B tools/test_bundled_app_cores.py pkgs`. The core suite exercises the real FZF row layout at 40, 80 and 120 columns with fixture packages. Check the install picker’s starting view, the Alt-I toggle, the explicit installed-only view and the native selector action using an owned inventory.
+
 Termux pkgs upgrade changes also require the package-core mirror/flag fixtures and `tools/test_pkgs_integration.py`; follow [package workflow acceptance](../../docs/testing.md#package-workflow-acceptance). Use fake pkg/APT/pacman and private terminals for mirror stages, failures and raw output. Never rotate live mirrors or upgrade host packages as a test.
 
 For npm upgrade/receipt changes, run package-core `test_npm_updates`, `test_script_receipts`, `test_npm_scripts` and `test_npm_global`, then the integration and bundled checks. Use owned prefixes/config/state and the loopback registry for native evidence; verify unchanged repeats, nested rebuilds, recipe boundaries, query failure and approval drift without touching host packages or receipts.

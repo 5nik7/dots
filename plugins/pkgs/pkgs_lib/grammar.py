@@ -6,7 +6,7 @@ MANAGERS = ('apt', 'pacman', 'paru', 'yay', 'dnf', 'xbps', 'npm', 'uv-tool', 'pi
 ALIASES = {'in': 'install', 'un': 'uninstall', 'up': 'upgrade',
            'xup': 'export', 'upls': 'upgrade', 'remove': 'uninstall'}
 
-COMMANDS = {'install': 'Install exact names or open a picker', 'uninstall': 'Remove installed packages',
+COMMANDS = {'install': 'Install by name or browse packages with installed entries hidden by default', 'uninstall': 'Remove installed packages',
             'remove': 'Alias for uninstall', 'search': 'Read-only search picker', 'list': 'Print package inventory',
             'info': 'Readable package details', 'upgrade': 'Upgrade user-wide packages or a selected manager', 'refresh': 'Refresh repository metadata',
             'managers': 'Detected managers and capabilities', 'doctor': 'Detection and completion diagnostics',
@@ -20,7 +20,7 @@ COMMANDS = {'install': 'Install exact names or open a picker', 'uninstall': 'Rem
 DESCRIPTION = '''Fuzzy package management for Termux, Linux, WSL and native Windows.
 
 Commands:
-  install [NAME ...]       Install exact names; no names opens picker
+  install [NAME ...]       Install by name or browse with installed packages hidden by default
   uninstall [NAME ...]     Remove installed packages; no names opens picker
   search [QUERY]           Read-only search picker (Enter shows details)
   list                    Print package inventory
@@ -52,7 +52,7 @@ Examples:
 Install, upgrade and refresh run without an extra confirmation flag.
 Install, uninstall and upgrade show brief results; --raw shows full manager output.
 Pip upgrades continue after package failures; global npm scripts need separate approval.
-Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.
+FZF: Tab select, Ctrl-X preview, Alt-I show/hide installed, Alt-O homepage.
 Bare invocation shows help. Completion inserts names and never installs.
 '''
 

@@ -87,14 +87,16 @@ Use `dots config browse --query progress` to edit the shared bar appearance. All
 | `icons.progress.bar.left` / `right` | `[` / `]` | Surrounds; empty hides either side |
 | `colors.apps.cli.progress.filled.fg` / `percentage.fg` | `colors.ui.heading.fg` | Filled cells and percentage; current theme aqua |
 | `colors.apps.cli.progress.empty.fg` / `surround.fg` | `colors.ui.muted.fg` | Empty cells and surrounds |
-| `colors.apps.pkgs.manager.fg` | `magenta` | Manager labels such as npm, pip, apt and uv; current theme pink |
+| `colors.apps.pkgs.manager.fg` | `accent` | Package manager labels such as npm, pip, apt and uv, bold by default |
+| `colors.apps.pkgs.package.fg` | `bright_magenta` | Package names in picker rows, reports and progress, bold by default |
+| `colors.apps.pkgs.picker.description.fg` | `light_foreground` | Package descriptions in FZF, independently of the muted middle dots |
 
 Each glyph is a single printable display cell. Config suggests alternatives such as `─`, `═`, `█`, `#`, `=`, `░` and `·`; choose them individually. Combining, wide, control and multicharacter values are rejected. ASCII mode preserves configured ASCII glyphs and substitutes `#`, `-`, `[` and `]` for non-ASCII ones. Each progress color role also supports `bg`, `bold`, `dim`, `italic`, `underline`, `reverse` and `strikethrough`. Spinner/activity styles retain their separate controls.
 
 ```sh
 dots config set icons.progress.bar.filled '='
 dots config set colors.apps.cli.progress.empty.fg muted
-dots config set colors.apps.pkgs.manager.fg magenta
+dots config set colors.apps.pkgs.manager.fg accent
 dots debug demo progress
 dots debug demo pkgs --static
 ```

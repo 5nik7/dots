@@ -96,6 +96,39 @@ class Core(Isolated):
         self.assertEqual(rc, 1)
         self.assertIn('Not installed', err)
 
+    def test_picker_routes_and_fuzzy_completion_pass_canonical_context(self):
+        package = Package('@scope/tool', installed=True)
+        for route in ('in', 'install', 'search', 'un', 'uninstall', 'remove'):
+            removal = route in ('un', 'uninstall', 'remove')
+            with self.subTest(route=route), patch.object(cli, 'choose_manager', return_value=Backend('npm')), \
+                 patch.object(cli, 'inventory', return_value=[package]) as inventory, \
+                 patch.object(cli, 'pick', return_value=[]) as picker:
+                rc, out, err = self.invoke(route)
+                self.assertEqual(rc, 0, err)
+                self.assertEqual(inventory.call_args.kwargs['installed_only'], removal)
+                command = 'uninstall' if removal else ('search' if route == 'search' else 'install')
+                self.assertEqual(picker.call_args.kwargs, {'command': command, 'installed_only': removal})
+            with self.subTest(completion=route), patch.object(completion, 'available', return_value=True), \
+                 patch.object(completion, 'inventory', return_value=[package]) as inventory, \
+                 patch.object(completion, 'pick', return_value=[package]) as picker:
+                result = completion.complete(['--manager', 'npm', route, ''], self.cfg, fuzzy=True)
+                self.assertEqual(result, [('@scope/tool', '')])
+                self.assertEqual(inventory.call_args.kwargs, {'installed_only': removal, 'offline': True})
+                self.assertEqual(picker.call_args.kwargs, {'completion': True, 'command': command, 'installed_only': removal})
+
+    def test_explicit_installed_install_picker_and_fuzzy_completion(self):
+        with patch.object(cli, 'choose_manager', return_value=Backend('npm')), \
+             patch.object(cli, 'inventory', return_value=[]) as inventory, patch.object(cli, 'pick', return_value=[]) as picker:
+            self.assertEqual(self.invoke('in', '--installed')[0], 0)
+            self.assertTrue(inventory.call_args.kwargs['installed_only'])
+            self.assertEqual(picker.call_args.kwargs, {'command': 'install', 'installed_only': True})
+        with patch.object(completion, 'available', return_value=True), \
+             patch.object(completion, 'inventory', return_value=[]) as inventory, \
+             patch.object(completion, 'pick', return_value=[]) as picker:
+            completion.complete(['--manager', 'npm', 'in', '--installed', ''], self.cfg, fuzzy=True)
+            self.assertEqual(inventory.call_args.kwargs, {'installed_only': True, 'offline': True})
+            self.assertEqual(picker.call_args.kwargs, {'command': 'install', 'installed_only': True, 'completion': True})
+
 class Backends(Isolated):
     def test_dpkg_only_installed_status(self):
         fixture = 'git\t2.0\tinstalled\tversion control\nold\t1\tconfig-files\tremoved\npartial\t1\tunpacked\tpartial\n'
@@ -172,6 +205,22 @@ class Backends(Isolated):
             with self.assertRaises(Error): detect.default_manager()
 
 class Preview(Isolated):
+    def test_picker_record_fields_and_independent_styles(self):
+        package = Package('@scope/pkg', '1.2', 'démo\tlib\n', True, repo='extra', external=[{}])
+        colors = {'package': '1;95', 'picker.description': '37', 'picker.muted': '90', 'preview.success': '32', 'preview.warning': '33'}
+        with patch('pkgs_lib.presentation.styles', return_value=colors):
+            record = ui.row(package, 4, ui.colorizer('always', True), show_installed_marker=True)
+        self.assertEqual(record, '4\t\x1b[1;95m@scope/pkg\x1b[0m\x1b[90m · \x1b[0m'
+                         '\x1b[32m[i]\x1b[0m\x1b[33m[e]\x1b[0m\x1b[90m · \x1b[0m\x1b[37mdémo lib\x1b[0m')
+        with patch.dict(os.environ, {'NO_COLOR': '1'}):
+            paint = ui.colorizer('auto', True)
+            self.assertEqual(ui.row(package, 4, paint, show_installed_marker=False), '4\t@scope/pkg · [e] · démo lib')
+            package.external.clear()
+            self.assertEqual(ui.row(package, 4, paint, show_installed_marker=False), '4\t@scope/pkg · démo lib')
+            package.description = ' \t\x1b'
+            self.assertEqual(ui.row(package, 4, paint, show_installed_marker=True), '4\t@scope/pkg · [i]')
+            self.assertEqual(ui.row(package, 4, paint, show_installed_marker=False), '4\t@scope/pkg')
+
     def test_color_and_no_color(self):
         p = Package('fzf', '0.1', 'Easy to read descriptions.', True, '0.1')
         with patch.dict(os.environ, {'NO_COLOR': '1'}):
@@ -218,9 +267,14 @@ class Preview(Isolated):
         path.chmod(0o755)
         return str(path)
     def test_picker_raw_identity_and_cleanup(self):
-        path = self.fake_fzf('import sys,os\nlines=sys.stdin.read().splitlines()\nprint(lines[1])\n')
+        path = self.fake_fzf(
+            "import os\nfrom pathlib import Path\nlines=sys.stdin.read().splitlines()\n"
+            "assert lines == ['0\\tfirst · [i]', '1\\t@scope/name · tabs here']\n"
+            "assert (Path(os.environ['PKGS_SESSION']) / 'hide').read_text() == lines[1] + '\\n'\n"
+            "print(lines[1])\n")
         with patch('pkgs_lib.ui.which', return_value=path):
-            rows = ui.pick([Package('first'), Package('@scope/name', description='tabs\there')], Backend('npm'), self.cfg)
+            rows = ui.pick([Package('first', installed=True), Package('@scope/name', description='tabs\there')],
+                           Backend('npm'), dict(self.cfg, color='never'))
         self.assertEqual([p.name for p in rows], ['@scope/name'])
     def test_picker_cancel_and_failure_distinct(self):
         for rc in (130, 1, 2):
@@ -239,6 +293,33 @@ class Preview(Isolated):
             self.assertEqual(out.getvalue(), '1\tavailable\n')
             with contextlib.redirect_stdout(io.StringIO()): ui.session('toggle')
         self.assertFalse((self.home/'hidden').exists())
+
+    def test_initial_install_filter_reveals_and_rehides_original_records(self):
+        installed = Package('first', installed=True)
+        available = Package('second')
+        for candidates in ([installed, available], [installed]):
+            visible = '1\tsecond\n' if available in candidates else ''
+
+            def fzf(args, *, stdin, env, **kwargs):
+                self.assertEqual(stdin.read(), visible)
+                with patch.dict(os.environ, {'PKGS_SESSION': env['PKGS_SESSION']}):
+                    full = io.StringIO()
+                    with contextlib.redirect_stdout(full): ui.session('toggle')
+                    self.assertEqual(full.getvalue(), '0\tfirst · [i]\n' + visible)
+                    hidden = io.StringIO()
+                    with contextlib.redirect_stdout(hidden): ui.session('toggle')
+                    self.assertEqual(hidden.getvalue(), visible)
+                    restored = io.StringIO()
+                    with contextlib.redirect_stdout(restored): ui.session('toggle')
+                    self.assertEqual(restored.getvalue(), full.getvalue())
+                # An FZF result carries the original catalog ID, including after reload.
+                return subprocess.CompletedProcess(args, 0, full.getvalue().splitlines()[-1] + '\n')
+
+            with self.subTest(visible=visible), patch.object(ui, 'which', return_value='fixture-fzf'), \
+                 patch.object(ui, 'invocation', return_value=([], dict(os.environ))), \
+                 patch.object(ui.subprocess, 'run', side_effect=fzf):
+                selected = ui.pick(candidates, Backend('apt'), dict(self.cfg, color='never'), command='install')
+                self.assertEqual(selected, [candidates[-1]])
 
 class Completions(Isolated):
     def test_install_is_idempotent_and_preserves_config(self):

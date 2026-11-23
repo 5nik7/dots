@@ -1748,7 +1748,7 @@
     "argument": []
   },
   "pkgs-install": {
-    "summary": "Install exact names or open a picker",
+    "summary": "Install by name or browse packages with installed entries hidden by default",
     "option": [
       [
         "--help",
