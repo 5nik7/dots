@@ -12,22 +12,6 @@
       "strategy": "directory-link"
     },
     {
-      "id": "alacritty",
-      "source": "${PROFILE}/config/alacritty",
-      "app": "alacritty",
-      "category": "config",
-      "target": "${APP_CONFIG:alacritty}",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "bat",
-      "source": "${PROFILE}/config/bat",
-      "app": "bat",
-      "category": "config",
-      "target": null,
-      "strategy": "directory-link"
-    },
-    {
       "id": "clink",
       "source": "${PROFILE}/config/clink/clink_settings",
       "app": "clink",
