@@ -389,7 +389,8 @@ operations_main() {
         command -v sha256sum >/dev/null 2>&1 || die 3 'publishing requires sha256sum'
         dots::progress_start 'Collecting publish inputs'
         if [[ -z $MESSAGE ]]; then
-            text_cmd date -u '+%Y-%m-%d %H:%M UTC'; MESSAGE="Sync via ${HOSTNAME:-unknown} on $REPLY"
+            text_cmd date -u '+%Y-%m-%d %H:%M UTC'
+            MESSAGE="Sync via ${DOTS_PROFILE:-${HOSTNAME:-unknown}} on $REPLY"
         fi
         if ((SCOPED_PUBLISH)); then
             select_publish_scope || return $?

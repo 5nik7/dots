@@ -819,7 +819,10 @@ def main():
     if args.command == 'status' and args.dry_run: parser.error('status is already read-only')
     if not shutil.which('git'): raise GitError('Git is required')
     if any(name in os.environ for name in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR')): raise GitError('unset Git repository/index redirection variables')
-    if not args.message: args.message = 'Sync via ' + (os.environ.get('HOSTNAME') or socket.gethostname()) + ' on ' + datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+    if args.command == 'publish' and not args.message:
+        identity = os.environ.get('DOTS_PROFILE') or os.environ.get('HOSTNAME') or socket.gethostname()
+        timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+        args.message = f'Sync via {identity} on {timestamp}'
     def interrupted(signum, frame):
         raise SystemExit(128 + signum)
     signal.signal(signal.SIGTERM, interrupted)

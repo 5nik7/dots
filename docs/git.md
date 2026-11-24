@@ -108,9 +108,11 @@ stages ordinary tracked and untracked files, respecting ignore rules; gitlinks a
 handled separately so deliberately staged pointers are preserved. Tracked files
 remain eligible even beneath ignored directories; ignored new files stay excluded.
 Staging failures can leave some changes staged; inspect `git status` before retrying. Review the
-preview, then confirm once; unattended callers require `--yes`. A default UTC
-message is generated if `-m` / `--message` is omitted. Children publish before
-parents; failed children block dependent parents, while safe siblings continue.
+preview, then confirm once; unattended callers require `--yes`. Without
+`-m` / `--message`, publish uses `Sync via <name> on <UTC timestamp>`.
+The name comes from `DOTS_PROFILE`, falling back to the hostname when the variable
+is unset or empty. Children publish before parents. A failed child blocks its
+dependent parents, while safe siblings continue.
 
 Human terminal approval uses Gum's **Cancel / Publish** menu when available,
 with Cancel selected by default. Otherwise the existing text prompt applies.

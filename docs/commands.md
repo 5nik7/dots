@@ -162,6 +162,8 @@ and help reuse the canonical action headers. Contextual name, action and option
 completion is shared across all four shells; name discovery runs on demand.
 Scoped publication retains the existing publish options and one combined approval;
 `--all` selects unstaged files, while `--all-submodules` selects child subtrees.
+The default publish message uses the nonempty `DOTS_PROFILE` environment value
+or falls back to the hostname. Use `-m` to supply your own message.
 Registered PATH operands are relative to the selected repository and complete in
 Bash, Zsh, Fish and PowerShell through the core-owned `git-submodule` provider.
 Human submodule reports open with the starting repository and branch. Adjacent
