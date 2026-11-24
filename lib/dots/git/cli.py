@@ -222,7 +222,12 @@ class Workflow:
         if self.output is not None and stream is None:
             if path not in self.presentation_roles:
                 self.presentation_roles[path] = 'repo_owned' if self.owned(path) else 'repo'
-            self.output.event(path, state, detail, file, xy, ui=ui, repo_role=self.presentation_roles[path])
+            fields = None
+            if state == 'planned' and path in self.destinations:
+                destination = self.destinations[path]
+                fields = [('Branch', destination[0]), ('Push to', destination[5]),
+                          ('Target', destination[2]), ('Message', self.args.message)]
+            self.output.event(path, state, detail, file, xy, ui=ui, repo_role=self.presentation_roles[path], fields=fields)
             if self.view == 'verbose' and state == 'planned' and root(path) == path:
                 self.output.metadata(self.metadata(path))
             return
@@ -318,10 +323,12 @@ class Workflow:
             print(json.dumps(dict(schema=1, remote_state='cached', repositories=rows, complete=not self.failed), ensure_ascii=True))
         else:
             if self.output:
+                self.ui.emit()
                 self.output.root = self.root
-                self.output.forest(parents)
+                companion = str(self.wiki.path) if self.wiki and self.wiki.row and not self.wiki.only else None
+                self.output.forest(parents, companion=companion)
             else: self.ui.heading('Git status')
-            for index, row in enumerate(rows):
+            for row in rows:
                 path = Path(row['path'])
                 label = str(path) if self.args.full_paths else path.name
                 if not self.args.full_paths and sum(Path(r['path']).name == path.name for r in rows) > 1:
@@ -332,9 +339,6 @@ class Workflow:
                     if reason and reason != 'Associated wiki repository': display['reason'] = reason
                     if row['status'] not in ('missing', 'blocked'):
                         display.update(self.metadata(path))
-                    if index:
-                        self.output.position(str(path), row.get('kind') == 'wiki')
-                        self.output.separator()
                     self.output.status(display, label)
                     continue
                 self.ui.emit()
@@ -356,8 +360,8 @@ class Workflow:
             summary = f'{len(rows)} repositories / {changed} changed or unavailable / {len(rows)-changed} clean'
             if self.output and self.view != 'verbose': return
             if self.output:
-                self.ui._spans([(summary, '')], prefix='  ')
-                self.ui._spans([('Remote state uses local tracking refs; no fetch performed.', '')], prefix='  ')
+                self.output.fields_box([('Repositories', summary),
+                                        ('Remote', 'Remote state uses local tracking refs; no fetch performed.')])
             else:
                 self.ui.emit('  ' + summary)
                 self.ui.emit('  Remote state uses local tracking refs; no fetch performed.')
@@ -402,7 +406,7 @@ class Workflow:
                 new = next(rows) if status[0] in ('R', 'C') else old
                 files.append(dict(xy=status[0] + ' ', path=new, old_path=old if new != old else '', changed=True))
         except (ValueError, OSError, StopIteration, IndexError):
-            self.ui.detail('Files', 'Change list unavailable; inspect the repository history.')
+            self.output.fields_box([('Files', 'Change list unavailable; inspect the repository history.')], gutter='  ')
             return
         self.output.file_list(path, files)
 
@@ -605,12 +609,15 @@ class Workflow:
                                     self.collect(Path(row['path']))
                         if not self.args.json:
                             with permanent_output():
-                                self.ui.detail('Scope', 'Only selected subtrees will publish; excluded parent indexes remain unchanged.')
-                            if not self.scope_rows:
-                                with permanent_output():
-                                    self.ui.detail('Result', 'No registered submodules.')
+                                fields = [('Scope', 'Only selected subtrees will publish; excluded parent indexes remain unchanged.')]
+                                if not self.scope_rows: fields.append(('Result', 'No registered submodules.'))
+                                if self.output: self.output.fields_box(fields)
+                                else:
+                                    for label, value in fields: self.ui.detail(label, value)
                     if self.wiki: self.wiki.collect()
                 with preparation_steps.step('Review publication'):
+                    if self.output:
+                        with permanent_output(): self.ui.heading('Publish preview')
                     expected = set()
                     for path in self.order:
                         parent = self.parents[path]
@@ -634,7 +641,7 @@ class Workflow:
                             self.event(path, 'blocked', str(error))
                     if self.output and expected:
                         with permanent_output():
-                            self.ui.detail('Pointers', 'Published child pointers may be staged in their parents.')
+                            self.output.fields_box([('Pointers', 'Published child pointers may be staged in their parents.')])
                     if self.args.dry_run or not self.destinations:
                         self.report_parent_pointers()
                         return
@@ -721,7 +728,21 @@ class Workflow:
             if self.args.command == 'status': self.status()
             else:
                 command = 'submodules publish' if getattr(self.args, 'scoped_publish', False) else self.args.command
+                if self.output:
+                    self.ui.emit()
+                    if self.args.scoped_publish:
+                        from inspection import context_header
+                        context = context_header(self.args.report_base or self.root)
+                        GitView(self.ui, self.view, self.args.full_paths).header(context)
                 if not self.args.json: self.ui.heading('Git ' + command)
+                if self.output:
+                    if self.args.command == 'sync':
+                        mode = 'Configured submodule branches' if self.args.remote else 'Pinned submodules'
+                    else:
+                        mode = 'Tracked and untracked changes' if self.args.all else 'Staged changes'
+                    setup = [('Root', str(self.root) if self.args.full_paths else self.ui.path(self.root)), ('Mode', mode)]
+                    if self.args.dry_run: setup.append(('Preview', 'Local only; no network or writes'))
+                    self.output.fields_box(setup, styles={'Root': self.ui.resources.match_style('', kind='dir')[0]})
                 if self.args.command == 'sync':
                     with sequence('Synchronize repositories', 2 if self.wiki and self.wiki.row and not self.wiki.only else 1, unit='repo') as roots:
                         with roots.step(self.root.name):
@@ -744,6 +765,17 @@ class Workflow:
                     if self.scope_rows is not None:
                         data.update(base=str(self.root), selection=[row['path'] for row in self.scope_rows])
                     print(json.dumps(data, ensure_ascii=True))
+                elif self.output:
+                    if self.failed:
+                        fields = [('Result', 'Incomplete'), ('Recovery', 'Completed work is retained. Resolve blockers and rerun.')]
+                        if self.args.dry_run: fields[1] = ('Recovery', 'Resolve blockers and rerun. No changes were made.')
+                        style = self.role('blocked')
+                    elif any(event['status'] == 'cancelled' for event in self.events):
+                        fields, style = [('Result', 'Cancelled'), ('Details', 'Nothing committed or pushed.')], '93'
+                    elif self.args.dry_run:
+                        fields, style = [('Result', 'Preview only; no changes made.'), ('Remote', 'Remote state was not fetched.')], '96'
+                    else: fields, style = [('Result', 'Complete')], self.role('clean')
+                    self.output.fields_box(fields, styles={'Result': style})
                 elif self.failed: self.ui.emit('  Incomplete; completed work is retained. Resolve blockers and rerun.')
                 elif self.args.dry_run: self.ui.emit('  Preview only; no changes made. Remote state was not fetched.')
                 else: self.ui.emit('  Complete')
@@ -767,7 +799,13 @@ def main():
     parser.add_argument('--wiki-only', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('-m', '--message')
     for flag in ('json', 'full-paths', 'dry-run', 'all', 'yes', 'remote', 'init'): parser.add_argument('--' + flag, action='store_true')
-    args = parser.parse_intermixed_args()
+    argv = sys.argv[1:]
+    report_base = None
+    if argv[:1] == ['--report-base'] and argv[2:3] == ['submodules-publish']:
+        # Private named dispatch context, kept outside public argument parsing.
+        report_base, argv = argv[1], argv[2:]
+    args = parser.parse_intermixed_args(argv)
+    args.report_base = report_base
     args.scoped_publish = args.command == 'submodules-publish'
     if args.update_packages and (args.command != 'publish' or args.wiki_only):
         parser.error('--update-packages requires root git publish, not a submodule or wiki-only action')

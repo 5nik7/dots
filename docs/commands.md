@@ -164,8 +164,9 @@ Scoped publication retains the existing publish options and one combined approva
 `--all` selects unstaged files, while `--all-submodules` selects child subtrees.
 Registered PATH operands are relative to the selected repository and complete in
 Bash, Zsh, Fish and PowerShell through the core-owned `git-submodule` provider.
-Human info `Path` fields use folder styling; human submodule trees maintain
-connected guides through spacing, nesting, wrapping and details. Redirected
+Human submodule reports open with the starting repository and branch. Adjacent
+submodules share a compact tree, and publish previews group each repository’s
+branch, destination, target ref and message in a box. Ordinary redirected
 text and JSON keep their established formats.
 See [Git commands](git.md#repository-info-and-submodules) for schemas, safety,
 presentation, dependencies and examples. No new sync route is introduced.

@@ -157,6 +157,9 @@ dots_command_help() {
   local route=$1 row long short type description position option_label
   local _DOTS_HELP_ACTIVE=1 _DOTS_HELP_ROUTE=$1
   shift
+  if [[ $route == git || $route == git\ * ]] && { [[ ${DOTS_MENU_CAPTURE:-} == 1 ]] || dots::human; }; then
+    printf '\n'
+  fi
   if [[ $route == patina || $route == anodize || $route == anodize\ * ]]; then
     # Shared core renderer only: help must never execute the resolved extension.
     source "$DOTS_LIB_DIR/../../plugins/anodize/logo.bash"

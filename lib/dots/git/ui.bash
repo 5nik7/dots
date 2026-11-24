@@ -257,6 +257,24 @@ operations_report() {
             json_string "${EVENT_CODES[i]}"; printf '"xy":%s}' "$REPLY"
         done
         printf ']}\n'
+    elif [[ $GIT_VIEW ]]; then
+        local VIEW_RESULT_STYLE
+        if ((RESULT)); then
+            dots::git_style blocked 2; VIEW_RESULT_STYLE=$REPLY
+            local recovery='Completed work is retained. Resolve blockers and rerun.'
+            (( !DRY_RUN )) || recovery='Resolve blockers and rerun. No changes were made.'
+            view_fields_box Result Incomplete Recovery "$recovery" >&2
+        elif [[ ${EVENT_STATES[*]} == *cancelled* ]]; then
+            dots::style; VIEW_RESULT_STYLE=$DOTS_UI_YELLOW
+            view_fields_box Result Cancelled Details 'Nothing committed or pushed.'
+        elif ((DRY_RUN)); then
+            dots::style; VIEW_RESULT_STYLE=$DOTS_UI_CYAN
+            view_fields_box Result 'Preview only; no changes made.' Remote 'Remote state was not fetched; undiscovered descendants remain unknown.'
+        else
+            dots::git_style clean; VIEW_RESULT_STYLE=$REPLY
+            view_fields_box Result Complete
+        fi
+        if ((RESULT && DRY_RUN)); then view_fields_box Remote 'Remote state was not fetched; undiscovered descendants remain unknown.'; fi
     else
         printf '\n'
         if ((RESULT)); then dots::warning 'Incomplete; completed work is retained. Resolve blockers and rerun.'

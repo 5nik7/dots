@@ -585,6 +585,14 @@
       "strategy": "link",
       "app": "blastoff",
       "category": "config"
+    },
+    {
+      "id": "method",
+      "source": "${PROFILE}/config/zsh-system-clipboard/method",
+      "target": "${CONFIG}/zsh-system-clipboard/method",
+      "app": "config",
+      "category": "config",
+      "strategy": "link"
     }
   ]
 }

@@ -82,9 +82,14 @@ class WikiGitTests(WikiFixture):
         command=[sys.executable,'-B',str(ROOT/'lib/dots/git/inspection.py'),'info','-C',str(self.root),'--json']
         result=subprocess.run(command,env=self.env,text=True,capture_output=True);self.assertEqual(result.returncode,0,result.stderr)
         self.assertEqual(json.loads(result.stdout)['companions'][0]['kind'],'wiki')
+        self.assertEqual(self.run_git('status', '--short').splitlines(), ['', 'source main', '│', 'wiki master'])
         shutil.rmtree(self.target)
         data=self.run_git('status','--json');self.assertTrue(data['complete'])
         self.assertEqual(data['repositories'][-1]['status'],'missing')
+        missing = self.run_git('status', '--short').splitlines()
+        self.assertEqual(missing[:4], ['', 'source main', '│', 'wiki unavailable  missing'])
+        self.assertTrue(any(line.startswith('│ Reason') and 'dots wiki init' in line for line in missing))
+        self.assertEqual(self.run_git('status', '--short', '--no-wiki').splitlines(), ['', 'source main'])
         self.run_git('status','--json',only=True,code=1)
         self.assertFalse(self.target.exists())
 

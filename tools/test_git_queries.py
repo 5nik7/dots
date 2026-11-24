@@ -36,6 +36,16 @@ class Queries(unittest.TestCase):
             self.assertEqual(self.call(entry, '-s', '--json'), self.call(entry, 'status', '-s', '--json'))
             self.call(entry, '--host', '--https', code=2)
 
+    def test_git_help_starts_with_one_blank_line_in_human_views(self):
+        env = dict(self.f.env, DOTS=str(fixture.PROJECT), DOTS_COLOR='never', DOTS_ICONS='never')
+        for entry in self.entries:
+            for route in (['git'], ['git', 'publish', '--help'], ['git', 'submodule', 'child', '--help']):
+                for capture, prefix in [('0', b'dots git'), ('1', b'\ndots git')]:
+                    with self.subTest(entry=entry, route=route, capture=capture):
+                        result = subprocess.run([*entry, *route], env=dict(env, DOTS_MENU_CAPTURE=capture),
+                                                cwd=self.f.home, capture_output=True, check=True, timeout=40)
+                        self.assertTrue(result.stdout.replace(b'\r\n', b'\n').startswith(prefix), result.stdout[:80])
+
     @unittest.skipUnless(os.name != 'nt' and (fixture.PROJECT/'plugins/git-it/git-it').is_file(),
                          'requires the initialized POSIX plugin')
     def test_installed_plugin_and_dots_report_the_same_repository(self):
@@ -74,6 +84,26 @@ class Queries(unittest.TestCase):
             self.assertEqual(self.call(entry, 'wiki', 'info', '--get', 'root').strip(), os.fsencode(wiki))
         self.f.git(wiki, 'remote', 'set-url', 'origin', 'https://example.invalid:8443/org/my project.wiki.git')
         self.assertEqual(len(json.loads(self.call(self.entries[0], 'status', '--json'))['repositories']), 1)
+
+    @unittest.skipUnless(os.name != 'nt' and (fixture.PROJECT/'plugins/git-it/git-it').is_file(),
+                         'requires the initialized Bash git-it plugin')
+    def test_compact_tree_through_all_git_entry_points(self):
+        source = self.f.repo('modules-source')
+        self.f.sub(self.root, source, 'modules/one')
+        self.f.sub(self.root, source, 'modules/two')
+        wiki = self.f.repo('checkout.wiki')
+        self.f.git(self.root, 'remote', 'set-url', 'origin', 'git@github.com:team/checkout.git')
+        self.f.git(wiki, 'remote', 'add', 'origin', 'git@github.com:team/checkout.wiki.git')
+        env = dict(self.f.env, DOTS=str(fixture.PROJECT), DOTS_PROGRESS='never')
+        native, bash = self.entries
+        commands = ([fixture.PROJECT/'plugins/git-it/git-it'], [*bash, 'git', 'it'],
+                    [*bash, 'git'], [*native, 'git'])
+        for command in commands:
+            for flags, tail in (([], ['├ two main', '│', 'checkout.wiki main']),
+                                (['--no-wiki'], ['└ two main'])):
+                with self.subTest(command=command, flags=flags):
+                    result = self.f.run_cmd([*command, 'status', '-C', self.root, '--short', *flags], env=env)
+                    self.assertEqual(result.stdout.splitlines(), ['', 'checkout main', '│', '├ one main', *tail])
 
 
 if __name__ == '__main__':

@@ -155,6 +155,16 @@ class Inspection:
         return dict(name=name or None, url=url or None, host=host or None, owner=owner or None,
                     owned=owned, ownership=self.ownership)
 
+    @staticmethod
+    def revision(path):
+        branch = core.text(path, 'symbolic-ref', '--quiet', '--short', 'HEAD', required=False) or None
+        head = core.text(path, 'rev-parse', '--verify', 'HEAD', required=False) or None
+        return dict(branch=branch, head=head, detached=not branch and bool(head))
+
+    def identity(self, path):
+        revision = self.revision(path)
+        return dict(path=str(path), **revision, remote=self.remote(path, revision['branch']))
+
     def inspect(self, edge):
         row = dict(edge, branch=None, head=None, detached=False, status=edge['availability'],
                    ahead=None, behind=None, upstream=None, files=[], pointer_changed=False, remote=None)
@@ -162,9 +172,7 @@ class Inspection:
             return row
         path = Path(row['path'])
         try:
-            row['branch'] = core.text(path, 'symbolic-ref', '--quiet', '--short', 'HEAD', required=False) or None
-            row['head'] = core.text(path, 'rev-parse', '--verify', 'HEAD', required=False) or None
-            row['detached'] = not row['branch'] and bool(row['head'])
+            row.update(self.revision(path))
             row['files'] = core.status_files(path)
             row['status'] = 'modified' if row['files'] else 'clean'
             if any('U' in f['xy'] or f['xy'] in ('AA', 'DD') for f in row['files']):
@@ -356,7 +364,13 @@ class Parser(HelpArgumentParser):
         raise core.UsageError(message)
 
 
-def main(argv=None, info_edge=None, report_kind=None):
+def context_header(path):
+    """Read only the identity shown above a scoped operation report."""
+    path = Path(path)
+    return Inspection(path).identity(path)
+
+
+def main(argv=None, info_edge=None, report_kind=None, report_base=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv[:1] == ['info']:
         from queries import is_field_query, main as query
@@ -394,6 +408,7 @@ def main(argv=None, info_edge=None, report_kind=None):
     if args.remote is not None and args.command != 'info':
         parser.error('--remote NAME requires info')
     base = context(args.directory)
+    report_base = report_base or base
     if info_edge is not None:
         base = Path(info_edge['path'])
         args.directory = str(base)
@@ -465,11 +480,24 @@ def main(argv=None, info_edge=None, report_kind=None):
         return int(not complete)
     ui = view.ui
     if output:
-        output.forest({row['path']: row.get('parent') for row in inspected})
+        ui.emit()
+        scoped = args.command != 'info' or info_edge is not None
+        display_root = str(report_base)
+        parents = {row['path']: row.get('parent') for row in inspected}
+        if scoped:
+            # Filters and named navigation can omit intermediate ancestors.
+            # Attach results to their nearest displayed ancestor, or to the
+            # context header, without inspecting excluded repositories.
+            registered_parents = {row['path']: row['parent'] for row in rows}
+            for path, parent in parents.items():
+                while parent in registered_parents and parent not in parents:
+                    parent = registered_parents[parent]
+                parents[path] = parent if parent in parents else display_root
+            parents[display_root] = None
+        output.forest(parents, companion=companion_rows[0]['path'] if companion_rows else None)
+        if scoped:
+            output.header(view.identity(report_base))
         for i, row in enumerate(inspected):
-            if i:
-                output.position(row['path'])
-                output.separator()
             if args.command == 'info' and i == 0 and (report_kind or info_edge is not None):
                 row = dict(row, kind=report_kind or 'submodule')
             if args.command in ('info', 'submodules-info'): output.info(row)
@@ -479,14 +507,15 @@ def main(argv=None, info_edge=None, report_kind=None):
                 output.summary(row.get('files', []), label='Changes')
                 if args.details or mode == 'verbose': output.box(row)
         for companion in companion_rows:
-            ui.emit(ui.paint_guide(output.vertical, output.guide))
             row = companion.get('repository') or dict(path=companion['path'], status='missing', reason=companion.get('reason'))
             output.info(dict(row, kind='wiki'))
+        notes = []
         if not inspected and not companion_rows:
-            ui.detail('Result', 'No matching submodule changes.' if args.dirty else 'No registered submodules.')
-        for error in errors: ui.detail('Blocked', error['path'] + ': ' + error['reason'], '91')
-        if args.depth: ui.detail('Depth', f'{args.depth} levels; counts cover this traversal only')
-        if not complete: ui.detail('Result', 'Incomplete; unavailable descendants remain unknown.', '93')
+            notes.append(('Result', 'No matching submodule changes.' if args.dirty else 'No registered submodules.'))
+        notes.extend(('Blocked', error['path'] + ': ' + error['reason']) for error in errors)
+        if args.depth: notes.append(('Depth', f'{args.depth} levels; counts cover this traversal only'))
+        if not complete: notes.append(('Result', 'Incomplete; unavailable descendants remain unknown.'))
+        if notes: output.fields_box(notes, styles={'Blocked': '91', 'Result': '93' if not complete else None})
         return int(not complete)
     ui.heading('Git info' if args.command == 'info' else 'Git submodule info' if args.command == 'submodules-info' else 'Git submodule status' if args.command == 'status' else 'Git submodules')
     if args.command == 'info':

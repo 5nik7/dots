@@ -122,6 +122,8 @@ def help_view(words):
     if names:
         for word in ('submodule' if pending else action).split():
             ui.route_spans += [(' ', 'description'), (word,'subcommand')]
+    if ui.human or os.environ.get('DOTS_MENU_CAPTURE') == '1':
+        ui.emit()
     ui.heading(label)
     if not names or pending:
         ui.detail('Usage', label + ' NAME [ACTION] [OPTIONS]')
@@ -234,9 +236,10 @@ def main(argv=None):
         if selected['availability'] != 'available': raise ValueError('cannot navigate an unavailable submodule')
         args = ['-C', selected['path'], *flags, *(['--', *tail] if tail else [])]
         if action != 'submodules publish':
-            return inspection.main([{'submodules': 'submodules', 'submodules info': 'submodules-info', 'submodules status': 'status'}[action], *args])
+            return inspection.main([{'submodules': 'submodules', 'submodules info': 'submodules-info', 'submodules status': 'status'}[action], *args],
+                                   report_base=base)
     command = [sys.executable, '-B', str(LIB / 'git/cli.py')] if native else ['bash', str(LIB / 'git/main.bash')]
-    return subprocess.call([*command, 'submodules-publish', *args])
+    return subprocess.call([*command, '--report-base', str(base), 'submodules-publish', *args])
 
 
 if __name__ == '__main__':

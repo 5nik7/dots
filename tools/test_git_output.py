@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import shutil
 import sys
+import unicodedata
 import unittest
 
 import test_git_operations as fixtures
@@ -60,10 +61,10 @@ class Views(unittest.TestCase):
         self.git(repo, 'add', 'b.txt', 'd.txt')
         (repo/'d.txt').write_text('partially staged\n')
         (repo/'-literal ü [x].txt').write_text('untracked\n')
-        expected = ('│ unstaged modified (2)\n│ ├ a.txt\n│ └ c.txt\n'
-                    '│ staged modified (1)\n│ └ b.txt\n'
-                    '│ staged modified + unstaged modified (1)\n│ └ d.txt\n'
-                    '│ untracked (1)\n│ └ -literal ü [x].txt\n')
+        expected = ('unstaged modified (2)\n├ a.txt\n└ c.txt\n'
+                    'staged modified (1)\n└ b.txt\n'
+                    'staged modified + unstaged modified (1)\n└ d.txt\n'
+                    'untracked (1)\n└ -literal ü [x].txt\n')
         index = (repo/'.git/index').read_bytes()
         for native in (False, True):
             command = self.command(native, repo, 'status')
@@ -72,14 +73,15 @@ class Views(unittest.TestCase):
                 env = dict(self.env, DOTS_PROGRESS='none', DOTS_MENU_CAPTURE='1' if capture else '0')
                 output = self.run_cmd([*command, '--view', 'default'], env=env).stdout
                 self.assertIn(expected, output)
-                self.assertEqual(output.splitlines().count('│ unstaged modified (2)'), 1)
+                self.assertEqual(output.splitlines().count('unstaged modified (2)'), 1)
+                self.assertTrue(output.startswith('\ngrouped main\n┌'), output)
                 self.assertEqual(self.run_cmd([*command, '--view', 'default', '--json'], env=env).stdout, data)
             short = self.run_cmd([*command, '--short'], env=dict(self.env, COLUMNS='160')).stdout
             self.assertIn('States  [ M] (2) / [M ] (1) / [MM] (1) / [??] (1)', short)
             verbose = self.run_cmd([*command, '--verbose'], env=dict(self.env, COLUMNS='160')).stdout
-            self.assertIn('│ [ M] unstaged modified (2)\n│ ├ a.txt\n│ └ c.txt', verbose)
-            self.assertIn('│ [MM] staged modified + unstaged modified (1)', verbose)
-            self.assertIn('│ [??] untracked (1)', verbose)
+            self.assertIn('[ M] unstaged modified (2)\n├ a.txt\n└ c.txt', verbose)
+            self.assertIn('[MM] staged modified + unstaged modified (1)', verbose)
+            self.assertIn('[??] untracked (1)', verbose)
             self.assertIn('HEAD', verbose)
         # Automatic terminal default still groups with icons and wraps safely.
         ansi = re.compile(rb'\x1b\[[0-?]*[ -/]*[@-~]')
@@ -89,10 +91,10 @@ class Views(unittest.TestCase):
                     dict(self.env, DOTS_PROGRESS='none', DOTS_COLOR='always', DOTS_ICONS='always', TERM='xterm-256color'), width)
                 self.assertEqual(code, 0, data)
                 lines = ansi.sub(b'', data).decode().splitlines()
-                self.assertEqual(lines.count('│  unstaged modified (2)'), 1)
+                self.assertEqual(lines.count(' unstaged modified (2)'), 1)
                 for name in ('a.txt', 'c.txt'):
                     line = next(line for line in lines if line.endswith(name))
-                    self.assertTrue(line.startswith(('│ ├ ', '│ └ ')), line)
+                    self.assertTrue(line.startswith(('├ ', '└ ')), line)
                 self.assertTrue(all(len(line) <= width for line in lines), lines)
         self.assertEqual((repo/'.git/index').read_bytes(), index)
 
@@ -107,6 +109,63 @@ class Views(unittest.TestCase):
             self.assertIn('   unstaged modified (1)', output)
             self.assertEqual(sum(line.endswith(('├ file', '└ file')) for line in output.splitlines()), 2, output)
             self.assertEqual(output.count('Protocol '), 1, output)
+
+    def test_operation_boxes_and_literal_publish_fields(self):
+        def cells(line):
+            return sum(0 if unicodedata.combining(char) else
+                       2 if unicodedata.east_asian_width(char) in 'WF' else 1 for char in line)
+
+        _, bare, repo = self.remote_repo('boxed')
+        self.owned_remote(repo, bare)
+        (repo / 'file').write_text('selected\n')
+        self.git(repo, 'add', 'file')
+        message = 'branch: publish to →; message: 猫 e\u0301'
+        for native in (False, True):
+            command = self.command(native, repo, 'publish', '--config', str(self.config), '--dry-run', '-m', message)
+            legacy = self.run_cmd(command).stdout
+            self.assertNotIn('┌', legacy)
+            self.assertFalse(legacy.startswith('\n'))
+            data = self.run_cmd([*command, '--json']).stdout
+            self.assertFalse(data.startswith('\n'))
+            self.assertEqual(self.run_cmd([*command, '--verbose', '--json']).stdout, data)
+            for width in (40, 80, 120):
+                code, raw = self.terminal([*command, '--view', 'default'],
+                    dict(self.env, DOTS_PROGRESS='never', DOTS_ICONS='never', DOTS_COLOR='never', TERM='xterm'), width)
+                self.assertEqual(code, 0, raw)
+                lines = raw.decode().splitlines()
+                self.assertEqual(lines[:2], ['', 'Git publish'])
+                self.assertIn('Publish preview', lines)
+                self.assertTrue(any(line.lstrip().startswith('│ Branch') and 'main' in line for line in lines))
+                self.assertTrue(any(line.lstrip().startswith('│ Push to') for line in lines))
+                self.assertTrue(any(line.lstrip().startswith('│ Target') and 'refs/heads/main' in line for line in lines))
+                self.assertTrue(any(line.startswith('│ Result') for line in lines))
+                self.assertTrue(any(line.rstrip().endswith('└ file') for line in lines))
+                if width >= 80:
+                    self.assertTrue(any(line.lstrip().startswith('│ Message') and message in line for line in lines))
+                inside = None
+                for line in lines:
+                    if line.lstrip().startswith('┌'):
+                        inside = cells(line)
+                        self.assertLessEqual(inside, width)
+                    elif inside is not None:
+                        self.assertEqual(cells(line), inside, line)
+                        if line.lstrip().startswith('└'): inside = None
+                self.assertIsNone(inside)
+
+    def test_sync_and_empty_scoped_publish_boxes(self):
+        _, _, repo = self.remote_repo('boxed-scope')
+        for native in (False, True):
+            sync = self.command(native, repo, 'sync', '--view', 'short', '--dry-run')
+            output = self.run_cmd(sync, env=dict(self.env, COLUMNS='160')).stdout
+            self.assertTrue(output.startswith('\nGit sync\n'))
+            self.assertRegex(output, r'│ Plan\s+fetch and fast-forward/check out .*remote state not checked')
+            prefix = [sys.executable, '-B', str(PROJECT/'lib/dots/git/cli.py'), 'submodules-publish'] if native else [
+                shutil.which('bash'), str(PROJECT/'bin/dots'), 'git', 'submodules', 'publish']
+            cmd = [*prefix, '-C', str(repo), '--all-submodules', '--dry-run', '--view', 'default']
+            output = self.run_cmd(cmd, env=dict(self.env, COLUMNS='160')).stdout
+            self.assertEqual(output.splitlines()[:3], ['', 'boxed-scope main', 'Git submodules publish'])
+            self.assertRegex(output, r'│ Result\s+No registered submodules\.')
+            self.assertEqual(json.loads(self.run_cmd([*cmd, '--json']).stdout)['events'], [])
 
     def test_sync_reports_only_actual_changed_paths(self):
         for native in (False, True):

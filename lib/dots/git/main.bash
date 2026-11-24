@@ -11,6 +11,12 @@ source "$LIB/common.bash"
 source "$LIB/ui.bash"
 source "$LIB/views.bash"
 ((BASH_VERSINFO[0] >= 5)) || die 3 'requires Bash 5 or newer'
+# Named submodule dispatch supplies its starting point before the route. This
+# context is local to the report and never participates in selection or Git.
+declare +x REPORT_BASE=''
+if [[ ${1:-} == --report-base && ${3:-} == submodules-publish ]]; then
+    REPORT_BASE=$2; shift 2
+fi
 CMD=$1; shift
 WIKI_ARGS=("$@")
 NO_WIKI=0
@@ -107,6 +113,7 @@ if [[ $CMD == status ]]; then
     status_main
 else
     source "$LIB/operations.bash"
-    ((!JSON)) && dots::heading "Git $OUTPUT_COMMAND"
+    if [[ $GIT_VIEW ]]; then view_operation_heading
+    elif ((!JSON)); then dots::heading "Git $OUTPUT_COMMAND"; fi
     operations_main
 fi

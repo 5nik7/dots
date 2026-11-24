@@ -2961,6 +2961,13 @@
           "pin": null,
           "selection": "explicit",
           "enabled": true
+        },
+        {
+          "name": "yq",
+          "observed_version": "4.54.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
         }
       ]
     },
@@ -3845,6 +3852,13 @@
         {
           "name": "ujson",
           "observed_version": "6.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "packaging",
+          "observed_version": "26.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true

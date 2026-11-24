@@ -243,6 +243,7 @@ publish_preview() {
         PREVIEW_DEST[$dir]=$PUSH_URL; PREVIEW_REF[$dir]=$UP_REF
         PREVIEW_REMOTE[$dir]=$UP_REMOTE; PREVIEW_BRANCH[$dir]=$BRANCH
         ((PUBLISH_CANDIDATES+=1))
+        local -a VIEW_PLAN_FIELDS=(Branch "$BRANCH" 'Push to' "$SAFE_URL" Target "$UP_REF" Message "$MESSAGE")
         event "$dir" planned "branch $BRANCH: publish to $dest; message: $MESSAGE"
         [[ -z $parent ]] || EXPECTED[$parent]=1
     else
@@ -405,8 +406,15 @@ operations_main() {
                     dots::progress_run 'Collecting publish inputs' collect_publish "${selected_edges[scope_i]}" || RESULT=1
                 fi
             done
-            if ((!JSON)); then dots::info 'Only selected subtrees will publish; excluded parent indexes remain unchanged.'; fi
-            if ((!JSON && ${#SCOPE_ROOTS[@]} == 0)); then dots::info 'No registered submodules.'; fi
+            local scope_note='Only selected subtrees will publish; excluded parent indexes remain unchanged.'
+            if [[ $GIT_VIEW ]]; then
+                local -a scope_fields=(Scope "$scope_note")
+                ((${#SCOPE_ROOTS[@]})) || scope_fields+=(Result 'No registered submodules.')
+                view_fields_box "${scope_fields[@]}"
+            elif ((!JSON)); then
+                dots::info "$scope_note"
+                ((${#SCOPE_ROOTS[@]})) || dots::info 'No registered submodules.'
+            fi
         else
             dots::progress_run 'Collecting publish inputs' collect_publish "$ROOT" || RESULT=1
         fi
@@ -416,7 +424,11 @@ operations_main() {
         local dir parent answer progress_status
         ((!JSON)) && dots::heading "Publish preview"
         for dir in "${PUB_DIRS[@]}"; do publish_preview "$dir"; done
-        if ((!JSON && PUBLISH_CANDIDATES > 0)); then dots::info "Published child pointers may be staged in their parents."; fi
+        if ((!JSON && PUBLISH_CANDIDATES > 0)); then
+            local pointer_note='Published child pointers may be staged in their parents.'
+            if [[ $GIT_VIEW ]]; then view_fields_box Pointers "$pointer_note"
+            else dots::info "$pointer_note"; fi
+        fi
         if ((!DRY_RUN && PUBLISH_CANDIDATES > 0)); then
             if ((!YES)); then
                 [[ -t 0 ]] || die 2 'publish requires a terminal confirmation or --yes'

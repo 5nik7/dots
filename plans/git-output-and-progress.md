@@ -1,5 +1,40 @@
 # Git output modes and shared progress
 
+## Compact repository trees and boxed Git plans
+
+The Git family and the bundled standalone git-it share the terminal layout
+described in [Git output views](../docs/git.md#output-views). Scope the starting
+repository header to presentation, select tree guides from visible rows, and
+group related operation fields in the existing metadata box style. Check
+terminal help, default/short/verbose reports, narrow wrapping, nested and
+empty selections, visible and excluded wikis, local publish/sync previews,
+and exact redirected and machine output across both Dots controllers and git-it.
+
+Git maintenance owns these views. No configuration integration change is needed
+because the current Git view, color and icon preferences apply. The existing
+Git menus open the same reports. Command grammar, completion, setup and Windows
+app destinations require no changes. The root README’s first commands and links
+still apply. Native Linux, WSL and Windows PowerShell 5.1/7 terminal checks are
+separate from Termux and portable controller verification.
+
+**Termux verification, 2026-11-24.** An exact-line fixture checked both Dots
+controllers, the standalone executable, and `dots git it` with two submodules
+and a matching sibling wiki, then with `--no-wiki`. Terminal fixtures covered
+40/80/120 columns, nested and empty selections, scoped publish, and wrapped
+publish messages. With the same configuration on each revision, 21 redirected
+and data invocations per implementation matched HEAD byte for byte in stdout,
+stderr and exit status. Completion output also matched for six Dots shells and
+three standalone shell scripts. All 81 standalone tests, 15 Dots Git output
+tests, 24 native-controller operation tests and 13 wiki Git tests passed.
+All 27 Bash operation cases passed across the suite and the targeted rerun of
+its duplicate-name display assertion. The local wiki build and freshness check
+passed.
+Two checks also fail on unmodified HEAD. The Windows package-manifest fixture
+expects a platform refusal for a checkout without an active profile. Both
+revisions report the missing profile. The generic resource continuation test
+expects literal magenta for a semantic accent that resolves to blue on this
+checkout. The Git-specific guide foreground and wrapped-file checks passed.
+
 ## Counted state groups across Git reports
 
 **Status: Implemented and locally verified; native host checks remain pending.** Default and verbose file reports use one counted heading per complete index/worktree state per repository, with first-seen state/file order and two-space hierarchy. Verbose includes bracketed XY codes and retains metadata/phases. Short keeps XY file rows and adds a compact `States  [ M] (2) / [??] (1)` summary. Rename pairs and mixed states each count once. Counts use existing records only; unavailable inspection does not imply zero changes. Existing configured icons, status colors, directory/basename styles and control escaping apply.

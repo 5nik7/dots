@@ -14,6 +14,12 @@ Use `dots git -s` for status or `dots git status -s` for the short view. The roo
 
 ## Output views
 
+Git help and human reports start with one blank line. In a repository tree, a single
+`│` row separates the root from its submodules and another precedes the wiki.
+Adjacent submodules have no spacer row. When a wiki follows, the last direct
+submodule uses `├`. Otherwise it closes the branch with `└`. A repository
+displayed on its own has no outer guide beside its metadata or changed files.
+
 Terminal reports use `apps.git.view`, initially `default`. Select a view for one command with `--view default|short|verbose`, `-s`/`--short`, or `-v`/`--verbose`. Conflicting selectors are errors. These options work across status, info, publish, sync, registered/named submodules and Wiki routes. Tree `--details` remains a compatibility spelling for verbose output.
 
 | View | Status and operation reports |
@@ -37,13 +43,21 @@ Default and verbose status group matching full index/worktree states within each
 │└───────────────────────┘
 │  unstaged modified (1)
 │ └  .dots/sources.json
+│
+├  nvim main
 ├  git-it main
+│
 󱔘 dots.wiki master
 ```
 
 The default info and status reports show the root metadata box. Repository headers show the branch or detached commit and nonzero cached tracking counts. Configured file colors and icons identify changed paths. A heading icon identifies the change type and shares its status color. Configure it with `icons.git.status.*`; [status icon settings](configuration.md#git-status-icons) lists defaults and examples. Disabled icons or an empty glyph leave the label at the same indentation without an extra separator. Combined states such as `staged modified + unstaged modified` remain a single heading. When types differ, the icon follows conflict, deleted, renamed, copied, added, type changed, then modified precedence; the full label always remains visible. Counts are files in that complete state within the current repository; a combined staged/unstaged state or rename pair counts once. A changed submodule entry counts once in its parent, with child files counted separately in the child repository. Verbose headings include XY, for example ` [ M] unstaged modified (2)`, with files nested beneath. Short retains individual XY rows beneath its compact count summary. Clean repositories omit empty groups, and unavailable inspection does not imply zero changes. This layout also applies to submodule/Wiki status and the mock Git gallery.
 
 Info and submodule trees keep their inspection structure and show the same per-state counts in compact change summaries, without file lists. Publish reviews selected paths once under counted headings (or a short summary and XY rows), then reports phases and outcomes; counts cover only selected paths, package-manifest notes remain visible, and prospective child-pointer staging stays explicit. Sync groups paths changed between the actual before/after commits after an update, using change-kind headings such as `modified (3)` rather than staging labels. Its dry-run does not invent an incoming file list before fetching. Every view retains blockers and recovery instructions.
+
+Operation settings and explanations appear in labeled boxes. Each repository
+with a publish plan has a box showing **Branch**, **Push to**, **Target**, and
+**Message**. File lists follow outside the box. Sync plans, blockers, recovery
+instructions, and final results use the same box style. Long values wrap.
 
 File rows color directory components using the configured directory file style
 (`type.dir`), while the basename and icon retain their file style. For example,
@@ -199,8 +213,10 @@ dots git submodules publish --all-submodules --all --dry-run
 
 `info` shows repository identity/path, selected fetch remote and URL, owner
 namespace, configured ownership match, branch/HEAD/upstream, local-change counts,
-cached tracking counts and submodule availability counts. It does not list file
-contents or include the full tree. `Owner` is the account/namespace in the remote
+cached tracking counts and submodule availability counts. The human report shows
+compact rows for registered descendants and the associated wiki when present.
+The JSON report puts the requested repository in `repositories` and an associated
+wiki in `companions`. `Owner` is the account/namespace in the remote
 URL; `Owned` is an exact match against the configured owner rules, independent of
 color settings. Missing or malformed ownership configuration is identified.
 Credentials, query strings and URL fragments are removed from human and JSON
@@ -214,6 +230,13 @@ pointers. `--details` adds remote/owner and full recorded/current commit IDs.
 Counts cover that traversal; the output explicitly identifies the depth limit.
 The limit deliberately avoids inspecting deeper registrations, so it does not
 claim that a displayed boundary node has no children.
+
+Human submodule reports start with the original repository and branch, including
+when a filter matches nothing. For example, `dots git -C ~/dots submodule editor
+submodules status` shows the branch of `~/dots` first, followed by the matching
+descendants of `editor`. This header supplies context for scoped publication as
+well. Only the requested subtrees participate in publication or appear in its
+selection records.
 
 `submodules info [--depth N]` shows the same info fields for every discovered
 descendant, excluding the outer root. Each block adds its named selector and

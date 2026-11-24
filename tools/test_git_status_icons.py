@@ -146,6 +146,7 @@ class StatusIcons(unittest.TestCase):
                 current.cache_clear()
                 output = io.StringIO()
                 view = GitView(Presentation(output, terminal=True), mode, root=self.home)
+                view.forest({str(self.home): None, str(self.home / 'child'): str(self.home)})
                 view.status(dict(path=str(self.home), branch='main', status='modified', files=rows))
                 python = output.getvalue()
             if mode == 'default': box = python

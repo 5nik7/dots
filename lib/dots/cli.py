@@ -68,6 +68,8 @@ def help_view(directories, words):
         ui.emit()
         ui.heading('Commands')
     else:
+        if words[0] == 'git' and (ui.human or os.environ.get('DOTS_MENU_CAPTURE') == '1'):
+            ui.emit()
         ui.help_text('dots ' + ' '.join(words), kind='syntax', **context)
     if metadata:
         ui.help_text(metadata['summary'], indent=2, **context)

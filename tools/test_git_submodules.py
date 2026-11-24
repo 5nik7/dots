@@ -112,9 +112,10 @@ class Cases:
         rich = dict(self.env, DOTS_COLOR='never', DOTS_ICONS='always', COLUMNS='120')
         output = self.call(top, 'submodules', env=rich).stdout
         lines = output.splitlines()
-        self.assertTrue(lines[0].startswith('├  child '), output)
-        self.assertIn('\n│ │\n│ └  leaf ', output)
-        self.assertIn('\n│\n└  z-last ', output)
+        self.assertEqual(lines[:3], ['', ' top main', '│'])
+        self.assertTrue(lines[3].startswith('├  child '), output)
+        self.assertTrue(lines[4].startswith('│ └  leaf '), output)
+        self.assertTrue(lines[5].startswith('└  z-last '), output)
         detailed = self.call(top, 'submodules', '--details', env=rich).stdout
         section = detailed[detailed.index('├ '):detailed.index('└  z-last')].splitlines()
         self.assertTrue(all(line.startswith('│') for line in section[1:]), detailed)
@@ -122,8 +123,8 @@ class Cases:
         self.assertTrue(all(len(line) <= 40 for line in narrow.splitlines()), narrow)
         without_icons = self.call(top, 'submodules', env=dict(rich, DOTS_ICONS='never', DOTS_COLOR='always')).stdout
         without_icons = re.sub(r'\x1b\[[0-9;]*m', '', without_icons)
-        self.assertTrue(without_icons.startswith('├ child '), without_icons)
-        self.assertIn('\n│ │\n│ └ leaf ', without_icons)
+        self.assertTrue(without_icons.startswith('\ntop main\n│\n├ child '), without_icons)
+        self.assertIn('\n│ └ leaf ', without_icons)
         redirected = self.call(top, 'submodules').stdout
         self.assertTrue(redirected.splitlines()[1].startswith('    Repository '))
         self.assertEqual(redirected.splitlines()[2], '')
@@ -133,7 +134,15 @@ class Cases:
         short = self.call(top, 'submodules', '--depth', '1', env=rich).stdout
         self.assertNotIn(' leaf', short)
         empty = self.call(self.repo('empty-tree'), 'submodules', env=rich).stdout
-        self.assertNotIn('│', empty)
+        self.assertTrue(empty.startswith('\n empty-tree main\n┌'), empty)
+        self.assertNotIn('\n││', empty)
+        filtered = self.call(top, 'submodules', 'status', '--dirty', '--short').stdout
+        self.assertTrue(filtered.startswith('\ntop main\n┌'), filtered)
+        for route in (('submodule', 'child:leaf'), ('submodule', 'child', 'submodule', 'leaf', 'status'),
+                      ('submodule', 'child', 'submodules'), ('submodule', 'child', 'submodules', 'info'),
+                      ('submodule', 'child', 'submodules', 'status')):
+            text = self.call(top, *route, '--short').stdout
+            self.assertTrue(text.startswith('\ntop main\n│\n└ leaf '), (route, text))
         theme = Path(self.env.get('XDG_STATE_HOME', self.home / '.local/state')) / 'dots/current/theme'
         theme.mkdir(parents=True, exist_ok=True)
         theme.joinpath('file-styles.tsv').write_text('dots-file-styles\t1\ntype\tdir\t38;2;17;34;51\t-\n')
@@ -146,8 +155,23 @@ class Cases:
                 self.assertNotIn('', line)
         self.git(mid, 'submodule', 'deinit', '-f', '--', 'leaf')
         missing = self.call(top, 'submodules', '--details', env=rich, ok=False).stdout
-        self.assertRegex(missing, r'(?m)^│ +Reason  .*not initialized')
+        self.assertRegex(missing, r'(?m)^│ +│ Reason\s+not initialized')
         self.assertIn('not initialized', missing)
+
+    def test_wiki_continues_source_guide_only_when_shown(self):
+        top, _, _ = self.nested()
+        wiki = self.repo(top.name + '.wiki')
+        for repo in (top, wiki):
+            self.git(repo, 'remote', 'add', 'origin', 'https://example.invalid/owner/' + repo.name + '.git')
+        for action in ('info', 'status'):
+            rows = self.call(top, action, '--short').stdout.splitlines()
+            self.assertEqual(rows[:3], ['', 'top main', '│'])
+            self.assertTrue(rows[3].startswith('├ child '), rows)
+            self.assertTrue(rows[4].startswith('│ └ leaf '), rows)
+            self.assertEqual(rows[5:], ['│', 'top.wiki main'])
+            excluded = self.call(top, action, '--short', '--no-wiki').stdout.splitlines()
+            self.assertTrue(excluded[3].startswith('└ child '), excluded)
+            self.assertTrue(excluded[4].startswith('  └ leaf '), excluded)
 
     def test_tree_depth_status_filter_and_missing(self):
         top, mid, leaf = self.nested()
@@ -272,10 +296,12 @@ class Cases:
             (leaf/name).write_text('selected\n')
         self.git(leaf, 'add', '.')
         before = self.index(top), self.git(top, 'rev-parse', 'HEAD'), self.git(top_bare, 'rev-parse', 'main')
-        for route in (['submodules', 'publish', 'middle'], ['submodule', 'middle', 'publish', '--config', str(self.config)]):
+        for route in (['submodules', 'publish', 'middle'], ['submodule', 'middle', 'publish', '--config', str(self.config)],
+                      ['submodule', 'middle', 'submodules', 'publish', 'leaf', '--config', str(self.config)]):
             for mode in ('default', 'short', 'verbose'):
                 output = self.call(top, *route, '--dry-run', '--view', mode,
                                    env=dict(self.env, COLUMNS='160')).stdout
+                self.assertEqual(output.splitlines()[:2], ['', top.name + ' main'], route)
                 self.assertIn('[A ] (2)' if mode == 'short' else 'staged added (2)', output)
                 self.assertEqual(output.count('change-a'), 1)
                 self.assertEqual(output.count('change-b'), 1)

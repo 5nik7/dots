@@ -434,6 +434,12 @@
       ]
     },
     {
+      "id": "termux:method",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
       "id": "termux:os-release",
       "platforms": [
         "termux"

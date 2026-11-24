@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 try:
     import pty
 except ImportError:
@@ -584,9 +585,9 @@ class GitOperations(unittest.TestCase):
         for width in ('40','80','120'):
             result=self.cli(repo,'status',env=dict(self.env,DOTS_COLOR='always',COLUMNS=width))
             self.assertIn('\x1b[',result.stdout)
-            self.assertIn('one/shared',result.stdout)
-            self.assertIn('two/shared',result.stdout)
-            self.assertNotIn(str(repo),result.stdout)
+            lines = re.sub(r'\x1b\[[0-9;]*m', '', result.stdout).splitlines()
+            self.assertEqual(lines[:2], ['', 'presentation main'])
+            self.assertEqual(lines[-3:], ['│', '├ one/shared main', '└ two/shared main'])
         for env in [dict(self.env,DOTS_COLOR='auto',NO_COLOR='1',TERM='xterm-256color'),dict(self.env,DOTS_COLOR='auto',TERM='dumb')]:
             master,slave=pty.openpty()
             try:

@@ -216,29 +216,126 @@ view_status_header() {
         view_spans "$label" "$repo_code" "  $branch" "$branch_code" "  $state" "$state_code" "  $ahead ahead" "$ahead_code" " / $behind behind (cached)" "$behind_code"
     fi
 }
+# Width of one sanitized character in a boxed field. Combining marks occupy
+# no column, while wide CJK and emoji occupy two.
+view_cell_width() {
+    local code
+    printf -v code '%d' "'$1"
+    if (( code>=768 && code<=879 || code>=65024 && code<=65039 )); then REPLY=0
+    elif (( code>=4352 && code<=4447 || code>=11904 && code<=42191 || code>=44032 && code<=55203 ||
+            code>=63744 && code<=64255 || code>=65281 && code<=65376 || code>=127744 && code<=129791 )); then REPLY=2
+    else REPLY=1; fi
+}
+
+# Labels and values are separate from their ANSI styles throughout wrapping.
+view_fields_box() {
+    local -a fields=("$@")
+    local indent=${VIEW_BOX_INDENT:-0} columns=${COLUMNS:-80} labels=0 longest=0 width cells
+    local key value char i j line edge border_style='' prefix style remaining
+    [[ $columns =~ ^[1-9][0-9]*$ ]] || columns=80
+    dots::style
+    [[ ! $DOTS_UI_RESET ]] || printf -v border_style '\e[%sm' "${_DOTS_STYLE_COLORS[git_guide]:-90}"
+    for ((i=0; i<${#fields[@]}; i+=2)); do
+        key=${fields[i]}
+        (( labels >= ${#key} )) || labels=${#key}
+        dots::text "${fields[i+1]}"; value=$REPLY; fields[i+1]=$value
+        cells=${#value}
+        if [[ $value == *[!\ -~]* ]]; then
+            cells=0
+            for ((j=0; j<${#value}; j++)); do view_cell_width "${value:j:1}"; ((cells+=REPLY)); done
+        fi
+        (( longest >= cells )) || longest=$cells
+    done
+    width=$((10#$columns-indent-labels-6))
+    if ((width < 2)); then
+        for ((i=0; i<${#fields[@]}; i+=2)); do dots::row "${fields[i]}" "${fields[i+1]}"; done
+        return
+    fi
+    (( width <= longest )) || width=$longest
+    printf -v edge '%*s' "$((labels+width+4))" ''; edge=${edge// /─}
+    printf -v prefix '%*s' "$indent" ''
+    printf '%s%s┌%s┐%s\n' "$prefix" "$border_style" "$edge" "$DOTS_UI_RESET"
+    for ((i=0; i<${#fields[@]}; i+=2)); do
+        key=${fields[i]} value=${fields[i+1]} line='' cells=0 style=''
+        case $key in
+            Branch|Target) dots::git_style branch; style=$REPLY ;;
+            Root|Path) style=${VIEW_PATH_STYLE:-} ;;
+            Result) style=${VIEW_RESULT_STYLE:-} ;;
+        esac
+        remaining=$value
+        while [[ $remaining ]] || [[ $key ]]; do
+            if [[ $remaining != *[!\ -~]* ]]; then
+                line=${remaining:0:width}; cells=${#line}; remaining=${remaining:cells}
+            else
+                line='' cells=0
+                for ((j=0; j<${#remaining}; j++)); do
+                    char=${remaining:j:1}; view_cell_width "$char"
+                    if ((cells && cells+REPLY>width)); then break; fi
+                    line+=$char; ((cells+=REPLY))
+                done
+                remaining=${remaining:j}
+            fi
+            printf '%s%s│%s %s%-*s%s  %s%s%s%*s %s│%s\n' "$prefix" "$border_style" "$DOTS_UI_RESET" "$DOTS_UI_BLUE" "$labels" "$key" "$DOTS_UI_RESET" "$style" "$line" "$DOTS_UI_RESET" "$((width-cells))" '' "$border_style" "$DOTS_UI_RESET"
+            key=''
+        done
+    done
+    printf '%s%s└%s┘%s\n' "$prefix" "$border_style" "$edge" "$DOTS_UI_RESET"
+}
+
+view_operation_heading() {
+    local base=${REPORT_BASE:-$ROOT} branch label role repo_style branch_style
+    local VIEW_SPANS_INDENT=0 mode VIEW_PATH_STYLE
+    local -a fields
+    printf '\n'
+    if ((SCOPED_PUBLISH)); then
+        role=branch
+        if text_cmd git -C "$base" symbolic-ref --quiet --short HEAD 2>/dev/null; then branch=$REPLY
+        elif text_cmd git -C "$base" rev-parse --short HEAD 2>/dev/null; then branch=$REPLY; role=detached
+        else branch=unborn; fi
+        repo_presentation_style "$base"; repo_style=$REPLY
+        repo_label "$base"; repo_identity_label "$base" "$REPLY"; label=$REPLY
+        dots::git_style "$role"; branch_style=$REPLY
+        branch_identity_label "$branch"; view_spans "$label" "$repo_style" " $REPLY" "$branch_style"
+    fi
+    dots::heading "Git $OUTPUT_COMMAND"
+    if [[ $CMD == sync ]]; then
+        if ((ADVANCE)); then mode='Configured submodule branches'; else mode='Pinned submodules'; fi
+    elif ((ALL)); then mode='Tracked and untracked changes'
+    else mode='Staged changes'; fi
+    dots::resource "$ROOT" "$ROOT" dir; VIEW_PATH_STYLE=$DOTS_RESOURCE_STYLE
+    label=$ROOT
+    if ((!FULL_PATHS)); then dots::path "$label"; label=$REPLY; fi
+    fields=(Root "$label" Mode "$mode")
+    (( !DRY_RUN )) || fields+=(Preview 'Local only; no network or writes')
+    view_fields_box "${fields[@]}"
+}
+
 view_metadata() {
     local dir=$1 REMOTE URL PROTOCOL HOST OWNER REPO OWNED HOST_ICON SAFE_URL REMOTE_ARG=''
     local BRANCH UP_REMOTE UP_REF TRACKING
     presentation_config
     local -a OWNERS=("${PRESENTATION_OWNERS[@]}") HOST_ALIASES=("${PRESENTATION_ALIASES[@]}")
-    dots::resource_row Path "$dir" "$dir" dir
-    if text_cmd git -C "$dir" rev-parse --verify HEAD 2>/dev/null; then dots::row HEAD "$REPLY"; else dots::row HEAD unborn; fi
-    if upstream "$dir"; then dots::row Upstream "$TRACKING"; else dots::row Upstream unavailable; fi
+    dots::resource "$dir" "$dir" dir
+    local VIEW_PATH_STYLE=$DOTS_RESOURCE_STYLE VIEW_BOX_INDENT=2
+    local -a fields=(Path "$DOTS_RESOURCE_TEXT")
+    if text_cmd git -C "$dir" rev-parse --verify HEAD 2>/dev/null; then fields+=(HEAD "$REPLY"); else fields+=(HEAD unborn); fi
+    if upstream "$dir"; then fields+=(Upstream "$TRACKING"); else fields+=(Upstream unavailable); fi
     if select_remote "$dir"; then
         parse_url "$URL"
-        dots::row Remote "$REMOTE"; dots::row URL "$SAFE_URL"; dots::row Owner "${OWNER:-unavailable}"
-        if ((${#OWNERS[@]})); then dots::row Owned "$OWNED"; else dots::row Owned unavailable; fi
+        fields+=(Remote "$REMOTE" URL "$SAFE_URL" Owner "${OWNER:-unavailable}")
+        if ((${#OWNERS[@]})); then fields+=(Owned "$OWNED"); else fields+=(Owned unavailable); fi
     fi
+    view_fields_box "${fields[@]}"
 }
 declare -A VIEW_FILES=() VIEW_PREVIEWS=() VIEW_RENAMES=()
 VIEW_LAST_REPO=''
 view_event() {
-    local dir=$1 state=$2 detail=$3 file=${4:-} xy=${5:-} key label role code
+    local dir=$1 state=$2 detail=$3 file=${4:-} xy=${5:-} key label role code VIEW_BOX_INDENT=2
     key=$dir/$file
     # Publication records every selected event, then renders the complete batch.
     if [[ $state == selected && ${VIEW_DEFER_SELECTED:-0} == 1 ]]; then return 0; fi
     if [[ $file && ${VIEW_FILES[$key]:-} && $state != blocked && $state != failed && $state != pending ]]; then
-        [[ $GIT_VIEW != verbose ]] || dots::row "$state" "$detail"
+        [[ $GIT_VIEW != verbose ]] || view_fields_box "$state" "$detail"
         return 0
     fi
     [[ ! $file ]] || VIEW_FILES[$key]=1
@@ -249,11 +346,18 @@ view_event() {
     if [[ $file ]]; then
         [[ $VIEW_LAST_REPO == "$dir" ]] || dots::line "$label" "$code" 2 "${COLUMNS:-80}"
         view_file "$dir" "$xy" "$file" "${VIEW_RENAMES[$key]:-}"
-        case $state in blocked|failed|pending) dots::row Details "$detail" ;; esac
+        case $state in blocked|failed|pending) view_fields_box Details "$detail" ;; esac
     else
         case $state in blocked|failed) role=blocked ;; published|updated|unchanged) role=clean ;; *) role=modified ;; esac
         dots::git_style "$role"; view_spans "$label" "$code" "  $state" "$REPLY"
-        if [[ $GIT_VIEW == verbose || $state == planned || $state == blocked || $state == failed || $state == pending || $state == cancelled || $state == skipped ]]; then dots::row Details "$detail"; fi
+        case $state in
+            planned)
+                if [[ $CMD == publish && ${VIEW_PLAN_FIELDS[0]:-} ]]; then view_fields_box "${VIEW_PLAN_FIELDS[@]}"
+                else view_fields_box Plan "$detail"; fi ;;
+            blocked|failed) view_fields_box Reason "$detail" ;;
+            pending|cancelled|skipped) view_fields_box Details "$detail" ;;
+            *) [[ $GIT_VIEW != verbose ]] || view_fields_box Details "$detail" ;;
+        esac
         if [[ $GIT_VIEW == verbose && $state == planned ]] && repo_root "$dir" && [[ $REPLY == "$dir" ]]; then view_metadata "$dir"; fi
     fi
     VIEW_LAST_REPO=$dir
@@ -263,9 +367,9 @@ view_event() {
 view_changes() {
     [[ ${GIT_VIEW:-} ]] || return 0
     local dir=$1 before=$2 after status old new i
-    text_cmd git -C "$dir" rev-parse HEAD || { dots::row Files 'Change list unavailable; inspect the repository history.'; return 0; }; after=$REPLY
+    text_cmd git -C "$dir" rev-parse HEAD || { view_fields_box Files 'Change list unavailable; inspect the repository history.'; return 0; }; after=$REPLY
     [[ $before != "$after" ]] || return 0
-    records_cmd git -C "$dir" diff --no-ext-diff --no-textconv --name-status -z --find-renames "$before" "$after" -- || { dots::row Files 'Change list unavailable; inspect the repository history.'; return 0; }
+    records_cmd git -C "$dir" diff --no-ext-diff --no-textconv --name-status -z --find-renames "$before" "$after" -- || { view_fields_box Files 'Change list unavailable; inspect the repository history.'; return 0; }
     local -a changes=("${RECORDS[@]}") paths=() codes=() oldpaths=()
     dots::progress_stop
     for ((i=0;i<${#changes[@]};i++)); do
