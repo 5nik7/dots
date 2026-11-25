@@ -25,7 +25,7 @@ RESERVED_MAPS = set(('dot shells zsh path status options commands functions alia
                      'psboundparameters psstyle foreach switch stacktrace profile_map '
                      'parameters terminfo fpath cdpath manpath modules reswords signals history '
                      'dotsgeneratedpaths dotsgeneratedmaps dotsenvironmentapplied dotsprofileconfigpath '
-                     'dotsprofilesettingorigins dotsprofilesettings dots_colors dots_option_sources '
+                     'dotsprofilesettingorigins dotsprofilesettings dotsprofileshelldirs dots_colors dots_option_sources '
                      'dots_options dots_palette dots_roles esc rst black red green yellow blue magenta '
                      'cyan white bright_black bright_red bright_green bright_yellow bright_blue '
                      'bright_magenta bright_cyan bright_white').split())

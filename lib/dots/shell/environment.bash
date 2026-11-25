@@ -3,20 +3,23 @@ _dots_retire_environment() {
   local part normalized rest=${PATH:-} result='' separator='' base skip name record
   local -a retired_roots=("$DOTS" "${DOTS_PROFILE_CHECKOUT:-}" "${_DOTS_PREVIOUS_CHECKOUT:-}" "$HOME/dots")
   unset DOTRUBY RUBYCOMP
-  while :; do
-    part=${rest%%:*}; normalized=$part; skip=0
-    while [[ $normalized == */ && $normalized != / ]]; do normalized=${normalized%/}; done
-    for base in "${retired_roots[@]}"; do
-      [[ -z $base || $normalized != "${base%/}/ruby/completion" ]] || skip=1
+  if [[ $rest == */ruby/completion* ]]; then
+    while :; do
+      part=${rest%%:*}; normalized=$part; skip=0
+      while [[ $normalized == */ && $normalized != / ]]; do normalized=${normalized%/}; done
+      for base in "${retired_roots[@]}"; do
+        [[ -z $base || $normalized != "${base%/}/ruby/completion" ]] || skip=1
+      done
+      if (( ! skip )); then result+=$separator$part; separator=:; fi
+      [[ $rest == *:* ]] || break
+      rest=${rest#*:}
     done
-    if (( ! skip )); then result+=$separator$part; separator=:; fi
-    [[ $rest == *:* ]] || break
-    rest=${rest#*:}
-  done
-  export PATH=$result
+    export PATH=$result
+  fi
   for name in DOTS_ENV_HOOKS DOTS_ENV_ORIGINS; do
     typeset -p "$name" >/dev/null 2>&1 || continue
     if [[ -n ${ZSH_VERSION:-} ]]; then rest=${(P)name}; else rest=${!name}; fi
+    [[ $rest == *DOTRUBY* || $rest == *RUBYCOMP* ]] || continue
     result=''
     while [[ -n $rest ]]; do
       record=${rest%%;*}
@@ -52,6 +55,13 @@ export THEME="${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme"
 export THEMESBIN="${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current/bin"
 dot[config]=$_DOTS_CONFIG_PATH dot[state]=${XDG_STATE_HOME:-$HOME/.local/state}/dots
 shells[root]=$SHELLS shells[zsh]=$ZSH shells[bash]=$SHELLS/bash shells[pwsh]=$PWSH
+_dots_manual_path() {
+  local manuals=$HOME/.local/share/man
+  if [[ ${DOTS_PLATFORM:-} != windows && -d $manuals && :${MANPATH-}: != *":$manuals:"* ]]; then
+    # An empty component asks man to keep its system search path.
+    export MANPATH="$manuals:${MANPATH-}"
+  fi
+}
 _dots_shell_paths() {
   local directory part rest=${PATH:-} result='' separator=''
   # Remove only retired paths and our optional generated-command path.
@@ -71,13 +81,8 @@ _dots_shell_paths() {
     case :$PATH: in *":$directory:"*) ;; *) PATH="$directory${PATH:+:$PATH}" ;; esac
   done
   export PATH
-  local manuals=$HOME/.local/share/man
-  if [[ ${DOTS_PLATFORM:-} != windows && -d $manuals && :${MANPATH-}: != *":$manuals:"* ]]; then
-    # An empty component asks man to keep its system search path.
-    export MANPATH="$manuals:${MANPATH-}"
-  fi
+  _dots_manual_path
 }
-_dots_shell_paths
 if [[ ${dots_options[DOTS_INIT_COMMANDS]} == 1 ]]; then
   alias .ln='"$DOTS/bin/dots" link'
 elif [[ $(alias .ln 2>/dev/null) == *'"$DOTS/bin/dots" link'* ]]; then

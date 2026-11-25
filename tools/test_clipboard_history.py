@@ -173,7 +173,6 @@ class Commands(unittest.TestCase):
         self.assertFalse((self.base/'nope').exists())
 
     def test_config_consumers_and_literal_copy_hook(self):
-        defaults=self.repo/'default/config.json';doc=json.loads(defaults.read_text());doc['apps']['clipboard'].update(record_copies=True,max_entries=1,exclude_patterns=['secret*']);defaults.write_text(json.dumps(doc))
         script="""import sys
 from unittest.mock import patch
 sys.path.insert(0,sys.argv[1])
@@ -183,12 +182,20 @@ with patch('clipboard._run'):
     clipboard.copy('second')
     clipboard.copy('secret content')
 """
-        result=subprocess.run([sys.executable,'-B','-c',script,str(ROOT/'lib/dots')],env=self.env,capture_output=True)
+        command = [sys.executable, '-B', '-c', script, str(ROOT/'lib/dots')]
+        result = subprocess.run(command, env=self.env, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.store.exists())
+        defaults = self.repo/'default/config.json'
+        doc = json.loads(defaults.read_text())
+        doc['apps']['clipboard']['settings'].update(record_copies=True, max_entries=1, exclude_patterns=['secret*'])
+        defaults.write_text(json.dumps(doc))
+        result=subprocess.run(command,env=self.env,capture_output=True)
         self.assertEqual(result.returncode,0,result.stderr)
         rows=json.loads(self.cli('list','--json').stdout)['items']
         self.assertEqual([r['text'] for r in rows],['second'])
         self.cli('pause','--json')
-        result=subprocess.run([sys.executable,'-B','-c',script,str(ROOT/'lib/dots')],env=self.env,capture_output=True)
+        result=subprocess.run(command,env=self.env,capture_output=True)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertEqual(json.loads(self.cli('list','--json').stdout)['items'],rows)
 
@@ -199,7 +206,7 @@ with patch('clipboard._run'):
         for name in ('termux-clipboard-get','wl-paste','xclip','xsel'):
             path=fake/name;path.write_text(script);path.chmod(0o700)
         env=dict(self.env,PATH=str(fake)+os.pathsep+self.env['PATH'],FIXTURE_CLIP=str(payload),WAYLAND_DISPLAY='fixture')
-        defaults=self.repo/'default/config.json';doc=json.loads(defaults.read_text());doc['apps']['clipboard']['poll_seconds']=1;defaults.write_text(json.dumps(doc))
+        defaults=self.repo/'default/config.json';doc=json.loads(defaults.read_text());doc['apps']['clipboard']['settings']['poll_seconds']=1;defaults.write_text(json.dumps(doc))
         original=subprocess.Popen;workers=[]
         def launch(*a,**kw):
             child=original(*a,**kw);workers.append(child);return child

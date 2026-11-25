@@ -193,7 +193,9 @@ class NativeInstallation(unittest.TestCase):
             self.assertTrue(Path(target).is_relative_to(self.base)
                             and Path(target).resolve().is_relative_to(self.base), target)
         for path in self.original_profiles:
-            self.assertTrue(Path(path).is_symlink(), path)
+            self.assertTrue(Path(path).is_file(), path)
+            self.assertFalse(Path(path).is_symlink(), path)
+            self.assertEqual(Path(path).read_bytes(), (self.repo/'shells/bootstrap/profile.ps1').read_bytes())
         binary = self.repo/'plugins/anodize/engine/.build/anodize-engine.exe'
         self.assertTrue(binary.is_file())
         self.assertEqual(binary.read_bytes()[:2], b'MZ')

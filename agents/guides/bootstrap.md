@@ -27,7 +27,7 @@ uninstall baseline. Reviewed replacement retains later edited destinations as
 additional backups. `--no-backup` discards only the newly replaced original after
 successful commit, preserving temporary rollback and existing retained baselines.
 Selected Anodize builds use owned caches; Starship palette publication coordinates
-with Blastoff writers. Keep shell startup free of prerequisite acquisition.
+with Blastoff writers. The standalone shell rc can acquire a missing checkout on interactive startup. Runtime and package installation remain explicit installer operations.
 
 ## Verification
 

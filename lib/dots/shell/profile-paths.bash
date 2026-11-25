@@ -6,7 +6,9 @@ _dots_apply_profile_paths() {
   else IFS=: read -r -a inherited <<< "${_DOTS_INHERITED_PROFILE_PATHS:-}"; fi
   while :; do
     part=${rest%%:*}; skip=0
-    for old in "$DOTBIN" "$DOTSCRIPTS" "$THEMESBIN" "${_DOTS_PROFILE_PATH_APPLIED[@]}" "${_dots_profile_path[@]}" "${inherited[@]}"; do [[ $part != "$old" ]] || skip=1; done
+    for old in "$DOTBIN" "$DOTSCRIPTS" "$THEMESBIN" "$DOTS/themes/bin" "${_DOTS_PROFILE_PATH_APPLIED[@]}" "${_dots_profile_path[@]}" "${inherited[@]}"; do [[ $part != "$old" ]] || skip=1; done
+    if [[ -n ${_DOTS_PREVIOUS_CHECKOUT:-} && $_DOTS_PREVIOUS_CHECKOUT != "$DOTS" &&
+        ( $part == "$_DOTS_PREVIOUS_CHECKOUT/bin" || $part == "$_DOTS_PREVIOUS_CHECKOUT/scripts" ) ]]; then skip=1; fi
     if (( ! skip )); then
       case :$result: in *":$part:"*) ;; *) result+=${result:+:}$part ;; esac
     fi
@@ -27,6 +29,7 @@ _dots_apply_profile_paths() {
   for directory in "$DOTSCRIPTS" "$DOTBIN"; do
     [[ ! -d $directory ]] || PATH="$directory${PATH:+:$PATH}"
   done
+  _dots_manual_path
 }
 _dots_apply_profile_paths
 unset -f _dots_apply_profile_paths

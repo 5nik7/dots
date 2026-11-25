@@ -43,7 +43,7 @@ def request_file(payload):
         with path.open('x', encoding='utf-8') as stream:
             if os.name != 'nt':
                 os.fchmod(stream.fileno(), 0o600)
-            json.dump(payload, stream, ensure_ascii=True)
+            stream.write(json.dumps(payload, ensure_ascii=True, separators=(',', ':')))
         yield path
 
 

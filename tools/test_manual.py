@@ -110,7 +110,18 @@ class ManagedManual(unittest.TestCase):
         self.plan().apply('install')
         self.assertNotIn(str(target),self.receipt()['entries'])
         target.unlink();target.symlink_to(self.base/'missing')
-        self.assertTrue(self.plan().blocked)
+        # Reviewed installation retains even a pre-existing broken link, so
+        # uninstall can restore its exact text after the replacement.
+        replacement = self.plan()
+        self.assertFalse(replacement.blocked)
+        self.assertTrue(any(row['status'] == 'replace-with-backup' and
+                            row.get('target') == str(target) for row in replacement.items))
+        self.assertEqual(os.readlink(target), str(self.base/'missing'))
+        replacement.apply('install')
+        removal = Installation(self.repo)
+        removal.plan_uninstall(['core'])
+        removal.apply('uninstall')
+        self.assertEqual(os.readlink(target), str(self.base/'missing'))
         target.unlink();self.plan().apply('install')
         target.unlink();target.write_text('user changed manual')
         removal=Installation(self.repo);removal.plan_uninstall(['core'])

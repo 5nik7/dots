@@ -73,6 +73,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Additional theme families](theme-families.md) | Completed family expansion; historical editor evidence. |
 | [Configuration paths](config-path-migration.md) | Completed migration; compatibility aliases remain. |
 | [Platform identity cleanup](platform-file-identities.md) | Retired Ruby environment and canonical platform file IDs with legacy recovery. |
+| [Startup speed and Config views](init-config-refactor.md) | Six-shell first prompt, durable bootstrap, app/type configuration aliases and FZF previews. |
 | [Shell initialization](shell-init.md) | Unified native shell hooks and startup migration. |
 | [User-local shell completions](local-shell-completions.md) | Native directory discovery and user-local precedence in Bash, Zsh and Fish. |
 | [Bash dispatcher](bash-dispatcher.md) | Implemented live command framework and three-shell completion. |

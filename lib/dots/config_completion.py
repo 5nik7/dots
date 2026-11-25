@@ -45,15 +45,66 @@ def key_candidates(root,current='',profile=None):
     if current.endswith('..'):
         current=current[:-2]
         if current and not current.endswith(('.','[')):current+='.'
+    # Keep ordinary all-key discovery canonical. Only construct aliases when
+    # they can match the requested spelling.
+    from config_namespace import Namespace, RESERVED, TYPES, field_path
+    from profile_config import context
+    root_branches = set()
+    if (not current and not branch_mode or current.startswith(('DOTS_', 'settings.DOTS_', 'profile.', '@'))):
+        available = set(keys(root,profile))
+    else:
+        segments = current.split('.')
+        head = segments[0]
+        app_tail = segments[2:] if head == 'apps' else segments[1:] if head not in RESERVED else []
+        structural = (not current or head in ('env','files') or head == 'apps' and len(segments) <= 2 or
+                      head not in RESERVED and len(segments) == 1 or bool(app_tail) and
+                      any(kind.startswith(app_tail[0]) for kind in ('env','files')))
+        # Only complete segments identify the application. A partial app/type
+        # prefix or a substring search still uses the complete inventory.
+        field = field_path(segments[:-1]) if len(segments) >= 3 else None
+        namespace = None
+        matches = set()
+        query = current.casefold()
+        if field and field[1] in TYPES and re.fullmatch(r'[a-z][a-z0-9_-]*', field[0]):
+            scoped = Namespace.load(root, context(root, profile), structural=structural, app=field[0])
+            matches = {key for key in scoped.forms if key.casefold().startswith(query)}
+            if matches:
+                namespace = scoped
+        if namespace is not None:
+            available = namespace.owners
+        elif structural:
+            namespace = Namespace.load(root, context(root, profile))
+            available = namespace.owners
+        else:
+            available = set(keys(root,profile))
+            namespace = Namespace(available)
+        if not current:
+            root_branches = {app+'.' for app in namespace.apps-RESERVED}
+            root_branches.add('env.')
+        else:
+            if not matches:
+                matches = {alias for alias in namespace.forms if alias.casefold().startswith(query)}
+            # At an app branch show each supported type once. Direct field
+            # prefixes continue to complete their original spelling.
+            path = current.rstrip('.').split('.')
+            if (len(path) == 1 and path[0] in namespace.apps-RESERVED or
+                    len(path) == 2 and path[0] == 'apps' and path[1] in namespace.apps):
+                prefix = current.rstrip('.')+'.'
+                matches = {key for key in matches if key.startswith(prefix)
+                           and key[len(prefix):].split('.',1)[0].split('[',1)[0] in TYPES}
+                available = set()
+            if matches:
+                available = {key for key in available if key.casefold().startswith(query)} | matches
+            else:
+                current = canonical(current)
     if not branch_mode:
-        query=canonical(current).casefold()
-        available=set(keys(root,profile))
+        query=current.casefold()
         parents={prefix for key in available for prefix in prefixes(key)[:-1]}
         return [(key,description(key)) for key in sorted(available-parents)
                 if all(word in key.casefold() for word in query.split())
                 and not (key.startswith('settings.DOTS_') and key[9:] in available)]
-    current=canonical(current)
-    result=[(key,'Branch' if branch else description(key)) for key,branch in branches(keys(root,profile),current)]
+    result=[(key,'Branch' if branch else description(key)) for key,branch in branches(available,current)]
+    if root_branches: result = sorted(set(result) | {(branch, 'Branch') for branch in root_branches})
     if not result and current:
         result=sorted({(new,description(new)) for old,new in MOVES if old.startswith(current)})
     return result
@@ -88,19 +139,41 @@ def color_candidates(root,profile=None):
     return sorted((name,str(value)) for name,value in result.items())
 
 
+def completion_owner(root, key, profile=None):
+    from config_namespace import Namespace, direct_owner, needs_namespace
+    from profile_config import context
+    direct = direct_owner(key)
+    if direct is not None:
+        return direct
+    if needs_namespace(key, 'get'):
+        return Namespace.load(root, context(root, profile), structural=False).owner(key)
+    return key
+
+
 def value_spec(root,key):
     """The same finite choices used by details, editors and completion."""
+    return owner_value_spec(root, completion_owner(root,key))
+
+
+def setting_value_spec(kind):
+    if kind == 'boolean':
+        return dict(type='boolean',choices=[True,False])
+    choices={'bool':['0','1'],'style':['auto','always','never'],
+             'suggestions':['deja','autosuggestions','none']}.get(kind,[])
+    return dict(type='string',choices=choices)
+
+
+def owner_value_spec(root, key, defaults=None):
     from config_keys import internal
     from config_values import constraints,read_defaults
     from profile_config import schema
-    key=internal(key)
-    setting=key.removeprefix('settings.')
-    if setting in schema():
-        kind=schema()[setting][0]
-        choices={'bool':['0','1'],'style':['auto','always','never'],
-                 'suggestions':['deja','autosuggestions','none']}.get(kind,[])
-        return dict(type='string',choices=choices)
-    if key=='settings.files.backup':return dict(type='boolean',choices=[True,False])
+    key = internal(key)
+    if key == 'settings.files.backup':
+        return setting_value_spec('boolean')
+    if key.startswith('settings.') or '.' not in key:
+        definition = schema().get(key.removeprefix('settings.'))
+        if definition:
+            return setting_value_spec(definition[0])
     if key.startswith(('colors.','icons.')):
         from style_catalog import constraints as visual_constraints
         return visual_constraints(*key.split('.',1))
@@ -114,13 +187,13 @@ def value_spec(root,key):
         # Import only the data validator; never the native editor/transaction path.
         from wttr.configuration import constraints as weather_constraints
         return weather_constraints(key)
-    return constraints(read_defaults(root),key)
+    return constraints(read_defaults(root) if defaults is None else defaults,key)
 
 
 def value_candidates(root,key,current='',profile=None):
     from config_keys import internal
-    key=internal(key)
-    try:spec=value_spec(root,key)
+    key=internal(completion_owner(root, key, profile))
+    try:spec=owner_value_spec(root,key)
     except (OSError,ValueError):spec={}
     color=spec.get('type')=='color'
     icon=key.startswith('icons.') or key.startswith('apps.nvim.icons.') or key.startswith(('apps.wttr.icons[','apps.wttr.icons.','apps.wttr.night_icons['))

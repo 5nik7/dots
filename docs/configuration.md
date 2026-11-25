@@ -155,6 +155,44 @@ For shared colors, icons, formatting and application preferences, the active pro
 
 Unqualified `set`/`unset` and Config browser edits save Dots preferences to shared defaults. Use `--profile ID` to edit that profile instead; `--defaults` makes the shared target explicit. These scopes cannot be combined. Ordinary `get`/`list` still inspect effective active-profile values; `--defaults` inspects shared values only. `profile.alias` does not inherit. Native Weather, pkgs and Codex-alert preferences retain their native file owners, including for unqualified writes. Shell startup settings also support explicit environment overrides and legacy settings files, as explained in [environment precedence](shell-environment.md#settings). See [profile configuration](profiles.md#profile-configuration) and [data contracts](specification.md) for exact rules.
 
+## Browse by app or by type
+
+Use `dots config get fzf` or `dots config get apps.fzf` to inspect FZF. Type groups include `colors`, `icons`, `formatting`, `settings`, `env`, and `files` where the application has corresponding fields. Each of these commands selects the same color group.
+
+```sh
+dots config get apps.fzf.colors
+dots config get fzf.colors
+dots config get colors.fzf
+```
+
+Native keys retain bracket quoting, for example `dots config explain 'fzf.colors["fg+"]'`. A semantic field such as `colors.fzf.ui.cursor.fg` retains its Dots style owner. Supported group edits write through one owner. To change fields from different owners in a combined view, edit the individual fields. Use either browsing direction in Config or start typing the corresponding prefix in shell completion.
+
+An empty custom map reads as `{}`. For example, `apps.nvim.icons`, `nvim.icons` and `icons.nvim` return the same object before any icons are set. Individual glyphs and FZF binding actions are strings. Use `dots config explain apps.fzf.bindings` to inspect the whole key-to-action map.
+
+`env` also selects `environment`. App environment groups show the registered exports and profile declarations associated with that app. Editing a writable declaration affects its existing profile-wide environment. Sensitive values retain their redaction. Bare `files` returns the managed mapping array. `apps.files` returns the Files command preferences. `files.fzf` and `fzf.files` filter the mapping array to FZF. Use a qualified ID such as `apps.bash.files["dots:bashrc"]` to inspect one mapping.
+
+## FZF preview order
+
+The shell file pickers and Zsh fzf-tab use `apps.fzf.settings.previewers.<type>` when a selection needs a preview. Each list is tried in order. An empty list hides that type’s preview.
+
+| Type | Default order |
+|---|---|
+| `markdown` | Wiki Markdown viewer, plain text |
+| `text` (including code) | highlight, bat or batcat, plain text |
+| `directory` | eza, built-in directory listing |
+| `image` | Kitty graphics on a compatible terminal, Chafa, metadata |
+| `font` | Rendered font sample, font information, metadata |
+| `binary` | File description, metadata |
+| `completion` | Candidate description |
+
+```sh
+dots config get fzf.settings.previewers.markdown
+dots config set fzf.settings.previewers.markdown '["wiki","plain"]' --json-value
+dots config set fzf.settings.previewers.text '[["bat","--paging=never","--","{path}"],"plain"]' --json-value
+```
+
+A custom renderer takes an executable and literal arguments. Whole arguments can use `{path}`, `{word}`, `{description}`, `{width}`, or `{height}`. Missing or failing tools fall through to the next renderer. The Markdown `wiki` renderer honors `apps.cli.markdown_viewer`. When the chosen program fails, FZF tries the next entry in the configured Markdown list. The Wiki’s explicit plain mode succeeds immediately. Without Python, the shell adapter offers a bounded plain preview, including file contents and completion descriptions, using the tools already installed. An inherited `FZF_DEFAULT_OPTS` or `FZF_DEFAULT_OPTS_FILE` keeps control of the caller’s options through startup and theme refresh. With neither supplied, the published Config options apply. An explicit empty `apps.fzf.preview` disables the generated preview. Dots action pickers retain their specialized previews.
+
 ## Edit a preference
 
 ```sh
@@ -421,18 +459,14 @@ Backup defaults are `apps.bak.store="~/.bakstore"`, `apps.bak.location="store"`,
 
 | Data | Shared defaults | Profile overrides |
 | --- | --- | --- |
-| Behavior, formatting, shell settings | `default/config.json` | `profiles/NAME/config.json` |
-| Colors and color attributes | `default/colors.toml` | `profiles/NAME/colors.toml` |
-| Icons | `default/icons.toml` | `profiles/NAME/icons.toml` |
+| Shared colors, icons, shell settings, and per-application preferences | `default/config.json` | `profiles/NAME/config.json` |
 | Identity, inheritance, environment, paths and managed mappings | — | `profiles/NAME/profile.json` |
 
-The typed color/icon controls use a reserved `[controls]` TOML table with quoted
-public Config keys. `{ inherit = true }` declares a nullable control; `{}` declares
-an extensible map. Ordinary style tables retain their existing syntax. Use
-`dots config` for validated edits; there is one stored declaration per scope.
-Legacy inline profile preferences remain readable, with separated files winning
-at the same layer. Existing file-style catalogs, Git configuration, theme
-connectors and native application files retain their specialized owners.
+The shipped schema-2 files are the shared default and sparse overrides for Linux and Termux. WSL inherits Linux, and Windows uses shared values. A profile file appears on its first preference override. Removing its last override restores inheritance. When older declarations still exist beside a unified file, an empty schema-2 marker keeps those superseded declarations inactive.
+
+In JSON, shared roles live under `colors` and `icons`. Each `apps.NAME` object can contain `settings`, `formatting`, `colors` and `icons`. For example, `apps.fzf.settings.preview_window` stores the value also reached through `settings.fzf.preview_window`. Application views of `env` and `files` read their profile declarations. Weather, package and Codex native controls continue to use their application files. Use `dots config path KEY --profile NAME` to find a field’s edit destination and `dots config explain KEY` for its effective value and source.
+
+Existing schema-1 JSON, inline manifest preferences and the literal `[controls]` tables of split TOML layouts remain readable. Each scope keeps its layout until explicitly migrated. A schema-2 file is authoritative for that layer.
 
 ```sh
 dots config set apps.cli.logo_gradient installer
@@ -441,25 +475,17 @@ dots config unset colors.ui.heading.fg --profile windows
 dots config import termux --profile windows --dry-run
 dots config import termux --profile windows --apply --yes
 dots config import termux --apply --yes  # target shared defaults
-dots config migrate --layout --all-profiles
-dots config migrate --layout --all-profiles --apply --yes
+dots config migrate --layout unified --all-profiles --json
+dots config migrate --layout unified --all-profiles --apply --yes
 ```
 
-Import merges source-profile appearance declarations (including inherited profile
-customizations, excluding shared defaults) into the target. Imported values win;
-unrelated target fields survive. `SOURCE=defaults` explicitly copies shared
-appearance. Colors, icons, formatting and portable display controls (CLI logo, Fonts/Wiki
-display and tmux clock/session/indicator appearance) are included. Shell settings, file mappings, environment, package choices, backup
-locations and native application files are excluded. Config → Import appearance
-uses the same guarded preview and Cancel/Save review; noninteractive imports
-preview unless `--apply --yes` is supplied. Imports and layout migrations do not
-publish themes or reload applications; new invocations read saved preferences.
-Use the existing explicit refresh command when published visuals need updating.
+Import reads explicit portable appearance declarations from either layout. Source profile customizations include inherited profile declarations. Use `SOURCE=defaults` to explicitly copy shared appearance. Imported fields win, and unrelated target fields survive. The destination keeps its current layout. Colors, icons, formatting and portable display controls such as CLI logo, Fonts/Wiki display and tmux status appearance are eligible. Shell settings, structural file mappings, environment, package policies, backup locations and native application files stay with their owners. A preview runs by default. The interactive Config import offers Cancel and Save. Noninteractive saves require `--apply --yes`.
 
-Layout migration preserves effective values, strips only preference groups from
-manifests, and supports repeat no-op and ordinary `dots files undo TRANSACTION`.
-The repository's Termux appearance has been promoted to shared defaults; redundant
-Termux declarations were removed so future shared edits take effect there.
+`dots config migrate --layout unified` collects the selected profile’s explicit preferences in a schema-2 `config.json`. Use `--profile NAME` to select another profile, `--defaults` for shared preferences alone, or `--all-profiles` for the shared defaults and every declared profile. A profile may keep its legacy layout while its parent uses schema 2. The bare `--layout` spelling retains the older separation workflow for legacy profiles.
+
+Review the paths in the preview. Differing declarations at the same address within a layer require resolution. A blocked JSON review lists the affected directories and reasons. Sidecar TOML beside an already unified file must agree with its active declarations before it can be removed. Migrations transfer explicit values including false, empty glyphs and nullable controls. Structural fields remain in `profile.json`.
+
+Apply uses one retained Files transaction. Its guards reject edits since the preview was built. A second unchanged migration writes nothing. `dots files undo TRANSACTION` restores original JSON, comments and TOML bytes, with the usual drift checks. Imports and migrations take effect on subsequent reads. Use `dots config refresh` separately when published visuals need updating.
 
 The [tmux clock controls](tmux.md#retained-widget-readings) include automatic location acquisition, its refresh interval and sun-time retention. They use the same Config editor, completion, precedence and published preference refresh as the other `apps.tmux.clock` settings.
 

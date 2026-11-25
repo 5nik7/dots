@@ -38,7 +38,7 @@ _dots_completion_fingerprint() {
   local -A info
   reply=()
   for item in "${_DOTS_COMPLETION_WATCH[@]}"; do
-    if zstat -H info -- "$item" 2>/dev/null; then
+    if zstat -H info -F '%s.%N' -- "$item" 2>/dev/null; then
       reply+=("$info[device]:$info[inode]:$info[mode]:$info[size]:$info[mtime]:$info[ctime]")
     else reply+=(missing)
     fi

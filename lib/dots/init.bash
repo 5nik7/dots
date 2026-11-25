@@ -4,7 +4,7 @@
 # shellcheck disable=SC2016
 dots_init() {
   if [[ ${1:-} == --bootstrap ]]; then
-    [[ $# == 2 && ( $2 == bash || $2 == zsh || $2 == powershell ) ]] || { dots_usage_error 'dots init --bootstrap bash|zsh|powershell'; return 2; }
+    [[ $# == 2 && ( $2 == bash || $2 == zsh || $2 == fish || $2 == powershell || $2 == nu || $2 == xonsh ) ]] || { dots_usage_error 'dots init --bootstrap bash|zsh|fish|powershell|nu|xonsh'; return 2; }
     python3 -B "$DOTS_LIB_DIR/bootstrap_snippet.py" "$2"
     return
   fi

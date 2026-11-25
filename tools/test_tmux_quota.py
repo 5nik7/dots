@@ -261,7 +261,7 @@ class Quota(unittest.TestCase):
     def test_shared_battery_padding_preserves_marker_slot(self):
         spec=importlib.util.spec_from_file_location('battery',ROOT/'config/tmux/battery-status.py')
         battery=importlib.util.module_from_spec(spec);spec.loader.exec_module(battery)
-        fmt=json.loads((ROOT/'default/config.json').read_text())['formatting']['apps']['tmux']['battery']
+        fmt=json.loads((ROOT/'default/config.json').read_text())['apps']['tmux']['formatting']['battery']
         prefs={'formatting':{'battery':fmt},'icons':{'battery.normal':'B','battery.unknown':'B'}}
         from status_styles import cells
         for percent,tail in ((1,'1%  '),(80,'80% '),(100,'100% '),(None,'?%  ')):

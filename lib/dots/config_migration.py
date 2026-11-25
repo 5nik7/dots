@@ -9,6 +9,14 @@ from files.transactions import Store, digest, parents_safe
 from files.file_platform import state_root
 
 
+def apply_operations(action, operations, guards, catalogs):
+    from preference_files import clear_current
+    result = Store(state_root()).apply('config-' + action, operations, guards, retain=True, catalogs=catalogs)
+    if operations:
+        clear_current()
+    return result
+
+
 def style_text(path, group):
     before=read(path)
     after=public_styles(group,before,strict=True)
@@ -70,7 +78,12 @@ class KeyPlan:
                 raise ValueError('key migration requires a bounded regular file: '+str(path))
             before=path.read_text()
             if path.suffix=='.json':
-                data=json.loads(before);changed=document(data,strict=True)
+                data=json.loads(before)
+                if path.name == 'config.json' and data.get('schema') == 2:
+                    from preference_files import unified_values
+                    unified_values(data)
+                    continue
+                changed=document(data,strict=True)
                 if changed==data:continue
                 after=json.dumps(changed,ensure_ascii=False,indent=2)+'\n'
             else:after=style_text(path,path.stem)
@@ -99,4 +112,141 @@ class KeyPlan:
                 raise ValueError('key migration would change effective configuration for '+identity)
 
     def apply(self):
-        return Store(state_root()).apply('config-migrate-keys',self.operations,self.guards,retain=True,catalogs=self.catalogs)
+        return apply_operations('migrate-keys', self.operations, self.guards, self.catalogs)
+
+
+def unified_layer(directory, manifest):
+    """Combine explicit declarations, requiring agreement at a shared address."""
+    from preference_files import GROUPS, controls, put, unified_document, unified_values
+    from config_values import name
+    from style_config import read as read_styles
+
+    merged = {}
+    def merge(target, incoming, path=()):
+        for field, value in incoming.items():
+            key = (*path, field)
+            if field not in target:
+                target[field] = value
+            elif isinstance(value, dict) and isinstance(target[field], dict):
+                merge(target[field], value, key)
+            elif type(value) is not type(target[field]) or value != target[field]:
+                raise ValueError('conflicting configuration declarations in ' + str(directory) + ': ' + name(key))
+
+    empty_styles = {'colors': {}, 'icons': {}}
+    def add_typed(data):
+        # Test aliases before document() can replace one of their spellings.
+        merge(merged, unified_document(document(data, strict=True), empty_styles))
+
+    from preference_files import json_document
+    from copy import deepcopy
+    config = json_document(directory/'config.json')
+    if config.get('schema') == 2:
+        typed, styles = unified_values(config)
+        merge(merged, unified_document(typed, styles))
+    else:
+        add_typed(config)
+    if manifest is not None:
+        add_typed({group: manifest[group] for group in GROUPS if group in manifest})
+    # Inline declarations still participate below schema 2. Sibling legacy TOML
+    # does not, so an unmerged entry there must be reviewed before removal.
+    active = deepcopy(merged) if config['schema'] == 2 else None
+    for group in empty_styles:
+        path = directory/(group+'.toml')
+        typed = {}
+        for key, value in controls(path).items():
+            put(typed, key, value)
+        merge(merged, unified_document(document(typed, strict=True), {**empty_styles, group: read_styles(path)}))
+    if active is not None and active != merged:
+        raise ValueError('legacy preferences beside unified configuration require explicit reconciliation: ' + str(directory))
+    return merged
+
+
+class LayoutReviewError(ValueError):
+    def __init__(self, problems):
+        self.problems = problems
+        super().__init__('\n'.join(item['path'] + ': ' + item['reason'] for item in problems))
+
+
+class UnifiedLayoutPlan:
+    """Publish each selected scope atomically with its obsolete source removals."""
+    def __init__(self, root, selected, *, all_profiles=False, defaults=False):
+        from profiles import available
+        from profile_config import context, settings
+        from preference_files import FILES, GROUPS, text
+        from config_values import Controls, validate_effective
+        from style_config import Styles
+
+        root = Path(root)
+        shared = root/'default'
+        self.path = shared if defaults or all_profiles else Path(selected['layers'][-1]['root'])
+        self.operations = []
+        self.items = []
+        self.guards = {}
+        replacements = {}
+        problems = []
+        scopes = [context(root, item['id']) for item in available(root)] if all_profiles or defaults else [selected]
+        targets = {shared} if all_profiles or defaults else set()
+        if not defaults:
+            targets.update(Path(scope['layers'][-1]['root']) for scope in scopes)
+        directories = {shared, *(Path(layer['root']) for scope in scopes for layer in scope['layers'])}
+        for directory in sorted(directories):
+            for filename in (*FILES, *(('profile.json',) if directory != shared else ())):
+                path = directory/filename
+                parents_safe(path)
+                text(path)  # Reject symlinks, nonregular and oversized artifacts.
+                self.guards[str(path)] = digest(path)
+        for directory in sorted(targets):
+            path = directory/'config.json'
+            manifest_path = directory/'profile.json'
+            manifest = json.loads(text(manifest_path)) if directory != shared else None
+            sources = [directory/filename for filename in FILES if self.guards[str(directory/filename)] is not None]
+            if not sources and not any(field in (manifest or {}) for field in GROUPS):
+                continue
+            try:
+                unified = unified_layer(directory, manifest)
+            except ValueError as error:
+                problems.append(dict(path=str(directory), reason=str(error)))
+                continue
+            replacements[path] = unified
+            if path not in sources or json.loads(text(path)) != unified:
+                self.write_json(path, unified)
+            for source in sources:
+                if source != path:
+                    self.operations.append(dict(path=str(source), delete=True))
+                    self.items.append(dict(action='remove-merged-preferences', path=str(source)))
+            if manifest is not None:
+                structural = {key: value for key, value in manifest.items() if key not in GROUPS}
+                if structural != manifest:
+                    replacements[manifest_path] = structural
+                    self.write_json(manifest_path, structural)
+        if problems:
+            raise LayoutReviewError(problems)
+        checks = [(scope, False) for scope in scopes]
+        if shared in targets:
+            checks.append((selected, True))
+        for scope, checking_defaults in checks:
+            before = Controls(root, scope, defaults=checking_defaults)
+            after = Controls(root, scope, defaults=checking_defaults, replacements=replacements)
+            old_styles = Styles(root, scope, defaults=checking_defaults)
+            new_styles = Styles(root, scope, defaults=checking_defaults, replacements=replacements)
+            validate_effective(after.values, after.defaults, new_styles, scope['facts']['platform'])
+            def setting_values(replacements=None):
+                return {key: record['value'] for key, record in settings(root, scope, defaults=checking_defaults,
+                                                                         replacements=replacements).items()}
+            if before.values != after.values or setting_values() != setting_values(replacements):
+                raise ValueError('unified migration changes effective preferences: ' + scope['current'])
+            for group in ('colors', 'icons'):
+                for key in old_styles.values[group].keys() | new_styles.values[group].keys():
+                    if old_styles.resolve(group, key)['value'] != new_styles.resolve(group, key)['value']:
+                        raise ValueError('unified migration changes ' + group + '.' + key + ' for ' + scope['current'])
+        if any(digest(Path(path)) != expected for path, expected in self.guards.items()):
+            raise ValueError('configuration changed during preview')
+
+    def write_json(self, path, value):
+        from preference_files import unified_operation
+        # Store retains the original byte payload for text and deletion operations.
+        self.operations.append(unified_operation(path, value))
+        self.items.append(dict(action='unify-preferences', path=str(path)))
+
+    def apply(self, action='migrate-layout'):
+        return apply_operations(action, self.operations, self.guards, [Path(path) for path in self.guards])

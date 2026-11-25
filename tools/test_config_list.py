@@ -81,14 +81,15 @@ class ConfigList(unittest.TestCase):
         raw=json.loads(run('list','icons','--json').stdout)
         original=copy.deepcopy(raw)
         status_icons=raw['config']['icons']['apps']['tmux']['status']
-        self.assertEqual(status_icons,{'open':''})
+        self.assertEqual(status_icons, {'open':'', 'question':''})
         from config_view import icon_tree
         styles=Styles(self.root)
         for width in (40,80,120):
             ui=Presentation(io.StringIO(),terminal=True);ui.width=width;ui.color=False
             listing(ui,raw)
             plain=re.sub(r'\x1b\[[0-9;]*m','',ui.stream.getvalue())
-            self.assertIn('open',plain);self.assertIn('working',plain);self.assertIn('waiting',plain)
+            for indicator in ('open', 'question', 'working', 'waiting'):
+                self.assertIn(indicator, plain)
             self.assertIn('inheritedfromicons.status.working',''.join(plain.split()))
             self.assertTrue(all(cells(line)<=width for line in plain.splitlines()),plain)
         self.assertEqual(raw,original)
@@ -96,7 +97,7 @@ class ConfigList(unittest.TestCase):
         self.assertIn('colors.apps.tmux.indicators.open.fg',icons['open'].annotation)
         self.assertIn('inherited from icons.status.waiting',icons['waiting'].annotation)
         for native in (False,True):
-            for state,glyph in (('open',''),('working',''),('waiting','')):
+            for state,glyph in (('open',''),('question',''),('working',''),('waiting','')):
                 key='icons.apps.tmux.status.'+state
                 self.assertEqual(run('get',key,native=native).stdout.strip(),glyph)
                 explained=json.loads(run('explain',key,'--json',native=native).stdout)
@@ -142,7 +143,8 @@ class ConfigList(unittest.TestCase):
                 self.assertIn('fg:#123456,bold,strip',''.join(text.split()))
                 self.assertTrue(all(cells(line)<=width for line in text.splitlines()),text)
         raw=json.loads(profile_fixtures.ProfileConfig.run_config(self,'list','apps','--json').stdout)
-        self.assertIsNone(raw['config']['apps']['fzf']['colors']['fg+'])
+        self.assertEqual(raw['config']['apps']['fzf']['colors']['fg+'], 'accent')
+        self.assertIsNone(raw['config']['apps']['fzf']['colors']['preview-label'])
 
 
 if __name__=='__main__':unittest.main()

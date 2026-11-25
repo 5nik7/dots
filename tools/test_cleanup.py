@@ -78,6 +78,42 @@ class Cleanup(unittest.TestCase):
         self.assertNotIn('\x1b',b)
         self.assertFalse(self.store.directory.exists())
 
+    def test_historic_bundles_ownership_drift_and_publisher_lock(self):
+        import hashlib
+        import fcntl
+        cache = self.adapter.cache/'dots/startup/zsh-termux-termux'
+        cache.mkdir(parents=True)
+        (cache/'build.lock').touch()
+        def generation(label, version=1):
+            body, guard = label.encode(), b':'
+            path = cache/hashlib.sha256(body + guard).hexdigest()[:24]
+            path.mkdir(mode=0o700)
+            (path/'bundle').write_bytes(body)
+            (path/'guard').write_bytes(guard)
+            (path/'manifest.json').write_text(json.dumps(dict(version=version, shell='zsh', root=str(self.home),
+                                                               inputs=[], source_map=[])))
+            return path
+        old, previous, current, foreign = [generation(n) for n in ('old','previous','current','foreign')]
+        (foreign/'user-notes').touch()
+        (cache/'current').write_text(current.name + '\n')
+        (cache/'previous').write_text(previous.name + '\n')
+        targets, issues = self.adapter.candidates(('builds',), 30)
+        self.assertEqual([t.path for t in targets], [old])
+        self.assertEqual(issues, [])
+        def review():
+            return run(self.adapter, targets, ('builds',), issues, self.store, lambda *_: 'delete',
+                       inspect=lambda _: ([], []))
+        with (cache/'build.lock').open('rb+') as stream:
+            fcntl.flock(stream, fcntl.LOCK_EX)
+            self.assertEqual(review()['groups'][0]['status'], 'blocked')
+        (cache/'previous').write_text(old.name + '\n')
+        self.assertEqual(review()['groups'][0]['status'], 'blocked')
+        (cache/'previous').write_text(previous.name + '\n')
+        result = review()
+        self.assertGreater(result['totals']['logical_bytes'], 0)
+        self.assertFalse(old.exists())
+        self.assertTrue(all(p.is_dir() for p in (current, previous, foreign)))
+
     def test_delete_receipt_totals_and_repeat(self):
         self.file('.npm/_cacache/a','1234'); self.file('.cache/pip/sub/b','56789')
         first = self.execute()

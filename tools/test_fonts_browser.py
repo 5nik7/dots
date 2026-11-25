@@ -23,12 +23,13 @@ class FontBrowsers(NativeMenuFixture):
 
     def test_configured_catalog_preview_and_styles_keep_selection_at_40_80_120(self):
         path=Path(self.env['DOTS'])/'default/config.json'
-        doc=__import__('config_keys').document(json.loads(path.read_text()),public=False)
-        doc['formatting']['apps']['menu'].update(indent=1,label_width='25%',label_gap=2)
-        doc['apps']['menu']['popup'].update(width='90%',height='90%')
+        doc=json.loads(path.read_text())
+        doc['apps']['menu']['formatting'].update(indent=1,label_width='25%',label_gap=2)
+        doc['apps']['menu']['formatting']['popup'].update(width='90%',height='90%')
         for width,position,enabled in ((40,'down',True),(80,'right',True),(120,'down',False)):
-            doc['apps']['menu']['popup'].update(width='90%' if enabled else 'fit',height='90%' if enabled else 'fit')
-            doc['apps']['fonts']['preview'].update(enabled=enabled,sample=False,position=position,size=25)
+            doc['apps']['menu']['formatting']['popup'].update(width='90%' if enabled else 'fit',height='90%' if enabled else 'fit')
+            doc['apps']['fonts']['settings']['preview'].update(enabled=enabled,sample=False)
+            doc['apps']['fonts']['formatting']['preview'].update(position=position,size=25)
             path.write_text(json.dumps(doc))
             self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
             time.sleep(.15);self.drain(self.first[1]);self.drain(self.second[1])
@@ -188,7 +189,7 @@ with patch('fonts.menus.context_for',return_value=context),patch('fonts.menus.in
 
     def test_glyph_stays_visible_with_long_suffix_match(self):
         path=Path(self.env['DOTS'])/'default/config.json'
-        doc=json.loads(path.read_text());doc['apps']['fonts']['preview']['enabled']=False
+        doc=json.loads(path.read_text());doc['apps']['fonts']['settings']['preview']['enabled']=False
         path.write_text(json.dumps(doc))
         for width in (40,80,120):
             self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',24,width,0,0))

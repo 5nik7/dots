@@ -55,8 +55,8 @@ def main(argv=None):
     p=parser();args=p.parse_args(argv)
     root=Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2]).resolve()
     if args.action=='demo':
-        from debug.demo import run
-        return run(args,p,root)
+        from debug.demo import run as run_demo
+        return run_demo(args,p,root)
     if not args.action:
         from files.catalog import Presentation
         from command_metadata import catalog, roots, read

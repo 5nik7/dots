@@ -2,10 +2,11 @@
 
 **Status: Accepted.**
 
-**2026-11-11 refinement:** Preference storage and write targets below are
+**2026-11-25 refinement.** Shared and profile preferences now use a sparse, app-first schema-2 `config.json`. The controller supports earlier split TOML and schema-1 JSON through their original owners. The [Config guide](../configuration.md#preference-files-and-appearance-import) specifies the explicit migration and undo.
+
+**2026-11-11 refinement:** Preference storage and write targets below were
 superseded by the [shared-preferences plan](../../plans/config-preferences-completion.md).
-`profile.json` retains structural profile data; adjacent `config.json`,
-`colors.toml` and `icons.toml` own preferences. Unqualified preference saves target
+In the earlier split layout, `profile.json` retained structural profile data, with adjacent `config.json`, `colors.toml` and `icons.toml` owning preferences. Unqualified preference saves target
 `default/`; explicit `--profile` saves overrides. Native application files remain
 authoritative. Legacy inline preferences remain readable during guarded migration.
 

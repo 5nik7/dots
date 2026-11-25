@@ -1,6 +1,6 @@
+const dots_tools = (path self | path expand --strict | path dirname | path dirname | path dirname | path join 'lib/dots/shell/tools.nu')
+source $dots_tools
 source catppuccin_mocha.nu
-
-$env.config.show_banner = false
 
 $env.config.table = {
   mode: thin

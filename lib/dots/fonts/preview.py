@@ -11,17 +11,23 @@ from resources import clean
 from fonts.model import sha
 
 
-def render_sample(path,color=True):
-    if not (shutil.which('magick') and shutil.which('chafa')):return 'Actual font sample unavailable (optional ImageMagick/Chafa missing).\n'
-    result=subprocess.run(['magick','-limit','memory','64MiB','-limit','map','64MiB','-size','720x150',
+def render_sample(path,color=True,*,quiet=False):
+    if not (shutil.which('magick') and shutil.which('chafa')):
+        return '' if quiet else 'Actual font sample unavailable (optional ImageMagick/Chafa missing).\n'
+    from themes.file_preview import run_renderer
+    failure = '' if quiet else 'Actual font rendering unavailable.\n'
+    result=run_renderer(['magick','-limit','memory','64MiB','-limit','map','64MiB','-size','720x150',
         'xc:none','-font',str(path),'-pointsize','28','-fill','white','-gravity','center',
-        '-annotate','0','Aa Bb 0123456789\nThe quick brown fox\n!= -> {} [] ()','png:-'],capture_output=True,timeout=8)
-    if result.returncode or len(result.stdout)>4*1024*1024:return 'Actual font rendering unavailable.\n'
+        '-annotate','0','Aa Bb 0123456789\nThe quick brown fox\n!= -> {} [] ()','png:-'],
+        b'', os.environ, timeout=8, limit=4*1024*1024)
+    if not result:
+        return failure
     width=max(8,min(65,int(os.environ.get('FZF_PREVIEW_COLUMNS','65'))))
-    image=subprocess.run(['chafa','--probe=off','--format=symbols','--size='+str(width)+'x10','--colors=none','-'],
-                         input=result.stdout,capture_output=True,timeout=8)
-    if image.returncode:return 'Actual font rendering unavailable.\n'
-    sample=image.stdout.decode('utf-8',errors='replace')
+    image=run_renderer(['chafa','--probe=off','--format=symbols','--size='+str(width)+'x10','--colors=none','-'],
+                       result, os.environ, timeout=8)
+    if not image:
+        return failure
+    sample=image.decode('utf-8',errors='replace')
     if color:
         from fonts.presentation import FontPresentation
         sample='\033['+FontPresentation().style('face','ui.foreground')+'m'+sample+'\033[0m'

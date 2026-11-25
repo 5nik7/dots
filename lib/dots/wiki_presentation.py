@@ -117,11 +117,11 @@ def topics(ui, query, matches):
     if not matches: ui.detail('Results', 'No matching topics.')
 
 
-def document(data, ui, *, inline_notice=False):
+def document(data, ui, *, inline_notice=False, fallback=True):
     """Render only a human document; callers retain exact raw/redirected bytes."""
     from markdown_viewer import render
     return render(data, ui, viewer='builtin' if preference('reader', 'auto') == 'plain' else None,
-                  inline_notice=inline_notice)
+                  inline_notice=inline_notice, fallback=fallback)
 
 
 def diagnostic(message, stream):

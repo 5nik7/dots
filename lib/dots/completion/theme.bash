@@ -1,10 +1,15 @@
 # Shared Bash/Zsh registration lifecycle; only reads generated names.
 _dots_theme_completion_load() {
-  local directory=$1 name specification
+  local directory=$1 name specification fingerprint=''
   local -a next=()
   local -A specifications=()
   typeset -ga _DOTS_THEME_COMPLETION_NAMES
   [[ -f $directory/names && ! -L $directory/names ]] || return 0
+  # Explicit registration also runs after compinit has reset its command map.
+  # Remember the names we registered so the first prompt can reuse them.
+  if [[ ${2:-} == register && -r $directory/fingerprint ]]; then
+    IFS= read -r fingerprint < "$directory/fingerprint" || return 1
+  fi
   while IFS= read -r name; do
     [[ $name =~ ^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$ ]] && next+=("$name")
   done < "$directory/names"
@@ -36,4 +41,5 @@ _dots_theme_completion_load() {
     fi
   done
   typeset -ga _DOTS_THEME_COMPLETION_NAMES=("${next[@]}")
+  [[ -z $fingerprint ]] || _DOTS_THEME_COMMANDS_TOKEN=$fingerprint
 }

@@ -2,9 +2,9 @@
 zmodload zsh/stat
 zmodload -F zsh/files b:zf_mkdir b:zf_mv b:zf_rm
 
-# Sets REPLY to a generated file. A failed generator never replaces a good file
-# or causes stale output to be sourced for a different executable identity.
-_dots_generated_file() {
+# Return one validated snapshot. Replacing the cache in another shell cannot
+# change the bytes the current shell subsequently sources.
+_dots_generated_template() {
   local name=$1 executable=$2
   shift 2
   local resolved=${commands[$executable]:-$executable}
@@ -14,28 +14,43 @@ _dots_generated_file() {
   zstat -H info -- "$resolved" 2>/dev/null || return 1
   local signature="${(q)resolved}:${info[device]}:${info[inode]}:${info[size]}:${info[mtime]}:${info[ctime]}:${(j: :)${(q)@}}"
   local directory="$XDG_CACHE_HOME/dots/zsh/${DOTS_PLATFORM:-linux}-$ZSH_VERSION"
-  local target="$directory/$name.zsh" first='' temporary
-  if [[ -r $target ]]; then
-    IFS= read -r first < "$target"
-    if [[ $first == "# $signature" ]]; then REPLY=$target; return 0; fi
+  local target="$directory/$name.zsh" content temporary magic
+  if [[ $name == uv || $name == starship ]]; then
+    (( ! ${+functions[$executable]} )) || return 1
+    IFS= read -r -u 0 -k 4 magic < "$resolved" && [[ $magic == $'\177ELF' ]] || return 1
+  fi
+  [[ -d $directory ]] || (umask 077; zf_mkdir -p -- "$directory") 2>/dev/null || return 1
+  [[ -O $directory && ! -L $directory ]] && zstat -H info -- "$directory" 2>/dev/null &&
+      (( (info[mode] & 8#22) == 0 )) || return 1
+  if [[ -f $target && ! -L $target && -O $target ]] && zstat -H info -- "$target" 2>/dev/null &&
+      (( (info[mode] & 8#77) == 0 )); then
+    content=$(<"$target")
+    if [[ ${content%%$'\n'*} == "# $signature" ]]; then REPLY=$content; return 0; fi
   fi
   # umask is scoped to the generator's subshell, never the interactive shell.
-  zf_mkdir -p -- "$directory" || return 1
   temporary="$target.tmp.$$.${RANDOM}"
-  if (umask 077; { print -r -- "# $signature"; "$resolved" "$@"; } >| "$temporary"); then
-    local content=$(<"$temporary")
+  if (umask 077; {
+        print -r -- "# $signature"
+        case $name in
+          uv) builtin cd -- "$directory" && command env -i HOME="$PWD" "$resolved" --no-config "$@" ;;
+          starship) builtin cd -- "$directory" && command env -i HOME="$PWD" "$resolved" "$@" ;;
+          *) "$resolved" "$@" ;;
+        esac
+      } >| "$temporary") 2>/dev/null; then
+    content=$(<"$temporary")
     if [[ $content == *$'\n'?* ]] && command zsh -dfn "$temporary" 2>/dev/null; then
       zf_mv -f -- "$temporary" "$target" || { zf_rm -f -- "$temporary"; return 1; }
-      REPLY=$target
+      REPLY=$content
       return 0
     fi
   fi
-  zf_rm -f -- "$temporary"
+  zf_rm -f -- "$temporary" 2>/dev/null
   return 1
 }
 
 _dots_source_generated() {
-  if _dots_generated_file "$@"; then source "$REPLY"
+  local REPLY
+  if _dots_generated_template "$@"; then source /dev/stdin <<< "$REPLY"
   else
     # Preserve availability if the cache cannot be written. Generator failures
     # are not evaluated; successful uncached output still works this session.

@@ -24,7 +24,9 @@ _dots_config_load() {
   local root=${DOTS:-${DT_LIB%/lib/dots/themes}}
   local config=${DOTS_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env}
   local -A values=() origins=() kinds=() seen=()
+  local -a keys=()
   while IFS=$'\t' read -r key kind value description; do
+    keys+=("$key")
     values[$key]=$value kinds[$key]=$kind origins[$key]=default
   done < "$root/lib/dots/shell/settings.tsv"
   if [[ -e $config ]]; then
@@ -54,13 +56,23 @@ _dots_config_load() {
     while IFS= read -r line; do [[ -z $line ]] || _DOTS_PROFILE_SETTING_ROWS+=("$line"); done <<< "$rows"
     typeset -g _DOTS_PROFILE_SETTINGS_CHECKOUT=$root
   fi
-  typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS _DOTS_FORMATTING _DOTS_HELP_STYLES
-  _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=() _DOTS_FORMATTING=()
-  _DOTS_HELP_STYLES=()
-  typeset -ga _DOTS_COMPLETION_SETTING_ROWS=()
-  typeset -g _DOTS_HELP_TAGLINE='Manage your dotfiles and more...'
-  typeset -g _DOTS_CLI_PROGRESS=both _DOTS_GIT_VIEW=default
-  for line in "${_DOTS_PROFILE_SETTING_ROWS[@]}"; do
+  local -a settings
+  if [[ ${_DOTS_STARTUP_MODE:-} == full && -n ${_dots_startup_generation:-} &&
+        ${_dots_early_settings_generation:-} == "$_dots_startup_generation" ]]; then
+    # .zshenv already projected this generation's presentation data. Apply
+    # native options again so .zprofile can choose a config file or override.
+    settings=("${_dots_early_option_rows[@]}")
+  else
+    typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS _DOTS_FORMATTING _DOTS_HELP_STYLES
+    _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=() _DOTS_FORMATTING=() _DOTS_HELP_STYLES=()
+    typeset -ga _DOTS_COMPLETION_SETTING_ROWS=()
+    typeset -g _DOTS_HELP_TAGLINE='Manage your dotfiles and more...'
+    typeset -g _DOTS_CLI_PROGRESS=both _DOTS_GIT_VIEW=default
+    settings=("${_DOTS_PROFILE_SETTING_ROWS[@]}")
+  fi
+  unset _dots_early_settings_generation _dots_early_option_rows
+  local -a option_rows=()
+  for line in "${settings[@]}"; do
     key=${line%%$'\t'*}
     value=${line#*$'\t'}; value=${value%%$'\t'*}
     case $key in
@@ -84,26 +96,32 @@ _dots_config_load() {
       __icon.*) _DOTS_STYLE_ICONS[${key#__icon.}]=$value; continue ;;
       __color.*) _DOTS_STYLE_COLORS[${key#__color.}]=$value; continue ;;
     esac
+    [[ ${_DOTS_STARTUP_MODE:-} != early ]] || option_rows+=("$line")
     IFS=$'\t' read -r key value source_value <<< "$line"
     if [[ $key == __path ]]; then typeset -g _DOTS_PROFILE_CONFIG=$value; continue; fi
     [[ -z ${DOTS_CONFIG_FILE:-} ]] || continue
     [[ -n ${kinds[$key]:-} ]] && _dots_config_valid "${kinds[$key]}" "$value" || return 1
     values[$key]=$value origins[$key]=$source_value
   done
-  while IFS=$'\t' read -r key kind value description; do
+  for key in "${keys[@]}"; do
+    kind=${kinds[$key]}
     if [[ -n ${ZSH_VERSION:-} ]]; then source_value=${(P)key}
     else source_value=${!key-}; fi
     if [[ -n $source_value ]]; then
       _dots_config_valid "$kind" "$source_value" || { printf 'dots: invalid override %s\n' "$key" >&2; return 1; }
       values[$key]=$source_value origins[$key]=environment
     fi
-  done < "$root/lib/dots/shell/settings.tsv"
+  done
   # Commit only after the complete input has passed validation.
   typeset -gA dots_options dots_option_sources
   dots_options=() dots_option_sources=()
-  while IFS=$'\t' read -r key kind value description; do
+  for key in "${keys[@]}"; do
     dots_options[$key]=${values[$key]} dots_option_sources[$key]=${origins[$key]}
-  done < "$root/lib/dots/shell/settings.tsv"
+  done
   typeset -g _DOTS_CONFIG_PATH=$config
   if [[ -z ${DOTS_CONFIG_FILE:-} && -f ${_DOTS_PROFILE_CONFIG:-}/profile.json ]]; then _DOTS_CONFIG_PATH=$_DOTS_PROFILE_CONFIG/config.json; fi
+  if [[ ${_DOTS_STARTUP_MODE:-} == early && -n ${_dots_startup_generation:-} && $- == *i* ]]; then
+    typeset -g _dots_early_settings_generation=$_dots_startup_generation
+    typeset -ga _dots_early_option_rows=("${option_rows[@]}")
+  fi
 }

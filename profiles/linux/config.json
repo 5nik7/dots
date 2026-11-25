@@ -1,3 +1,15 @@
 {
-  "schema": 1
+  "schema": 2,
+  "apps": {
+    "tmux": {
+      "colors": {
+        "windows": {
+          "inactive": {
+            "fg": "muted",
+            "bg": "default"
+          }
+        }
+      }
+    }
+  }
 }

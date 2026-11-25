@@ -400,6 +400,12 @@ There is no content hashing or claim that an existing copy matches its source.
 
 The JSON catalog defines resource ownership and target mappings in [data contracts](specification.md). Managed file operations consume that ownership and follow the transaction rules in [safety](safety.md).
 
+WSL inherits the Linux file mappings. Its base profile overrides two resources, `dots:file-config-eza-themes-catppuccin-mocha-mauve-yml` and `dots:vivid`, to disable them. An edit to an inherited mapping can be scoped to the WSL profile.
+
+In the effective flat array, a child override keeps the parent mapping's position. New qualified IDs follow inherited mappings in the child's declaration order.
+
+On Termux, Config groups `termux:config-json` under `pkgs`, `termux:config` under `codex-termux`, `termux:config-toml` under `mise`, and `termux:method` under `zsh-system-clipboard`. For example, `dots config get 'apps.mise.files["termux:config-toml"]'` reads the mise mapping. The former `apps.config.files` view and its qualified lookups still reach these resources.
+
 An explicit theme connection may live below a managed application directory. Operations verify the parent link against its active directory mapping and guard the physical destination. A theme link follows the stable active pointer across publications. A link pinned to a specific generation requires review.
 
 ## Presentation

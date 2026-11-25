@@ -212,11 +212,12 @@ else: result=browser.select('Units',browser.UNIT_ENTRIES,context)
 print(result)
 '''
         for theme,fg,bg in (('dark','#abcdef','#101820'),('light','#234567','#f0f4f8')):
-            (root/'default/colors.toml').write_text(
-                '[apps.menu.icon]\nfg="#d07842"\n[apps.menu.label]\nfg="'+fg+'"\n'
-                '[apps.menu.description]\nfg="#778899"\n'
-                f'[controls]\n"colors.apps.menu.popup.body.fg" = "{fg}"\n'
-                f'"colors.apps.menu.popup.body.bg" = "{bg}"\n')
+            path = root/'default/config.json'
+            document = json.loads(path.read_bytes())
+            menu = document['apps']['menu']['colors']
+            menu.update(icon={'fg':'#d07842'},label={'fg':fg},description={'fg':'#778899'})
+            menu['popup']['body'].update(fg=fg,bg=bg)
+            path.write_text(json.dumps(document))
             for width,height in ((40,12),(80,24),(120,30)):
                 self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',height,width,0,0))
                 from menu_tmux import TmuxContext

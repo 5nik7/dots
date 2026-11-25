@@ -66,14 +66,18 @@ def config_path(name, root=None, *, write=False):
 
 
 def settings(root=None, selected=None, *, defaults=False, replacements=None):
-    from preference_files import layers
+    from preference_files import layers, setting_layers
     root = checkout(root)
     result = {}
-    inputs = layers(root/'default', replacements=replacements)
-    for layer in [] if defaults else (selected or context(root))['layers']:
-        inputs.extend(layers(Path(layer['root']), layer, replacements))
-    for path, data in inputs:
-        values = data.get('settings', {})
+    scopes = [(root/'default', None)]
+    if not defaults:
+        scopes.extend((Path(layer['root']), layer) for layer in (selected or context(root))['layers'])
+    if replacements:
+        inputs = ((path, data.get('settings', {})) for directory, layer in scopes
+                  for path, data in layers(directory, layer, replacements))
+    else:
+        inputs = (row for directory, layer in scopes for row in setting_layers(directory, layer))
+    for path, values in inputs:
         validate_settings(values)
         result.update({key: dict(value=value, source=str(path)) for key,value in values.items()})
     return result
@@ -101,6 +105,7 @@ def file_rows(root, selected):
         from files.catalog import Catalog
         catalog = Catalog(checkout(root), selected['facts']['platform'], profile=selected)
         owners = {s['id']: s for s in catalog.sources}
+        effective = {}
         for layer in selected['layers']:
             declarations = layer.get('files', {})
             if isinstance(declarations, list):
@@ -108,18 +113,21 @@ def file_rows(root, selected):
                 pairs = ((row, *catalog.source_location(row['source'], layer, checked))
                          for row in declarations)
             else:
+                groups = catalog.layer_groups(layer)
+                # Legacy groups replace the owner's entire ordered array.
+                effective = {k: v for k, v in effective.items() if k[0] not in groups}
                 pairs = ((row, Path(owners[owner]['root']) / row['source'], owners[owner])
-                         for owner, rows in catalog.layer_groups(layer).items() for row in rows)
+                         for owner, rows in groups.items() for row in rows)
             for row, path, source in pairs:
-                key = source['id'], row['id']
-                if catalog.mapping_layers.get(key, {}).get('id') != layer['id']:
-                    continue
-                spec = row['source']
-                if not isinstance(declarations, list) or (spec.startswith('${PROFILE}/') and
-                                                         layer['id'] != selected['current']):
-                    # The effective list must remain portable if saved into the leaf.
-                    spec = catalog.source_spec(path)
-                yield ':'.join(key), layer, dict(row, source=spec)
+                # Overriding a qualified ID keeps its original position.
+                effective[source['id'], row['id']] = row, path, layer
+        for key, (row, path, layer) in effective.items():
+            spec = row['source']
+            if not isinstance(layer['files'], list) or (spec.startswith('${PROFILE}/') and
+                                                      layer['id'] != selected['current']):
+                # The effective list must remain portable if saved into the leaf.
+                spec = catalog.source_spec(path)
+            yield ':'.join(key), layer, dict(row, source=spec)
         return
     groups = {}
     for layer in selected['layers']:
@@ -129,10 +137,10 @@ def file_rows(root, selected):
             yield owner + ':' + row['id'], layer, row
 
 
-def keys(root=None, identity=None):
+def keys(root=None, identity=None, *, defaults=False, app=None):
     result = set(schema()) | {'settings.files.backup', 'profile.alias'}
     selected = context(root, identity or None)
-    for layer in selected['layers']:
+    for layer in [] if defaults else selected['layers']:
         for group in ('settings', 'environment'):
             result.update(group + '.' + key for key in layer.get(group, {}))
         if isinstance(layer.get('files'), dict):
@@ -140,7 +148,7 @@ def keys(root=None, identity=None):
     result.add('files')
     from style_config import Styles, APPS
     from style_catalog import supported,known_keys
-    styles=Styles(root,selected)
+    styles=Styles(root,selected,defaults=defaults)
     for group in styles.values:
         result.add(group)
         for key in known_keys(group,styles):
@@ -148,17 +156,18 @@ def keys(root=None, identity=None):
             parts = key.split(".")
             result.update(group + "." + ".".join(parts[:i]) for i in range(1,len(parts)+1))
     from config_values import Controls
-    result.update(Controls(root,selected).keys())
-    if sys.version_info>=(3,11) and (checkout(root)/'config/wttr/config.toml').is_file() and selected['current']==context(root)['current']:
+    result.update(Controls(root,selected,defaults=defaults).keys())
+    if app in (None, 'wttr') and not defaults and sys.version_info>=(3,11) and (checkout(root)/'config/wttr/config.toml').is_file() and selected['current']==context(root)['current']:
         from config_wttr import Native
         try: result.update(Native(checkout(root),selected).keys())
         except (OSError,ValueError): pass  # Invalid optional weather input cannot hide core config keys.
-    try:
-        from config_pkgs import Native
-        result.update(Native(root or checkout(), selected).keys())
-    except (OSError, ValueError, ImportError):
-        pass
-    if sys.version_info>=(3,11) and (checkout(root)/'config/tmux/codex-alerts.toml').is_file() and selected['current']==context(root)['current']:
+    if app in (None, 'pkgs') and not defaults:
+        try:
+            from config_pkgs import Native
+            result.update(Native(root or checkout(), selected).keys())
+        except (OSError, ValueError, ImportError):
+            pass
+    if app in (None, 'codex') and not defaults and sys.version_info>=(3,11) and (checkout(root)/'config/tmux/codex-alerts.toml').is_file() and selected['current']==context(root)['current']:
         from codex_notifications import KEYS
         result.update(KEYS)
     from config_keys import canonical

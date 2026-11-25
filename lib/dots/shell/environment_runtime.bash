@@ -1,5 +1,12 @@
 # Native environment assignment and provenance; values never enter cache files.
 typeset -gA _DOTS_ENV_APPLIED _DOTS_ENV_ORIGINS _DOTS_HOOK_BEFORE _DOTS_HOOK_RECORDS
+_dots_tool_path() {
+  [[ -d $2 ]] || return 0
+  case :${PATH:-}: in *":$2:"*) return 0 ;; esac
+  if [[ $1 == prepend ]]; then PATH="$2${PATH:+:$PATH}"
+  else PATH="${PATH:+$PATH:}$2"; fi
+  export PATH
+}
 _dots_env_default() {
   local key=$1 value=$2 origin=${3:-default} current
   if [[ -n ${ZSH_VERSION:-} ]]; then current=${(P)key}; else current=${!key-}; fi

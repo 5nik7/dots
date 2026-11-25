@@ -317,7 +317,9 @@ Profile schema 1 uses `id`, optional `description`, `alias`, `extends`, `environ
 [profiles](profiles.md#definitions-and-inheritance). Profile mappings retain resource and replacement IDs. The internal source flag `bundled`
 marks resources that no longer need optional-source acquisition.
 
-Profile `settings` maps registered shell names to validated strings and `files.backup` to a boolean. Profile `files` accepts an ordered array with local IDs, rooted source paths and one target per row. The catalog qualifies IDs using source ownership. `${PROFILE}` resolves at the declaring layer, `${DOTS}` at the checkout, and `${THEME}` at the native state directory’s stable `current/theme` pointer. A child overrides individual qualified IDs. Platform restrictions and historical IDs live in the core registry. Hand-written flat rows can introduce new IDs. The shipped `theme:yazi` mapping declares `${THEME}/yazi` with strategy `directory-link`. The two generated files remain individually inspectable with `dots theme files`. Legacy grouped manifests retain whole-owner array inheritance. See [file mappings](files.md#ownership-and-formats).
+Profile `settings` maps registered shell names to validated strings and `files.backup` to a boolean. Profile `files` accepts an ordered array with local IDs, rooted source paths and one target per row. The catalog qualifies IDs using source ownership. `${PROFILE}` resolves at the declaring layer, `${DOTS}` at the checkout, and `${THEME}` at the native state directory’s stable `current/theme` pointer. A child overrides individual qualified IDs in their inherited positions and appends new IDs in declaration order. Platform restrictions and historical IDs live in the core registry. Hand-written flat rows can introduce new IDs. The shipped `theme:yazi` mapping declares `${THEME}/yazi` with strategy `directory-link`. The two generated files remain individually inspectable with `dots theme files`. Legacy grouped manifests retain whole-owner array inheritance. See [file mappings](files.md#ownership-and-formats).
+
+Preference schema 2 uses one `config.json` per layer. The shared groups are `settings`, `colors` and `icons`. Application objects in `apps` group their fields under `settings`, `formatting`, `colors` and `icons`. A missing profile override inherits from the parent, then from shared defaults. An empty unified document remains authoritative over older declarations in the same layer. The structural profile manifest owns environment declarations and file mappings. Native application adapters retain their own files. Schema 1 and mixed-layout resolution, preview, migration and undo are described in [preference files and appearance import](configuration.md#preference-files-and-appearance-import).
 
 Environment JSON remains version 1 with `values.NAME.value` and `source`, adding
 `group`, inherited-match status, sensitivity, defaults and PATH contribution
@@ -492,14 +494,9 @@ fingerprint or imply a complete source/theme rebuild. See [visual behavior](prof
 
 ### Typed application preferences
 
-Shared `default/config.json` and `profiles/NAME/config.json` are schema-1 objects
-containing behavior `apps`, `formatting` and shell `settings`. Typed color/icon
-controls are stored by canonical public key in the `[controls]` table of adjacent
-TOML files, using literal scalars, `{}` for empty extensible maps and
-`{ inherit = true }` for nullable declarations. Manifests retain structural data.
-Legacy inline preferences remain readable; separated declarations win at the same
-layer. Default saves target shared files; explicit profiles create overrides; null
-inherits, while false/zero/empty strings/lists retain their types. Literal map
+Schema-2 shared and profile `config.json` objects can contain `settings`, `colors`, `icons` and `apps`. Inside each app the supported groups are `settings`, `formatting`, `colors` and `icons`. Shared style values and more specific app fields resolve independently in each layer. Profile declarations win over parent declarations and shared defaults. Native application files and structural manifest fields retain their owners. Namespace aliases refer to the same field and edit destination.
+
+Schema-1 JSON, legacy inline settings and split TOML remain readable at their original scope. Split typed controls use the literal `[controls]` table, with `{}` for extensible maps and `{ inherit = true }` for nullable declarations. Schema 2 expresses these as JSON. A profile reset removes its local override. False, zero, empty strings and empty lists retain their types. Literal map
 keys use dot identifiers or JSON string bracket segments. No key or value is
 shell-evaluated by the configuration controller. Validation, completion and
 popup drafts share `config_values.py`; supported visual bindings remain in
@@ -688,3 +685,7 @@ after the installed plugin selects and filters the group.
 The `codex_usage` tmux component uses the existing `apps.tmux`, `formatting.apps.tmux`, `colors.apps.tmux` and `icons.apps.tmux` contracts; see the [complete control table](tmux.md#codex-weekly-quota). Timing values are bounded integers, the maximum stale age must be at least the refresh interval, and thresholds require `orange_at < yellow_at < green_at` within 0–100. Its percentage width is 0–20 cells. The literal `formatting.apps.tmux.codex_usage.git_separator` and corresponding color role control the separator before an adjacent visible Git component; empty hides it. Default placement is main right before Git and indicators; explicit component lists remain authoritative. The optional icon inherits `applications.codex` and accepts empty to hide. Config discovery, previews and completion do not invoke aistat. The existing schema-1 published preferences projection carries the settings; no new state-store schema is introduced.
 
 Quota snapshots use the existing private widget-cache envelope with only `remaining_percent` as provider value. The cache identity includes home, executable identity and metadata for aistat's `~/.codex/auth.json` owner. No credentials or account identifiers are retained. Only one active account and its exact `seven_day` limit are accepted; booleans, nonfinite numbers and values outside 0–100 are invalid. An identity change during acquisition discards the result. Successful reads never transfer across an observed authentication-file change.
+
+## Application and type paths
+
+Application and type paths identify the same owning field. Reads, provenance and edits use existing storage and profile precedence. Bare `files` retains its mapping array, while `apps.files` retains its application preferences. See the [Config key examples](configuration.md#browse-by-app-or-by-type) and [preview list contract](configuration.md#fzf-preview-order).

@@ -21,6 +21,19 @@ class Preferences(unittest.TestCase):
     def setUp(self):
         fixtures.ProfileConfig.setUp(self)
         shutil.copytree(fixtures.ROOT/'default',self.root/'default')
+        # These fixtures exercise older installations after the repository defaults migrate.
+        from preference_files import unified_values, partition, encode_style
+        from style_config import encode
+        directory=self.root/'default'
+        path=directory/'config.json'
+        document=json.loads(path.read_text())
+        if document['schema']==2:
+            typed, styles=unified_values(document)
+            pieces=partition(typed)
+            path.write_text(json.dumps(pieces['config.json']))
+            for group, values in styles.items():
+                target=directory/(group+'.toml')
+                target.write_text(encode_style(target, pieces[target.name], encode(values)))
         self.environ=patch.dict(os.environ,self.env,clear=True)
         self.environ.start();self.addCleanup(self.environ.stop)
 
@@ -51,6 +64,131 @@ class Preferences(unittest.TestCase):
         store=Store(self.home/'state/dots');ops,guards,catalogs=store.inverse(saved['id'])
         store.apply('undo',ops,guards,retain=True,catalogs=catalogs)
         self.assertEqual(json.loads(self.path.read_text()),old)
+
+    def test_unified_cli_exact_bytes_sparse_scopes_and_repeat(self):
+        doc = self.legacy_preferences()
+        doc['apps']['fonts']['preview'] = {'enabled': False}
+        manifest = self.path.parent/'profile.json'
+        manifest.write_bytes(json.dumps(doc, indent=3).replace('\n', '\r\n').encode())
+        config = manifest.parent/'config.json'
+        config.write_bytes(b'\xef\xbb\xbf{"schema": 1, "apps": {"fzf": {"preview": ""}}}\r\n')
+        icons = manifest.parent/'icons.toml'
+        icons.write_bytes(b'# personal settings\r\n[status]\r\nok = ""\r\n')
+        colors = manifest.parent/'colors.toml'
+        typed_key = json.dumps('apps.nvim.highlights["@comment.todo"].bold')
+        colors.write_text('[ui.heading]\nfg="blue" # personal selection\n[controls]\n'+typed_key+' = false\n')
+        original = {f: f.read_bytes() for f in (manifest, config, icons, colors)}
+        preview = json.loads(self.cli('migrate','--layout','unified','--profile',self.platform,'--json').stdout)
+        self.assertEqual(preview['status'], 'preview')
+        self.assertEqual({f:f.read_bytes() for f in original}, original)
+        self.assertFalse((self.home/'state').exists())
+        result = json.loads(self.cli('migrate','--layout=unified','--profile',self.platform,'--apply','--yes','--json').stdout)
+        stored = json.loads(config.read_text())
+        self.assertEqual(stored['schema'], 2)
+        self.assertEqual(stored['apps']['fzf']['settings']['preview'], '')
+        self.assertIs(stored['apps']['nvim']['colors']['highlights']['@comment.todo']['bold'], False)
+        self.assertEqual(stored['icons']['status']['ok'], '')
+        self.assertNotIn('environment', stored)
+        self.assertEqual(json.loads(manifest.read_text())['environment'], doc['environment'])
+        self.assertFalse(icons.exists() or colors.exists())
+        self.assertEqual(json.loads(self.cli('migrate','--layout','unified','--profile',self.platform,
+                                            '--apply','--yes','--json').stdout)['status'], 'unchanged')
+        store = Store(self.home/'state/dots')
+        ops, guards, catalogs = store.inverse(result['transaction'])
+        store.apply('undo', ops, guards, retain=True, catalogs=catalogs)
+        self.assertEqual({f:f.read_bytes() for f in original}, original)
+
+    def test_unified_conflicts_stale_plan_and_different_layer_precedence(self):
+        from config_migration import UnifiedLayoutPlan
+        source = self.path.parent/'icons.toml'
+        source.write_text('[navigation]\ncodex="old"\n[applications]\ncodex="new"\n')
+        with self.assertRaisesRegex(ValueError, 'conflicting configuration aliases'):
+            UnifiedLayoutPlan(self.root,context(self.root))
+        before = source.read_bytes()
+        blocked = self.cli('migrate','--layout','unified','--all-profiles','--apply','--yes','--json',code=1)
+        details = json.loads(blocked.stdout)
+        self.assertEqual(details['status'], 'blocked')
+        self.assertIn('applications.codex', details['problems'][0]['reason'])
+        self.assertEqual(source.read_bytes(),before)
+        self.assertFalse((self.home/'state').exists())
+        source.write_text('[applications]\ncodex="new"\n')
+        shared = UnifiedLayoutPlan(self.root,context(self.root), defaults=True)
+        shared.apply()
+        plan = UnifiedLayoutPlan(self.root,context(self.root))
+        self.assertTrue(plan.operations)
+        source.write_text('[applications]\ncodex="changed"\n')
+        with self.assertRaises((ValueError, RuntimeError)):
+            plan.apply()
+        self.assertEqual(json.loads((self.root/'default/config.json').read_text())['schema'],2)
+        self.assertFalse((self.path.parent/'config.json').exists())
+
+    def test_unified_mixed_legacy_sidecars_require_review_and_exact_undo_on_failure(self):
+        from config_migration import UnifiedLayoutPlan
+        from transactions import digest
+        import transactions
+        self.legacy_preferences()
+        path = self.path.parent/'icons.toml'
+        path.write_text('# original comment\n[status]\nok="A"\n')
+        unified = UnifiedLayoutPlan(self.root, context(self.root))
+        originals = {f: digest(f) for f in map(Path, unified.guards)}
+        original_rename = transactions.os.rename
+        failed = []
+        def fail_once(source, dest):
+            if Path(dest) == self.path and '.dots-new-' in str(source) and not failed:
+                failed.append(True)
+                raise OSError('unified publication failure')
+            return original_rename(source, dest)
+        with patch.object(transactions.os,'rename',side_effect=fail_once):
+            with self.assertRaisesRegex(OSError,'unified publication failure'):
+                unified.apply()
+        self.assertTrue(failed)
+        self.assertEqual(originals, {f: digest(f) for f in originals})
+        unified.apply()
+        path.write_text('# unrelated newer declaration\n[status]\nwaiting="Z"\n')
+        with self.assertRaisesRegex(ValueError,'reconciliation'):
+            UnifiedLayoutPlan(self.root, context(self.root))
+
+    def test_optional_layout_value_completion_on_both_controllers(self):
+        import subprocess
+        import sys
+        for native in (False, True):
+            def choices(*words):
+                words = ('config', 'migrate', *words)
+                dispatch = ([sys.executable,'-B',str(self.root/'lib/dots/cli.py'),'__complete'] if native else
+                            [str(self.root/'bin/dots'),'__complete','bash',str(len(words)),'--','dots'])
+                run = subprocess.run([*dispatch,*words], env=self.env,
+                                     check=True, text=True, capture_output=True)
+                return [line.split('\t')[1] for line in run.stdout.splitlines()]
+            self.assertIn('unified', choices('--layout','u'))
+            self.assertIn('--layout=unified', choices('--layout=u'))
+            self.assertIn('--all-profiles', choices('--layout','--all'))
+            self.assertIn('--json', choices('--layout','--all-profiles','--j'))
+
+    def test_mixed_layout_import_both_directions_portable_declarations_only(self):
+        target = 'windows' if self.platform != 'windows' else 'linux'
+        other = self.root/'profiles'/target
+        defaults = self.root/'default/config.json'
+        defaults_before = defaults.read_bytes()
+        self.legacy_preferences()
+        (self.path.parent/'icons.toml').write_text('[applications]\ncodex=""\n')
+        (other/'config.json').write_text('{"schema":2,"apps":{"bak":{"settings":{"mode":"copy"}}}}')
+        for source, dest in ((self.platform,target),(target,self.platform)):
+            with self.subTest(source=source):
+                scope = context(self.root,dest)
+                initial = TransferPlan(self.root,scope,source=source)
+                initial.apply()
+                self.assertFalse(Controls(self.root,scope).resolve('apps.fonts.menu_descriptions')['value'])
+                self.assertEqual(Styles(self.root,scope).resolve('icons','applications.codex')['value'],'')
+                self.assertEqual(TransferPlan(self.root,scope,source=source).operations, [])
+                if dest == target:
+                    self.assertEqual(settings(self.root,scope),{})
+                    document=json.loads((other/'config.json').read_text())
+                    self.assertEqual(document['apps']['bak']['settings'],{'mode':'copy'})
+                    self.assertNotIn('environment',document)
+                    self.assertNotIn('settings',document)
+                    self.assertEqual(document['icons'],{'applications':{'codex':''}})
+                    self.assertFalse((other/'icons.toml').exists())
+        self.assertEqual(defaults.read_bytes(),defaults_before)
 
     def test_default_explicit_profile_settings_and_typed_colors(self):
         self.cli('set','formatting.apps.cli.indent','5','--no-refresh')

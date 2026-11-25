@@ -1,0 +1,2 @@
+#compdef dots-zsh-plugins
+_arguments '1:plugin acquisition:(setup retry)'

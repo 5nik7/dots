@@ -9,6 +9,38 @@ SAFE_OPTIONS=set('style layout border info pointer marker gutter gutter-raw sepa
 SAFE_ACTIONS=set('up down up-match down-match page-up page-down half-page-up half-page-down first last toggle-preview preview-up preview-down preview-page-up preview-page-down toggle-wrap toggle-raw'.split())
 PROTECTED_KEYS=set('enter esc ctrl-c tab btab ctrl-a ctrl-d alt-p alt-j alt-k alt-c f1'.split())
 
+PREVIEWERS = {
+    'completion': ('description',),
+    'directory': ('eza', 'listing'),
+    'markdown': ('wiki', 'bat', 'plain'),
+    'text': ('highlight', 'bat', 'plain'),
+    'image': ('kitty', 'chafa'),
+    'font': ('font-sample', 'font-info'),
+    'binary': (),
+}
+
+
+def preview_constraints(kind):
+    names = PREVIEWERS[kind] + (('file', 'metadata') if kind != 'completion' else ())
+    return dict(type='array', syntax='Ordered built-ins (' + ', '.join(names) +
+                ') or literal executable argv arrays. Whole arguments {path}, {word}, {description}, '
+                '{width} and {height} supply preview data. Empty list hides the preview.')
+
+
+def validate_previewers(kind, renderers):
+    if kind not in PREVIEWERS or not isinstance(renderers, list) or len(renderers) > 16:
+        raise ValueError('previewers require an ordered list of up to 16 renderers')
+    for renderer in renderers:
+        if isinstance(renderer, str):
+            if renderer in PREVIEWERS[kind] or kind != 'completion' and renderer in ('file', 'metadata'):
+                continue
+            raise ValueError('unknown built-in renderer for ' + kind)
+        if (not isinstance(renderer, list) or not 1 <= len(renderer) <= 32 or
+                not all(isinstance(arg, str) and len(arg) <= 4096 and
+                        all(char.isprintable() for char in arg) for arg in renderer) or
+                not renderer[0].strip() or renderer[0] in ('{path}', '{word}', '{description}', '{width}', '{height}')):
+            raise ValueError('custom previewers require a literal executable name and printable arguments')
+
 
 def validate_color(value):
     from style_config import validate

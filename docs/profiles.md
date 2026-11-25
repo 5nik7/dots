@@ -63,9 +63,7 @@ package export/update menu and `pkgs export --update`. This file contains packag
 data, separate from the profile definition. `dots git publish --update-packages`
 can refresh and include it explicitly; see [package workflows](packages.md).
 
-Full Bash/Zsh startup sources existing `shells/init.bash` or `shells/init.zsh`
-from active profiles in inheritance order. These are trusted hooks whose exported
-changes are tracked; lightweight `dots init` does not execute them.
+Full interactive startup runs a profile’s `shells/init.<ext>` before shared shell preferences and `shells/local.<ext>` afterward, with parent layers first in each phase. Bash and Zsh track exports from these trusted hooks. Set shell-specific preferences in the file for your shell. [Native extensions and examples](shell-init.md#installed-startup-and-first-use)
 
 Environment declarations contain literal strings with `${NAME}` references;
 `${PROFILE}` means the active profile directory. Generated profile paths are resolved before application templates. They do not execute shell
@@ -76,8 +74,7 @@ reload can update a previous default without overwriting a later user override.
 The `LESS=--mouse` application default merges mouse support with inherited pager options, such as batpipe's `-R`, instead of replacing them or being suppressed by them. Existing mouse options are preserved. A different profile default for `LESS` retains the ordinary precedence rule; see [less mouse support](shell-environment.md#global-less-mouse-support).
 
 A profile's `profile.json` stores `files` alongside `environment` and profile identity.
-Shell `settings`, behavior and formatting live in adjacent `config.json`; colors
-and icons live in `colors.toml` and `icons.toml`. Legacy inline preferences remain
+Shell settings, application behavior, formatting, colors and icons share an optional schema-2 `config.json` beside the manifest. Legacy split and inline preferences remain
 readable until an explicit [layout migration](configuration.md#preference-files-and-appearance-import).
 The `files` array lists source and target mappings and supports explicit resource `replaces` declarations. Each source starts with `${DOTS}`, `${PROFILE}`, or `${THEME}`. Replacing a whole application directory must
 use an explicit directory mapping; there is no automatic file-format or tree
@@ -311,40 +308,27 @@ caller values into the cache. No whole-checkout scan or prompt-time rebuild is
 performed. Generated theme files and third-party plugin/tool caches keep their
 own lifecycle.
 
-PowerShell and Fish prepare smaller native environment adapters. Nushell reads
-inert environment JSON through Python, and Xonsh uses its Python runtime. No
+PowerShell and Fish prepare smaller native environment adapters. Nushell reads environment, settings and ordered native hook paths together through Python. Xonsh resolves the same data inside its own Python runtime. No
 adapter requires Bash on native Windows. Missing preparation prerequisites or
 unwritable storage leave minimal integration available and report the limitation.
 
 ## Missing-checkout bootstrap
 
-Generate a startup snippet for the shell that will receive it:
+The installer places a small independent startup file at the shell’s normal rc location. To integrate the same bootstrap into a personal rc yourself, generate a standalone snippet for the receiving shell:
 
 ```sh
-dots init --bootstrap bash
 dots init --bootstrap zsh
+dots init --bootstrap fish
 dots init --bootstrap powershell
 ```
 
-Generation prints code and makes no installation changes. Keep the emitted code
-in a regular file outside the checkout if it must survive checkout removal; a
-startup symlink into a missing checkout cannot bootstrap itself. Place the resulting
-snippet in the shell's startup file through an explicit edit or managed-file
-installation. When run, it loads an existing checkout or acquires a missing
-checkout using installed Git and Python. Defaults are `~/dots`, the public
-HTTPS `5nik7/dots` repository, and branch `main`.
+The supported names are `bash`, `zsh`, `fish`, `nu`, `xonsh`, and `powershell`. Generation writes only to stdout. Keep the emitted code outside the checkout so it can run when the repository is missing. The installed form keeps its acquisition helper and checkout location under `~/.local/share/dots/bootstrap`.
 
-`DOTS_BOOTSTRAP_DIR`, `DOTS_BOOTSTRAP_SOURCE`, and `DOTS_BOOTSTRAP_REF` customize
-those choices. Sources may be HTTPS or a local repository and must not embed
-credentials. Fetches are bounded and noninteractive. Existing destinations are
-never reset or updated. No packages, application configuration, secrets or
-recursive submodules are installed.
+An interactive launch resolves Dots from its executable or a known checkout. If neither is usable, installed Git acquires the public HTTPS `5nik7/dots` repository, branch `main`, at `~/dots`. Set `DOTS_BOOTSTRAP_DIR` to select a checkout explicitly. `DOTS_BOOTSTRAP_SOURCE` accepts credential-free HTTPS, an existing local repository path or a local file URL. An absolute path is independent of the shell’s starting directory. `DOTS_BOOTSTRAP_REF` selects the branch. An unattended shell stays offline. Acquisition requires no Python installation. Full initialization still uses each adapter’s normal runtimes or reports its available fallback.
 
-Acquisition uses a sibling staging directory, a process lock and a durable
-status journal. Linux/Termux use an atomic no-replace rename; native Windows uses
-its no-replace rename behavior. Failed/interrupted staging remains available for
-inspection. Existing occupied destinations are refused. Unsupported acquisition
-platforms leave the shell usable instead of guessing filesystem semantics.
+When a noninteractive Nushell explicitly sources the bootstrap, Nu resolves its source file at parse time. It uses an existing `~/dots` first and the installer's pinned checkout second. If `DOTS_BOOTSTRAP_DIR` names a different location, the bootstrap leaves that session alone. A script that needs that location can directly source its `shells/nushell/init.nu` file.
+
+The clone goes into a private sibling staging directory. Publication refuses occupied destinations. Staging records the acquisition status. Git has a 90-second deadline. An interrupted or failed checkout remains in staging for inspection and a later interactive launch can retry. Existing checkouts are reused without fetching. Shell startup does not install packages or recursively initialize submodules.
 
 ## Androidots and Windots migration
 
@@ -413,7 +397,7 @@ For startup sequence, timing, PATH and command diagnostics, see
 
 ## Icons and semantic colors
 
-`default/icons.toml` and `default/colors.toml` hold shared visual defaults. Every base profile has `icons.toml` and `colors.toml` beside `profile.json`; empty files inherit defaults. Resolution folds shared defaults, inherited parents and the selected profile in that order. Within each layer, a general value is applied before that layer’s app override; a general child-profile value therefore beats an app-specific parent/default value. Color fields inherit independently, and empty icons and false attributes remain intentional. `unset` removes a profile override and exposes its inherited value. Shared defaults remain defined and are changed with `set --defaults`.
+`default/config.json` holds shared visual defaults. A profile overrides individual fields in its own `config.json`. Missing fields inherit from the parent and shared defaults. Resolution folds shared defaults, inherited parents and the selected profile in that order. Within each layer, a general value is applied before that layer’s app override; a general child-profile value therefore beats an app-specific parent/default value. Color fields inherit independently, and empty icons and false attributes remain intentional. `unset` removes a profile override and exposes its inherited value. Shared defaults remain defined and are changed with `set --defaults`.
 
 ```sh
 dots config get files
@@ -430,7 +414,7 @@ dots config set colors.ui.muted.fg muted --defaults
 dots config path icons --profile windows
 ```
 
-The literal TOML subset accepts named tables, quoted strings, booleans and comments. Icons may be empty and contain up to 64 printable characters; terminal controls are rejected. Color fields are `fg`, `bg`, and boolean `bold`, `dim`, `italic`, `underline`, `reverse`, `strikethrough`. Foregrounds/backgrounds select semantic roles, `palette.NAME`, a global `colors.ROLE.fg`/`.bg` reference, or `#RRGGBB`; they never execute shell or template code. Shared UI roles are `ui.heading`, `ui.label`, `ui.identity`, `ui.accent`, `ui.foreground`, `ui.muted`, `ui.selection`; status roles include info, success, warning, error, working and waiting. CLI uses terminal-palette fallbacks until a palette is published. `dots config check` validates both preference files and the profile catalog.
+Legacy split files accept named TOML tables, quoted strings, booleans and comments. Icons may be empty and contain up to 64 printable characters; terminal controls are rejected. Color fields are `fg`, `bg`, and boolean `bold`, `dim`, `italic`, `underline`, `reverse`, `strikethrough`. Foregrounds/backgrounds select semantic roles, `palette.NAME`, a global `colors.ROLE.fg`/`.bg` reference, or `#RRGGBB`; they never execute shell or template code. Shared UI roles are `ui.heading`, `ui.label`, `ui.identity`, `ui.accent`, `ui.foreground`, `ui.muted`, `ui.selection`; status roles include info, success, warning, error, working and waiting. CLI uses terminal-palette fallbacks until a palette is published. `dots config check` validates both preference files and the profile catalog.
 
 The `apps` namespace provides overrides for `cli`, `tmux`, `yazi`, `fzf`, `gum`, `starship`, and `gitmux`. CLI renderers support foreground/background and attributes. Native consumers use their supported fields: generated color templates use fg/bg, Gitmux/Starship use Git symbols, and Yazi uses file/Git symbols. File and Git color rules remain in `file-colors.toml`; palette definitions and exact palette swatches retain their existing owners.
 
@@ -475,8 +459,7 @@ new saves instead of silently doing nothing. The added controls are:
 | `colors.apps.tmux.windows.active`, `inactive`, `alert` | Window base fg/bg spans; existing name contrast spans remain separate |
 | `colors.apps.tmux.pane.active_border.fg`, `inactive_border.fg` | Pane borders |
 
-Defaults preserve current appearance, including the Linux/WSL inactive tmux
-window defaults. Specialized weather condition artwork, notification behavior,
+Defaults preserve current appearance, including the inactive tmux window colors that WSL inherits from Linux. Specialized weather condition artwork, notification behavior,
 layout sizes, application-native settings and arbitrary theme plugins remain
 outside this bounded visual catalog.
 
@@ -518,10 +501,7 @@ consumer activation is reported pending without selecting a theme.
 
 `apps.cli.logo_gradient` selects root usage artwork coloring: `classic` preserves vertical blue/cyan, while `installer` (the shared default) uses the horizontal published theme hint/info/accent gradient. Both values are available in Config editing and value completion. The setting follows profile inheritance and null/unset reset, activates on the next command invocation, and does not refresh the theme or applications.
 
-`default/config.json` declares typed behavior, `formatting` and shell `settings`.
-`profiles/NAME/config.json` overrides individual fields. Typed appearance lives in
-`[controls]` tables in adjacent `colors.toml`/`icons.toml`, including popup, menu-entry,
-FZF and Neovim colors/icons; public keys remain unchanged. Resolution is selected
+`default/config.json` declares shared styles and shell settings alongside app-specific settings, formatting, colors and icons. Each profile can override individual fields in a schema-2 `config.json`. Earlier split layouts still resolve typed appearance from their adjacent TOML files. Resolution is selected
 profile, inherited parents, shared defaults, then null. A profile `null` or
 `config unset` removes the override; false, zero, empty strings and empty lists
 remain values. Shared nonnullable defaults must remain defined.
@@ -618,7 +598,7 @@ These settings apply on the next command invocation or popup without publishing 
   has separate `label` and `value` styles. Status/priority retain their specialized
   roles unless a field style overrides them. Todo formatting adds `level_indent`,
   `row_gap` and `list_type`; see [Todo views](todo.md#human-tree-views).
-- `apps.fzf.colors` uses native color slots (bracket quoting for `+` or other native
+- The native fields of `apps.fzf.colors` use FZF color slots (bracket quoting for `+` or other native
   punctuation), palette names/hex/ANSI indices and colon-separated attributes.
   `nth` accepts attributes only. `default_opts` is a literal argument list;
   `bindings`, `preview` and `preview_window` follow native FZF syntax. Shell

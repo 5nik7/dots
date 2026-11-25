@@ -21,22 +21,23 @@ def coordinated_lock():
         yield
 
 
-def plan(installation):
-    if 'blastoff' not in installation.components:
-        return
-    root = installation.root
-    default = root/'config/blastoff/themes/dots.toml'
-    if not default.is_file(): return  # Minimal catalog fixtures have no bundle.
-    sys.path.insert(0, str(root/'lib/dots/themes'))
-    from backup_catalog import physical as resolve_parent
-    from starship import update_palette
-    import tomllib
+def active_path():
     home = Path(os.environ.get('HOME') or Path.home())
-    active = resolve_parent(os.environ.get('STARSHIP_CONFIG') or home/'.config/starship.toml', installation.guards)
+    return Path(os.environ.get('STARSHIP_CONFIG') or home/'.config/starship.toml').expanduser()
+
+
+def destinations(installation, selected=()):
+    from backup_catalog import physical as resolve_parent
+    home = Path(os.environ.get('HOME') or Path.home())
+    active = resolve_parent(active_path(), installation.guards)
     logical_store = Path(os.environ.get('BLASTOFF_HOME') or home/'.config/blastoff').expanduser()
-    # Account for a selected catalog link that has not been published yet.
-    mapping = next((op for op in installation.operations if op['path'] == str(logical_store) and 'link' in op), None)
-    storage = Path(mapping['link']) if mapping else resolve_parent(logical_store/'themes/dots.toml', installation.guards).parent.parent
+    storage = next((Path(row['source']) for row in selected if row['strategy'] == 'directory-link'
+                    and row['target'] == str(logical_store)), None)
+    if storage is None:
+        storage = next((Path(op['link']) for op in installation.operations
+                        if op['path'] == str(logical_store) and op.get('directory') and 'link' in op), None)
+    if storage is None:
+        storage = resolve_parent(logical_store/'themes/dots.toml', installation.guards).parent.parent
     saved = storage/'themes/dots.toml'
     if active.is_relative_to(storage/'themes') or active.is_relative_to(storage/'modules'):
         raise ValueError('Starship active destination must be outside the saved library')
@@ -44,6 +45,36 @@ def plan(installation):
         target = active.resolve()
         if target.parent == storage/'themes' and target.is_file() and not target.is_symlink():
             saved = target
+    return active, saved
+
+
+def catalog_active(installation, row, selected, source, target):
+    if 'blastoff' not in installation.components or target != active_path():
+        return False
+    default = installation.root/'config/blastoff/themes/dots.toml'
+    if not default.is_file():
+        return False
+    if row['strategy'] != 'link' or row['app'] != 'blastoff' or source != default:
+        raise ValueError(f"Blastoff active destination conflicts with {row['id']}: {target}")
+    active, saved = destinations(installation, selected)
+    installation.add(row['id'], active, link=saved)
+    installation.starship_catalog_link = (active, saved)
+    return True
+
+
+def plan(installation):
+    if 'blastoff' not in installation.components:
+        return
+    root = installation.root
+    default = root/'config/blastoff/themes/dots.toml'
+    if not default.is_file(): return  # Minimal catalog fixtures have no bundle.
+    sys.path.insert(0, str(root/'lib/dots/themes'))
+    from starship import update_palette
+    import tomllib
+    active, saved = destinations(installation)
+    catalog_link = getattr(installation, 'starship_catalog_link', None)
+    if catalog_link is not None and catalog_link != (active, saved):
+        raise ValueError('Starship active selection changed after preview')
     installation.guard(saved)
     original = saved.read_bytes() if saved.is_file() else default.read_bytes()
     installation.guard(default)
@@ -68,4 +99,5 @@ def plan(installation):
     if saved.exists() and not saved.is_file(): raise ValueError('saved Starship theme must be a regular file')
     if updated != original or not saved.exists():
         installation.add('dots:blastoff:palette', saved, text=updated.decode('utf-8-sig'))
-    installation.add('dots:blastoff:active', active, link=saved)
+    if catalog_link is None:
+        installation.add('dots:blastoff:active', active, link=saved)

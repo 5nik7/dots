@@ -9,8 +9,12 @@ if not test -r "$_dots_fish_directory/environment.fish"; or not test -r "$_dots_
     printf 'dots: Fish startup requires the Dots checkout layout\n' >&2
     return 1
 end
-source "$_dots_fish_directory/environment.fish"; or return
+set -gx DOTS (path resolve -- "$_dots_fish_directory/../..")
+source "$DOTS/lib/dots/shell/init.fish"; or return
 status is-interactive; or return 0
+for directory in $_dots_profile_shell_dirs
+    test ! -r "$directory/init.fish"; or source "$directory/init.fish"
+end
 for directory in "$DOTS/shells/fish/functions"
     contains -- "$directory" $fish_function_path; or set -gp fish_function_path "$directory"
 end
@@ -38,6 +42,9 @@ for directory in $fish_complete_path
     contains -- "$directory" $_dots_completion_paths; or set -a _dots_completion_paths "$directory"
 end
 set -g fish_complete_path $_dots_completion_paths
+if set -q dots_shell_tools[1]
+    source "$DOTS/lib/dots/shell/tools.fish" $dots_shell_tools
+end
 if not set -q _dots_fish_config_ready
     # Explicit list preserves conf.d ordering without discovery at startup.
     for snippet in autopair done fish_frozen_key_bindings fish_frozen_theme fzf usage
@@ -46,3 +53,6 @@ if not set -q _dots_fish_config_ready
     set -g _dots_fish_config_ready 1
 end
 source "$DOTS/shells/fish/interactive.fish"
+for directory in $_dots_profile_shell_dirs
+    test ! -r "$directory/local.fish"; or source "$directory/local.fish"
+end

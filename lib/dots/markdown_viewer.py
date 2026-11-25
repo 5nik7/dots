@@ -53,7 +53,7 @@ def arguments(viewer, binary, width, color):
     return [binary]  # cat consumes stdin, including on native Windows.
 
 
-def render(data, ui, *, viewer=None, inline_notice=False):
+def render(data, ui, *, viewer=None, inline_notice=False, fallback=True):
     from config_values import value
     from themes.file_preview import run_renderer
     selected = viewer or value('apps.cli.markdown_viewer', 'auto')
@@ -62,7 +62,10 @@ def render(data, ui, *, viewer=None, inline_notice=False):
     source = plain(data)
     if not source.strip():
         return source
-    candidates = PRIORITY if selected == 'auto' else (selected, *(v for v in PRIORITY if v != selected))
+    if selected == 'auto':
+        candidates = PRIORITY if fallback else PRIORITY[:-1]
+    else:
+        candidates = (selected, *(v for v in PRIORITY if fallback and v != selected))
     environment = dict(os.environ)
     environment.update(COLUMNS=str(max(1, ui.width)))
     if not ui.color:
@@ -80,13 +83,13 @@ def render(data, ui, *, viewer=None, inline_notice=False):
                 pass
         if output is not None and output.strip():
             return notice + rendered_bytes(output, ui.color)
-        if candidate == selected:
+        if candidate == selected and fallback:
             message = 'dots: Markdown viewer ' + selected + ' unavailable or failed; using automatic fallback.'
             if inline_notice:
                 notice = (message + '\n\n').encode()
             else:
                 print(message, file=sys.stderr)
-    return notice + source
+    return notice + source if fallback else None
 
 
 def reader_ui(context=None, *, gutters=2):

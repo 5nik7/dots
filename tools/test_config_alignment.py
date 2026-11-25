@@ -208,25 +208,29 @@ class Alignment(unittest.TestCase):
             self.assertEqual(cells(line[:line.index('·')]),start)
 
     def test_compiled_shell_rows_are_literal_and_invalidate_with_defaults(self):
-        from startup import Compiler,prepare
+        from startup import prepare
         defaults=self.root/'default/config.json'
-        doc=json.loads(defaults.read_text());doc['formatting']['apps']['cli']['label_width']='40%'
+        doc=json.loads(defaults.read_text());doc['apps']['cli']['formatting']['label_width']='40%'
         defaults.write_text(json.dumps(doc))
         for shell in ('bash','zsh'):
             executable=shutil.which(shell)
             if not executable:continue
-            # No personal startup modules are included or executed by this fixture.
-            with patch.object(Compiler,'expand',return_value=':'):
-                destination=self.home/('compiled-'+shell)
-                generation=prepare(self.root,shell,destination)
-            script='python3() { return 99; }; source "$1"; printf "%s\\n" "${_DOTS_FORMATTING[label_width]}"'
-            result=subprocess.run([executable,'-c',script,'fixture',str(generation/'bundle')],env=self.env,capture_output=True,text=True,timeout=15)
+            # The early generation loads the literal rows without personal hooks.
+            version=subprocess.check_output([executable,'-fc','echo "${ZSH_VERSION:-$BASH_VERSION}"'],env=self.env,text=True).strip()
+            destination=self.home/('compiled-'+shell)
+            with patch.dict(os.environ,DOTS_BUILD_SHELL_VERSION=version):
+                generation=prepare(self.root,shell,destination,early=True)
+            script='python3() { return 99; }; source "$1" || exit; printf "%s\\n" "${_DOTS_FORMATTING[label_width]}"'
+            native_env=dict(self.env,_dots_startup_cache=str(destination),_dots_startup_generation=generation.name,
+                            _DOTS_STARTUP_MODE='early')
+            result=subprocess.run([executable,'-fc',script,'fixture',str(generation/'bundle')],env=native_env,capture_output=True,text=True,timeout=15)
             self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout,'40%\n')
             self.assertIn(str(defaults),(generation/'guard').read_text())
-            doc['formatting']['apps']['cli']['label_width']='50%';defaults.write_text(json.dumps(doc))
-            with patch.object(Compiler,'expand',return_value=':'):updated=prepare(self.root,shell,destination)
+            doc['apps']['cli']['formatting']['label_width']='50%';defaults.write_text(json.dumps(doc))
+            with patch.dict(os.environ,DOTS_BUILD_SHELL_VERSION=version):
+                updated=prepare(self.root,shell,destination,early=True)
             self.assertNotEqual(updated,generation)
-            doc['formatting']['apps']['cli']['label_width']='40%';defaults.write_text(json.dumps(doc))
+            doc['apps']['cli']['formatting']['label_width']='40%';defaults.write_text(json.dumps(doc))
 
 
 class NativeAlignment(NativeMenuFixture):
@@ -234,16 +238,21 @@ class NativeAlignment(NativeMenuFixture):
         root=Path(self.env['DOTS']);root.mkdir()
         shutil.copytree(fixtures.ROOT/'default',root/'default')
         doc=json.loads((root/'default/config.json').read_text())
-        doc['formatting']['apps']['menu'].update(label_width='40%',label_gap=2)
+        doc['apps']['menu']['formatting'].update(label_width='40%',label_gap=2)
         (root/'default/config.json').write_text(json.dumps(doc))
         for name in ('termux','linux','wsl','windows'):
             path=root/'profiles'/name;path.mkdir(parents=True);(path/'profile.json').write_text(json.dumps(dict(schema=1,id=name)))
         code='''import os
-from types import SimpleNamespace
-from config_menu import Row,pick
+from pathlib import Path
+from config_menu import Inventory,Row,pick
+from config_namespace import Namespace
 from menu_tmux import TmuxContext
-rows=[Row('apps.really_long.configuration_key','ONE','fixture','fixture'),Row('apps.short','TWO','fixture','fixture')]
-item=pick(SimpleNamespace(scope='fixture',rows=rows),'apps',{'search_all':True},TmuxContext.capture(client=os.environ['CLIENT']))
+rows=[Row('apps.fixture.settings.really_long_configuration_key','ONE','fixture','fixture'),
+      Row('apps.fixture.settings.short','TWO','fixture','fixture')]
+inventory=Inventory(Path(os.environ['DOTS']),'defaults',no_refresh=True)
+inventory.rows=rows
+inventory.namespace=Namespace(row.key for row in rows)
+item=pick(inventory,'apps',{'search_all':True},TmuxContext.capture(client=os.environ['CLIENT']))
 print(item.key)
 '''
         for columns in (40,80,120):
@@ -252,7 +261,7 @@ print(item.key)
             worker=self.worker(code)
             self.receive(self.first[1],b'ONE');self.assertNotIn(b'ONE',self.drain(self.second[1]))
             os.write(self.first[1],b'\r');out,err=worker.communicate(timeout=10)
-            self.assertEqual(worker.returncode,0,err);self.assertEqual(out.strip(),'apps.really_long.configuration_key')
+            self.assertEqual(worker.returncode,0,err);self.assertEqual(out.strip(),'apps.fixture.settings.really_long_configuration_key')
 
 
 if __name__=='__main__':unittest.main()

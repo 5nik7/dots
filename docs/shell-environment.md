@@ -29,14 +29,7 @@ Personal Bash/Zsh startup appends `${XDG_DATA_HOME:-$HOME/.local/share}/gem/ruby
 
 ## Starship configuration
 
-Dots personal startup no longer sets `STARSHIP_CONFIG`. Starship discovers
-`~/.config/starship.toml` (including on Windows); the managed resource links that
-home-relative path to `config/starship/starship.toml`, independently of
-`XDG_CONFIG_HOME`. On startup/reload, native adapters remove only recognized old
-Dots-generated overrides. Deliberate custom values remain supported. Windots
-Clink follows the same rule. Existing links and prompt contents are retained.
-Blastoff 0.1.12 preserves this active-file link during normal writes and tracks
-the resolved repository file; explicit `--replace-link` still converts the link.
+Dots keeps an explicit `STARSHIP_CONFIG` and removes recognized old Dots-generated overrides on startup or reload. Windots Clink follows the same rule. Starship otherwise discovers `~/.config/starship.toml`, including on Windows. Blastoff setup links the active file to the selected saved theme. The default saved theme is `config/blastoff/themes/dots.toml` in the checkout. The Termux Files mapping also exposes this theme at `${CONFIG}/starship.toml`. [Starship and Blastoff installation](installation.md)
 
 The bundled prompt groups `git_branch`, `git_commit`, `git_status`, `git_metrics` and `git_state` behind `${custom.tmux}` on Unix and `${custom.tmux_windows}` on Windows. A nonempty `TMUX` hides the whole group and skips its child Git renderer; unset or empty `TMUX` shows it normally. This condition does not query the tmux server or depend on Gitmux. Existing Git module settings and the selected palette control its appearance, with one trailing separator when the group is populated and no padding when it is empty.
 
@@ -198,6 +191,8 @@ the parent shell. It does not enumerate the whole environment, read secrets, or
 pretend to inspect parent-local arrays. JSON has `version: 1` and a `values`
 object whose entries contain `value` and `source` strings.
 
+When an interactive Zsh exports `CLICOLOR`, its registered owner in `dots env --json` is `shells/zsh/interactive.zsh`. The Zsh completion directory `ZSHCOMP` comes from `shells/zsh/core/environment.zsh`.
+
 In a terminal, `dots env` groups the current theme, settings and paths with shared
 Dots colors. Boolean settings retain `0`/`1` alongside disabled/enabled labels;
 each value includes its source. Short rows align, while long values and narrow
@@ -279,6 +274,10 @@ Explicit `LESS_TERMCAP_so`/`LESS_TERMCAP_se` values, including empty values, and
 Dots popup readers resolve the same colors from the current published palette before opening less, including background tmux launches with an older environment. They retain explicit overrides and their existing secure reader configuration. Reopen the popup to see current colors; for ordinary commands, start a new shell or use the shell's existing reload command (`rl` in the personal Zsh configuration). Already running readers retain their launch environment.
 
 Exact RGB styling requires a termcap-based less and a truecolor terminal, supported locally on Termux and applicable to Linux/WSL. Native Windows less uses a console rendering path without the equivalent RGB terminal override; it retains stock colors. The native PowerShell implementation does not invoke Bash or WSL. No application destinations, system-wide files or package settings change.
+
+## Shared tool paths
+
+The backend checks the current environment for existing Go, Cargo and Bun bin directories (including a custom `BUN_INSTALL`), `~/bin`, `~/.local/bin`, FZF, .NET tools and the supported Ruby gem bin directory. It preserves inherited entry order and removes duplicate additions across native adapters. A profile can still set `GOBIN` or `CARGO_HOME` to its own location. Environment inspection reports the corresponding tool paths through `dots env`. [Interactive tool hooks and profile overrides](shell-init.md#installed-startup-and-first-use)
 
 ## Generated profile namespaces
 

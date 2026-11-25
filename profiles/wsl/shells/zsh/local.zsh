@@ -24,23 +24,17 @@ extpath "$WINDIR/System32/WindowsPowerShell/v1.0"
 extpath "$WINDIR/System32"
 extpath "$WINDIR"
 
-has vfox && eval "$(vfox activate zsh)"
-has bob && eval "$(bob complete zsh)"
+if has vfox && [[ -z ${_DOTS_TOOL_READY[vfox]:-} ]] &&
+    _dots_zsh_generated vfox activate zsh && eval "$REPLY"; then
+  _DOTS_TOOL_READY[vfox]=1
+fi
+if has bob && [[ -z ${_DOTS_TOOL_READY[bob]:-} ]] &&
+    _dots_zsh_generated bob complete zsh && eval "$REPLY"; then
+  _DOTS_TOOL_READY[bob]=1
+fi
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-PATH="/home/njen/perl5/bin${PATH:+:${PATH}}"
-export PATH
-PERL5LIB="/home/njen/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
-export PERL5LIB
-PERL_LOCAL_LIB_ROOT="/home/njen/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
-export PERL_LOCAL_LIB_ROOT
-PERL_MB_OPT="--install_base \"/home/njen/perl5\""
-export PERL_MB_OPT
-PERL_MM_OPT="INSTALL_BASE=/home/njen/perl5"
-export PERL_MM_OPT
+path=(/home/njen/perl5/bin "${(@)path:#/home/njen/perl5/bin}")
+_dots_zsh_perl_environment /home/njen/perl5
 
 open() {
   pwsh.exe -Command "Start-Process '$1' -WindowStyle Hidden -ErrorAction SilentlyContinue"

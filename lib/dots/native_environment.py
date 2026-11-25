@@ -4,15 +4,15 @@ import os
 from pathlib import Path
 import sys
 import shutil
-from environment import declarations, TOKEN, retired_paths, clean_metadata, application_value
+from environment import declarations, TOKEN, retired_paths, clean_metadata, application_value, tool_paths
 from platform_info import detect
 from profiles import resolve, SENSITIVE
 from profile_environment import Model, RESERVED, IDENTIFIER
 
 
-def exports(root, env=None, generated=None):
+def exports(root, env=None, generated=None, profile=None):
     env = os.environ if env is None else env
-    profile = resolve(root, detect(env=env))
+    profile = resolve(root, detect(env=env)) if profile is None else profile
     generated = generated or Model(root, profile)
     context = dict(env, DOTS=str(root))
     context.update(generated.scalars)
@@ -34,6 +34,13 @@ def exports(root, env=None, generated=None):
     previous = env.get('DOTS_PROFILE_PATHS','').split(os.pathsep)
     retired = retired_paths(root, env)
     existing = [entry for entry in env.get('PATH','').split(os.pathsep) if entry not in previous and os.path.normcase(os.path.normpath(entry)) not in retired]
+    for placement, path, _ in tool_paths(context):
+        if path in existing:
+            continue
+        if placement == 'prepend':
+            existing.insert(0, path)
+        else:
+            existing.append(path)
     for key in ('DOTS_ENV_HOOKS','DOTS_ENV_ORIGINS'):
         if key in env: data[key] = clean_metadata(env[key])
     data['DOTS_PROFILE_PATHS'] = os.pathsep.join(paths)
@@ -44,9 +51,10 @@ def exports(root, env=None, generated=None):
     return data
 
 
-def document(root, env=None):
+def document(root, env=None, profile=None):
     env = os.environ if env is None else env
-    generated = Model(root, resolve(root, detect(env=env)))
+    profile = resolve(root, detect(env=env)) if profile is None else profile
+    generated = Model(root, profile)
     unset = []
     try: previous = json.loads(env.get('DOTS_GENERATED_PATHS', '{}'))
     except (TypeError,ValueError): previous = {}
@@ -57,7 +65,7 @@ def document(root, env=None):
                     and name not in generated.scalars and isinstance(value,str)
                     and Path(value).is_relative_to(Path(oldroot)/'profiles') and env.get(name) == value):
                 unset.append(name)
-    return dict(exports=exports(root,env,generated), maps=generated.maps, unset=unset,
+    return dict(exports=exports(root,env,generated,profile), maps=generated.maps, unset=unset,
                 generated=list(generated.scalars))
 
 

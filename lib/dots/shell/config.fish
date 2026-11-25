@@ -14,9 +14,6 @@ function _dots_config_valid --argument-names kind value
 end
 function _dots_config_load
     set -l keys
-    set -l kinds
-    set -l values
-    set -l origins
     set -l seen
     set -l config "$HOME/.config/dots/config.env"
     if set -q XDG_CONFIG_HOME; and test -n "$XDG_CONFIG_HOME"
@@ -25,12 +22,11 @@ function _dots_config_load
     if set -q DOTS_CONFIG_FILE; and test -n "$DOTS_CONFIG_FILE"
         set config "$DOTS_CONFIG_FILE"
     end
-    while read -l line
-        set -l fields (string split \t -- "$line")
-        set -a keys $fields[1]
-        set -a kinds $fields[2]
-        set -a values $fields[3]
-        set -a origins default
+    while read -ld \t key kind value description
+        set -a keys $key
+        set -f kind_$key "$kind"
+        set -f value_$key "$value"
+        set -f source_$key default
     end < "$DOTS/lib/dots/shell/settings.tsv"
     if test -e "$config"
         test -f "$config"; and test -r "$config"; or return 1
@@ -42,40 +38,41 @@ function _dots_config_load
             set -l pair (string split -m1 = -- "$line")
             test (count $pair) -eq 2; or return 1
             set -l key (string trim -- "$pair[1]")
-            set -l index (contains -i -- "$key" $keys)
-            test -n "$index"; and not contains -- "$key" $seen; or return 1
+            contains -- "$key" $keys; and not contains -- "$key" $seen; or return 1
+            set -l kind kind_$key
             set -l value (string trim -- "$pair[2]")
             set value (string replace -r '^"(.*)"$' '$1' -- "$value")
             set value (string replace -r "^'(.*)'\$" '$1' -- "$value")
-            _dots_config_valid "$kinds[$index]" "$value"; or return 1
-            set values[$index] "$value"
-            set origins[$index] config
+            _dots_config_valid "$$kind" "$value"; or return 1
+            set -f value_$key "$value"
+            set -f source_$key config
             set -a seen $key
         end < "$config"
     end
     if not set -q DOTS_CONFIG_FILE; or test -z "$DOTS_CONFIG_FILE"
         for key in $_dots_profile_setting_keys
-            set -l index (contains -i -- "$key" $keys)
+            contains -- "$key" $keys; or return 1
+            set -l kind kind_$key
             set -l name _dots_profile_setting_$key
             set -l origin _dots_profile_source_$key
-            test -n "$index"; or return 1
-            _dots_config_valid "$kinds[$index]" "$$name"; or return 1
-            set values[$index] "$$name"
-            set origins[$index] "$$origin"
+            _dots_config_valid "$$kind" "$$name"; or return 1
+            set -f value_$key "$$name"
+            set -f source_$key "$$origin"
         end
     end
     for key in $keys
-        set -l index (contains -i -- "$key" $keys)
         if set -q $key; and test -n "$$key"
-            _dots_config_valid "$kinds[$index]" "$$key"; or return 1
-            set values[$index] "$$key"
-            set origins[$index] environment
+            set -l kind kind_$key
+            _dots_config_valid "$$kind" "$$key"; or return 1
+            set -f value_$key "$$key"
+            set -f source_$key environment
         end
     end
     for key in $keys
-        set -l index (contains -i -- "$key" $keys)
-        set -g _dots_option_$keys[$index] "$values[$index]"
-        set -g _dots_source_$keys[$index] "$origins[$index]"
+        set -l value value_$key
+        set -l source_name source_$key
+        set -g _dots_option_$key "$$value"
+        set -g _dots_source_$key "$$source_name"
     end
     set -g _DOTS_CONFIG_PATH "$config"
     if not set -q DOTS_CONFIG_FILE; or test -z "$DOTS_CONFIG_FILE"

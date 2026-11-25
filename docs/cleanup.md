@@ -2,6 +2,8 @@
 
 `dots cleanup` finds known disposable files, reviews them in groups and reports confirmed removals. It detects the execution platform. Termux retains its existing rules. Linux and WSL support bounded user cache/log rules through the same guarded POSIX engine. Windows implements a bounded native adapter for default npm/pip caches and named Neovim logs. Its handle, ACL, removal and accounting paths have owned native fixture evidence; actual Restart Manager integration and live acceptance remain pending. See the dated [verification evidence](../plans/cleanup.md#windows-provider-follow-up-2026-11-14).
 
+On Termux, Linux and WSL the `builds` group also reports disk usage for old Bash and Zsh startup bundles. A candidate must have the original compiler layout, a matching content digest and the expected file owner. Cleanup locks publication and checks the current and previous pointers again after review. The scan preserves incomplete generations, foreign files and active readers. Current-format startup bundles retain the latest two generations during publication.
+
 Linux/WSL candidates include npm `_cacache`, pip, Go module/build caches, uv,
 Cargo registry and named Neovim logs under an owned home. System package caches,
 CPAN and checkpoint rules are not imported from Termux. Location overrides must

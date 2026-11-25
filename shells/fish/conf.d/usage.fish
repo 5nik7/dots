@@ -1,6 +1,6 @@
-# Shared by Fish's conf.d startup and dots init; guard is shell-local.
-if status is-interactive; and not set -q _dots_fish_usage_ready
-    set -l dots_fish_root (path dirname (path dirname (path resolve (status filename))))
-    source "$dots_fish_root/integrations/usage.fish"
-    set -g _dots_fish_usage_ready 1
-end
+# Fish may source this file through native conf.d and through the checkout entry.
+status is-interactive; or return 0
+set -q _dots_fish_usage_ready; and return 0
+
+command -q usage; and usage g completion-init fish | source
+set -g _dots_fish_usage_ready 1

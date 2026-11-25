@@ -22,7 +22,7 @@ def rows(root=None, selected=None, *, styles=None, controls=None):
         yield '__completion.color.'+role, styles.sgr(role, fallback, app='completion'), 'style'
     # Watch exact inputs and parent directories: creating an absent override
     # must invalidate the in-memory projection too. No directory enumeration.
-    paths = {*styles.paths, *controls.paths, Path(__file__)}
+    paths = {*styles.preference_inputs(controls), Path(__file__)}
     paths.update(Path(layer['root'])/'profile.json' for layer in styles.selected['layers'])
     paths.add(state_root()/'current/theme/palette.json')
     paths.update(path.parent for path in tuple(paths))

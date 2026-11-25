@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Isolated regression checks for the public Zsh configuration (no downloads)."""
 import os
+import json
 from pathlib import Path
 import shutil
 import subprocess
 import tempfile
-import tarfile
 import unittest
 
 REPO = Path(__file__).resolve().parents[1]
@@ -58,6 +58,55 @@ prepath "$HOME/missing" && exit 3
 [[ $PATH == $before ]] || exit 4
 ''')
 
+    def test_options_preserve_caller_scope_and_shared_history(self):
+        prior = self.root / 'cache/dots/startup/zsh-termux-termux/previous/bundle'
+        prior.parent.mkdir(parents=True)
+        prior.write_text('setopt_if_exists() { if [[ "${options[$1]+1}" ]]; then setopt "$1"; fi }\n')
+        self.shell('''source "$XDG_CACHE_HOME/dots/startup/zsh-termux-termux/previous/bundle"
+for choice in off on; do
+  if [[ $choice == on ]]; then setopt localoptions; else unsetopt localoptions; fi
+  source "$DOTS/shells/zsh/options.zsh"
+  [[ $options[localoptions] == $choice && -o sharehistory && -o incappendhistory ]] || exit 1
+  (( ! ${+functions[setopt_if_exists]} && ! ${+_dots_zsh_option} )) || exit 2
+done
+setopt_if_exists() { print personal; }
+source "$DOTS/shells/zsh/options.zsh"
+[[ $(setopt_if_exists) == personal ]]''')
+
+    def test_fzf_generator_and_personal_source_can_retry(self):
+        executable = self.root / 'fzf'
+        executable.write_text('#!' + ZSH + '\nprint -r -- "FZF_LOADED=yes"\n[[ -f "$HOME/allow" ]]\n')
+        executable.chmod(0o700)
+        self.shell('''path=("$HOME" $path)
+source "$DOTS/shells/zsh/integrations/fzf.zsh"
+[[ -z ${_DOTS_FZF_READY:-}${FZF_LOADED:-} ]] || exit 1
+: > "$HOME/allow"
+source "$DOTS/shells/zsh/integrations/fzf.zsh"
+[[ $_DOTS_FZF_READY == 1 && $FZF_LOADED == yes ]] || exit 2
+unset _DOTS_FZF_READY
+print -r -- 'return 1' > "$HOME/.fzf.zsh"
+source "$DOTS/shells/zsh/integrations/fzf.zsh"
+[[ -z ${_DOTS_FZF_READY:-} ]] || exit 3
+print -r -- 'FZF_LOADED=personal' >| "$HOME/.fzf.zsh"
+source "$DOTS/shells/zsh/integrations/fzf.zsh"
+[[ $_DOTS_FZF_READY == 1 && $FZF_LOADED == personal ]]''')
+
+    def test_zinit_missing_never_fetches_during_startup_or_reload(self):
+        git = self.root / 'git'
+        git.write_text('#!' + ZSH + '\nprint attempt >> "$HOME/attempts"\nexit 1\n')
+        git.chmod(0o700)
+        self.shell('''path=("$HOME" $path)
+DOTS_ZSH_SUGGESTIONS=none
+for invocation in 1 2; do
+  source "$DOTS/shells/zsh/integrations/plugins.zsh"
+  _dots_completion_plugins
+  _dots_plugin_setup
+  _dots_widget_plugins
+  [[ -z ${_DOTS_PLUGIN_PATHS_READY:-} && ! -e "$HOME/attempts" ]] || exit 1
+  [[ -n ${_DOTS_PLUGINS_MISSING[zdharma-continuum/zinit]} ]] || exit 2
+done
+''')
+
     def test_completion_dump_loads_literal_bracket_function_in_fresh_shell(self):
         providers = self.root / 'completions'
         providers.mkdir()
@@ -80,16 +129,16 @@ autoload +X _setup _complete || exit 3
 
     def test_platform_context_and_distribution_are_separate(self):
         (self.root / 'os-release').write_text('NAME="Ubuntu Linux"\nID=ubuntu\n')
-        for osname, kernel, expected in [('linux-gnu', '6.1-linux', 'linux:false'),
-                                         ('linux-gnu', '6.1-microsoft-standard-WSL2', 'wsl:true'),
-                                         ('msys', 'unused', 'msys:false')]:
+        for osname, kernel, expected in [('linux-gnu', '6.1-linux', 'linux:false:ubuntu'),
+                                         ('linux-gnu', '6.1-microsoft-standard-WSL2', 'wsl:true:ubuntu'),
+                                         ('msys', 'unused', 'windows:false:windows')]:
             (self.root / 'kernel').write_text(kernel + '\n')
             p = self.shell(f'''source "$DOTS/shells/zsh/platforms/detect.zsh"
 _dots_detect_platform {osname} "$HOME/os-release" "$HOME/kernel" "$HOME/missing"
 print -r -- "$DOTS_PLATFORM:$is_wsl:$distro"
 ''')
-            self.assertEqual(p.stdout.strip(), expected + ':ubuntu')
-        self.shell('''TERMUX_VERSION=fixture
+            self.assertEqual(p.stdout.strip(), expected)
+        self.shell('''TERMUX_VERSION=fixture TERMUX__PREFIX="$HOME/fixture/usr"
 source "$DOTS/shells/zsh/platforms/detect.zsh"
 [[ $DOTS_PLATFORM == termux && $is_termux == true && $distro == termux ]]
 ''')
@@ -135,6 +184,21 @@ files=("$XDG_CACHE_HOME"/dots/zsh/**/*(N.))
 (( ${#files} == 0 ))
 ''')
 
+    def test_cache_reader_keeps_its_generation_when_another_shell_replaces_it(self):
+        self.generator('print -r -- "typeset -g fixture_value=$1"\n')
+        self.shell('''source "$DOTS/shells/zsh/core/cache.zsh"
+_dots_generated_template test "$HOME/generator" first || exit 1
+first=$REPLY
+( _dots_source_generated test "$HOME/generator" second ) || exit 2
+eval "$first"
+[[ $fixture_value == first ]] || exit 3
+cache="$XDG_CACHE_HOME/dots/zsh/linux-$ZSH_VERSION/test.zsh"
+print -r -- 'typeset -g UNTRUSTED=yes' >> "$cache"
+chmod 666 "$cache"
+_dots_source_generated test "$HOME/generator" second
+[[ -z ${UNTRUSTED:-} && $fixture_value == second ]] || exit 4
+''')
+
     def test_cache_executable_replacement_and_unwritable_location(self):
         self.generator('print "typeset -g fixture_value=one"\n')
         self.shell('source "$DOTS/shells/zsh/core/cache.zsh"; _dots_source_generated test "$HOME/generator"')
@@ -153,6 +217,75 @@ _dots_source_generated test "$HOME/generator"
 source "$DOTS/shells/zsh/zshenv"
 [[ -n $DOTS_PLATFORM && -n $distro && -n ${functions[is_wsl]} ]]
 ''')
+
+    def test_early_zshenv_prepares_once_and_preserves_login_and_independent_rc(self):
+        from bench_shell_readiness import interactive_fixture
+        with interactive_fixture(REPO, 'zsh', installed=True) as (env, home, argv, _):
+            repo = Path(env['DOTS'])
+            python = Path(env['PATH'])/'python3'
+            actual = python.resolve()
+            python.unlink()
+            python.write_text('#!' + shutil.which('sh') + '\nprintf "%s\\n" "$2" >> "$HOME/python.calls"\nexec "$REAL_PYTHON" "$@"\n')
+            python.chmod(0o700)
+            env['REAL_PYTHON'] = str(actual)
+            calls = home/'python.calls'
+            def run(flags, code):
+                result = subprocess.run([argv[0], flags, code], env=env, cwd=home,
+                                        capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                return result.stdout.strip()
+            early = 'print -r -- "${dots_options[DOTS_INIT_COMMANDS]}|${functions[is_wsl]:+yes}|${functions[_dots_compinit]:-quiet}|$DOTBIN"'
+            self.assertEqual(run('-dc', early), '1|yes|quiet|' + str(repo/'bin'))
+            self.assertEqual(calls.read_text().splitlines(), [str(repo/'lib/dots/startup.py')])
+            selector, = (Path(env['XDG_CACHE_HOME'])/'dots/startup').glob('zsh-*/current')
+            def modules():
+                manifest = selector.parent/selector.read_text().strip()/'manifest.json'
+                return json.loads(manifest.read_text())['modules']
+            self.assertNotIn('shells/zsh/interactive.zsh', modules())
+            early_generation = selector.read_text().strip()
+            calls.write_text('')
+            self.assertEqual(run('-dlc', early), '1|yes|quiet|' + str(repo/'bin'))
+            self.assertEqual(calls.read_text(), '')
+            (home/'.zprofile').write_text('print -r -- "${dots_options[DOTS_INIT_COMMANDS]}" > "$HOME/early"\n'
+                                          'export DOTS_INIT_COMMANDS=0\n')
+            self.assertEqual(run('-dlic', 'print -r -- "${dots_options[DOTS_INIT_COMMANDS]}|${dot[root]}|${_DOTS_COMPINIT_READY}"'),
+                             '0|' + str(repo) + '|1')
+            self.assertEqual((home/'early').read_text(), '1\n')
+            self.assertNotIn('profile_config.py', calls.read_text())
+            self.assertEqual(calls.read_text().splitlines().count(str(repo/'lib/dots/startup.py')), 1)
+            self.assertIn('shells/zsh/interactive.zsh', modules())
+            full_generation = selector.read_text()
+            # A script which already saw the early pointer may acquire the
+            # compiler lock after an interactive shell has upgraded it.
+            subprocess.run([str(actual), '-B', str(repo/'lib/dots/startup.py'), '--shell', 'zsh',
+                            '--cache', str(selector.parent), '--early', '--observed', early_generation],
+                           cwd=home, env=env, capture_output=True, text=True, check=True, timeout=30)
+            self.assertEqual(selector.read_text(), full_generation)
+            calls.write_text('')
+            self.assertEqual(run('-dc', early), '1|yes|quiet|' + str(repo/'bin'))
+            self.assertNotIn('startup.py', calls.read_text())
+            (home/'.zshrc').unlink()
+            (home/'.zshrc').write_text('INDEPENDENT_RC=$DOTBIN\n')
+            self.assertEqual(run('-dic', 'print -r -- "$INDEPENDENT_RC"'), str(repo/'bin'))
+            platform = run('-dc', 'print -r -- "$DOTS_PLATFORM"')
+            selected = repo/'profiles'/platform/'config.json'
+            selected.write_text(json.dumps(dict(schema=2, settings=dict(DOTS_INIT_COMMANDS='0'))))
+            self.assertEqual(run('-dc', early), '0|yes|quiet|' + str(repo/'bin'))
+            selected.unlink()
+            self.assertEqual(run('-dc', early), '1|yes|quiet|' + str(repo/'bin'))
+            self.assertEqual(calls.read_text().splitlines().count(str(repo/'lib/dots/startup.py')), 2)
+
+            calls.write_text('')
+            (home/'.zshrc').unlink()
+            (home/'.zshrc').symlink_to(repo/'shells/zsh/zshrc')
+            env['XDG_CACHE_HOME'] = str(home/'fresh-login-cache')
+            self.assertEqual(run('-dlic', 'print -r -- "${dots_options[DOTS_INIT_COMMANDS]}|${_DOTS_COMPINIT_READY}"'), '0|1')
+            self.assertEqual(calls.read_text().splitlines().count(str(repo/'lib/dots/startup.py')), 1)
+            blocked = home/'ordinary-file'
+            blocked.write_text('keep\n')
+            env['XDG_CACHE_HOME'] = str(blocked/'cache')
+            self.assertEqual(run('-dc', early), '1|yes|quiet|' + str(repo/'bin'))
+            self.assertEqual(blocked.read_text(), 'keep\n')
 
     def test_shellmod_uses_running_shell_and_corrected_alias(self):
         self.shell('''source "$DOTS/bin/lib/common.sh"
@@ -204,6 +337,50 @@ source "$DOTS/shells/zsh/integrations/tools.zsh"
 [[ $NVM_DIR == "$HOME/.nvm" && $NVM_FIXTURE_READY == yes ]]
 ''')
 
+    def test_tool_activation_ignores_failed_output_and_retries(self):
+        self.shell('''source "$DOTS/bin/lib/common.sh"
+has() { [[ $1 == mise ]]; }
+mise() { print -r -- 'export RAN_PARTIAL=yes'; return 3; }
+source "$DOTS/shells/zsh/integrations/tools.zsh"
+[[ -z ${RAN_PARTIAL:-} && -z ${_DOTS_TOOL_READY[mise]:-} ]] || exit 1
+mise() { print -r -- 'export ACTIVATED=yes'; }
+source "$DOTS/shells/zsh/integrations/tools.zsh"
+[[ $ACTIVATED == yes && ${_DOTS_TOOL_READY[mise]:-} == 1 ]] || exit 2
+''')
+
+    def test_first_pip_and_usage_completion_preserve_shell_providers(self):
+        self.shell('''source "$DOTS/bin/lib/common.sh"
+source "$DOTS/shells/zsh/core/cache.zsh"
+has() { [[ $1 == usage ]]; }
+pip() { print -r -- 'function __pip() { PIP_FIXTURE=ready; }'; }
+usage() { print -r -- 'typeset -g USAGE_FIXTURE=ready'; }
+source "$DOTS/shells/zsh/integrations/tools.zsh"
+[[ -z ${PIP_FIXTURE:-}${USAGE_FIXTURE:-} ]] || exit 1
+_dots_zsh_pip_completion || exit 2
+_dots_zsh_usage_completion || exit 3
+[[ $PIP_FIXTURE == ready && $USAGE_FIXTURE == ready ]] || exit 4
+cached=("$XDG_CACHE_HOME"/dots/zsh/*/{pip,usage}.zsh(N))
+(( ! $#cached )) || exit 5
+''')
+
+    def test_uv_script_and_function_shims_never_persist_session_values(self):
+        directory = self.root/'commands'
+        directory.mkdir()
+        shim = directory/'uv'
+        shim.write_text('#!' + ZSH + '\nprint -r -- "typeset -g UV_FIXTURE=$SESSION_FIXTURE"\n')
+        shim.chmod(0o700)
+        self.shell('''source "$DOTS/shells/zsh/core/cache.zsh"
+path=("$HOME/commands" $path)
+export SESSION_FIXTURE=from_script
+_dots_source_generated uv uv generate-shell-completion zsh
+[[ $UV_FIXTURE == from_script ]] || exit 1
+uv() { print -r -- 'typeset -g UV_FIXTURE=from_function'; }
+_dots_source_generated uv uv generate-shell-completion zsh
+[[ $UV_FIXTURE == from_function ]] || exit 2
+cached=("$XDG_CACHE_HOME"/dots/zsh/*/uv.zsh(N))
+(( ! $#cached ))
+''')
+
     def test_startup_without_optional_tools_or_plugins(self):
         from zsh_fixture import fixture, run
         root, repo, env = fixture(plugins=False)
@@ -218,10 +395,12 @@ source "$DOTS/shells/zsh/integrations/tools.zsh"
             link.symlink_to(repo / 'shells/zsh' / name)
         minimal = root / 'minimal-bin'
         minimal.mkdir()
-        for name in ('bash', 'zsh', 'mkdir', 'rm', 'mv'):
+        # Python and stat prepare a cold checkout. Leave every optional
+        # generator and plugin manager out of the executable search path.
+        for name in ('bash', 'zsh', 'python3', 'stat', 'mkdir', 'rm', 'mv'):
             exe = shutil.which(name)
             (minimal / name).symlink_to(exe)
-        env['PATH'] = str(minimal)
+        env.update(PATH=str(minimal), DOTS_INIT_THEME='0')
         for name in ('batpipe', 'batman'):
             (repo / 'scripts' / name).unlink()
         (Path(env['HOME']) / '.fzf.zsh').unlink()
@@ -232,7 +411,17 @@ source "$DOTS/shells/zsh/integrations/tools.zsh"
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertNotIn('command not found', p.stderr)
 
+    def installed_plugin_stubs(self):
+        for name in ['zsh-users---zsh-completions', 'Aloxaf---fzf-tab',
+                     'zdharma-continuum---fast-syntax-highlighting',
+                     'zsh-users---zsh-autosuggestions', 'Giammarco-Ferranti---deja',
+                     'zsh-users---zsh-history-substring-search']:
+            plugin = self.root / 'data/zinit/plugins' / name
+            plugin.mkdir(parents=True, exist_ok=True)
+            (plugin / (name.split('---')[1] + '.plugin.zsh')).touch()
+
     def suggestion_shell(self, code):
+        self.installed_plugin_stubs()
         return self.shell('''source "$DOTS/shells/zsh/integrations/plugins.zsh"
 typeset -a loaded ice
 zinit() {
@@ -304,6 +493,8 @@ _dots_suggestion_plugin
 ''')
 
     def binary_shell(self, code, executable=True):
+        self.installed_plugin_stubs()
+        (self.root / "data/zinit/plugins/dots-deja-binary").mkdir(exist_ok=True)
         directory = self.root / 'release space ü'
         directory.mkdir(exist_ok=True)
         binary = directory / 'deja'
@@ -334,7 +525,7 @@ zinit() {
 }
 ''' + code)
 
-    def test_deja_installs_before_plugin_and_reload_is_quiet(self):
+    def test_deja_activates_cached_binary_before_plugin_and_reload_is_quiet(self):
         p = self.binary_shell('''_dots_suggestion_plugin
 [[ $_DOTS_SUGGESTION_ENGINE == deja && $downloads == 1 ]] || exit 1
 [[ $loaded == Giammarco-Ferranti/deja ]] || exit 2
@@ -398,7 +589,7 @@ _dots_suggestion_plugin
 [[ $_DOTS_SUGGESTION_ENGINE == deja && $downloads == 0 ]]
 ''')
 
-    def test_deja_real_zinit_download_and_cached_load(self):
+    def test_deja_real_zinit_uses_cached_release_without_downloading(self):
         manager = Path(os.environ['HOME']) / '.local/share/zinit/zinit.git'
         if not (manager / 'zinit.zsh').is_file():
             self.skipTest('public Zinit checkout unavailable')
@@ -407,8 +598,9 @@ _dots_suggestion_plugin
         binary = self.root / 'deja'
         binary.write_text('#!' + ZSH + '\n[[ $1 == --version ]]\n')
         binary.chmod(0o700)
-        with tarfile.open(self.root / 'release.tar.gz', 'w:gz') as archive:
-            archive.add(binary, arcname='deja')
+        cached = self.root / 'zinit space ü/plugins/dots-deja-binary'
+        cached.mkdir(parents=True)
+        shutil.copy2(binary, cached / 'deja')
         plugin = self.root / 'zinit space ü/plugins/Giammarco-Ferranti---deja'
         plugin.mkdir(parents=True)
         (plugin / 'deja.plugin.zsh').write_text('typeset -g plugin_sourced=yes\n')
@@ -421,12 +613,7 @@ DOTS_PLATFORM=wsl
 MACHTYPE=x86_64
 .zinit-download-file-stdout() {
   print -r -- "$1" >> "$HOME/requests"
-  case $1 in
-    */latest) print -r -- '<a href="/Giammarco-Ferranti/deja/releases/tag/v0.0.1">release</a>';;
-    */expanded_assets/*) print -r -- '<a href="/Giammarco-Ferranti/deja/releases/download/v0.0.1/deja_0.0.1_linux_amd64.tar.gz">archive</a>';;
-    *.tar.gz) command cat "$HOME/release.tar.gz";;
-    *) return 1;;
-  esac
+  return 97
 }
 _dots_suggestion_plugin || exit 1
 [[ $_DOTS_SUGGESTION_ENGINE == deja && $plugin_sourced == yes ]] || exit 5
@@ -436,10 +623,9 @@ _dots_deja_binary || exit 3
 [[ $PATH == $before ]] || exit 4
 '''
         self.shell(setup)
-        requests = (self.root / 'requests').read_text()
-        self.assertIn('deja_0.0.1_linux_amd64.tar.gz', requests)
+        self.assertFalse((self.root / 'requests').exists())
         self.shell(setup)
-        self.assertEqual((self.root / 'requests').read_text(), requests)
+        self.assertFalse((self.root / 'requests').exists())
 
     def test_plugin_paths_keep_prefix_and_appended_provider_order(self):
         self.shell('''source "$DOTS/shells/zsh/integrations/plugins.zsh"
@@ -460,6 +646,10 @@ _dots_completion_plugins
             shutil.copy2(command, self.repo / 'bin' / command.name)
         shutil.copytree(REPO / 'themes/catppuccin/flavors', self.repo / 'themes/catppuccin/flavors')
         shutil.copy2(REPO / 'themes/catppuccin/theme.toml', self.repo / 'themes/catppuccin/theme.toml')
+        (self.repo/'default').mkdir()
+        for name in ('config.json', 'file-colors.toml', 'colors.toml', 'icons.toml'):
+            source = REPO/'default'/name
+            if source.is_file(): shutil.copy2(source, self.repo/'default'/name)
         src = self.repo / 'themes/catppuccin/src'
         src.mkdir(parents=True)
         (src / 'fzf.zsh').write_text('FZF_DEFAULT_OPTS+=" --color=$FLAVOR"\n')

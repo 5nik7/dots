@@ -47,7 +47,25 @@ $dotsInteractive = $dotsLaunchArgs -notcontains '-NonInteractive' -and
     ($dotsLaunchArgs -contains '-NoExit' -or
      -not ($dotsLaunchArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
 if ($dotsInteractive) {
-    Write-DotsDebugEvent begin 'shells/powershell/interactive.ps1' module
-    . (Join-Path $env:DOTS 'shells/powershell/interactive.ps1')
-    Write-DotsDebugEvent end 'shells/powershell/interactive.ps1' module ([int](-not $?))
+    $dotsProfilePrompt = $false
+    foreach ($dotsProfileStage in 'init', 'local') {
+        if ($dotsProfileStage -eq 'local') {
+            Write-DotsDebugEvent begin 'shells/powershell/interactive.ps1' module
+            . (Join-Path $env:DOTS 'shells/powershell/interactive.ps1')
+            Write-DotsDebugEvent end 'shells/powershell/interactive.ps1' module ([int](-not $?))
+        }
+        foreach ($dotsProfileDirectory in $global:DotsProfileShellDirs) {
+            $dotsProfileHook = Join-Path $dotsProfileDirectory ($dotsProfileStage + '.ps1')
+            if (Test-Path -LiteralPath $dotsProfileHook -PathType Leaf) {
+                $dotsBeforeProfilePrompt = $function:prompt
+                . $dotsProfileHook
+                if ($function:prompt -ne $dotsBeforeProfilePrompt -and $function:prompt -ne $global:_DotsPromptWrapper) {
+                    Install-DotsPrompt -Renderer $function:prompt
+                    if ($global:__ShellInteg_Installed) { __ShellInteg_Rearm }
+                    $dotsProfilePrompt = $true
+                }
+            }
+        }
+    }
+    Remove-Variable dotsProfilePrompt, dotsBeforeProfilePrompt, dotsProfileStage, dotsProfileDirectory, dotsProfileHook -ErrorAction Ignore
 }

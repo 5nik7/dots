@@ -26,9 +26,9 @@ def canonical(name):
 def icon_roles():
     # The shipped defaults declare the public icon vocabulary; profile-only
     # unknown entries remain readable without becoming advertised controls.
-    from style_config import read
-    return {canonical(name) for name in read(Path(__file__).resolve().parents[2]/'default/icons.toml')
-            if not name.startswith('apps.')}
+    from preference_files import style_layers
+    layers = style_layers(Path(__file__).resolve().parents[2]/'default', 'icons')
+    return {canonical(name) for _, values in layers for name in values if not name.startswith('apps.')}
 
 
 def split(name):

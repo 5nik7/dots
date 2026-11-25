@@ -1,6 +1,6 @@
 """Profile configuration browser; selection is separate from reviewed writes."""
 from contextlib import nullcontext
-from dataclasses import asdict, dataclass, replace
+from dataclasses import dataclass, replace
 import copy
 import io
 import json
@@ -23,7 +23,7 @@ from menu_input import prompt
 from resources import clean, cells
 from picker_style import fit, picker_colors, named_styles
 
-CATEGORIES = ('all', 'icons', 'colors', 'formatting', 'apps', 'files', 'profile', 'settings', 'environment')
+from config_sections import CATEGORIES, SHARED_CATEGORIES
 HELP = ('List and Get inspect configuration; Set edits reviewed values.\n'
         'Get and Set choose a category before selecting an option.\n'
         'Enter: style fields / details / actions   Alt-F: filter / sort\n'
@@ -72,6 +72,7 @@ class Row:
     mapping: object = None
     explanation: object = None
     constraints: object = None
+    visual_key: str = ''
 
     @property
     def group(self): return self.key.split('.', 1)[0]
@@ -98,14 +99,14 @@ class Inventory:
         from config_values import Controls,parts,lookup,MISSING,constraints,activation
         self.controls=Controls(self.root,self.selected,defaults=self.defaults)
         self.rows = []
-        from preference_files import appearance_file
+        from preference_files import appearance_file, uses_unified
         destination_root=self.root/'default' if self.defaults else Path(self.selected['layers'][-1]['root'])
-        destination=str(destination_root/'config.json')
+        unified = uses_unified(destination_root, self.root)
         from markdown_viewer import availability
         for key in self.controls.keys():
             if key in ('formatting','apps'):continue
             resolved=self.controls.resolve(key)
-            destination=str(destination_root/appearance_file(key))
+            destination = str(destination_root / ('config.json' if unified else appearance_file(key)))
             self.rows.append(Row(key,resolved['value'],resolved['source'] or 'Not configured',destination,
                                  'Markdown renderer; next document view; available: ' + availability() if key=='apps.cli.markdown_viewer' else
                                  'Root usage logo gradient; next invocation, no theme refresh' if key=='apps.cli.logo_gradient' else
@@ -139,50 +140,48 @@ class Inventory:
                 result=native.resolve(key)
                 self.rows.append(Row(key,result['value'],result['source'],str(native.original),
                                      result['activation']+'; native TOML, no profile inheritance',result['source']==str(native.original),'codex',constraints=toast_constraints(key)))
+        from config_completion import owner_value_spec, setting_value_spec
         from profile_config import settings as preference_settings
-        definitions=schema()
+        definitions = {**schema(), 'files.backup': ('boolean', False, 'Back up occupied managed file destinations')}
         declared=preference_settings(self.root,self.selected,defaults=self.defaults)
-        for key,(kind,default,description) in {**definitions,'files.backup':('boolean',False,'Back up occupied managed file destinations')}.items():
+        for key,(kind,default,description) in definitions.items():
             row=declared.get(key,dict(value=default,source='Built-in default'))
-            from config_completion import value_spec
             target=str(destination_root/'config.json')
-            self.rows.append(Row('settings.'+key,row['value'],row['source'],target,description,row['source']!='Built-in default' and Path(row['source']).parent==destination_root,kind,constraints=value_spec(self.root,'settings.'+key)))
+            self.rows.append(Row('settings.'+key,row['value'],row['source'],target,description,row['source']!='Built-in default' and Path(row['source']).parent==destination_root,kind,constraints=setting_value_spec(kind)))
         if not self.defaults:
             destination = str(Path(self.selected['layers'][-1]['root'])/'profile.json')
             leaf = self.selected['layers'][-1]
             self.rows.append(Row('profile.alias', leaf.get('alias'), destination if leaf.get('alias') else 'Canonical profile name only',
                                  destination, 'Additional variable prefix and map; does not replace the canonical name', 'alias' in leaf))
-            definitions = schema()
-            settings = {name: default for name, (_, default, _) in definitions.items()}
-            settings['files.backup'] = False
-            values = dict(settings=settings, environment={})
-            sources = {('settings', key): 'Built-in default' for key in settings}
+            declared_env = {}
             for layer in self.selected['layers']:
-                for group in values:
-                    values[group].update(layer.get(group, {}))
-                    sources.update({(group, key): str(Path(layer['root'])/'profile.json')
-                                    for key in layer.get(group, {})})
-            for group in ('environment',):
-                for key, value in values[group].items():
-                    kind, _, description = definitions.get(key, ('text', None, 'Literal environment declaration'))
-                    if key == 'files.backup': kind, description = 'boolean', 'Back up occupied managed file destinations'
-                    source = sources[group, key]
-                    from config_completion import value_spec
-                    self.rows.append(Row(group+'.'+key, value, source, destination, description,
-                                         source == destination, kind,constraints=value_spec(self.root,group+'.'+key)))
+                source = str(Path(layer['root'])/'profile.json')
+                declared_env.update((key, (value, source)) for key, value in layer.get('environment', {}).items())
+            for key, (value, source) in declared_env.items():
+                kind, _, description = definitions.get(key, ('text', None, 'Literal environment declaration'))
+                path = 'environment.' + key
+                self.rows.append(Row(path, value, source, destination, description, source == destination, kind,
+                                     constraints=owner_value_spec(self.root, path, self.controls.defaults)))
+            from config_namespace import environment_rows
+            for variable, (value, source) in environment_rows(self.root,self.selected,runtime=True).items():
+                if variable not in declared_env:
+                    observed = source.startswith('runtime')
+                    self.rows.append(Row('environment.'+variable, value, source, 'Runtime environment' if observed else destination,
+                                         'Runtime export' if observed else 'Application environment default',
+                                         kind='observed' if observed else 'text'))
             from profile_config import file_rows
             for identity, layer, item in file_rows(self.root, self.selected):
                 source = str(Path(layer['root']) / 'profile.json')
                 self.rows.append(Row('files.'+identity, item['source'], source, destination,
                                      'Managed file mapping · '+identity, source == destination,
                                      'mapping', dict(item, owner=identity.split(':', 1)[0])))
-        from config_refresh import explain, active, read_json
+        from config_refresh import active, read_json
         from files.file_platform import state_root
         try:
             generation = active(state_root())
-            published = read_json(generation/'preferences.json') if generation else {}
-        except (OSError, ValueError): published = {}
-        active_profile = profile_context(self.root)['current']
+            self.published = read_json(generation/'preferences.json') if generation else {}
+        except (OSError, ValueError): self.published = {}
+        self.active_profile = profile_context(self.root)['current']
         from style_catalog import known_keys,constraints as visual_constraints
         from config_keys import canonical
         for group in self.styles.values:
@@ -192,10 +191,13 @@ class Inventory:
                 value,source=resolved['value'],resolved['source'] or 'Not configured'
                 kind = 'boolean' if group == 'colors' and key.rsplit('.', 1)[-1] in ATTRS else 'color' if group == 'colors' else 'text'
                 self.rows.append(Row(group+'.'+key, value, source, destination,
-                                     'Visual preference · '+group, source == destination, kind, explanation=explain(group+'.'+key, _style=self.styles, _published=published, _active=active_profile, defaults=self.defaults)['consumers'],constraints=visual_constraints(group,key)))
+                                     'Visual preference · '+group, source == destination, kind, constraints=visual_constraints(group,key), visual_key=group+'.'+key))
         from config_keys import canonical,description
         self.rows=list({canonical(row.key):replace(row,key=canonical(row.key),description=description(row.key)+'; '+row.description) for row in self.rows}.values())
         self.rows.sort(key=lambda row: (CATEGORIES.index(row.group), row.key))
+        from config_namespace import Namespace
+        self.namespace = Namespace((row.key for row in self.rows),
+                                   files=((row.key[6:], row.mapping) for row in self.rows if row.mapping))
         self.check()
 
     def check(self):
@@ -204,8 +206,17 @@ class Inventory:
 
     def find(self, key):
         from config_keys import canonical
-        key=canonical(key)
-        return next((row for row in self.rows if row.key == key), None)
+        key=canonical(self.namespace.owner(key))
+        row = next((row for row in self.rows if row.key == key), None)
+        return self.describe(row) if row else None
+
+    def describe(self, row):
+        if not row.visual_key:
+            return row
+        from config_refresh import explain
+        bindings = explain(row.visual_key, _style=self.styles, _published=self.published,
+                           _active=self.active_profile, defaults=self.defaults)['consumers']
+        return replace(row, explanation=bindings)
 
     def app_row(self, row, app):
         name = re.sub(r'^apps\.[^.]+\.', '', row.key.split('.', 1)[1])
@@ -245,7 +256,7 @@ class Draft:
         if isinstance(plan, StylePlan):
             plan.edit(name, value, unset=reset)
             styles = Styles(self.inventory.root, self.inventory.selected, defaults=self.inventory.defaults,
-                            replacements={plan.path: plan.data})
+                            replacements=plan.replacements)
             proposed = styles.resolve(self.row.group, name)['value']
         elif self.row.kind=='native':
             from config_values import lookup,parts
@@ -399,24 +410,36 @@ def show(text, *, title, context):
     return select(title, [('back','Back')], context, text)
 
 
-def tree_rows(inventory, branch='', search=False):
+def tree_rows(inventory, branch='', search=False, query=''):
     """Show editable endpoints; expand style records only when selected."""
     from config_completion import prefixes
     from config_keys import under
     fields={'fg','bg','sp',*ATTRS}
     groups={}
-    for row in inventory.rows:
+    category = branch.partition('.')[0]
+    rows = inventory.rows
+    if branch and category not in CATEGORIES or not branch and query:
+        rows = [replace(row, key=inventory.namespace.query_key(row.key, branch or query)) for row in rows]
+    elif category in ('apps','colors','icons','formatting','files','settings','env'):
+        rows = [replace(row, key=inventory.namespace.query_key(row.key, branch)
+                        if row.mapping and branch != category else inventory.namespace.view_key(row.key, category))
+                for row in rows]
+    if search and not branch:
+        unique = {row.key: row for row in rows}
+        return [unique[key] for key in sorted(unique)]
+    for row in rows:
         chain=prefixes(row.key)
         if len(chain)>1 and row.key[len(chain[-2])+1:] in fields and (
-                row.group=='colors' or row.key.startswith(('apps.nvim.highlights[','apps.wttr.icon_colors','apps.wttr.night_icon_colors'))):
+                row.group=='colors' or inventory.namespace.owner(row.key).startswith(('colors.', 'apps.nvim.highlights[','apps.wttr.icon_colors','apps.wttr.night_icon_colors'))):
             groups.setdefault(chain[-2],[]).append(row)
     if branch in groups:return groups[branch]
     result={}
-    for row in inventory.rows:
+    for row in rows:
         if branch and not under(row.key,branch):continue
         chain=prefixes(row.key)
         key=next((key for key in reversed(chain) if key in groups),None) if not search else None
         if key:
+            if key in result:continue
             children=groups[key]
             sources={child.source for child in children if child.value is not None}
             destinations={child.destination for child in children}
@@ -431,7 +454,7 @@ def tree_rows(inventory, branch='', search=False):
 
 def filter_choices(inventory,category,frame):
     from config_completion import prefixes
-    categories=('all','icons','colors','formatting','apps','settings') if inventory.defaults else CATEGORIES
+    categories=SHARED_CATEGORIES if inventory.defaults else CATEGORIES
     choices=[('category:'+name,'All categories' if name=='all' else name.title()) for name in categories]
     if category!='all':
         prefix=frame.get('filter_prefix') or category
@@ -463,7 +486,7 @@ def pick(inventory, category, frame, context):
     gap=min(formatting.get('label_gap',1),max(0,ui.width-indent-8))
     key_width=column_width(formatting.get('label_width',0),ui.width,indent=indent,gap=gap)
     branch=frame.get('branch', '' if category=='all' else category)
-    rows=tree_rows(inventory,branch,frame.get('search_all',False))
+    rows=tree_rows(inventory,branch,frame.get('search_all',False),frame.get('query',''))
     from config_keys import under
     if frame.get('filter_prefix'):rows=[row for row in rows if under(row.key,frame['filter_prefix'])]
     order=frame.get('sort','key')
@@ -476,12 +499,22 @@ def pick(inventory, category, frame, context):
         key=pad(row.key,key_width,formatting.get('alignment','left'))
         prefix=(' '*indent+ui.paint(row.key,styles['blue'])+'\n'+' '*(indent+key_width+gap)
                 if key_width and cells(row.key)>key_width else ' '*indent+ui.paint(key,styles['blue'])+' '*gap)
-        labels.append(prefix+fit(display(row.key, row.value, ui=ui), max(8, ui.width//3))+
+        labels.append(prefix+fit(display(inventory.namespace.owner(row.key), row.value, ui=ui), max(8, ui.width//3))+
                       ui.paint(' · '+origin, styles['muted']))
     # Snapshot inert rows once; format only the selected preview. Rendering every
     # nullable icon/style binding here makes opening All grow with the vocabulary.
-    snapshots = [asdict(replace(row, value=display(row.key, row.value)))
-                 if row.group == 'environment' else asdict(row) for row in rows]
+    snapshots = []
+    for row in rows:
+        owner = inventory.namespace.owner(row.key)
+        if owner.startswith('environment.'):
+            row = replace(row, value=display(owner, row.value))
+        record = vars(inventory.describe(row)).copy()
+        record.pop('visual_key')
+        if record['explanation']:
+            fields = ('app', 'value', 'source', 'refresh', 'resolved_color', 'fallback')
+            record['explanation'] = [{key: binding[key] for key in fields if key in binding}
+                                     for binding in record['explanation']]
+        snapshots.append(record)
     notice = '\n'.join(textwrap.wrap(clean(frame.get('notice', '')), max(1,width-4)))
     if not rows: notice = 'No options in this category'+('\n'+notice if notice else '')
     mode = frame.get('mode', 'set')
@@ -504,8 +537,9 @@ def pick(inventory, category, frame, context):
             except SelectionEvent as event:
                 if event.index is not None: frame['selected'] = rows[event.index].key
                 raise
-    frame['selected'] = rows[result[0]].key
-    return rows[result[0]]
+    selected = rows[result[0]]
+    frame['selected'] = selected.key
+    return inventory.describe(selected)
 
 
 def input_value(row, initial, context, *, root=None, profile=None):
@@ -578,7 +612,9 @@ def file_action(root, scope, row, action, context, new_id=None):
 def actions(inventory, row, context):
     while True:
         items = [('details','Details')]
-        if row.mapping:
+        if row.kind == 'observed':
+            pass
+        elif row.mapping:
             active = profile_context(inventory.root)
             if active['layers'] and inventory.scope == active['layers'][-1]['id']:
                 items += [('mapping','Edit mapping with dots files'), ('rename','Rename ID'), ('browse','Browse managed files')]
@@ -647,6 +683,7 @@ def _browse(root, selected, args):
         if row is None and not inventory.defaults and re.fullmatch(r'environment\.[A-Z][A-Z0-9_]*',key):
             row = Row(key,None,'Not set',str(Path(selected['layers'][-1]['root'])/'profile.json'),'Literal environment declaration')
         if row is None: raise ValueError('unknown or noneditable configuration key: '+args.key)
+        if row.kind == 'observed': raise ValueError('runtime environment inspection is read-only')
         if row.mapping: return file_action(root,scope,row,'mapping',context)
         if row.owner_group in ('icons','colors'):
             from style_catalog import supported
@@ -681,7 +718,7 @@ def _browse(root, selected, args):
             category = 'all' if mode == 'list' else None
             branch=None
         if category is None:
-            categories = ('all','icons','colors','formatting','apps','settings') if scope == 'defaults' else CATEGORIES
+            categories = SHARED_CATEGORIES if scope == 'defaults' else CATEGORIES
             category = select('Category', [(name,name.title()) for name in categories], context)
             if category is None:
                 mode = None
@@ -724,7 +761,7 @@ def _browse(root, selected, args):
                         elif action=='sort':target['sort']=choice
                 if event.action == 'help': show(HELP, title='Help', context=context)
                 elif event.action == 'category':
-                    categories = ('all','icons','colors','formatting','apps','settings') if scope == 'defaults' else CATEGORIES
+                    categories = SHARED_CATEGORIES if scope == 'defaults' else CATEGORIES
                     category = select('Category', [(name,name.title()) for name in categories], context) or category
                     branch=None
                 elif event.action == 'scope':

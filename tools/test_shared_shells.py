@@ -45,6 +45,44 @@ source "$DOTS/shells/shared/functions.sh"
 source "$DOTS/shells/shared/aliases.sh"
 '''
 
+    def test_fish_conf_d_folds_keep_native_and_checkout_sources_idempotent(self):
+        code = '''
+set -g calls 0
+function fzf_configure_bindings
+    set -g calls (math $calls + 1)
+end
+for i in 1 2
+    for name in autopair done fzf usage
+        source "$DOTS/shells/fish/conf.d/$name.fish"
+    end
+end
+'''
+        noninteractive = self.shell('fish', code + 'printf "%s" "$calls"')
+        self.assertEqual(noninteractive.stdout, '0')
+        result = self.shell('fish', code + '''functions -q _autopair_fish_key_bindings; or exit 7
+functions -q _fzf_uninstall; or exit 8
+printf "%s" "$calls"
+''', interactive=True)
+        self.assertEqual(result.stdout, '1')
+
+    def test_theme_shortcut_refresh_runs_once_per_prompt(self):
+        code = self.fixture.generated('bash') + '''
+source "$DOTS/lib/dots/themes/shell.bash"
+_dots_theme_commands() { calls=$((calls + 1)); }
+for theme in 0 1; do
+  for refresh in 0 1; do
+    for completion in 0 1; do
+      dots_options[DOTS_INIT_THEME]=$theme dots_options[DOTS_THEME_AUTO_UPDATE]=$refresh
+      dots_options[DOTS_INIT_COMPLETION]=$completion calls=0
+      false
+      _dots_shell_prompt
+      [[ $? == 1 && $calls == "$completion" ]] || exit 7
+    done
+  done
+done
+'''
+        self.shell('bash', code, interactive=True)
+
     def full_bash(self):
         return 'source "$DOTS/shells/bash/.bashrc" || exit 90\n'
 
@@ -57,9 +95,21 @@ typeset -f _dots_bash_prompt >/dev/null && exit 2
 ''' + self.full_bash() + self.full_bash() + '''
 [[ $MISE_COUNT == 1 && $LOCAL_FIXTURE == yes ]] || exit 3
 [[ $_FIXTURE_COMPLETION_BASE == yes ]] || exit 4
-[[ ! ${_DOTS_BASH_TOOL_READY[rbenv]+x} ]] || exit 5
+[[ ! ${_DOTS_TOOL_READY[rbenv]+x} ]] || exit 5
 typeset -f _dots_bash_prompt >/dev/null || exit 6
 ''', interactive=True)
+
+    def test_bash_login_shares_helpers_and_preserves_custom_profile(self):
+        profile = self.home/'.profile'
+        profile.symlink_to(self.repo/'shells/profile')
+        (self.home/'.bashrc').symlink_to(self.repo/'shells/bash/.bashrc')
+        with (self.repo/'bin/lib/common.sh').open('a') as common:
+            common.write('\n((_fixture_common_count += 1)) || :\n')
+        login = 'source "$DOTS/shells/bash/.bash_profile"\n'
+        self.shell('bash', login + '[[ $_fixture_common_count == 1 && ! ${_dots_login_common+x} ]]', interactive=True)
+        profile.unlink()
+        profile.write_text('export _fixture_custom_login=ready\n')
+        self.shell('bash', login + '[[ $_fixture_common_count == 1 && $_fixture_custom_login == ready ]]', interactive=True)
 
     def test_function_loading_preserves_aliases_and_expansion_mode(self):
         for shell in ('bash', 'zsh'):
@@ -386,11 +436,11 @@ y || exit 3
         (self.home / '.bash_aliases').write_text("alias ll='fixture-list'\n")
         code = self.full_bash()
         self.shell('bash', code + '''
-[[ ! ${SHOULD_NOT_RUN+x} && ! ${_DOTS_BASH_TOOL_READY[mise]+x} ]] || exit 1
+[[ ! ${SHOULD_NOT_RUN+x} && ! ${_DOTS_TOOL_READY[mise]+x} ]] || exit 1
 [[ $(alias ll) == *fixture-list* ]] || exit 2
 function mise { printf '%s\\n' 'MISE_COUNT=$(( ${MISE_COUNT:-0} + 1 ))'; }
 ''' + code + code + '''
-[[ $MISE_COUNT == 1 && ${_DOTS_BASH_TOOL_READY[mise]} == 1 ]] || exit 3
+[[ $MISE_COUNT == 1 && ${_DOTS_TOOL_READY[mise]} == 1 ]] || exit 3
 [[ $- == *i* && $(set -o) == *'vi '* ]] || exit 4
 ''', interactive=True)
 
@@ -440,14 +490,52 @@ fixpath
         self.stub('uv', "printf '%s\\n' 'SHOULD_NOT_RUN=yes'; exit 1\n")
         code = self.full_bash()
         self.shell('bash', code + '''
-[[ ! ${SHOULD_NOT_RUN+x} && ! ${_DOTS_BASH_COMPLETION_READY[uv]+x} ]] || exit 1
-function uv { printf '%s\\n' 'UV_COUNT=$(( ${UV_COUNT:-0} + 1 ))'; }
+[[ $(complete -p uv) == *' -F _dots_bash_lazy_completion '* ]] || exit 1
+_dots_bash_lazy_completion uv && exit 2
+[[ ! ${SHOULD_NOT_RUN+x} ]] || exit 3
+function uv { printf '%s\\n' 'UV_COUNT=$(( ${UV_COUNT:-0} + 1 )); _fixture_uv() { COMPREPLY=(ready); }; complete -F _fixture_uv uv'; }
 ''' + code + code + '''
-[[ $UV_COUNT == 1 ]] || exit 2
-reload-completion uv || exit 3
-[[ $UV_COUNT == 2 ]] || exit 4
+[[ ! ${UV_COUNT+x} ]] || exit 4
+_dots_bash_lazy_completion uv
+[[ $? == 124 && $UV_COUNT == 1 && $(complete -p uv) == *' -F _fixture_uv '* ]] || exit 6
+_fixture_uv
+[[ ${COMPREPLY[*]} == ready ]] || exit 7
+reload-completion uv || exit 8
+[[ $UV_COUNT == 2 ]] || exit 9
 reload-completion command-without-provider 2>/dev/null && exit 5
 true
+''', interactive=True)
+
+    @unittest.skipUnless(shutil.which('uv'), 'uv unavailable')
+    def test_bash_native_uv_completion_cache_identity_and_private_mode(self):
+        tools = self.root / 'tools'
+        for name in ('uv', 'env', 'chmod'):
+            (tools/name).symlink_to(shutil.which(name))
+        second = self.root/'second'
+        second.mkdir()
+        (second/'uv').symlink_to(shutil.which('uv'))
+        self.env['SECOND_BIN'] = str(second)
+        self.env['PRIVATE_FIXTURE'] = 'only-in-caller-environment'
+        self.shell('bash', self.full_bash() + '''
+_dots_bash_lazy_completion uv; [[ $? == 124 ]] || exit 1
+template="$XDG_CACHE_HOME/dots/bash/$BASH_VERSION/uv.bash"
+[[ -s $template && $(stat -c '%a' -- "$template") == 600 ]] || exit 2
+metadata=$(stat -c '%i:%y' -- "$template")
+_dots_bash_uv_template uv generate-shell-completion bash || exit 3
+[[ $(stat -c '%i:%y' -- "$template") == "$metadata" && $(<"$template") != *"$PRIVATE_FIXTURE"* ]] || exit 4
+descriptor=$REPLY
+( PATH="$SECOND_BIN:$PATH"; _dots_bash_uv_template uv generate-shell-completion bash ) || exit 5
+[[ $(stat -c '%i:%y' -- "$template") != "$metadata" ]] || exit 6
+IFS= read -r held < "/dev/fd/$descriptor"
+IFS= read -r other < "$template"
+[[ $held != "$other" ]] || exit 7
+source "/dev/fd/$descriptor" && [[ $(complete -p uv) != *lazy_completion* ]] || exit 8
+exec {descriptor}<&-
+printf '%s\n' 'export UNTRUSTED=yes' >> "$template"
+chmod 666 "$template"
+PATH="$SECOND_BIN:$PATH"
+_dots_bash_uv_completion uv generate-shell-completion bash
+[[ -z ${UNTRUSTED:-} && $(stat -c '%a' -- "$template") == 600 ]] || exit 9
 ''', interactive=True)
 
     def test_bash_runtime_files_and_private_module_boundary(self):
@@ -470,7 +558,7 @@ true
         self.shell('bash',hook + hook + '''
 [[ $NVM_COUNT == 1 && $NVM_COMPLETION == yes && $CARGO_FIXTURE == yes ]] || exit 1
 [[ ! ${PRIVATE_MUST_NOT_LOAD+x} ]] || exit 2
-[[ ! ${_DOTS_BASH_TOOL_READY[rbenv]+x} && ! -e $HOME/rbenv-ran ]] || exit 3
+[[ ! ${_DOTS_TOOL_READY[rbenv]+x} && ! -e $HOME/rbenv-ran ]] || exit 3
 ''',interactive=True)
 
     def test_bash_theme_refresh_builtin_unchanged_path(self):

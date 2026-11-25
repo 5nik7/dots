@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dots:summary=List categorized configuration and value sources
 # dots:usage=[CATEGORY...] [OPTIONS]
-# dots:argument=*|choice:all,icons,colors,formatting,apps,files,profile,settings,environment|Categories to list together; omit for all
+# dots:argument=*|choice:all,icons,colors,formatting,apps,files,profile,settings,environment,env|Categories to list together; omit for all
 # dots:option=--defaults||flag|Use shared color and icon defaults
 # dots:option=--profile||profile-id|Select a profile without activating it
 # dots:option=--json||flag|Print structured configuration data

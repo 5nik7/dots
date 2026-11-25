@@ -1,0 +1,46 @@
+#!/usr/bin/env sh
+# Private FZF adapter. Startup only passes its name to FZF.
+root=${DOTS:-"$(dirname -- "$0")/.."}
+if command -v python3 >/dev/null 2>&1; then
+    exec python3 -B "$root/lib/dots/fzf_preview.py" "$@"
+fi
+# The minimal path has no configured renderer. Bound untrusted input before
+# filtering it, including a text file consisting of one very long line.
+plain() {
+    if command -v perl >/dev/null 2>&1; then
+        head -c 131072 | perl -CSDA -pe 's/(?![\t\n])\p{Cc}//g'
+    else
+        head -c 131072 | LC_ALL=C tr -cd '\11\12\40-\176'
+    fi
+}
+if [ "$1" = --selection ]; then
+    [ -f "$2" ] && [ "$(wc -c < "$2")" -le 65536 ] || exit 1
+    IFS= read -r candidate < "$2" || :
+elif [ "$1" = --completion ]; then
+    if [ -z "$3" ]; then printf '%s\n' "$2" "$5" "$4" | plain; exit; fi
+    candidate=$3
+else
+    candidate=$1
+fi
+if [ -d "$candidate" ]; then
+    if command -v eza >/dev/null 2>&1; then
+        eza -1a --color=never -- "$candidate" | head -n 200 | plain
+    else
+        LC_ALL=C ls -1A -- "$candidate" | head -n 200 | plain
+    fi
+elif [ -f "$candidate" ]; then
+    mime=
+    if command -v file >/dev/null 2>&1; then mime=$(file --brief --mime-type -- "$candidate"); fi
+    case "$mime" in
+        text/*|application/json|application/xml|'') head -c 131072 -- "$candidate" | head -n 500 | plain ;;
+        image/*)
+            if command -v chafa >/dev/null 2>&1 && [ "$(wc -c < "$candidate")" -le 33554432 ]; then
+                chafa --format=symbols --colors=none --animate=off -- "$candidate" | plain
+            else
+                file -- "$candidate" | plain
+            fi ;;
+        *) file -- "$candidate" | plain ;;
+    esac
+else
+    printf '%s\n' "$candidate" | plain
+fi

@@ -214,8 +214,8 @@ print(json.dumps([chosen,args[args.index('--popup')+1]]))
 '''
         for width,position,background,sizes,expected in ((40,'center','#111111',('90%','50%'),'center,36,15'),
                 (80,'top','#eeeeee',('fit','fit'),'top,32,8'),(120,'right','#111111',('fill','fill'),'right,120,30')):
-            defaults=root/'default/config.json';doc=__import__('config_keys').document(json.loads(defaults.read_text()),public=False)
-            doc['apps']['menu']['popup'].update(position=position,width=sizes[0],height=sizes[1]);defaults.write_text(json.dumps(doc))
+            defaults=root/'default/config.json';doc=json.loads(defaults.read_text())
+            doc['apps']['menu']['formatting']['popup'].update(position=position,width=sizes[0],height=sizes[1]);defaults.write_text(json.dumps(doc))
             self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
             time.sleep(.15);self.drain(self.first[1]);self.drain(self.second[1])
             worker=self.worker(code,BG=background)

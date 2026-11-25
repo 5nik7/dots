@@ -1,205 +1,93 @@
 {
-  "schema": 1,
+  "schema": 2,
   "apps": {
     "completion": {
-      "enabled": true
+      "settings": {
+        "enabled": true
+      },
+      "colors": {
+        "branch": {
+          "fg": "magenta"
+        },
+        "candidate": {
+          "fg": "colors.ui.foreground.fg"
+        },
+        "command": {
+          "fg": "blue"
+        },
+        "description": {
+          "fg": "colors.ui.muted.fg"
+        },
+        "heading": {
+          "bold": true,
+          "fg": "cyan"
+        },
+        "option": {
+          "fg": "yellow"
+        },
+        "remote": {
+          "fg": "blue"
+        },
+        "separator": {
+          "fg": "colors.ui.muted.fg"
+        },
+        "tag": {
+          "fg": "cyan"
+        },
+        "value": {
+          "fg": "green"
+        }
+      }
     },
     "yazi": {
-      "tab_bar": {
-        "hide_in_tmux": true,
-        "only_with_multiple_tabs": true,
-        "labels": "auto",
-        "width": 20
+      "settings": {
+        "tab_bar": {
+          "hide_in_tmux": true,
+          "only_with_multiple_tabs": true,
+          "labels": "auto",
+          "width": 20
+        }
       }
     },
     "wiki": {
-      "list_details": "summary",
-      "search_snippets": true,
-      "search_urls": true,
-      "menu_descriptions": true,
-      "section_breadcrumbs": true,
-      "reader": "auto"
+      "settings": {
+        "list_details": "summary",
+        "search_snippets": true,
+        "search_urls": true,
+        "menu_descriptions": true,
+        "section_breadcrumbs": true,
+        "reader": "auto"
+      },
+      "formatting": {
+        "row_gap": 1
+      }
     },
     "fonts": {
-      "list_details": "full",
-      "provenance": true,
-      "menu_descriptions": true,
-      "preview": {
-        "enabled": true,
-        "sample": true
+      "settings": {
+        "list_details": "full",
+        "provenance": true,
+        "menu_descriptions": true,
+        "preview": {
+          "enabled": true,
+          "sample": true
+        }
+      },
+      "formatting": {
+        "preview": {
+          "position": "down",
+          "size": 33,
+          "wrap": true
+        }
       }
     },
     "cli": {
-      "markdown_viewer": "auto",
-      "progress": "both",
-      "logo_gradient": "installer",
-      "tagline": "Manage your dotfiles and more..."
-    },
-    "git": {
-      "view": "default"
-    },
-    "files": {
-      "list_view": "short",
-      "group_by_status": true
-    },
-    "bak": {
-      "store": "~/.bakstore",
-      "location": "store",
-      "mode": "move"
-    },
-    "setup": {
-      "logo": true,
-      "clear_screen": true,
-      "components": [
-        "core",
-        "files",
-        "themes",
-        "anodize",
-        "blastoff",
-        "pkgs",
-        "git-it"
-      ],
-      "resources": [],
-      "dependencies": false
-    },
-    "fzf": {
-      "default_opts": [
-        "--style=default",
-        "--layout=reverse",
-        "--height=~90%",
-        "--border=none",
-        "--info=hidden",
-        "--prompt= 󰅂 ",
-        "--pointer=▎",
-        "--marker=▎",
-        "--gutter=▎",
-        "--gutter-raw=▎",
-        "--no-separator",
-        "--no-scrollbar",
-        "-x",
-        "--smart-case",
-        "--ansi"
-      ],
-      "bindings": {
-        "ctrl-x": "toggle-preview",
-        "up": "up-match",
-        "down": "down-match",
-        "alt-r": "toggle-raw"
+      "settings": {
+        "markdown_viewer": "auto",
+        "progress": "both",
+        "logo_gradient": "installer",
+        "tagline": "Manage your dotfiles and more..."
       },
-      "preview_window": "right:hidden:50%:wrap-word:border-left",
-      "preview": null
-    },
-    "nvim": {
-      "options": {
-        "termguicolors": true,
-        "wrap": true,
-        "smartindent": true,
-        "cmdheight": 0,
-        "mousescroll": "ver:1,hor:1",
-        "number": null,
-        "relativenumber": null,
-        "expandtab": null,
-        "shiftwidth": null,
-        "tabstop": null,
-        "softtabstop": null,
-        "scrolloff": null,
-        "sidescrolloff": null,
-        "mouse": null,
-        "signcolumn": null,
-        "list": null,
-        "listchars": null
-      },
-      "globals": {
-        "autoformat": true,
-        "snacks_animate": true
-      },
-      "diagnostics": {
-        "virtual_text": null,
-        "signs": null,
-        "underline": null,
-        "update_in_insert": null,
-        "severity_sort": null
-      },
-      "theme": {
-        "transparent": true,
-        "terminal_colors": false
-      }
-    },
-    "tmux": {
-      "clock": {
-        "icon_mode": "none",
-        "auto_location": false,
-        "location_refresh_seconds": 21600,
-        "sun_times_max_stale_seconds": 604800
-      },
-      "battery": {
-        "critical": null,
-        "low": null,
-        "charging_style": false
-      },
-      "session": {
-        "name_source": "workspace",
-        "show_number": true,
-        "show_name": true,
-        "repository_icon": true,
-        "repository_color": false,
-        "multiple": false
-      },
-      "indicators": {
-        "copy": {
-          "text": "C"
-        },
-        "prefix": {
-          "text": "PRFX"
-        },
-        "zoom": {
-          "text": "ZOOM"
-        },
-        "working": {
-          "text": null
-        },
-        "waiting": {
-          "text": null
-        },
-        "attention": {
-          "text": null
-        },
-        "open": {
-          "text": null
-        },
-        "question": {
-          "text": null
-        }
-      },
-      "codex_usage": {
-        "enabled": true,
-        "refresh_seconds": 90,
-        "timeout_seconds": 15,
-        "max_stale_seconds": 300,
-        "green_at": 50,
-        "yellow_at": 25,
-        "orange_at": 10
-      }
-    },
-    "clipboard": {
-      "record_copies": true,
-      "max_entries": 500,
-      "max_age_days": 30,
-      "max_entry_bytes": 65536,
-      "deduplicate": true,
-      "exclude_patterns": [],
-      "poll_seconds": 2,
-      "preview": true,
-      "preview_lines": 8,
-      "list_limit": 50
-    },
-    "cleanup": {
-      "checkpoint_min_age_days": 30
-    }
-  },
-  "formatting": {
-    "apps": {
-      "cli": {
+      "formatting": {
         "indent": 2,
         "indent_style": "spaces",
         "tab_width": 2,
@@ -207,37 +95,331 @@
         "label_width": 10,
         "alignment": "left"
       },
-      "wiki": {
-        "row_gap": 1
-      },
-      "todo": {
-        "indent": 2,
-        "indent_style": "spaces",
-        "tab_width": 2,
-        "label_gap": 1,
-        "label_width": 10,
-        "row_gap": 1,
-        "alignment": "left",
-        "level_indent": 2,
-        "list_type": "tree"
-      },
-      "menu": {
-        "indent": 0,
-        "indent_style": "spaces",
-        "tab_width": 2,
-        "label_gap": 1,
-        "label_width": 0,
-        "row_gap": 0,
-        "alignment": "left",
-        "padding": 1,
-        "popup": {
-          "position": "center",
-          "width": "fit",
-          "height": "auto",
-          "border": "sharp"
+      "colors": {
+        "help": {
+          "argument": {
+            "fg": "green"
+          },
+          "command": {
+            "fg": "blue"
+          },
+          "description": {
+            "fg": "colors.ui.foreground.fg"
+          },
+          "executable": {
+            "fg": "cyan"
+          },
+          "heading": {
+            "fg": "colors.ui.heading.fg"
+          },
+          "option": {
+            "fg": "yellow"
+          },
+          "punctuation": {
+            "fg": "colors.ui.muted.fg"
+          },
+          "subcommand": {
+            "fg": "magenta"
+          },
+          "tagline": {
+            "fg": "accent"
+          }
+        },
+        "progress": {
+          "empty": {
+            "fg": "colors.ui.muted.fg"
+          },
+          "filled": {
+            "fg": "colors.ui.heading.fg"
+          },
+          "percentage": {
+            "fg": "colors.ui.heading.fg"
+          },
+          "surround": {
+            "fg": "colors.ui.muted.fg"
+          }
+        }
+      }
+    },
+    "git": {
+      "settings": {
+        "view": "default"
+      }
+    },
+    "files": {
+      "settings": {
+        "list_view": "short",
+        "group_by_status": true
+      }
+    },
+    "bak": {
+      "settings": {
+        "store": "~/.bakstore",
+        "location": "store",
+        "mode": "move"
+      }
+    },
+    "setup": {
+      "settings": {
+        "logo": true,
+        "clear_screen": true,
+        "components": [
+          "core",
+          "files",
+          "themes",
+          "anodize",
+          "blastoff",
+          "pkgs",
+          "git-it"
+        ],
+        "resources": [],
+        "dependencies": false
+      }
+    },
+    "fzf": {
+      "settings": {
+        "default_opts": [
+          "--style=default",
+          "--layout=reverse",
+          "--height=~90%",
+          "--border=none",
+          "--info=hidden",
+          "--prompt= 󰅂 ",
+          "--pointer=▎",
+          "--marker=▎",
+          "--gutter=▎",
+          "--gutter-raw=▎",
+          "--no-separator",
+          "--no-scrollbar",
+          "-x",
+          "--smart-case",
+          "--ansi"
+        ],
+        "bindings": {
+          "ctrl-x": "toggle-preview",
+          "up": "up-match",
+          "down": "down-match",
+          "alt-r": "toggle-raw"
+        },
+        "preview_window": "right:hidden:50%:wrap-word:border-left",
+        "preview": null,
+        "previewers": {
+          "completion": [
+            "description"
+          ],
+          "directory": [
+            "eza",
+            "listing"
+          ],
+          "markdown": [
+            "wiki",
+            "plain"
+          ],
+          "text": [
+            "highlight",
+            "bat",
+            "plain"
+          ],
+          "image": [
+            "kitty",
+            "chafa",
+            "metadata"
+          ],
+          "font": [
+            "font-sample",
+            "font-info",
+            "metadata"
+          ],
+          "binary": [
+            "file",
+            "metadata"
+          ]
         }
       },
-      "tmux": {
+      "colors": {
+        "bg": null,
+        "border": null,
+        "disabled": null,
+        "fg": null,
+        "footer": null,
+        "footer-bg": null,
+        "footer-border": null,
+        "footer-label": null,
+        "gutter": null,
+        "header": "muted",
+        "header-bg": null,
+        "header-border": null,
+        "header-label": null,
+        "hl": null,
+        "info": null,
+        "input-bg": null,
+        "input-border": null,
+        "input-fg": null,
+        "input-label": null,
+        "label": null,
+        "list-bg": null,
+        "list-border": null,
+        "list-label": null,
+        "marker": null,
+        "nomatch": null,
+        "nth": null,
+        "pointer": null,
+        "preview-bg": null,
+        "preview-border": null,
+        "preview-fg": null,
+        "preview-label": null,
+        "preview-scrollbar": null,
+        "prompt": "accent",
+        "query": null,
+        "scrollbar": null,
+        "selected-bg": null,
+        "selected-fg": null,
+        "separator": null,
+        "spinner": null,
+        "bg+": null,
+        "fg+": "accent",
+        "hl+": null,
+        "ui": {
+          "cursor": {
+            "fg": "accent"
+          }
+        }
+      }
+    },
+    "nvim": {
+      "settings": {
+        "options": {
+          "termguicolors": true,
+          "wrap": true,
+          "smartindent": true,
+          "cmdheight": 0,
+          "mousescroll": "ver:1,hor:1",
+          "number": null,
+          "relativenumber": null,
+          "expandtab": null,
+          "shiftwidth": null,
+          "tabstop": null,
+          "softtabstop": null,
+          "scrolloff": null,
+          "sidescrolloff": null,
+          "mouse": null,
+          "signcolumn": null,
+          "list": null,
+          "listchars": null
+        },
+        "globals": {
+          "autoformat": true,
+          "snacks_animate": true
+        },
+        "diagnostics": {
+          "virtual_text": null,
+          "signs": null,
+          "underline": null,
+          "update_in_insert": null,
+          "severity_sort": null
+        },
+        "theme": {
+          "transparent": true,
+          "terminal_colors": false
+        }
+      },
+      "colors": {
+        "highlights": {},
+        "icon_styles": {}
+      },
+      "icons": {},
+      "formatting": {
+        "lualine": {
+          "sections": {
+            "a": [
+              "mode"
+            ],
+            "b": [],
+            "c": [
+              "root",
+              "diagnostics",
+              "filetype",
+              "path",
+              "symbols"
+            ],
+            "x": [
+              "profiler",
+              "debug",
+              "diff"
+            ],
+            "y": [
+              "progress",
+              "location"
+            ],
+            "z": []
+          },
+          "padding_left": null,
+          "padding_right": null,
+          "component_separator_left": "",
+          "component_separator_right": "",
+          "section_separator_left": "",
+          "section_separator_right": ""
+        }
+      }
+    },
+    "tmux": {
+      "settings": {
+        "clock": {
+          "icon_mode": "none",
+          "auto_location": false,
+          "location_refresh_seconds": 21600,
+          "sun_times_max_stale_seconds": 604800
+        },
+        "battery": {
+          "critical": null,
+          "low": null,
+          "charging_style": false
+        },
+        "session": {
+          "name_source": "workspace",
+          "show_number": true,
+          "show_name": true,
+          "repository_icon": true,
+          "repository_color": false,
+          "multiple": false
+        },
+        "indicators": {
+          "copy": {
+            "text": "C"
+          },
+          "prefix": {
+            "text": "PRFX"
+          },
+          "zoom": {
+            "text": "ZOOM"
+          },
+          "working": {
+            "text": null
+          },
+          "waiting": {
+            "text": null
+          },
+          "attention": {
+            "text": null
+          },
+          "open": {
+            "text": null
+          },
+          "question": {
+            "text": null
+          }
+        },
+        "codex_usage": {
+          "enabled": true,
+          "refresh_seconds": 90,
+          "timeout_seconds": 15,
+          "max_stale_seconds": 300,
+          "green_at": 50,
+          "yellow_at": 25,
+          "orange_at": 10
+        }
+      },
+      "formatting": {
         "position": "top",
         "rows": 0,
         "main_row": null,
@@ -375,46 +557,672 @@
           "alignment": "right"
         }
       },
-      "nvim": {
-        "lualine": {
-          "sections": {
-            "a": [
-              "mode"
-            ],
-            "b": [],
-            "c": [
-              "root",
-              "diagnostics",
-              "filetype",
-              "path",
-              "symbols"
-            ],
-            "x": [
-              "profiler",
-              "debug",
-              "diff"
-            ],
-            "y": [
-              "progress",
-              "location"
-            ],
-            "z": []
+      "colors": {
+        "battery": {
+          "icon": {
+            "bg": "dark_background"
           },
-          "padding_left": null,
-          "padding_right": null,
-          "component_separator_left": "",
-          "component_separator_right": "",
-          "section_separator_left": "",
-          "section_separator_right": ""
+          "spacer": {
+            "bg": "dark_background"
+          },
+          "surround": {
+            "bg": "dark_background"
+          },
+          "text": {
+            "bg": "dark_background"
+          }
+        },
+        "codex_usage": {
+          "bold": true,
+          "critical": {
+            "fg": "red"
+          },
+          "git_separator": {
+            "fg": "muted"
+          },
+          "good": {
+            "fg": "green"
+          },
+          "low": {
+            "fg": "orange"
+          },
+          "medium": {
+            "fg": "yellow"
+          },
+          "unknown": {
+            "fg": "muted"
+          }
+        },
+        "indicators": {
+          "open": {
+            "bold": false,
+            "dim": false,
+            "fg": "muted"
+          },
+          "question": {
+            "bold": true,
+            "dim": false,
+            "fg": "bright_red"
+          }
+        },
+        "pane": {
+          "active_border": {
+            "fg": "selection"
+          },
+          "inactive_border": {
+            "fg": "muted"
+          }
+        },
+        "session": {
+          "finished": {
+            "fg": "bright_green"
+          },
+          "repository": {
+            "fg": "colors.ui.accent.fg"
+          }
+        },
+        "status": {
+          "waiting": {
+            "fg": "colors.ui.accent.fg"
+          },
+          "working": {
+            "fg": "colors.ui.accent.fg"
+          }
+        },
+        "tabs": {
+          "finished": {
+            "fg": "bright_green"
+          }
+        },
+        "windows": {
+          "active": {
+            "bg": "selection_background",
+            "fg": "bright_green"
+          },
+          "alert": {
+            "bg": "darker_background",
+            "fg": "bright_red"
+          },
+          "finished": {
+            "fg": "bright_green"
+          },
+          "inactive": {
+            "bg": "dark_background",
+            "fg": "light_foreground"
+          }
         }
       },
-      "fonts": {
-        "preview": {
-          "position": "down",
-          "size": 33,
-          "wrap": true
+      "icons": {
+        "clock": {
+          "day": "󰖙",
+          "fixed": "",
+          "night": "󰖔",
+          "unknown": ""
+        },
+        "status": {
+          "open": "",
+          "question": ""
         }
       }
+    },
+    "clipboard": {
+      "settings": {
+        "record_copies": false,
+        "max_entries": 500,
+        "max_age_days": 30,
+        "max_entry_bytes": 65536,
+        "deduplicate": true,
+        "exclude_patterns": [],
+        "poll_seconds": 2,
+        "preview": true,
+        "preview_lines": 8,
+        "list_limit": 50
+      },
+      "colors": {
+        "error": {
+          "fg": "colors.status.error.fg"
+        },
+        "heading": {
+          "fg": "colors.ui.heading.fg"
+        },
+        "identity": {
+          "fg": "colors.ui.accent.fg"
+        },
+        "label": {
+          "fg": "colors.ui.label.fg"
+        },
+        "pinned": {
+          "fg": "colors.status.warning.fg"
+        },
+        "source": {
+          "fg": "colors.ui.muted.fg"
+        },
+        "text": {
+          "fg": "colors.ui.foreground.fg"
+        },
+        "timestamp": {
+          "fg": "colors.ui.muted.fg"
+        }
+      }
+    },
+    "cleanup": {
+      "settings": {
+        "checkpoint_min_age_days": 30
+      }
+    },
+    "todo": {
+      "formatting": {
+        "indent": 2,
+        "indent_style": "spaces",
+        "tab_width": 2,
+        "label_gap": 1,
+        "label_width": 10,
+        "row_gap": 1,
+        "alignment": "left",
+        "level_indent": 2,
+        "list_type": "tree"
+      },
+      "colors": {
+        "field": {
+          "acceptance": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "foreground"
+            }
+          },
+          "alias": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "bold": true,
+              "fg": "blue"
+            }
+          },
+          "completed": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "reset"
+            }
+          },
+          "created": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "muted"
+            }
+          },
+          "due": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "foreground"
+            }
+          },
+          "id": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "muted"
+            }
+          },
+          "notes": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "light_foreground"
+            }
+          },
+          "parent": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "foreground"
+            }
+          },
+          "priority": {
+            "label": {
+              "fg": "blue"
+            }
+          },
+          "removed": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "muted"
+            }
+          },
+          "status": {
+            "label": {
+              "fg": "blue"
+            }
+          },
+          "subgoal_id": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "muted"
+            }
+          },
+          "subgoal_title": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "bright_foreground"
+            }
+          },
+          "subgoals": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "foreground"
+            }
+          },
+          "tags": {
+            "label": {
+              "bg": "default",
+              "fg": "blue"
+            },
+            "value": {
+              "dim": true,
+              "fg": "default"
+            }
+          },
+          "title": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "bold": true,
+              "fg": "bright_foreground"
+            }
+          },
+          "updated": {
+            "label": {
+              "fg": "blue"
+            },
+            "value": {
+              "fg": "muted"
+            }
+          }
+        },
+        "priority": {
+          "high": {
+            "bold": true,
+            "fg": "warning",
+            "underline": true
+          },
+          "low": {
+            "bold": true,
+            "fg": "muted"
+          },
+          "normal": {
+            "dim": false,
+            "fg": "orange"
+          }
+        },
+        "status": {
+          "blocked": {
+            "bold": true,
+            "fg": "bright_cyan"
+          },
+          "doing": {
+            "bold": true,
+            "fg": "bright_green"
+          },
+          "done": {
+            "fg": "green"
+          },
+          "open": {
+            "bold": true,
+            "fg": "muted"
+          },
+          "removed": {
+            "fg": "muted"
+          }
+        }
+      }
+    },
+    "menu": {
+      "formatting": {
+        "indent": 0,
+        "indent_style": "spaces",
+        "tab_width": 2,
+        "label_gap": 1,
+        "label_width": 0,
+        "row_gap": 0,
+        "alignment": "left",
+        "padding": 1,
+        "popup": {
+          "position": "center",
+          "width": "fit",
+          "height": "auto",
+          "border": "sharp"
+        }
+      },
+      "colors": {
+        "popup": {
+          "preview": {
+            "border": {
+              "fg": null
+            },
+            "label": {
+              "fg": null
+            },
+            "fg": null,
+            "bg": null
+          },
+          "border": {
+            "fg": "lighter_background"
+          },
+          "label": {
+            "fg": null
+          },
+          "body": {
+            "fg": null,
+            "bg": null
+          }
+        },
+        "entries": {},
+        "description": {
+          "fg": "muted"
+        },
+        "icon": {
+          "dim": true,
+          "fg": "blue"
+        },
+        "label": {
+          "bold": true,
+          "fg": "bright_blue"
+        },
+        "shortcut": {
+          "fg": "cyan"
+        },
+        "state": {
+          "fg": "warning"
+        }
+      }
+    },
+    "gum": {
+      "colors": {
+        "ui": {
+          "border": {
+            "fg": "magenta"
+          },
+          "match": {
+            "fg": "magenta"
+          }
+        }
+      }
+    },
+    "pkgs": {
+      "colors": {
+        "manager": {
+          "bold": true,
+          "fg": "accent"
+        },
+        "package": {
+          "bold": true,
+          "fg": "bright_magenta"
+        },
+        "picker": {
+          "description": {
+            "fg": "light_foreground"
+          }
+        }
+      }
+    }
+  },
+  "colors": {
+    "battery": {
+      "charging": {
+        "fg": "colors.battery.normal.fg"
+      },
+      "critical": {
+        "fg": "red"
+      },
+      "low": {
+        "fg": "yellow"
+      },
+      "normal": {
+        "fg": "green"
+      },
+      "unknown": {
+        "fg": "muted"
+      }
+    },
+    "daylight": {
+      "day": {
+        "fg": "yellow"
+      },
+      "night": {
+        "fg": "blue"
+      },
+      "sunrise": {
+        "fg": "yellow"
+      },
+      "sunset": {
+        "fg": "orange"
+      }
+    },
+    "status": {
+      "error": {
+        "fg": "error"
+      },
+      "info": {
+        "fg": "info"
+      },
+      "success": {
+        "fg": "green"
+      },
+      "waiting": {
+        "fg": "warning"
+      },
+      "warning": {
+        "fg": "warning"
+      },
+      "working": {
+        "bold": true,
+        "fg": "accent"
+      }
+    },
+    "ui": {
+      "accent": {
+        "fg": "accent"
+      },
+      "border": {
+        "fg": "lighter_background"
+      },
+      "cursor": {
+        "fg": "bright_foreground"
+      },
+      "foreground": {
+        "fg": "foreground"
+      },
+      "heading": {
+        "bold": true,
+        "fg": "cyan"
+      },
+      "identity": {
+        "bold": true,
+        "fg": "blue"
+      },
+      "label": {
+        "fg": "blue"
+      },
+      "match": {
+        "fg": "bright_magenta"
+      },
+      "muted": {
+        "fg": "muted"
+      },
+      "selection": {
+        "bg": "selection_background",
+        "bold": true,
+        "fg": "bright_foreground"
+      },
+      "separator": {
+        "fg": "background"
+      }
+    }
+  },
+  "icons": {
+    "applications": {
+      "all": "󰌌",
+      "bash": "",
+      "codex": "󱙺",
+      "fzf": "󰍉",
+      "kitty": "󰄛",
+      "nvim": "",
+      "powershell": "",
+      "television": "󰔂",
+      "tmux": "",
+      "yazi": "󰉋",
+      "zsh": ""
+    },
+    "files": {
+      "archive": "󰀼",
+      "audio": "󰈣",
+      "configuration": "",
+      "css": "",
+      "device": "󰋊",
+      "directory": "󰉋",
+      "docker": "󰡨",
+      "executable": "󰆍",
+      "fifo": "󰈑",
+      "file": "󰈔",
+      "git": "",
+      "go": "",
+      "html": "",
+      "image": "󰈟",
+      "javascript": "",
+      "json": "",
+      "license": "󰿃",
+      "lua": "",
+      "markdown": "",
+      "pdf": "󰈦",
+      "powershell": "󰨊",
+      "python": "",
+      "rust": "",
+      "shell": "",
+      "socket": "󰆨",
+      "symlink": "󰌷",
+      "text": "󰈙",
+      "typescript": "",
+      "video": "󰈫"
+    },
+    "git": {
+      "added": "+",
+      "ahead": "󱦲",
+      "behind": "󱦳",
+      "branch": "",
+      "clean": "✔",
+      "conflict": "=",
+      "deleted": "-",
+      "modified": "!",
+      "repository": "",
+      "submodule": "",
+      "submodule_github": "",
+      "wiki": "󱔘",
+      "staged": "+",
+      "stashed": "*",
+      "untracked": "?",
+      "status": {
+        "added": "",
+        "conflict": "",
+        "copied": "",
+        "deleted": "",
+        "ignored": "",
+        "modified": "",
+        "renamed": "",
+        "selected": "",
+        "type_changed": "󰑓",
+        "untracked": ""
+      }
+    },
+    "hosts": {
+      "bitbucket": "",
+      "github": "󰊤",
+      "gitlab": ""
+    },
+    "menu": {
+      "anodize": "󰏘",
+      "backgrounds": "󰸉",
+      "bak": "󰁯",
+      "blastoff": "󱓞",
+      "cleanup": "󰃢",
+      "clipboard": "󰅌",
+      "debug": "󰃤",
+      "env": "󰒓",
+      "fonts": "󰛖",
+      "pkgs": "󰏖",
+      "profile": "󰀵",
+      "publish": "",
+      "submodules": "",
+      "switcher": "󰏘",
+      "sync": "",
+      "theme": "󰏘",
+      "wiki": "󰈙"
+    },
+    "navigation": {
+      "back": "󰅁",
+      "delete": "󰆴",
+      "edit": "󰏫",
+      "ellipsis": "…",
+      "environment": "󰇁",
+      "help": "󰋖",
+      "keys": "󰌆",
+      "new": "󰐕",
+      "next": "󰅂",
+      "project": "",
+      "refresh": "󰑓",
+      "separator": "│",
+      "session": ""
+    },
+    "operations": {
+      "link": "󰡯"
+    },
+    "progress": {
+      "bar": {
+        "empty": "-",
+        "filled": "━",
+        "left": "[",
+        "right": "]"
+      }
+    },
+    "status": {
+      "error": "",
+      "info": "󰋽",
+      "stashed": "",
+      "success": "",
+      "todo": "󰄬",
+      "waiting": "",
+      "warning": "",
+      "working": ""
+    },
+    "weather": {
+      "daily": "󰖙",
+      "hourly": "󰥔",
+      "humidity": "",
+      "location": "",
+      "precip": "",
+      "sunrise": "",
+      "sunset": "󰖚",
+      "title": "",
+      "units": ""
     }
   }
 }

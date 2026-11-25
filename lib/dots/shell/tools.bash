@@ -1,0 +1,47 @@
+# shellcheck disable=SC1090,SC1091,SC2153
+_dots_bash_generated() {
+  local output
+  has "$1" || return 1
+  output=$("$@") && [[ -n $output ]] &&
+    command bash --noprofile --norc -n <<< "$output" || return 1
+  REPLY=$output
+}
+typeset -gA _DOTS_TOOL_READY
+source "$DOTS/lib/dots/shell/tool-environment.bash"
+[[ ! -r $HOME/.atuin/bin/env ]] || source "$HOME/.atuin/bin/env"
+# Evaluate at source scope: some native integrations declare global shell state.
+for _dots_bash_tool in zoxide direnv batpipe usage batman atuin tv mise starship; do
+  [[ -z ${_DOTS_TOOL_READY[$_dots_bash_tool]:-} ]] || continue
+  if [[ $_dots_bash_tool == batman || $_dots_bash_tool == batpipe ]] && _dots_pager_tool "$_dots_bash_tool"; then
+    _DOTS_TOOL_READY[$_dots_bash_tool]=1
+    continue
+  fi
+  if case $_dots_bash_tool in
+    zoxide) _dots_bash_generated zoxide init bash ;;
+    direnv) _dots_bash_generated direnv hook bash ;;
+    batpipe)
+      # Its native shell export contract is fixed; avoid process-tree detection
+      # (restricted on Termux) and quote executable paths for less's child shell.
+      if has batpipe; then
+        printf -v _dots_bash_batpipe_path '%q' "$(command -v batpipe)"
+        printf -v REPLY 'export LESSOPEN=%q LESS=%q BATPIPE=color; unset LESSCLOSE' \
+          "|$_dots_bash_batpipe_path %s" "${LESS:-} -R"
+      else false; fi
+      ;;
+    usage) _dots_bash_generated usage g completion-init bash ;;
+    batman) _dots_bash_generated batman --export-env ;;
+    atuin) _dots_bash_generated atuin init bash ;;
+    tv) _dots_bash_generated tv init bash ;;
+    mise) _dots_bash_generated mise activate bash ;;
+    starship) _dots_bash_generated starship init bash ;;
+    *) false ;; # Never evaluate an earlier tool's output for an unknown entry.
+  esac then
+    if eval "$REPLY"; then
+      _DOTS_TOOL_READY[$_dots_bash_tool]=1
+      # A newly available history/search tool may replace Readline bindings.
+      case $_dots_bash_tool in atuin | tv) unset _DOTS_BASH_FZF_READY ;; esac
+    fi
+  fi
+done
+unset _dots_bash_tool _dots_bash_batpipe_path
+export DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m'

@@ -1,7 +1,7 @@
 # dots:summary=Print native shell initialization or explicitly set up files
-# dots:usage=[bash|zsh|fish|powershell|nu|xonsh] | --bootstrap bash|zsh|powershell | --setup [OPTIONS]
+# dots:usage=[bash|zsh|fish|powershell|nu|xonsh] | --bootstrap bash|zsh|fish|powershell|nu|xonsh | --setup [OPTIONS]
 # dots:option=--verbose|-v|flag|Show setup actions and backups
-# dots:option=--bootstrap||choice:bash,zsh,powershell|Print standalone missing-checkout startup bootstrap
+# dots:option=--bootstrap||choice:bash,zsh,fish,powershell,nu,xonsh|Print standalone missing-checkout startup bootstrap
 # dots:option=--setup||flag|Install platform configurations with retained backups
 # dots:option=--dry-run||flag|Preview setup without writes
 # dots:option=--yes||flag|Approve setup without prompting

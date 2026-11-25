@@ -32,9 +32,14 @@ def command_names():
 
 def environment(root, env=None):
     from native_environment import document
-    from shell.runtime import paths
+    from shell.runtime import paths, settings
+    from platform_info import detect
+    from profiles import resolve
     env = os.environ if env is None else env
-    result = document(root, env)
+    profile = resolve(root, detect(env=env))
+    result = document(root, env, profile)
+    values, origins, config = settings(root, env, selected=profile)
+    result['settings'] = dict(values=values, origins=origins, path=config)
     exports = result['exports']
     if exports['DOTS_PLATFORM'] != 'windows' and env.get('HOME'):
         manuals = Path(env['HOME']) / '.local/share/man'
@@ -42,6 +47,7 @@ def environment(root, env=None):
         if manuals.is_dir() and str(manuals) not in search.split(':'):
             exports['MANPATH'] = f'{manuals}:{search}'
     result['shell_paths'] = paths(root, env)
+    result['shell_paths']['profile_shells'] = [str(Path(row['root'])/'shells') for row in profile['layers']]
     result['completion_commands'] = command_names()
     return result
 
@@ -146,8 +152,14 @@ def candidate_records(records, current):
 def main(args=None):
     args = list(sys.argv[1:] if args is None else args)
     root = Path(os.environ.get('DOTS') or LIB.parents[1]).resolve()
-    if args == ['--environment']:
+    if args in (['--environment'], ['--nu-startup']):
         result = environment(root)
+        if args == ['--nu-startup']:
+            directories = [Path(path) for path in result['shell_paths']['profile_shells']]
+            early = [p/'init.nu' for p in directories if (p/'init.nu').is_file()]
+            late = [p/'local.nu' for p in directories if (p/'local.nu').is_file()]
+            shared = root/'shells/nushell'
+            result['startup_sources'] = list(map(str, [shared/'environment.nu', *early, shared/'interactive.nu', *late]))
     elif len(args) >= 4 and args[0] == '--complete':
         result = complete(root, args[1], args[2:])
     else:

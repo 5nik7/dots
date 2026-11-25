@@ -28,7 +28,7 @@
     "_FZF_COLORS_": "shells/shared/fzf.sh",
     "_PREVIEW_": "shells/shared/fzf.sh",
     "ZSHCOMP": "shells/zsh/core/environment.zsh",
-    "CLICOLOR": "shells/zsh/core/environment.zsh",
+    "CLICOLOR": "shells/zsh/interactive.zsh",
     "KEYTIMEOUT": "shells/zsh/keys.zsh",
     "VI_MODE_SET_CURSOR": "shells/zsh/keys.zsh",
     "BAT_THEME": "themes",

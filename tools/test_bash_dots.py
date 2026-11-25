@@ -283,13 +283,12 @@ dots::error 'Error'
         shutil.copytree(REPO / 'default', self.repo / 'default')
         controls = self.repo / 'default/config.json'
         document = json.loads(controls.read_text())
-        document.setdefault('apps', {}).setdefault('cli', {})['tagline'] = 'Fixture tagline ü $(touch nope)'
-        controls.write_text(json.dumps(document))
+        document['apps']['cli']['settings']['tagline'] = 'Fixture tagline ü $(touch nope)'
         colors = dict(executable='#112233', command='#223344', subcommand='#334455',
                       option='#445566', argument='#556677', heading='#667788',
                       description='#778899', punctuation='#8899aa', tagline='#99aabb')
-        (self.repo / 'default/colors.toml').write_text('\n'.join(
-            '[apps.cli.help.' + role + ']\nfg = "' + value + '"\n' for role, value in colors.items()))
+        document['apps']['cli']['colors']['help'] = {role:{'fg':value} for role,value in colors.items()}
+        controls.write_text(json.dumps(document))
         self.command('samples', header='# dots:summary=Manage samples\n# dots:example=dots samples deep -- --literal dots')
         self.command('samples-deep', header='''# dots:summary=Use dots help samples for details; --flavor chooses a value.
 # dots:usage=[OPTIONS] NAME
@@ -305,7 +304,7 @@ dots::error 'Error'
         for locale in ('C', 'C.UTF-8'):
             with self.subTest(locale=locale):
                 root = self.run_dots('--color=always', 'help', env=dict(self.env, LC_ALL=locale)).stdout
-                self.assertIn(span('tagline', document['apps']['cli']['tagline']), root)
+                self.assertIn(span('tagline', document['apps']['cli']['settings']['tagline']), root)
                 for role, text in [('executable', 'dots'), ('option', 'OPTIONS'),
                                    ('command', 'COMMAND'), ('argument', 'ARGS')]:
                     self.assertIn(span(role, text), root)
@@ -328,7 +327,7 @@ dots::error 'Error'
             visible = re.sub(r'\x1b\[[0-9;]*m', '', output)
             self.assertIn('Fixture tagline', visible)
             self.assertTrue(all(len(line) <= int(width) for line in visible.splitlines()), visible)
-        document['apps']['cli']['tagline'] = ''
+        document['apps']['cli']['settings']['tagline'] = ''
         controls.write_text(json.dumps(document))
         empty = self.run_dots('help').stdout
         self.assertTrue(empty.startswith('Usage\n'))
@@ -426,7 +425,7 @@ printf '%s' "$REPLY"
         examples = [
             (('completion',), 'dots completion bash|zsh|fish|powershell'),
             (('commands', 'unexpected'), 'dots commands [--check]'),
-            (('init', '--bootstrap'), 'dots init --bootstrap bash|zsh|powershell'),
+            (('init', '--bootstrap'), 'dots init --bootstrap bash|zsh|fish|powershell|nu|xonsh'),
             (('init', 'auto'), 'dots init [bash|zsh|fish|powershell|nu|xonsh]'),
         ]
         for arguments, usage in examples:

@@ -10,6 +10,17 @@ if [[ ! -r $_dots_zsh_file || ! -r ${_dots_zsh_file:h}/../environment.sh || ! -r
 fi
 export DOTS="${_dots_zsh_file:h:h:h}"
 unset _dots_zsh_file
-source "$DOTS/shells/environment.sh" || return
-prefix="${TERMUX__PREFIX:-${PREFIX:-}}"
-[[ -r "$DOTS/shells/zsh/platforms/detect.zsh" ]] && source "$DOTS/shells/zsh/platforms/detect.zsh"
+# The linked interactive rc applies the same settings and paths from its
+# prepared bundle. Login startup and independent rc files keep the early hook.
+if [[ -o interactive && ! -o login && -r ${ZDOTDIR:-$HOME}/.zshrc ]]; then
+  if [[ ${ZDOTDIR:-$HOME}/.zshrc -ef $DOTS/shells/zsh/zshrc ]]; then return 0; fi
+  IFS= read -r _dots_rc_marker < "${ZDOTDIR:-$HOME}/.zshrc"
+  if [[ $_dots_rc_marker == '# Standalone Bash/Zsh entry. The installed cold-path helper survives checkout removal.' ]]; then
+    unset _dots_rc_marker
+    return 0
+  fi
+  unset _dots_rc_marker
+fi
+_DOTS_STARTUP_MODE=early
+source "$DOTS/lib/dots/shell/startup.bash" || { unset _DOTS_STARTUP_MODE; return 1; }
+unset _DOTS_STARTUP_MODE

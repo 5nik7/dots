@@ -5,11 +5,6 @@ _dots_zsh_local_completion_path() {
   [[ ! -d $directory ]] || fpath=("$directory" "${fpath[@]}")
   export FPATH
 }
-# Plugins have registered their paths; user-local providers take priority.
-_dots_zsh_local_completion_path
-local directory="$XDG_CACHE_HOME/dots/zsh/${DOTS_PLATFORM:-linux}-$ZSH_VERSION"
-mkdir -p -- "$directory"
-: ${ZSH_COMPDUMP:="$directory/zcompdump"}
 autoload -Uz compinit
 zmodload zsh/complist
 # compdump emits unquoted autoload names. A provider such as Termux's _uu-[
@@ -31,6 +26,10 @@ _dots_literal_completion_dump() {
   fi
 }
 _dots_compinit() {
+  local directory="${XDG_CACHE_HOME:-$HOME/.cache}/dots/zsh/${DOTS_PLATFORM:-linux}-$ZSH_VERSION"
+  [[ -d $directory ]] || mkdir -p -- "$directory"
+  : ${ZSH_COMPDUMP:="$directory/zcompdump"}
+  # Plugins have registered their paths; user-local providers take priority.
   _dots_zsh_local_completion_path
   # Repair existing dumps before loading them. With read-only cache storage,
   # rebuild in memory instead of sourcing a dump that could abort autoloading.
@@ -38,11 +37,25 @@ _dots_compinit() {
     compinit -D
     return $?
   fi
+  # compdump publishes via rename. An existing regular dump can be reused
+  # without reading its entire body again when compinit leaves it in place.
+  local previous='' current=''
+  zmodload -i zsh/stat
+  local -A info
+  if zstat -H info -F '%s.%N' -- "$ZSH_COMPDUMP" 2>/dev/null; then
+    previous="$info[device]:$info[inode]:$info[size]:$info[mtime]:$info[ctime]"
+  fi
   compinit -d "$ZSH_COMPDUMP" || return
+  if [[ -n $previous ]] && zstat -H info -F '%s.%N' -- "$ZSH_COMPDUMP" 2>/dev/null; then
+    current="$info[device]:$info[inode]:$info[size]:$info[mtime]:$info[ctime]"
+    [[ $current != "$previous" ]] || return 0
+  fi
   _dots_literal_completion_dump
 }
 if [[ -z ${_DOTS_COMPINIT_READY:-} ]]; then
   _dots_compinit && _DOTS_COMPINIT_READY=1
+else
+  _dots_zsh_local_completion_path
 fi
 # The old first compinit retained these system registrations even after local
 # files without #compdef headers or narrower plugin headers took precedence.
@@ -76,7 +89,7 @@ _dots_zsh_reload_completion() {
 _dots_zsh_reload_completions() {
   rm -f -- "$ZSH_COMPDUMP" "$ZSH_COMPDUMP.zwc"
   local name directory="$XDG_CACHE_HOME/dots/zsh/${DOTS_PLATFORM:-linux}-$ZSH_VERSION"
-  for name in uv uvx starship; do rm -f -- "$directory/$name.zsh"; done
+  for name in uv uvx starship pip; do rm -f -- "$directory/$name.zsh"; done
   autoload -Uz compinit
   _dots_compinit || return
   _dots_completion_compat

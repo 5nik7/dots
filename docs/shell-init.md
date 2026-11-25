@@ -2,7 +2,7 @@
 
 **Implemented.** `dots init [bash|zsh|fish|powershell|nu|xonsh]` prints native shell code. It initializes only Dots settings, paths, colors, completions and refresh hooks; it does not install files or packages. The separate explicit `dots init --setup` mode delegates to [checkout installation](installation.md); ordinary hook generation/evaluation remains unchanged. The live Bash dispatcher requires Bash 4.4 or newer. Native PowerShell initialization has a separate adapter.
 
-Compiled Bash/Zsh settings include inert CLI row-formatting values. Changes to the contributing profile manifests or `default/config.json` invalidate the compiled generation; warm initialization reads the literals without invoking Python for row formatting. Ordinary Dots command invocations read current preferences independently. See [shared row alignment](profiles.md#shared-row-alignment).
+Compiled Bash/Zsh settings include CLI row formatting. Adding, editing or removing a contributing shared or profile preference file invalidates the prepared settings. This includes unified `config.json`, existing split-style configurations and profile manifests. An unchanged generation loads without a Python configuration query. Ordinary Dots commands read current preferences independently. See [shared row alignment](profiles.md#shared-row-alignment).
 
 The repository Zsh fzf-tab integration supports `COMMAND nf<Tab>` for an exact,
 unquoted argument. Search the cached Nerd Fonts glyphs, mark choices with Tab,
@@ -17,7 +17,7 @@ For Bash and Zsh, put this in the interactive startup file once `dots` is on PAT
 eval "$(dots init)"
 ```
 
-The generated default hook selects Bash or Zsh in the receiving shell. It does not use `$SHELL`, which can name a different login shell. Explicit `dots init bash` and `dots init zsh` forms are also available. The repository startup files resolve their own symlinks and source the adjacent native loader directly; `dots` need not be on PATH. Link or source the startup file from the checkout you want to use. Inherited `DOTS` values do not select another checkout during native startup.
+The generated default hook selects Bash or Zsh in the receiving shell. It does not use `$SHELL`, which can name a different login shell. Explicit `dots init bash` and `dots init zsh` forms are also available. Installed startup files can recover a missing checkout. The direct repository startup files resolve their own symlinks and source the adjacent native loader directly; `dots` need not be on PATH. Link or source the startup file from the checkout you want to use. Inherited `DOTS` values do not select another checkout during native startup.
 
 Fish uses native code:
 
@@ -64,9 +64,13 @@ Keep the complete checkout layout, including `shells/<shell>`, `lib/dots/shell`,
 
 Zsh resolves its source filename through the literal source trace, preserving Unicode checkout paths even in the C locale. This keeps the checkout path used by startup and editor highlighting intact.
 
+A login or noninteractive Zsh reads settings, paths and platform helpers before its rc. On a fresh cache, a script prepares only that early environment. The first interactive rc upgrades the same cache with its completion and interactive modules. A cold interactive login prepares both stages together. A separate personal rc receives the early environment. A nonlogin interactive shell with the Dots rc reads the generation at the rc stage. Login files can still change `DOTS_CONFIG_FILE`, environment overrides and PATH before the full rc runs.
+
+In a Termux fixture with an installed rc, the median warm noninteractive startup was 238 ms, down from 2,063 ms. A noninteractive login took 231 ms, down from 2,256 ms. Each figure uses seven alternating before/after samples. The first script with an empty cache took 2,772 ms versus 2,330 ms over five pairs. That first run validates and publishes the reusable projection. These measurements used isolated homes on a host with other verification work running.
+
 Startup resolves absolute and relative links, chained links, and symlinked parent directories before deriving paths. Relative link targets are relative to the link's directory. The caller's working directory is preserved. Bash requires `readlink` only for file symlinks; GNU `readlink -f` is not required. The other adapters use native path facilities. Missing checkout files and resolution failures report errors without falling back to another checkout. If a broken or cyclic rc link prevents the shell from reading the file at all, the shell handles that failure before Dots code runs.
 
-After moving the checkout, update links that still name its old location. No config-file edits are needed. Explicit generated hooks contain a fixed loader path and must be regenerated if that path changes. An individually copied rc file outside the checkout cannot discover its former location; use a symlink or an explicit hook instead. The shared profile, `shells/profile` (linked as `~/.profile`), consumes `DOTS` when available and does not independently discover a checkout.
+After moving the checkout, update links that still name its old location. No config-file edits are needed. Explicit generated hooks contain a fixed loader path and must be regenerated if that path changes. Copying the underlying checkout loader directly loses its source location. Use the installer’s standalone rc, a linked checkout loader, or a generated bootstrap instead. The shared profile, `shells/profile` (linked as `~/.profile`), consumes `DOTS` when available and does not independently discover a checkout.
 
 ## Personal Zsh keyboard setup
 
@@ -81,11 +85,11 @@ shell integration usable.
 
 ## PowerShell profile
 
-The personal PowerShell entry is `shells/powershell/profile.ps1`; `Microsoft.PowerShell_profile.ps1` remains a compatibility entry for existing installer links. Both discover the linked checkout. Link each engine's `$PROFILE.CurrentUserAllHosts` to the shared entry to use it in Core and Desktop. Dots settings, published colors and completion load once; only interactive sessions load personal helpers. Re-sourcing preserves the prompt chain and avoids duplicate personal setup.
+The personal PowerShell entry is `shells/powershell/profile.ps1`; `Microsoft.PowerShell_profile.ps1` remains a compatibility entry for existing installer links. Both discover the linked checkout. The installer copies a standalone rc to each supported engine’s `$PROFILE.CurrentUserAllHosts`. A manual installation can link that path to the shared entry. Dots settings, published colors and completion load once; only interactive sessions load personal helpers. Re-sourcing preserves the prompt chain and avoids duplicate personal setup.
 
-Interactive Core and Desktop sessions initialize Starship automatically, using the existing `STARSHIP_CONFIG` or Starship default. Missing or failed Starship initialization leaves a plain directory prompt. After Starship and Dots refresh setup, startup sources `shell-integration_v7.ps1` beside that engine's `$PROFILE.CurrentUserAllHosts` when present. Existing host-specific integration hooks remain safe because the vendor wrapper is idempotent; the vendor files are not rewritten. Console sessions use PSReadLine Vi mode, native Tab completion and **Alt+F** for fuzzy completion. Alt+F imports PSFzf on demand; absent FZF or PSFzf falls back to native completion. Redirected input skips line-editor setup. The `ls` helper uses eza without Git-status scans when available, otherwise `Get-ChildItem`. Editor selection is deferred until `edit`/`e`/`ep` is used and respects an existing `EDITOR`; otherwise it prefers nvim, code, vim, vi, then notepad. `ep` edits the repository profile source.
+Interactive Core and Desktop sessions preserve a profile-supplied prompt. With the default prompt, they initialize Starship using the existing `STARSHIP_CONFIG` or Starship default. Missing or failed Starship initialization leaves a plain directory prompt. After Starship and Dots refresh setup, startup sources `shell-integration_v7.ps1` beside that engine's `$PROFILE.CurrentUserAllHosts` when present. Existing host-specific integration hooks remain safe because the vendor wrapper is idempotent; the vendor files are not rewritten. Console sessions use PSReadLine Vi mode, native Tab completion and **Alt+F** for fuzzy completion. Alt+F imports PSFzf on demand; absent FZF or PSFzf falls back to native completion. Redirected input skips line-editor setup. The `ls` helper uses eza without Git-status scans when available, otherwise `Get-ChildItem`. Editor selection is deferred until `edit`/`e`/`ep` is used and respects an existing `EDITOR`; otherwise it prefers nvim, code, vim, vi, then notepad. `ep` edits the repository profile source.
 
-Other integrations remain disabled by default. Dot-source the optional loader in the current session, for example:
+PowerShell keeps optional runtime managers, history tools and editor bindings under explicit profile control. Dot-source the loader from the current session or your profile’s `shells/local.ps1`.
 
 ```powershell
 . "$env:PWSH/optional.ps1" starship
@@ -93,7 +97,7 @@ Other integrations remain disabled by default. Dot-source the optional loader in
 . "$env:PWSH/optional.ps1" mise
 ```
 
-Available feature names are `starship`, `blastoff`, `icons`, `catppuccin`, `pscompletions`, `fzf`, `completions`, `zoxide`, `mise`, `vfox`, `chocolatey`, `command-not-found`, `terminal` and `coreutils`. Each successful opt-in runs once per session; failed loads remain retryable. Choose the runtime manager you actually use. The loader uses installed tools only, checks generated-code exit status, and restores Dots refresh hooks after Starship activation. The coreutils vendor block is preserved in a separate opt-in file. Default startup runs Starship initialization, its continuation prompt, and the configured terminal integration; unrelated completion generators, module inventory, runtime managers and theme publication stay off. Starship prompt cost depends on the active configuration. Blastoff defaults `BLASTOFF_HOME` to the resolved checkout's `config/blastoff`, preserving an explicit override. Blastoff uses the bundled Dots launcher on both Desktop 5.1 and Core 7; the optional `blastoff` loader registers a forwarding function without importing a separately installed module. WinGet CommandNotFound requires Core 7.4+ and is not eagerly imported by the profile.
+Available feature names are `starship`, `blastoff`, `icons`, `catppuccin`, `pscompletions`, `fzf`, `completions`, `zoxide`, `mise`, `vfox`, `chocolatey`, `command-not-found`, `terminal`, `coreutils`, `atuin`, `direnv` and `tv`. The native direnv hook needs PowerShell 7.2 or newer. Each successful opt-in runs once per session; failed loads remain retryable. Choose the runtime manager you actually use. The loader uses installed tools only, checks generated-code exit status, and restores Dots refresh hooks after Starship activation. The coreutils vendor block is preserved in a separate opt-in file. Default startup runs Starship initialization, its continuation prompt, and the configured terminal integration; unrelated completion generators, module inventory, runtime managers and theme publication stay off. Starship prompt cost depends on the active configuration. Blastoff defaults `BLASTOFF_HOME` to the resolved checkout's `config/blastoff`, preserving an explicit override. Blastoff uses the bundled Dots launcher on both Desktop 5.1 and Core 7; the optional `blastoff` loader registers a forwarding function without importing a separately installed module. WinGet CommandNotFound requires Core 7.4+ and is not eagerly imported by the profile.
 
 Personal helpers remain explicit operations: `touch` creates or updates timestamps without truncating contents; `New-Backup` preserves literal paths, supports `-WhatIf`, uses unique destinations and defaults to moving the source (`-Copy` retains it). Yazi's `y`/`d` helper always removes its temporary cwd file. These personal helpers are separate from managed installation and its journals.
 
@@ -177,14 +181,37 @@ Interactive personal Bash/Zsh/Fish startup registers Androidots-local completion
 
 These fixed-path additions neither scan/generate completions nor create directories, execute Android APIs, or install packages. Other platforms and noninteractive startup do not add them. Generic `dots init` hooks retain their integration-only contract. `termux-geo completion --all --install` explicitly creates its files at these locations; see [installation and shell activation](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md#shell-completions). Existing other-command completions remain in place.
 
-## Bundles and missing-checkout bootstrap
+## Installed startup and first use
 
-Bash/Zsh startup uses prepared native bundles, with lightweight integration and
-full repository-rc modes. PowerShell/Fish prepare native environment adapters.
-`dots init --bootstrap bash|zsh|powershell` prints a standalone bootstrap snippet;
-ordinary `dots init` remains lightweight and its output generation is read-only.
-See [startup preparation](profiles.md#native-startup-bundles) and
-[bootstrap](profiles.md#missing-checkout-bootstrap).
+The installer copies one interactive rc for each applicable shell. Bash’s login file forwards to the same rc and sources a user’s login profile. Dots keeps the standalone `~/.profile` for callers that source its common helpers and `~/.zshenv` for noninteractive Zsh. With the Dots login profile, an interactive Bash login loads those helpers once.
+
+The installed rc honors an explicit `DOTS_BOOTSTRAP_DIR`. Otherwise it prefers a usable checkout reached through the installed executable, then the recorded checkout and then `~/dots`. This also selects the recorded checkout when another valid copy exists at `~/dots`. Bash and Zsh use a prepared bundle, Fish and PowerShell use prepared environment adapters, and Nushell and Xonsh resolve environment and settings together. Noninteractive sessions stay offline. Nushell can source its installed or conventional parse-time path offline. An interactive Nushell can select a different path at runtime before the first command. To distribute a checkout-independent entry yourself, use `dots init --bootstrap SHELL` for any of the six shells. [Startup preparation and first acquisition](profiles.md#missing-checkout-bootstrap)
+
+Shared shell preferences live under `shells/<shell>/`. Each active profile layer can add `shells/init.<ext>` before the shared interactive configuration and `shells/local.<ext>` afterward. Extensions are `bash`, `zsh`, `fish`, `nu`, `xsh` and `ps1`. Parent layers run before the selected layer in each phase. For example, put a machine-specific Fish binding in `$PROFILE/shells/local.fish`. The PowerShell profile path is `$env:PROFILE`. Installed Nushell loads interactive definitions before accepting the first command.
+
+Fish’s `conf.d` files own its autopair, command-finished notification, FZF binding and usage completion setup. Each runs once per interactive shell even when Fish’s native configuration discovery and the Dots rc both source it.
+
+The Termux and WSL early Zsh hooks select their shipped `shells/zsh/local.zsh` defaults. Full startup applies them after shared aliases and before native FZF and final keybindings. An independent `~/.zshrc.local` runs immediately afterward, so it can override these defaults. If the home file links to the selected profile file, startup sources it once. The usual `$PROFILE/shells/local.zsh` remains the last profile override. Reloading reapplies ordinary preferences and preserves the caller's `LOCAL_OPTIONS` setting. Successful plugin and FZF activations are reused. An explicit `rl` retries unavailable providers.
+
+The backend prepares the common tool paths and owns native tool initialization. Bash and Zsh register first-use completions for tools such as uv, uvx, pip and Starship. Configured prompts, directory hooks and editor bindings are ready at first use. Nushell keeps its existing prompt, keybindings and jump commands by default. Its selected Atuin hook also requires a readable `~/.atuin/bin/env`. PowerShell exposes tools through the explicit selections described above. [Shell settings and paths](shell-environment.md)
+
+Fish and Xonsh retain their configured native prompt and provide zoxide jumps on demand. To enable directory tracking, runtime managers, or a replacement prompt from first input, set the shell-local `dots_shell_tools` list in the profile’s early file. Select individual tools such as `zoxide`, `direnv`, `mise`, `atuin` or `starship`, or select `all` for the installed providers. Nushell uses the same selection in `$env.dots_shell_tools`. Fish and Nushell also support `tv`. Television has no native Xonsh generator.
+
+```fish
+# $PROFILE/shells/init.fish
+set -g dots_shell_tools zoxide direnv
+```
+
+```nu
+# $PROFILE/shells/init.nu
+$env.dots_shell_tools = ['zoxide' 'direnv']
+# Use ['all'] to select every installed provider.
+```
+
+```xonsh
+# $PROFILE/shells/init.xsh
+dots_shell_tools = ['zoxide', 'direnv']
+```
 
 Startup now has opt-in metadata markers for [debug traces](debug.md). Normal
 startup does not open a trace channel or start a tracing process. Generated
@@ -198,3 +225,8 @@ Interactive initialization also supplies [global less standout colors](shell-env
 Dots command paths lead inherited/profile paths in each shell, including repeated initialization. `.ln` forwards to the shared safe-link command. Explicit STARSHIP_CONFIG values are retained; unset values use Starship defaults.
 
 Bak completion is registered for standalone `bak`/`dots-bak` and `dots bak` in all six adapters. Zsh registration runs after compinit at the first prompt. Disabling completion removes Dots-owned Bash/Zsh/Fish Bak registrations. Preference cache inputs include separated JSON/TOML files and parent directories, so creating a previously absent profile preference file invalidates the bundle; warm startup retains the no-Python path.
+
+
+### Startup bundle retention
+
+Bash and Zsh publish immutable bundles beneath `$XDG_CACHE_HOME/dots/startup` (default `~/.cache/dots/startup`). The `current` and `previous` pointers retain two generations per shell and platform. A shell opens a bundle before checking its guard, so a concurrent rebuild can retire it while the open shell finishes its first initialization. Warm startup reads the pointer and checks only the selected inputs. The compact source map still resolves compiled lines to their original file and line. Earlier generations from installations predating retention are available for review in `dots cleanup scan --group builds`.

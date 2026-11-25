@@ -40,7 +40,7 @@ def fixture(source=REPO, plugins=True):
     if (source / 'lib/dots').is_dir():
         copy_public_tree(source / 'lib/dots', repo / 'lib/dots', repo=source, fixture=repo, aliases=(REPO,))
     for name in ('bin/dots', 'bin/theme', 'bin/lib/common.sh', 'ruby/ruby.env',
-                 'scripts/preview.zsh', 'scripts/batman', 'scripts/batpipe'):
+                 'scripts/preview.zsh', 'scripts/_dots-fzf-preview', 'scripts/batman', 'scripts/batpipe'):
         dest = repo / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         original = source / name

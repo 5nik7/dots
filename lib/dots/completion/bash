@@ -84,4 +84,4 @@ complete -F _dots_complete_bash dots theme todo fonts nf bak dots-bak gup codex-
 if ! typeset -f _dots_theme_completion_load >/dev/null; then
   source "${BASH_SOURCE[0]%/*}/theme.bash"
 fi
-_dots_theme_completion_load "${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current"
+_dots_theme_completion_load "${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current" register

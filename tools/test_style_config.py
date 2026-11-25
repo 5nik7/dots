@@ -33,19 +33,22 @@ class StyleConfig(unittest.TestCase):
 
     def test_cli_inheritance_defaults_preview_and_undo(self):
         self.assertEqual(self.run_config('get','icons.git.branch').stdout,'\n')
-        path=self.path.parent/'icons.toml'
+        path=self.path.parent/'config.json'
         self.run_config('set','icons.git.branch','BR','--dry-run')
         self.assertFalse(path.exists())
         result=json.loads(self.run_config('set','icons.git.branch','BR','--json').stdout)
         self.assertEqual(self.run_config('get','icons.git.branch',native=True).stdout,'BR\n')
         self.assertEqual(self.run_config('get','icons.git.branch','--defaults').stdout,'\n')
-        self.run_config('set','colors.ui.heading.bold','false')
-        self.run_config('set','colors.apps.tmux.ui.heading.fg','#aabbcc')
+        later = [json.loads(self.run_config('set',key,value,'--json').stdout)['transaction'] for key,value in (
+            ('colors.ui.heading.bold','false'), ('colors.apps.tmux.ui.heading.fg','#aabbcc'))]
         self.run_config('check',native=True)
         with patch.dict(os.environ,self.env,clear=True):
             store=Store(Path(self.env['XDG_STATE_HOME'])/'dots')
-            ops,guards,catalogs=store.inverse(result['transaction'])
-            store.apply('undo',ops,guards,retain=True,catalogs=catalogs)
+            with self.assertRaisesRegex(ValueError, 'drift blocks undo'):
+                store.inverse(result['transaction'])
+            for transaction in [*reversed(later), result['transaction']]:
+                ops,guards,catalogs=store.inverse(transaction)
+                store.apply('undo',ops,guards,retain=True,catalogs=catalogs)
         self.assertFalse(path.exists())
         self.run_config('set','icons.git.branch','D','--defaults')
         self.assertEqual(self.run_config('get','icons.git.branch').stdout,'D\n')
@@ -176,8 +179,9 @@ class StyleConfig(unittest.TestCase):
             cold=fixture.run_shell(shell,code)
             self.assertEqual(cold.returncode,0,cold.stderr)
             self.assertEqual(cold.stdout,'')
-            path=fixture.root/'default/icons.toml'
-            original=path.read_text();path.write_text(original.replace('branch = ""','branch = "B"'))
+            path=fixture.root/'default/config.json'
+            original=path.read_text();doc=json.loads(original)
+            doc['icons']['git']['branch']='B';path.write_text(json.dumps(doc))
             changed=fixture.run_shell(shell,code)
             self.assertEqual(changed.stdout,'B',changed.stderr)
             commands=fixture.home/('shims-'+shell);commands.mkdir()
@@ -192,17 +196,17 @@ class StyleConfig(unittest.TestCase):
         fixture=test_profiles.Profiles();fixture.setUp();self.addCleanup(fixture.doCleanups)
         fixture.public()
         shutil.copytree(ROOT/'default',fixture.root/'default')
-        config=fixture.root/'default/config.json';colors=fixture.root/'default/colors.toml'
-        original_config=config.read_text();original_colors=colors.read_text()
+        config=fixture.root/'default/config.json'
+        original_config=config.read_text()
         for shell in ('bash','zsh'):
             if not shutil.which(shell):continue
             code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s\\n%s" "$_DOTS_HELP_TAGLINE" "${_DOTS_HELP_STYLES[argument]}"'
             cold=fixture.run_shell(shell,code)
             self.assertEqual(cold.returncode,0,cold.stderr)
             self.assertTrue(cold.stdout.startswith('Manage your dotfiles and more...\n'),cold.stdout)
-            updated=json.loads(original_config);updated['apps']['cli']['tagline']='A literal ü tagline'
+            updated=json.loads(original_config);updated['apps']['cli']['settings']['tagline']='A literal ü tagline'
+            updated['apps']['cli']['colors']['help']['argument']['fg']='#123456'
             config.write_text(json.dumps(updated))
-            colors.write_text(original_colors.replace('[apps.cli.help.argument]\nfg = "green"','[apps.cli.help.argument]\nfg = "#123456"'))
             changed=fixture.run_shell(shell,code)
             self.assertEqual(changed.returncode,0,changed.stderr)
             self.assertTrue(changed.stdout.startswith('A literal ü tagline\n'),changed.stdout)
@@ -213,7 +217,7 @@ class StyleConfig(unittest.TestCase):
             self.assertEqual(warm.returncode,0,warm.stderr)
             self.assertEqual(warm.stdout,changed.stdout)
             self.assertNotIn('UNEXPECTED_PYTHON',warm.stderr)
-            config.write_text(original_config);colors.write_text(original_colors)
+            config.write_text(original_config)
 
     def test_git_progress_preferences_invalidate_warm_bundle(self):
         import test_profiles
@@ -226,7 +230,7 @@ class StyleConfig(unittest.TestCase):
             code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s/%s" "$_DOTS_CLI_PROGRESS" "$_DOTS_GIT_VIEW"'
             cold=fixture.run_shell(shell,code)
             self.assertEqual(cold.returncode,0,cold.stderr);self.assertEqual(cold.stdout,'both/default')
-            updated=json.loads(original);updated['apps']['cli']['progress']='bar';updated['apps']['git']['view']='short'
+            updated=json.loads(original);updated['apps']['cli']['settings']['progress']='bar';updated['apps']['git']['settings']['view']='short'
             config.write_text(json.dumps(updated))
             changed=fixture.run_shell(shell,code)
             self.assertEqual(changed.returncode,0,changed.stderr);self.assertEqual(changed.stdout,'bar/short')

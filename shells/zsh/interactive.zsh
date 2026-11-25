@@ -20,13 +20,19 @@ _dots_completion_plugins
 source "$ZSH/core/completion.zsh"
 _dots_shell_prompt
 _dots_hook_snapshot
-source "$ZSH/integrations/tools.zsh"
+source "$DOTS/lib/dots/shell/tools.zsh"
 _dots_hook_record tools
 source "$DOTS/shells/shared/aliases.sh"
-[[ -r "${zsh[local]}" ]] && _dots_hook_source "${zsh[local]}" private-local 1
+if [[ -r ${zsh[profile_local]:-} ]]; then
+  _dots_hook_source "${zsh[profile_local]}" "profile-$DOTS_PLATFORM" 1
+fi
+if [[ -r ${zsh[local]} && ! ${zsh[local]} -ef ${zsh[profile_local]:-} ]]; then
+  _dots_hook_source "${zsh[local]}" private-local 1
+fi
 source "$ZSH/integrations/fzf.zsh"
 _dots_widget_plugins
 _dots_zsh_keys_finish
+_dots_plugins_arm
 
 [[ -n ${ZSH_DEBUGRC+1} ]] && zprof
 source "$DOTS/shells/shared/tmux-workspaces.sh"

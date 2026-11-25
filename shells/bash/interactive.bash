@@ -7,10 +7,17 @@ source "$DOTS/shells/bash/core/options.bash"
 source "$DOTS/shells/shared/fzf.sh"
 source "$DOTS/lib/dots/shell/init.bash"
 # Register before tool hooks so they can compose with the existing prompt.
-declare -gA _DOTS_BASH_TOOL_READY
+declare -gA _DOTS_TOOL_READY
+# Preserve initialized hooks when reloading a shell started by an older bundle.
+if declare -p _DOTS_BASH_TOOL_READY >/dev/null 2>&1; then
+  for _dots_tool in "${!_DOTS_BASH_TOOL_READY[@]}"; do
+    _DOTS_TOOL_READY[$_dots_tool]=${_DOTS_BASH_TOOL_READY[$_dots_tool]}
+  done
+  unset _DOTS_BASH_TOOL_READY _dots_tool
+fi
 source "$DOTS/shells/bash/core/prompt.bash"
 _dots_hook_snapshot
-source "$DOTS/shells/bash/integrations/tools.bash"
+source "$DOTS/lib/dots/shell/tools.bash"
 _dots_hook_record tools
 source "$DOTS/shells/bash/core/completion.bash"
 source "$DOTS/shells/shared/aliases.sh"

@@ -192,7 +192,7 @@ Theme-file directory previews, optional bat highlighting, spaced listings and `c
 ## Platform profiles
 
 The native controller exposes `profile` (including `list` and `check --all`), expanded `env`, and
-`init --bootstrap powershell` through the same static metadata as Bash.
+`init --bootstrap powershell` through the same static metadata as Bash. The installer copies the independent bootstrap into each engine’s all-hosts profile. It loads the checkout’s native profile and can acquire a missing checkout with Git.
 PowerShell prepares a native environment adapter with Python on a cold load;
 warm loads validate and apply it natively. No Bash invocation or Windows/WSL path
 translation is introduced. Actual Windows PowerShell 5.1/7 acceptance is pending.

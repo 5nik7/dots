@@ -13,7 +13,7 @@ dots clipboard search "text" --json
 dots clipboard status
 ```
 
-Recording of successful `cpy` and Dots copies is **off by default**. Enable it deliberately with `dots config set apps.clipboard.record_copies true`. This records only copies made through the shared adapter; `pst` remains a read without recording. To observe changes from other applications, explicitly run `dots clipboard watch start`. The watcher does not start through help, completion, shell initialization or installation.
+Recording of successful `cpy` and Dots copies is **off by default**. Enable it with `dots config set apps.clipboard.record_copies true` for the shared configuration or add `--profile termux` for that profile alone. This records copies made through the shared adapter. Reading with `pst` leaves history untouched. To observe changes from other applications, explicitly run `dots clipboard watch start`. The watcher does not start through help, completion, shell initialization or installation.
 
 ```bash
 dots clipboard watch status

@@ -261,6 +261,7 @@ source "$DOTS/lib/dots/shell/init.bash" && exit 4
     def test_diagnostic_sources(self):
         self.env['DOTS_THEME_DEFAULT'] = 'nord'
         self.env['THEME'] = 'old-family'
+        self.env['CLICOLOR'] = '1'
         result = subprocess.run([str(REPO / 'bin/dots'), 'env', '--json'], env=self.env,
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -269,6 +270,7 @@ source "$DOTS/lib/dots/shell/init.bash" && exit 4
         self.assertEqual(data['values']['DOTS_INIT_THEME']['source'], 'config')
         self.assertEqual(data['values']['THEME']['value'], str(self.home/'state/dots/current/theme'))
         self.assertEqual(data['values']['THEME']['inherited'], 'different')
+        self.assertEqual(data['values']['CLICOLOR']['owner'], 'shells/zsh/interactive.zsh')
         self.assertIn('PATH', data['values'])
         self.assertIn('platform', data)
         self.assertIn('profile', data)

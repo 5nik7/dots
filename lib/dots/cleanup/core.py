@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from collections import Counter
+from contextlib import ExitStack, contextmanager
 import os
 import stat
 
@@ -204,3 +205,45 @@ def delete_entries(target, boundary, progress=lambda *args: None, confirmed=None
         finally:
             os.close(fd)
         progress('Removing ' + target.rule, count, len(names))
+
+def historic_startup(cache, boundary):
+    """Offer only complete, inactive bundles written by the pre-retention compiler."""
+    base = cache / 'dots/startup'
+    safe_path(base, boundary)
+    if not base.is_dir():
+        return
+    from startup import generation_version, pointer
+    for location in sorted(base.iterdir()):
+        if not location.name.startswith(('bash-', 'zsh-')) or location.is_symlink() or not location.is_dir():
+            continue
+        safe_path(location, boundary)
+        active = pointer(location/'current')
+        if not active or not (location/'build.lock').is_file():
+            continue
+        keep = {active, pointer(location/'previous')}
+        for entry in sorted(location.iterdir()):
+            if entry.name not in keep and generation_version(entry) == 1:
+                yield entry
+
+
+@contextmanager
+def startup_guard(targets, *, inspect=None):
+    """Hold the publisher lock from the post-review check through deletion."""
+    selected = [t.path for t in targets if t.rule == 'dots-startup-history']
+    if not selected:
+        yield
+        return
+    from files.file_platform import lock, open_nofollow
+    from startup import pointer, generation_version
+    with ExitStack() as stack:
+        for parent in sorted({path.parent for path in selected}):
+            stream = stack.enter_context(os.fdopen(open_nofollow(parent/'build.lock', os.O_RDWR), 'rb+'))
+            lock(stream)
+            current = pointer(parent/'current')
+            if not current:
+                raise ValueError('missing current startup generation')
+            retained = {current, pointer(parent/'previous')}
+            for path in selected:
+                if path.parent == parent and (path.name in retained or generation_version(path) != 1):
+                    raise ValueError('startup generation changed since review: ' + str(path))
+        yield

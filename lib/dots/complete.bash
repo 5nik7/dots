@@ -354,12 +354,14 @@ dots_complete() {
     elif [[ ${words[index]} == init ]]; then
       if (( cursor == index+1 )); then
         dots_builtin_metadata init
-        dots_value_candidates choice:bash,zsh,fish,powershell,nu,xonsh
+        IFS='|' read -r position type description <<< "${DOTS_META_ARGUMENTS[0]}"
+        dots_value_candidates "$type"
         (( help )) || dots_candidate --bootstrap 'Print missing-checkout bootstrap'
         (( help )) || dots_candidate --setup 'Install platform configurations'
         (( help )) || dots_candidate --help 'Show command help'
-      elif [[ ${words[index+1]} == --bootstrap ]]; then
-        dots_value_candidates choice:bash,zsh,powershell
+      elif [[ ${words[index+1]} == --bootstrap ]] && (( cursor == index+2 )); then
+        dots_builtin_metadata init
+        dots_find_option --bootstrap && dots_value_candidates "$DOTS_OPTION_TYPE"
       elif [[ ${words[index+1]} == --setup ]]; then
         dots_builtin_metadata init
         for row in "${DOTS_META_OPTIONS[@]}"; do
@@ -429,6 +431,7 @@ dots_complete() {
           dots_metadata "$executable" || return
           for ((index=start+consumed; index<cursor; index++)); do
             token=${words[index]}
+            if [[ $expected_option == --layout && $expected == choice:unified && $token == -* ]]; then expected=; fi
             if [[ $expected ]]; then DOTS_OPTION_VALUES[$expected_option]=$token; expected=; continue; fi
             if (( options )) && [[ $token == -- ]]; then options=0; continue; fi
             if (( options )) && [[ $token == -* ]]; then
@@ -442,6 +445,7 @@ dots_complete() {
               fi
             else DOTS_POSITIONALS+=("$token"); (( ++positional )); fi
           done
+          if [[ $expected_option == --layout && $expected == choice:unified && $DOTS_CURRENT == -* ]]; then expected=; fi
           if [[ $expected ]]; then dots_value_candidates "$expected"
           elif (( options )) && [[ $DOTS_CURRENT == --*=* ]]; then
             if dots_find_option "${DOTS_CURRENT%%=*}"; then dots_value_candidates "$DOTS_OPTION_TYPE" "${DOTS_CURRENT%%=*}="; fi

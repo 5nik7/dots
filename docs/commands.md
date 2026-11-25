@@ -729,7 +729,7 @@ Theme-file `show` now supports directory entries and optional terminal syntax hi
 `dots profile list [--json]` lists available definitions and active layers. Both are
 read-only. `dots env [NAME] [--json]` now includes application defaults, context,
 PATH contributions and observed hook provenance in addition to settings/paths.
-`dots init --bootstrap bash|zsh|powershell` emits a standalone startup snippet;
+`dots init --bootstrap bash|zsh|fish|powershell|nu|xonsh` emits a standalone startup snippet;
 printing it does not clone or install anything. See [profiles](profiles.md).
 
 ## Profile and debug diagnostics
@@ -802,6 +802,8 @@ Codex attention setup is an explicit repository maintenance helper, documented u
 Menu review: **update** the cooperating Todo popup and its launcher handoff with Plan in Codex (Alt-C), Print brief (Alt-O), and Copy brief (Alt-Y), available on selected goals and in the brief reader. Print and launch close the containing menu; copy preserves browsing. Stable IDs, inert previews, explicit removal confirmation, query/focus restoration and exact-client handoff use the shared menu adapters. No new tmux binding is installed. Bash, Zsh/FZF-tab, Fish and native PowerShell complete commands, fields, tags, goal aliases and UUIDs in the invocation's scope; help and static completion perform no project discovery.
 
 ## Profile configuration commands
+
+`dots config get fzf` and `dots config get apps.fzf` select the same app. Config accepts app-first and type-first keys for reads, provenance, edits, browsing and completion. For example, `fzf.colors` and `colors.fzf` resolve the same native and semantic fields. `dots config list env` selects environment declarations. Bare `files` retains its mapping-array contract and `apps.files` selects Files preferences. [Config aliases and preview examples](configuration.md#browse-by-app-or-by-type)
 
 `dots config set KEY [VALUE]` opens the existing Config value picker/editor when VALUE is omitted in a usable terminal. It goes directly to the selected key, preserves profile/default scope and `--no-refresh`, and returns after reviewed Save or cancellation. Color options list active-theme colors with hex values, standard roles and custom input; native palette entries save `palette.NAME` references. Data/dry-run/JSON-value calls and noninteractive streams still require VALUE. Missing picker support produces an explicit-value diagnostic. The shared read-only candidate provider supports branches and typed values; see [Config popup editing](profiles.md#configuration-popup).
 
@@ -881,13 +883,7 @@ includes defaults and all declared profiles and cannot be combined with
 
 ### Preference import and layout migration
 
-`dots config import SOURCE [--profile TARGET]` previews a source-wins portable
-appearance merge; omitted target means shared defaults. Use `--apply --yes` to
-save noninteractively or the terminal Cancel/Save review. `dots config migrate
---layout [--all-profiles]` separates legacy inline preferences with the same
-preview/apply flags. Both support JSON, retained undo and no automatic refresh.
-Unqualified preference `set`/`unset` now target shared defaults; native app controls
-retain native-file writes. See [configuration](configuration.md#preference-files-and-appearance-import).
+`dots config import SOURCE [--profile TARGET]` previews a portable appearance merge across schema-1 and schema-2 scopes. Omit the target to import into shared defaults. Use `--apply --yes` to save noninteractively or the terminal Cancel/Save review. `dots config migrate --layout unified` previews a single-file migration for the active profile. It also accepts `--profile NAME`, `--defaults` or `--all-profiles`. Bare `--layout` retains the older separation workflow. Both routes support JSON and retained undo. [Configuration migration and import](configuration.md#preference-files-and-appearance-import).
 
 Bak contextual completion covers standalone `bak`/`dots-bak` and `dots bak`, with
 commands, flags, choices, paths and catalog IDs through all six shell adapters.

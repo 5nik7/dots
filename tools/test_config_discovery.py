@@ -35,17 +35,128 @@ class Discovery(unittest.TestCase):
         controls.cache_clear();styles.cache_clear()
         self.addCleanup(controls.cache_clear);self.addCleanup(styles.cache_clear)
 
+    def test_custom_map_roots_and_empty_icon_aliases(self):
+        from config_values import DYNAMIC, constraints, name, read_defaults
+        from config_menu import Inventory
+        defaults = read_defaults(self.root)
+        for path in DYNAMIC:
+            self.assertEqual(constraints(defaults, name(path))['type'], 'object', path)
+
+        aliases = ('apps.nvim.icons', 'nvim.icons', 'icons.nvim', 'icons.apps.nvim')
+        inventory = Inventory(self.root, self.platform)
+        for key in aliases:
+            self.assertEqual(inventory.find(key).value, {}, key)
+            info = json.loads(self.run_config('explain', key, '--json').stdout)
+            self.assertEqual(info['value'], {}, key)
+            self.assertEqual(info['constraints']['type'], 'object', key)
+        self.assertIn('nvim.icons', dict(key_candidates(self.root, 'nvim.ico', self.platform)))
+        self.assertEqual(json.loads(self.run_config('get', 'icons.nvim', '--json', native=True).stdout)['value'], {})
+        bindings = json.loads(self.run_config('explain', 'fzf.settings.bindings', '--json', native=True).stdout)
+        self.assertEqual(bindings['constraints']['type'], 'object')
+        self.assertEqual(bindings['value']['ctrl-x'], 'toggle-preview')
+        self.assertEqual(constraints(defaults, 'apps.fzf.bindings.ctrl-x')['type'], 'string')
+        child = 'nvim.icons["diagnostics.Error"]'
+        self.run_config('set', child, '!', '--no-refresh', native=True)
+        self.assertEqual(json.loads(self.run_config('get', 'icons.nvim', '--json').stdout)['value'],
+                         {'diagnostics.Error': '!'})
+        self.run_config('unset', child, '--no-refresh')
+        self.assertEqual(json.loads(self.run_config('get', 'icons.nvim', '--json').stdout)['value'], {})
+        self.assertEqual(constraints(defaults, 'apps.' + child)['type'], 'string')
+        self.run_config('get', 'nvim.unrecognized', code=1)
+
+    def test_scalar_get_loads_only_its_owners(self):
+        import io
+        from contextlib import ExitStack, redirect_stdout
+        from config_cli import main
+        with ExitStack() as stack:
+            for item in ('profile_config.keys', 'profile_config.file_rows', 'style_catalog.known_keys',
+                         'config_wttr.Native', 'config_pkgs.Native', 'config_codex.Native'):
+                stack.enter_context(patch(item, side_effect=AssertionError('unrelated owner ' + item)))
+            for key in ('colors.fzf.ui.cursor.fg', 'icons.git.branch', 'settings.fzf.preview_window',
+                        'formatting.cli.label_gap', 'DOTS_COLOR', 'profile.alias'):
+                with self.subTest(key=key), redirect_stdout(io.StringIO()) as output:
+                    self.assertEqual(main(['get', key, '--profile', self.platform, '--json']), 0)
+                    self.assertIn('value', json.loads(output.getvalue()))
+
+    def test_application_and_type_views_keep_one_owner(self):
+        for native in (False, True):
+            def read(key):
+                return json.loads(self.run_config('get', key, '--json', native=native).stdout)['value']
+            self.assertEqual(read('fzf'), read('apps.fzf'))
+            values = [read(key) for key in ('apps.fzf.colors', 'fzf.colors', 'colors.fzf')]
+            self.assertEqual(values[0], values[1])
+            self.assertEqual(values[1], values[2])
+            human = self.run_config('get','fzf.colors',native=native).stdout
+            self.assertIn('cursor', human)
+            self.assertIn('fg+', values[0])
+            self.assertIn('fg', values[0]['ui']['cursor'])
+            for spelling in ('fzf.colors["fg+"]', 'colors.fzf["fg+"]', 'colors.apps.fzf["fg+"]'):
+                self.run_config('set', spelling, 'red:bold', '--no-refresh', native=native)
+                self.assertEqual(read('apps.fzf.colors["fg+"]'), 'red:bold')
+                self.run_config('unset', spelling, '--no-refresh', native=native)
+            for spelling in ('fzf.settings.preview_window', 'settings.fzf.preview_window'):
+                self.assertEqual(read(spelling), read('apps.fzf.preview_window'))
+            self.assertEqual(read('files'), {})
+            self.assertEqual(read('apps.files.list_view'), 'short')
+
+    def test_group_edits_use_one_owner_and_reject_cross_owner_writes(self):
+        colors = self.path.with_name('config.json')
+        for key in ('apps.fzf.colors', 'fzf.colors', 'colors.fzf'):
+            change = self.run_config('set', key, '{"border":"red","fg+":"bold:white"}',
+                                     '--json-value','--no-refresh','--json')
+            self.assertEqual(json.loads(change.stdout)['path'], str(colors))
+            original = colors.read_bytes()
+            bad = self.run_config('set', key, '{"border":"blue","ui":{"cursor":{"fg":"blue"}}}',
+                                  '--json-value','--no-refresh',code=1)
+            self.assertIn('edit each field individually', bad.stderr)
+            self.assertEqual(colors.read_bytes(), original)
+            self.run_config('unset', key, '--no-refresh')
+        result = self.run_config('set','settings.fzf.preview_window','down:30%','--dry-run','--json')
+        self.assertEqual(json.loads(result.stdout)['items'][0]['key'],'apps.fzf.preview_window')
+        result = self.run_config('explain','fzf.colors["fg+"]','--json')
+        self.assertEqual(json.loads(result.stdout)['key'],'apps.fzf.colors["fg+"]')
+
+    def test_application_env_file_and_browser_views(self):
+        data=json.loads(self.path.read_text())
+        data['environment']={'FZF_OPTION':'fixture','FZF_API_KEY':'${SECRET_KEY}','TEAM_PRIVATE_TOKEN':'${SECRET_KEY}'}
+        data['files']={'dots':[dict(self.resource)]}
+        self.path.write_text(json.dumps(data))
+        def read(key):
+            return json.loads(self.run_config('get',key,'--json').stdout)['value']
+        self.assertEqual(read('apps.fzf.env'),read('env.fzf'))
+        self.assertEqual(read('fzf.env.FZF_API_KEY'),'[redacted]')
+        self.assertEqual(read('env.TEAM_PRIVATE_TOKEN'),'[redacted]')
+        self.run_config('get','apps.team.env','--json',code=1)
+        hidden = self.run_config('get','fzf.env.FZF_DEFAULT_OPTS','--json',
+                                 FZF_DEFAULT_OPTS='private sentinel',DOTS_ENV_HOOKS='FZF_DEFAULT_OPTS:local:1:set')
+        self.assertEqual(json.loads(hidden.stdout)['value'],'[redacted]')
+        self.assertNotIn('private sentinel',hidden.stdout + hidden.stderr)
+        self.run_config('set','env.fzf.FZF_OPTION','saved')
+        self.assertEqual(read('environment.FZF_OPTION'),'saved')
+        self.assertEqual(read('app.files'),[self.resource])
+        self.assertEqual(read('files.app'),read('apps.app.files'))
+        self.assertEqual(read('app.files["dots:app"]'), self.resource)
+        self.run_config('unset','apps.app.files',code=1)
+        inventory=__import__('config_menu').Inventory(self.root,self.platform)
+        self.assertEqual(inventory.find('fzf.settings.preview_window').key, 'apps.fzf.preview_window')
+        app_rows=__import__('config_menu').tree_rows(inventory,'apps.fzf.colors')
+        self.assertTrue(any(row.key=='apps.fzf.colors.ui.cursor' for row in app_rows))
+        self.assertTrue(any(key.startswith('colors.fzf.') for key,_ in key_candidates(self.root,'colors.fzf.')))
+        self.assertIn('fzf.settings.preview_window',dict(key_candidates(self.root,'fzf.settings.preview_w')))
+        self.assertEqual(list(dict(key_candidates(self.root,'fzf.colors.bord'))), ['fzf.colors.border'])
+        self.assertEqual(list(dict(key_candidates(self.root,'colors.fzf.bord'))), ['colors.fzf.border'])
+
     def test_canonical_control_and_style_roundtrip(self):
         selected=context(self.root)
         plan=ControlPlan(self.root,selected)
         plan.edit('formatting.apps.menu.popup.width','75%');plan.apply('set')
-        saved=json.loads(self.path.read_text())
-        self.assertEqual(saved['formatting']['apps']['menu']['popup']['width'],'75%')
+        saved=json.loads(self.path.with_name('config.json').read_text())
+        self.assertEqual(saved['apps']['menu']['formatting']['popup']['width'],'75%')
         self.assertEqual(Controls(self.root).resolve('apps.menu.popup.width')['value'],'75%')
         plan=StylePlan(self.root,context(self.root),'colors')
         plan.edit('apps.cli.todo.field.alias.value.fg','#112233');plan.apply('set')
-        raw=(self.path.parent/'colors.toml').read_text()
-        self.assertIn('[apps.todo.field.alias.value]',raw)
+        raw=json.loads(self.path.with_name('config.json').read_bytes())
+        self.assertEqual(raw['apps']['todo']['colors']['field']['alias']['value']['fg'],'#112233')
         self.assertEqual(Styles(self.root).style('todo.field.alias.value',app='cli')['fg'],'#112233')
 
     def test_migration_comments_values_idempotence_and_undo(self):

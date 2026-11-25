@@ -103,15 +103,16 @@ class ProgressStyles(unittest.TestCase):
         import test_profiles
         fixture=test_profiles.Profiles();fixture.setUp();self.addCleanup(fixture.doCleanups);fixture.public()
         shutil.copytree(fixtures.ROOT/'default',fixture.root/'default')
-        icons=fixture.root/'default/icons.toml';colors=fixture.root/'default/colors.toml'
-        original_icons,original_colors=icons.read_text(),colors.read_text()
+        config=fixture.root/'default/config.json';original=config.read_text()
         for shell in ('bash','zsh'):
             if not shutil.which(shell): continue
             code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s\\n%s" "${_DOTS_STYLE_ICONS[progress.bar.filled]}" "${_DOTS_STYLE_COLORS[progress.empty]}"'
             cold=fixture.run_shell(shell,code);self.assertEqual(cold.returncode,0,cold.stderr)
             self.assertTrue(cold.stdout.startswith('━\n'),cold.stdout)
-            icons.write_text(original_icons.replace('filled = "━"','filled = "="'))
-            colors.write_text(original_colors.replace('[apps.cli.progress.empty]\nfg = "colors.ui.muted.fg"','[apps.cli.progress.empty]\nfg = "#123456"'))
+            doc=json.loads(original)
+            doc['icons']['progress']['bar']['filled']='='
+            doc['apps']['cli']['colors']['progress']['empty']['fg']='#123456'
+            config.write_text(json.dumps(doc))
             changed=fixture.run_shell(shell,code);self.assertEqual(changed.returncode,0,changed.stderr)
             self.assertEqual(changed.stdout,'=\n38;2;18;52;86')
             shims=fixture.home/('progress-shims-'+shell);shims.mkdir()
@@ -119,7 +120,7 @@ class ProgressStyles(unittest.TestCase):
             warm=fixture.run_shell(shell,code,PATH=str(shims)+os.pathsep+fixture.env['PATH'])
             self.assertEqual(warm.returncode,0,warm.stderr);self.assertEqual(warm.stdout,changed.stdout)
             self.assertNotIn('UNEXPECTED_PYTHON',warm.stderr)
-            icons.write_text(original_icons);colors.write_text(original_colors)
+            config.write_text(original)
 
 
 if __name__=='__main__': unittest.main()

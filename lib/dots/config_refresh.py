@@ -396,6 +396,8 @@ def after_save(root, before):
                         break
             if old_apps.get('yazi', {}).get('tab_bar') != new_apps.get('yazi', {}).get('tab_bar'):
                 invocation.append(dict(app='yazi', status='next Yazi launch'))
+            if old_apps.get('fzf', {}).get('previewers') != new_apps.get('fzf', {}).get('previewers'):
+                invocation.append(dict(app='fzf', status='next preview'))
             return dict(schema=1, status='complete' if invocation else 'unchanged', consumers=invocation)
         if invocation_visuals_only(before,after):
             return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
@@ -420,6 +422,14 @@ def preview_save(root, plan):
             if before['config'].get('apps',{}).get(app) != after['config'].get('apps',{}).get(app):
                 changes.append(app)
         old_bar = before['config'].get('apps', {}).get('yazi', {}).get('tab_bar')
+        old_previewers = before['config'].get('apps', {}).get('fzf', {}).get('previewers')
+        new_previewers = after['config'].get('apps', {}).get('fzf', {}).get('previewers')
+        if old_previewers != new_previewers:
+            from config_keys import under
+            if not changes and all(under(item.get('key', ''), 'apps.fzf.previewers') for item in plan.items):
+                return dict(schema=1, status='preview', consumers=['fzf'], reason='Next preview')
+            if 'fzf' not in changes:
+                changes.append('fzf')
         new_bar = after['config'].get('apps', {}).get('yazi', {}).get('tab_bar')
         if old_bar != new_bar:
             if not changes and all(item.get('key', '').startswith('apps.yazi') for item in plan.items):
@@ -439,7 +449,7 @@ def preview_save(root, plan):
         if before['config'].get('apps',{}).get('setup') != after['config'].get('apps',{}).get('setup'):
             changes.append('setup')
         return dict(schema=1,status='preview',consumers=changes,reason='Refresh affected active consumers after saving' if changes else 'No active consumer change')
-    proposed = Styles(root, replacements={plan.path: plan.data}, palette=dict(colors=style.palette,palette=style.native_palette))
+    proposed = Styles(root, replacements=plan.replacements, palette=dict(colors=style.palette,palette=style.native_palette))
     before,after = snapshot(style.palette, root, styles=style), snapshot(style.palette, root, styles=proposed)
     changes = affected(before,after)
     if changes==['completion']:

@@ -40,7 +40,7 @@ class Layout(unittest.TestCase):
         after=[tmux('show-option','-gqv','status-format['+str(i)+']') for i in (0,1)]
         self.assertEqual(after[1],before[1])
         self.assertIn('@dots-config-clock',after[0])
-        config=self.defaults['formatting']['apps']['tmux'];config.update(position='bottom',main_row=0,termux_row=1,main_left=['windows','session'],main_right=['git','indicators'])
+        config=self.defaults['apps']['tmux']['formatting'];config.update(position='bottom',main_row=0,termux_row=1,main_left=['windows','session'],main_right=['git','indicators'])
         self.publish(tmux)
         self.assertEqual(tmux('show-option','-gqv','status-position'),'bottom')
         row=tmux('show-option','-gqv','status-format[0]')
@@ -66,9 +66,9 @@ class Layout(unittest.TestCase):
         tmux('rename-window','multi')
         tmux('set-option','-g','@dots-codex-snapshot','|@0:idle|')
         for multiple in (False,True):
-            self.defaults['apps']['tmux']['session']['multiple']=multiple
+            self.defaults['apps']['tmux']['settings']['session']['multiple']=multiple
             for left in (['session','windows'],['windows','session']):
-                self.defaults['formatting']['apps']['tmux']['main_left']=left
+                self.defaults['apps']['tmux']['formatting']['main_left']=left
                 # A visual refresh must replace an older server's predicates.
                 tmux('set-option','-g','@dots-session-multi','0')
                 tmux('set-option','-g','@dots-window-name','')
@@ -80,8 +80,11 @@ class Layout(unittest.TestCase):
                 window=tmux('display-message','-p','#{E:@dots-window-format}')
                 self.assertEqual(re.sub(r'#\[[^]]*\]','',window),' multi  ')
                 self.assertNotIn('HOST',window)
-        self.defaults['apps']['tmux']['session']['multiple']=False
+        self.defaults['apps']['tmux']['settings']['session']['multiple']=False
         self.publish(tmux)
+        # This case checks visibility in a detached server. Give the name room
+        # independently of the Termux client's current badge width.
+        tmux('set-option','-g','@dots-session-width','31')
         # The literal project name multi is not evidence of multiple roots.
         tmux('set-option','-g','@dots-workspace-project-count','1')
         text=tmux('display-message','-p','#{E:status-left}')
@@ -97,7 +100,7 @@ class Layout(unittest.TestCase):
     def test_saved_legacy_layout_keeps_git_right_without_quota_acquisition(self):
         tmux,_=self.server('legacy-placement')
         tmux('source-file',str(self.write_config(workspace_hooks=False)))
-        cfg=self.defaults['formatting']['apps']['tmux']
+        cfg=self.defaults['apps']['tmux']['formatting']
         cfg.update(main_left=['session','windows','git'],main_right=['indicators'])
         self.publish(tmux)
         row=tmux('show-option','-gqv','status-format[1]')
@@ -111,7 +114,7 @@ class Layout(unittest.TestCase):
     def test_custom_quota_and_git_hide_without_orphan_dividers(self):
         tmux,_=self.server('optional-placement')
         tmux('source-file',str(self.write_config(workspace_hooks=False)))
-        self.defaults['formatting']['apps']['tmux']['main_left']=['session']
+        self.defaults['apps']['tmux']['formatting']['main_left']=['session']
         self.publish(tmux)
         tmux('set-option','-g','status-left','')
         tmux('set-option','-g','status-right','')
@@ -122,7 +125,7 @@ class Layout(unittest.TestCase):
             text=tmux('display-message','-p','#{E:status-format[1]}')
             text=re.sub(r'#\[[^]]*\]','',text)
             self.assertEqual(text.strip(),expected)
-        fmt=self.defaults['formatting']['apps']['tmux']
+        fmt=self.defaults['apps']['tmux']['formatting']
         fmt['codex_usage']['git_separator']=''
         self.publish(tmux)
         self.assertEqual(tmux('show-option','-gqv','@dots-codex-git-separator'),'')
@@ -137,9 +140,9 @@ class GeneratedStatus(fixtures.TmuxStatus):
         # Shared native assertions use an explicit baseline, independent of
         # the owner's editable box padding, icon and indicator preferences.
         path=self.repo/'default/config.json';data=json.loads(path.read_text())
-        data['formatting']['apps']['tmux']['battery'].update(before='',after='',width=4)
+        data['apps']['tmux']['formatting']['battery'].update(before='',after='',width=4)
         for key,label in (('copy','COPY'),('prefix','PREFIX'),('zoom','ZOOM')):
-            data['apps']['tmux']['indicators'][key]['text']=label
+            data['apps']['tmux']['settings']['indicators'][key]['text']=label
         path.write_text(json.dumps(data))
         profile=self.repo/'profiles/termux'
         with (profile/'colors.toml').open('a') as stream:

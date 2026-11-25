@@ -1,22 +1,26 @@
 # Zsh Configuration
 
-The shared configuration supports the existing Termux workflow with explicit startup stages. WSL/Linux detection and path policy have fixture coverage; native WSL/Linux and MSYS2 interactive verification remain pending. MSYS2 has a separate adapter and does not share WSL cache identity.
+The shared configuration supports the existing Termux workflow with explicit startup stages. Fixtures exercise WSL/Linux detection and path policy. MSYS2 uses the Windows platform and its own runtime identifier. Native WSL/Linux and MSYS2 interactive verification remains pending.
 
 ## Startup Order
 
-`zshenv` resolves its source file through symlinks, exports checkout-derived paths including `DOTS`, `SHELLS`, and `ZSH`, and detects the execution environment without external commands. It retains `dotstro`, `is_termux`, and `is_wsl`. Link startup files from the desired checkout; inherited Dots path variables are replaced. Set custom overrides after initialization.
+`zshenv` resolves its source file through symlinks and exports the checkout root. Ordinary nonlogin interactive startup delegates settings, paths and platform detection to the known Dots rc. Login, noninteractive and independent rc files use the early section of the same prepared bundle. It exposes `dotstro`, `is_termux` and `is_wsl`. A login rc applies environment or settings-file overrides made by `.zprofile`.
 
-`zshrc` resolves its own source file and loads the adjacent `init.zsh` directly; that loader establishes the shared paths, and `interactive.zsh` loads these stages synchronously:
+`zshrc` resolves its checkout and enters the prepared backend. The public `init.zsh` links to this rc. After early profile hooks, the interactive sequence is:
 
 1. `core/environment.zsh`: XDG defaults, shared utilities, environment modules, editor selection, and paths.
 2. `core/cache.zsh`, shared functions/options, early `keys.zsh` preferences, FZF settings, and the selected theme.
 3. Installed completion providers, followed by `core/completion.zsh` and one `compinit` with its normal ownership checks.
-4. `integrations/tools.zsh`: immediately available runtime managers, directory hooks, history integration, generated completions, Starship, then shared aliases.
-5. The existing local configuration hook, FZF shell bindings, then FZF-tab and widget-wrapping plugins, followed by the final personal keybindings.
+4. The backend's `lib/dots/shell/tools.zsh` activates available runtime managers, directory hooks, history integration and Starship, and registers first-use tool completions. Shared aliases follow.
+5. The active Termux or WSL profile defaults, then an independent `~/.zshrc.local`, FZF shell bindings, fzf-tab, widget plugins and final personal keybindings. A home link to the selected profile file is sourced once. The generic `$PROFILE/shells/local.zsh` hook follows this sequence.
 
-User-facing functions and aliases are maintained in the [shared shell resources](../../docs/shared-shells.md). Existing `functions.zsh`, `aliases.zsh`, `options.zsh`, `fzf.zsh`, `completions.zsh`, and `plugins.zsh` entry points remain available. Tool activation and plugin/widget wrapping happen once per shell; start a new shell after changing their activation code. `rl` reloads ordinary configuration and reapplies the theme without duplicating hooks or FZF options.
+User-facing functions and aliases are maintained in the [shared shell resources](../../docs/shared-shells.md). `rl` reapplies preferences and the theme. FZF and each registered plugin are marked ready after successful initialization. Reload keeps working widgets, retries unavailable providers and preserves shared history and the caller's `LOCAL_OPTIONS` setting.
 
-The first-run Zinit/plugin download behavior is retained. Installed plugins are reused. Missing optional tools do not prevent basic shell use; this is not an installer or a claim that every optional integration works without its dependencies.
+Installed Zinit plugins load in their normal order. When the manager or a configured plugin is missing, the first Tab still uses native completion and queues the missing completion plugins. A native history key can queue the history-search plugin. The first accepted interactive command queues remaining configured plugins, including the Termux vi-mode and clipboard integrations. An installed custom Zinit plugin can still load through a local hook. Only the shipped public plugin choices are eligible for automatic downloads. A detached worker downloads those GitHub repositories into private staging directories and publishes into unoccupied Zinit destinations. Foreground editing continues immediately. The next prompt after the worker finishes activates the available plugins and restores personal binding priority. A shell script, the initial prompt, another keypress or an ordinary reload never starts a duplicate download.
+
+Automatic downloads require `python3` and `timeout` on PATH. Repository downloads also require `git`. The Linux/WSL Deja executable uses `curl`. Zsh skips each download whose prerequisites are missing. If none can run, native editing continues without starting a worker or writing a receipt.
+
+Run `dots-zsh-plugins setup` in an integrated interactive Zsh to prepare missing plugins immediately. `dots-zsh-plugins retry` retries failed attempts and reports individual errors. Per-destination locks and receipts under `${XDG_STATE_HOME:-~/.local/state}/dots/zsh/plugins` coordinate concurrent shells and suppress automatic retries after failure. Git prompts and recursive submodules are disabled. The platform's `timeout` utility bounds each transport to 30 seconds within a 90-second batch deadline, including after an acquiring shell closes. A killed worker leaves a preparing receipt. An explicit retry starts with a fresh staging directory. A hard kill can leave a private `.dots-plugin-*` staging directory beside its target. Existing installations and occupied destinations are preserved for inspection. Bash, Fish, Nushell, Xonsh and native PowerShell use their own integrations.
 
 ## Personal keybindings and history search
 
@@ -34,7 +38,7 @@ These preferences are specific to personal Zsh startup on Termux/Linux/WSL; the 
 
 ## Deja suggestions
 
-Deja is the default. On Linux/WSL x86-64 and ARM64, Zinit automatically downloads a missing executable when an interactive Zsh shell first selects Deja. Open a fresh shell to use it; an unset or empty `DOTS_ZSH_SUGGESTIONS` selects Deja. To use the optional `zsh-autosuggestions` engine instead:
+Deja is the default. On Linux/WSL x86-64 and ARM64, the first accepted interactive command can queue a missing executable after Deja is selected. Open a fresh shell to use it; an unset or empty `DOTS_ZSH_SUGGESTIONS` selects Deja. To use the optional `zsh-autosuggestions` engine instead:
 
 ```zsh
 DOTS_ZSH_SUGGESTIONS=autosuggestions zsh
@@ -42,9 +46,9 @@ DOTS_ZSH_SUGGESTIONS=autosuggestions zsh
 
 Exit that shell to return to the previous session. For persistent selection, export `DOTS_ZSH_SUGGESTIONS=autosuggestions` in your existing local configuration hook (before widget plugins load), then open a fresh shell. Remove that export or set it to `deja` to restore the default in a new shell. `rl` deliberately does not switch engines: stacking their widget wrappers is unsafe. Failed installation, an unusable release, unsupported platforms/architectures or invalid selector values warn and fall back to autosuggestions for that shell. Explicit `autosuggestions` and `none` selections never install Deja.
 
-Zinit loads `Giammarco-Ferranti/deja` synchronously with `lucid depth=1 pick'deja.plugin.zsh'`, using the existing load-once wrapper. No `wait` ice is used. Before loading the plugin, Dots reuses an executable already on PATH. Otherwise, on Linux/WSL, Zinit loads the latest Linux GitHub release as a command under the separate `dots-deja-binary` identity, selecting `amd64` or `arm64` explicitly. Its directory is managed by Zinit and added to the current shell's PATH; the executable is checked with `--version` before activation. Subsequent shells reuse the cached release without remote version checks. Zinit retains its normal download/extraction prerequisites and installation feedback; ordinary startup adds no Dots progress animation. Do not also source `deja init zsh` elsewhere or load either engine through another plugin list.
+Zinit loads `Giammarco-Ferranti/deja` synchronously with `lucid depth=1 pick'deja.plugin.zsh'`, using the existing load-once wrapper. No `wait` ice is used. Before loading the plugin, Dots reuses an executable already on PATH. Otherwise, on Linux/WSL, the first-use worker retrieves matching upstream release metadata and a size-limited archive using HTTPS and curl. It stages the single regular `deja` executable under the existing `dots-deja-binary` identity, selecting `amd64` or `arm64` explicitly. Zinit activates this cached executable. Its directory is managed by Zinit and added to the current shell's PATH; the executable is checked with `--version` before activation. Subsequent shells reuse the cached release without remote version checks. Do not also source `deja init zsh` elsewhere or load either engine through another plugin list.
 
-Updates are explicit: use `zinit update dots-deja-binary` for the managed executable and `zinit update Giammarco-Ferranti/deja` for the integration, then open a fresh shell. An executable supplied elsewhere on PATH remains your responsibility and takes precedence. Failed downloads can be retried in a fresh shell; if Zinit retained an incomplete installation, use its update command. No system packages, history import or startup-file edits are performed by this integration.
+Updates are explicit: use `zinit update dots-deja-binary` for the managed executable and `zinit update Giammarco-Ferranti/deja` for the integration, then open a fresh shell. An executable supplied elsewhere on PATH remains your responsibility and takes precedence. Run `dots-zsh-plugins retry` after a failed download. Open a fresh shell if an alternative suggestion engine has already been activated. No system packages, history import or startup-file edits are performed by this integration.
 
 Deja's default Tab binding is disabled so FZF-tab retains completion. To cycle alternatives, set `DEJA_CYCLE_KEY` to a spare key before startup; explicit values, including empty strings, are preserved. Right arrow accepts a suggestion. `DEJA_HIGHLIGHT_STYLE` initially inherits `ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE` (or `fg=8`) unless explicitly set. This is a startup snapshot, not live palette synchronization; restart after a theme change or supply an explicit style.
 
@@ -76,7 +80,7 @@ The existing `secrets.sh` and `zsh[local]` hooks remain supported and reapply on
 
 Zsh path insertion uses literal array membership and preserves existing precedence. Existing directories are retained in place; missing directories are not added. `fixpath` removes duplicate entries without sorting executable precedence. Bash and Zsh source `bin/lib/common.sh` for shared utilities; startup leaves its legacy 256-color arrays unallocated. The explicit utility functions remain available to build `COLOR`/`FG`/`BG` on request. Named theme color arrays come from the theme initializer.
 
-Termux derives site-functions from its prefix. Linux and WSL retain the installed shell's native completion paths. WSL detection accepts its environment markers, kernel release, or distribution configuration; distribution names remain separate from execution context. MSYS/Cygwin detection selects the MSYS adapter. No adapter translates drive paths, imports Windows PATH, or enables cross-filesystem linking.
+Termux derives site-functions from its prefix. Linux and WSL retain the installed shell's native completion paths. WSL detection accepts its environment markers or a Microsoft kernel release. MSYS/Cygwin detection selects the Windows platform with the detected runtime. These adapters preserve native paths.
 
 For WSL performance, prefer keeping the checkout, plugins, and cache on its Linux filesystem. MSYS2's native behavior still requires verification.
 

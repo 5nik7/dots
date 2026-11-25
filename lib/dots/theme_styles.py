@@ -4,22 +4,21 @@ from pathlib import Path
 import re
 
 from style_config import Styles, ATTRS
-
-
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr', 'completion')
+from style_catalog import APPS
 
 
 def snapshot(palette, root=None, *, styles=None,controls=None):
     styles = styles or Styles(root, palette=palette)
     from config_values import Controls
     controls=controls if controls is not None else Controls(styles.root,styles.selected,defaults=styles.defaults).values
-    result = dict(schema=1, icons=styles.values['icons'], colors={}, apps={})
+    result = dict(schema=1, icons=dict(styles.values['icons']), colors={}, apps={})
     from style_catalog import split, consumers, fields
     roles = sorted({split(key)[1].rsplit('.', 1)[0] for key in styles.values['colors']})
+    icons = styles.icon_names()
     for app in (None, *APPS):
         target = result if app is None else result['apps'].setdefault(app, dict(icons={}, colors={}))
-        for key in styles.values['icons']:
-            if not key.startswith('apps.') and (app is None or app in consumers('icons', key)):
+        for key in icons:
+            if app is None or app in consumers('icons', key):
                 target['icons'][key] = styles.icon(key, app=app)
         if app=='tmux':
             from tmux_controls import ICONS
@@ -37,6 +36,9 @@ def snapshot(palette, root=None, *, styles=None,controls=None):
             if app == 'yazi':
                 # Dotline reads tab policy from Config when Yazi starts.
                 target['options'] = {k:v for k,v in target['options'].items() if k != 'tab_bar'}
+            if app == 'fzf':
+                # File previewers read their profile on demand.
+                target['options'] = {k:v for k,v in target['options'].items() if k != 'previewers'}
             target['formatting']=controls.get('formatting',{}).get('apps',{}).get(app,{})
     result['config']=controls
     native=result['apps']['nvim']['options']
@@ -72,7 +74,7 @@ def tokens(palette, root=None):
                 if not re.fullmatch('#[a-fA-F0-9]{6}', value): value = semantic.get(value, semantic.get('foreground', '#ffffff'))
                 result[app+'_'+role.replace('.', '_')+'_'+field] = value
     tmux_styles = Styles(root, palette=palette)
-    for name in (k for k in tmux_styles.values['icons'] if not k.startswith('apps.')):
+    for name in tmux_styles.icon_names():
         value = tmux_styles.icon(name, app='tmux')
         result['tmux_icon_'+name.replace('.', '_')] = tmux_literal(value)
     # Native Yazi icon rules; file colors remain owned by file-colors.toml.
@@ -124,9 +126,9 @@ def write_shell(out, styles, doc):
     from style_config import ROLES
     rows = [('icon', k, v) for k, v in doc['apps']['cli']['icons'].items()]
     rows += [('color', k, styles.code(k)) for k in ROLES]
-    gum = (out/'gum_env.sh').read_text() if (out/'gum_env.sh').is_file() else ''
+    gum = (out/'gum_env.sh').read_text(encoding='utf-8') if (out/'gum_env.sh').is_file() else ''
     rows += [('env', m[1], m[2]) for m in re.finditer(r"(?m)^export ([A-Z][A-Z0-9_]*)='(#[0-9a-fA-F]{6})'$", gum)]
-    fzf = (out/'fzf.sh').read_text().replace('\\\n', '') if (out/'fzf.sh').is_file() else ''
+    fzf = (out/'fzf.sh').read_text(encoding='utf-8').replace('\\\n', '') if (out/'fzf.sh').is_file() else ''
     match = re.search(r'^export _FZF_COLORS_="([^"\n]+)"', fzf, re.M)
     if match: rows.append(('env', 'DOTS_THEME_FZF_COLORS', match[1]))
     from fzf_config import shell_options,colors
@@ -138,4 +140,4 @@ def write_shell(out, styles, doc):
     if options:
         rows.append(('env','DOTS_THEME_FZF_OPTS',shell_options(options)))
         rows.append(('env','DOTS_THEME_FZF_PREVIEW','1' if options.get('preview') is not None else '0'))
-    (out/'visual.tsv').write_text(''.join('\t'.join(row)+'\n' for row in rows))
+    (out/'visual.tsv').write_text(''.join('\t'.join(row)+'\n' for row in rows), encoding='utf-8')

@@ -145,6 +145,18 @@ print -r -- "WARM:${_DOTS_COMPLETION_STYLES[command]}"
         self.assertIn(b'WARM:32',result.stdout)
         self.assertEqual(result.stderr, b'')
 
+    def test_native_fingerprint_tracks_fractional_file_times(self):
+        item = self.home/'preference'
+        item.write_text('red')
+        for fraction in (123_000_001, 123_000_002):
+            instant = 1_700_000_000_000_000_000 + fraction
+            os.utime(item, ns=(instant, instant))
+            # Some filesystems expose less precision than a nanosecond.
+            stored = item.stat().st_mtime_ns
+            expected = f":{stored//10**9}.{stored%10**9:09d}:".encode()
+            result = self.zsh('_DOTS_COMPLETION_WATCH=("$HOME/preference"); _dots_completion_fingerprint; print -r -- "$reply[1]"')
+            self.assertIn(expected, result.stdout)
+
     def test_compiled_preferences_refresh_and_remain_python_free(self):
         import test_profiles
         fixture=test_profiles.Profiles();fixture.setUp();self.addCleanup(fixture.doCleanups)
@@ -406,11 +418,13 @@ zstyle ':fzf-tab:*' fzf-command capture_fzf
 zstyle ':fzf-tab:complete:__dots_preview_fallback__:' fzf-command capture_fzf
 _PREVIEW_=true
 PROMPT='READY> '
-cap() { print -rn -- "$BUFFER" >| "$HOME/buffer"; print -rl -- $region_highlight >| "$HOME/regions"; }
+cap() { print -rl -- $region_highlight >| "$HOME/regions"; print -rn -- "$BUFFER" >| "$HOME/buffer"; }
 zle -N cap; bindkey '^X' cap
 print -r -- "${+functions[_dots_completion_original_capture]}" >| "$HOME/adapter-installed"
 print -r -- "$FAST_HIGHLIGHT_STYLES[${FAST_THEME_NAME}subcommand]" >| "$HOME/input-style"
 autoload -Uz add-zle-hook-widget
+fixture_redraw() { print -rn -- "$BUFFER" >| "$HOME/drawn-buffer"; }
+add-zle-hook-widget line-pre-redraw fixture_redraw
 fixture_ready() { print -r -- FULL_READY; }
 add-zle-hook-widget line-init fixture_ready
 ''')
@@ -421,8 +435,8 @@ add-zle-hook-widget line-init fixture_ready
             # A complete unique word inserts its separator; the following Tab
             # opens that command's children. Neither operation executes dots.
             self.drain(terminal,.2)
-            terminal.send('dots git');self.drain(terminal,.2)
-            terminal.send('\t');self.drain(terminal,.4);terminal.send('\x18')
+            terminal.send('dots git');self.await_redraw(terminal,'dots git')
+            terminal.send('\t');self.await_redraw(terminal,'dots git ');terminal.send('\x18')
             self.assertEqual(self.await_buffer(terminal).read_text(),'dots git ')
             style=(self.home/'input-style').read_text().strip()
             self.assertTrue(style)
@@ -585,10 +599,21 @@ fi
             terminal.send('\x15'+query)
             self.drain(terminal,.4)
             terminal.send('\r')
-        self.drain(terminal,.3);terminal.send('\x18')
+        if (self.home/'drawn-buffer').exists(): self.await_redraw(terminal,expected)
+        else: self.drain(terminal,.3)
+        terminal.send('\x18')
         target=self.await_buffer(terminal)
         self.assertEqual(target.read_text(),expected)
         target.unlink()
+
+    def await_redraw(self,terminal,expected):
+        # FSH suppresses highlighting while another key is pending. Let ZLE
+        # finish the native widget before sending the capture chord.
+        target=self.home/'drawn-buffer'
+        deadline=time.monotonic()+20
+        while not target.exists() or target.read_text()!=expected:
+            self.assertLess(time.monotonic(),deadline,terminal.output[-2000:])
+            self.drain(terminal,.05)
 
     def await_buffer(self,terminal):
         deadline=time.monotonic()+8

@@ -1,16 +1,18 @@
 for name in DOTRUBY RUBYCOMP _dots_applied_DOTRUBY _dots_applied_RUBYCOMP
     set -e $name
 end
-set -l _dots_retired_paths "$DOTS/ruby/completion" "$HOME/dots/ruby/completion"
-if set -q DOTS_PROFILE_CHECKOUT; and test -n "$DOTS_PROFILE_CHECKOUT"
-    set -a _dots_retired_paths "$DOTS_PROFILE_CHECKOUT/ruby/completion"
+if string match -qr '/ruby/completion/*$' -- $PATH
+    set -l retired "$DOTS/ruby/completion" "$HOME/dots/ruby/completion"
+    test -z "$DOTS_PROFILE_CHECKOUT"; or set -a retired "$DOTS_PROFILE_CHECKOUT/ruby/completion"
+    set -l retained
+    for entry in $PATH
+        if string match -q '*/ruby/completion*' -- "$entry"
+            contains -- (string trim -r -c / -- "$entry") $retired; and continue
+        end
+        set -a retained "$entry"
+    end
+    set -gx PATH $retained
 end
-set -l _dots_retained_path
-for entry in $PATH
-    set -l normalized (string replace -r '/+$' '' -- "$entry")
-    contains -- "$normalized" $_dots_retired_paths; or set -a _dots_retained_path "$entry"
-end
-set -gx PATH $_dots_retained_path
 for name in DOTS_ENV_HOOKS DOTS_ENV_ORIGINS
     if set -q $name
         set -l retained
@@ -46,12 +48,11 @@ _dots_config_load; or begin
     printf 'dots: invalid settings; initialization stopped\n' >&2
     return 1
 end
-while read -l line
-    set -l fields (string split \t -- "$line")
+while read -ld \t variable key relative
     set -l value "$DOTS"
-    test "$fields[3]" = .; or set value "$DOTS/$fields[3]"
-    test "$fields[1]" = -; or set -gx $fields[1] "$value"
-    test "$fields[2]" = -; or set -g dot_$fields[2] "$value"
+    test "$relative" = .; or set value "$DOTS/$relative"
+    test "$variable" = -; or set -gx $variable "$value"
+    test "$key" = -; or set -g dot_$key "$value"
 end < "$DOTS/lib/dots/shell/paths.tsv"
 set -gx THEMESCMD "$DOTS/bin/theme"
 set -l state "$HOME/.local/state"
@@ -74,7 +75,7 @@ if test $_dots_option_DOTS_INIT_COMMANDS = 1
         command "$DOTS/bin/dots" link $argv
     end
 end
-set -l profile_entries (string split : -- "$DOTS_PROFILE_PATHS" | string match -rv '^$')
+set -l profile_entries (string split -n : -- "$DOTS_PROFILE_PATHS")
 set -l ordered_path
 for entry in $owned_path $profile_entries $PATH
     contains -- "$entry" "$DOTS/themes/bin"; and continue
@@ -89,6 +90,10 @@ if test "$DOTS_PLATFORM" != windows; and test -d "$manuals"; and not contains --
     set -gx --path MANPATH "$manuals:$MANPATH"
 end
 status is-interactive; or return 0
+if not set -q FZF_DEFAULT_OPTS; and not set -q FZF_DEFAULT_OPTS_FILE
+    set -g _DOTS_VISUAL_FZF_BASE "--bind=ctrl-x:toggle-preview --preview-window=right:hidden:50% --preview='_dots-fzf-preview --selection {f}'"
+    set -gx FZF_DEFAULT_OPTS "$_DOTS_VISUAL_FZF_BASE"
+end
 source "$DOTS/lib/dots/shell/less.fish"
 set -g esc (printf '\033')
 set -g ESC "$esc"
@@ -187,11 +192,13 @@ function _dots_fish_theme
                 set -gx $fields[2] "$fields[3]"
             end
         end < "$visual_file"
-        if set -q DOTS_THEME_FZF_COLORS
-            set -q _DOTS_VISUAL_FZF_BASE; or set -g _DOTS_VISUAL_FZF_BASE "$FZF_DEFAULT_OPTS"
+        if set -q DOTS_THEME_FZF_COLORS _DOTS_VISUAL_FZF_BASE; and not set -q FZF_DEFAULT_OPTS_FILE
             set -l fzf_base "$_DOTS_VISUAL_FZF_BASE"
             if set -q DOTS_THEME_FZF_OPTS
                 set fzf_base "$DOTS_THEME_FZF_OPTS"
+                if test "$DOTS_THEME_FZF_PREVIEW" = 0
+                    set fzf_base "$fzf_base --preview='_dots-fzf-preview --selection {f}'"
+                end
             end
             set -gx FZF_DEFAULT_OPTS "$fzf_base --color=$DOTS_THEME_FZF_COLORS"
         end

@@ -59,6 +59,28 @@ class InitTests(unittest.TestCase):
         self.env['APPDATA'] = str(self.home / 'appdata')
         self.env['LOCALAPPDATA'] = str(self.home / 'localappdata')
 
+    @unittest.skipUnless(executable('zsh'), 'native Zsh unavailable')
+    def test_zsh_startup_reload_and_tab_do_not_write_in_working_directory(self):
+        from bench_shell_readiness import interactive_fixture, wait_for_output
+        from zsh_interactive import Session
+        with interactive_fixture(REPO, 'zsh', installed=True) as (env, home, argv, _):
+            working = home / 'ordinary project'
+            child = working / 'unique-directory'
+            child.mkdir(parents=True)
+            session = Session(env, working, argv=argv)
+            try:
+                session.send("printf 'BOOT_%s\\n' ready\r")
+                wait_for_output(session, b'BOOT_ready')
+                session.send('cd unique-dir\t')
+                wait_for_output(session, b'ectory')
+                session.send("\r")
+                session.send('rlp && printf "RELOADED_%s\\n" "$PWD"\r')
+                wait_for_output(session, os.fsencode('RELOADED_' + str(child)))
+            finally:
+                session.close()
+            self.assertEqual(list(working.iterdir()), [child])
+            self.assertEqual(list(child.iterdir()), [])
+
     def dots(self, *args, env=None):
         return subprocess.run([shutil.which('bash'), str(self.repo / 'bin/dots'), *args],
                               env=env or self.env, cwd=self.home, text=True,
@@ -161,6 +183,30 @@ class InitTests(unittest.TestCase):
         self.assertNotIn('command not found', p.stderr)
 
     def test_bash_environment(self): self.assert_environment('bash')
+
+    def test_existing_tool_directories_share_precedence_and_keep_caller_paths(self):
+        gobin = self.home/'custom go'
+        cargo = self.home/'custom cargo'
+        bun = self.home/'custom bun'
+        paths = [bun/'bin', self.home/'.bun/bin', self.home/'bin', self.home/'.local/bin',
+                 cargo/'bin', self.home/'.cargo/bin', gobin]
+        for directory in paths:
+            directory.mkdir(parents=True, exist_ok=True)
+        (self.home/'.fzf/bin').mkdir(parents=True)
+        self.env.update(GOBIN=str(gobin), CARGO_HOME=str(cargo), BUN_INSTALL=str(bun))
+        for shell in SHELLS:
+            if not executable('pwsh' if shell == 'powershell' else shell):
+                continue
+            with self.subTest(shell=shell):
+                hook = self.generated(shell)
+                probe = """python3 -c 'import os, json; print(json.dumps(os.get_exec_path()))'"""
+                entries = json.loads(self.shell(shell, hook + hook + probe).stdout)
+                for directory in [*paths, self.home/'.fzf/bin']:
+                    self.assertEqual(entries.count(str(directory)), 1)
+                indices = [entries.index(str(path)) for path in paths]
+                self.assertEqual(indices, sorted(indices))
+                self.assertLess(entries.index(str(self.repo/'bin')), indices[0])
+                self.assertLess(indices[-1], entries.index(str(self.home/'.fzf/bin')))
 
     @unittest.skipIf(os.name == 'nt', 'POSIX manual lookup')
     def test_user_local_manual_discovery(self):

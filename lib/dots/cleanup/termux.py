@@ -9,11 +9,11 @@ import stat
 import subprocess
 import time
 
-from .core import Target, inside, inventory, safe_path
+from .core import historic_startup, startup_guard, Target, inside, inventory, safe_path
 
 GROUPS = {
     'downloads': ('Downloaded packages', 'low', 'npm, pip and cached APT installers'),
-    'builds': ('Build and dependency caches', 'low', 'Go, Cargo and uv; future builds may download dependencies'),
+    'builds': ('Build and dependency caches', 'low', 'Historic Dots startup bundles and Go, Cargo and uv caches; future builds may download dependencies'),
     'logs': ('Build leftovers and diagnostics', 'moderate', 'CPAN builds and named Neovim diagnostic logs; diagnostic history is lost'),
     'project-checkpoints': ('Project checkpoints', 'high', 'Permanently loses saved project versions and rollback points'),
     'sensitive-checkpoints': ('Sensitive checkpoints', 'high', 'Includes backed-up authentication, configuration or history'),
@@ -30,7 +30,7 @@ def group_metadata(platform):
         return GROUPS
     descriptions = {
         'downloads': 'npm and pip download caches; future installs may download packages again',
-        'builds': 'Go, Cargo and uv caches; future builds may download dependencies',
+        'builds': 'Historic Dots startup bundles and Go, Cargo and uv caches; future builds may download dependencies',
         'logs': 'Named Neovim diagnostic logs; diagnostic history is lost',
     }
     if platform == 'windows':
@@ -83,6 +83,7 @@ class Termux:
     platform = 'termux'
     supported_groups = tuple(GROUPS)
     can_delete = True
+    guard = staticmethod(startup_guard)
 
     def __init__(self, env=None):
         self.env = dict(os.environ if env is None else env)
@@ -145,6 +146,11 @@ class Termux:
             except (ValueError, OSError) as error:
                 issues.append(dict(group='downloads', rule='apt-archives', path=str(apt), reason=str(error)))
         if 'builds' in groups:
+            try:
+                for path in historic_startup(self.cache, self.boundary):
+                    add('dots-startup-history', 'builds', path, 'root')
+            except (ValueError, OSError) as error:
+                issues.append(dict(group='builds', rule='dots-startup-history', reason=str(error)))
             choices = (
                 ('go-module-cache', 'GOMODCACHE', self.home / 'go/pkg/mod'),
                 ('go-build-cache', 'GOCACHE', self.cache / 'go-build'),

@@ -1,4 +1,4 @@
-if command -v fd &>/dev/null; then
+if [[ ! ${FZF_DEFAULT_COMMAND+x} ]] && command -v fd &>/dev/null; then
   export FZF_DEFAULT_COMMAND='fd --type f --color=always --ignore-case --strip-cwd-prefix --hidden --exclude .git'
 fi
 
@@ -27,8 +27,9 @@ alt-r:toggle-raw"
 
 # so "$THEMECONF/fzf.sh"
 export _FZF_PREVIEW_POS_='right:hidden:50%:wrap-word:border-left'
-if has zsh; then export _PREVIEW_="preview.zsh"
-else export _PREVIEW_="bash \"$DOTS/shells/shared/preview.sh\""; fi
+export _PREVIEW_=_dots-fzf-preview
 
-export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
-
+if [[ ! ${FZF_DEFAULT_OPTS+x} && ! ${FZF_DEFAULT_OPTS_FILE+x} ]]; then
+  _DOTS_FZF_MANAGED=1
+  export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ --selection {f}'"
+fi

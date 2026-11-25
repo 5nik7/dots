@@ -5,7 +5,15 @@ source "$DOTS/lib/dots/shell/config.bash"
 _dots_config_load || return
 source "$DOTS/lib/dots/shell/environment.bash"
 source "$DOTS/lib/dots/shell/platform.bash"
+_dots_shell_paths
 [[ $- == *i* ]] || return 0
+if [[ ! ${_DOTS_FZF_MANAGED+x} ]]; then
+  if [[ ${FZF_DEFAULT_OPTS+x} || ${FZF_DEFAULT_OPTS_FILE+x} ]]; then _DOTS_FZF_MANAGED=0
+  else _DOTS_FZF_MANAGED=1; fi
+fi
+if [[ $_DOTS_FZF_MANAGED == 1 && ! ${FZF_DEFAULT_OPTS+x} ]]; then
+  export FZF_DEFAULT_OPTS="--bind=ctrl-x:toggle-preview --preview-window=right:hidden:50% --preview='_dots-fzf-preview --selection {f}'"
+fi
 source "$DOTS/lib/dots/shell/keys.bash"
 [[ ${esc-} == $'\033' ]] || typeset -g esc=$'\033'
 [[ ${ESC-} == $'\033' ]] || typeset -g ESC=$'\033'
@@ -50,10 +58,11 @@ _dots_shell_prompt() {
         source "$DOTS/lib/dots/completion/zsh" && _DOTS_COMPLETION_READY=1
       fi
     fi
-    if typeset -f _dots_theme_commands >/dev/null; then _dots_theme_commands; fi
   fi
   if [[ ${dots_options[DOTS_INIT_THEME]} == 1 && ${dots_options[DOTS_THEME_AUTO_UPDATE]} == 1 ]]; then
     _dots_theme_precmd
+  elif [[ ${dots_options[DOTS_INIT_COMPLETION]} == 1 ]] && typeset -f _dots_theme_commands >/dev/null; then
+    _dots_theme_commands
   fi
   if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_completion_refresh]} )); then
     _dots_completion_refresh

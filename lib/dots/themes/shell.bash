@@ -134,23 +134,22 @@ set_theme() {
       for visual_key in "${!visual_env[@]}"; do export "$visual_key=${visual_env[$visual_key]}"; done
     fi
   fi
+  export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=${dots_roles[muted]}"
+  export _FZF_COLORS_="bg:-1,bg+:-1,fg:${dots_roles[foreground]},fg+:${dots_roles[foreground]},hl:${dots_roles[accent]},hl+:${dots_roles[accent]},info:${dots_roles[muted]},prompt:${dots_roles[accent]},pointer:${dots_roles[accent]},marker:${dots_roles[warning]},spinner:${dots_roles[info]},border:${dots_roles[muted]}"
+  [[ ! ${DOTS_THEME_FZF_COLORS:-} ]] || export _FZF_COLORS_=$DOTS_THEME_FZF_COLORS
+  [[ ${_DOTS_FZF_MANAGED:-1} == 1 && ! ${FZF_DEFAULT_OPTS_FILE+x} ]] || return 0
   if [[ ${DOTS_THEME_FZF_OPTS+x} ]]; then
     export FZF_DEFAULT_OPTS=$DOTS_THEME_FZF_OPTS
-    if [[ ${DOTS_THEME_FZF_PREVIEW:-0} == 0 && -n ${_PREVIEW_:-} ]]; then
-      export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --preview='$_PREVIEW_ {}'"
+    if [[ ${DOTS_THEME_FZF_PREVIEW:-0} == 0 ]]; then
+      export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --preview='_dots-fzf-preview --selection {f}'"
     fi
   elif [[ -n ${_FZF_OPTS_:-} ]]; then
-    export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
+    export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ --selection {f}'"
   else
     if [[ -z ${_DOTS_THEME_FZF_BASE+x} ]]; then _DOTS_THEME_FZF_BASE=${FZF_DEFAULT_OPTS:-}; fi
     export FZF_DEFAULT_OPTS=$_DOTS_THEME_FZF_BASE
   fi
-  {
-    export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=${dots_roles[muted]}"
-    export _FZF_COLORS_="bg:-1,bg+:-1,fg:${dots_roles[foreground]},fg+:${dots_roles[foreground]},hl:${dots_roles[accent]},hl+:${dots_roles[accent]},info:${dots_roles[muted]},prompt:${dots_roles[accent]},pointer:${dots_roles[accent]},marker:${dots_roles[warning]},spinner:${dots_roles[info]},border:${dots_roles[muted]}"
-    [[ ! ${DOTS_THEME_FZF_COLORS:-} ]] || export _FZF_COLORS_=$DOTS_THEME_FZF_COLORS
-    export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=$_FZF_COLORS_"
-  }
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=$_FZF_COLORS_"
   return 0
 }
 _dots_theme_commands() {

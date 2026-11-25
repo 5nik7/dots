@@ -2,7 +2,7 @@
 param(
   [Parameter(Mandatory, Position=0)]
   [ValidateSet('starship', 'blastoff', 'icons', 'catppuccin', 'pscompletions',
-    'fzf', 'completions', 'zoxide', 'mise', 'vfox', 'chocolatey',
+    'fzf', 'completions', 'zoxide', 'mise', 'vfox', 'chocolatey', 'atuin', 'direnv', 'tv',
     'command-not-found', 'terminal', 'coreutils')]
   [string] $Feature
 )
@@ -52,20 +52,8 @@ try {
             ForEach-Object { [Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) }
         }
       }
-      { $_ -in 'starship', 'zoxide', 'mise', 'vfox' } {
-        $tool = Get-Command $Feature -CommandType Application -TotalCount 1 -ErrorAction Stop
-        $toolArgs = switch ($Feature) {
-          starship { 'init', 'powershell', '--print-full-init' }
-          zoxide { 'init', 'powershell' }
-          default { 'activate', 'pwsh' }
-        }
-        $generated = & $tool @toolArgs | Out-String
-        if ($LASTEXITCODE -ne 0 -or -not $generated.Trim()) { throw "Initialization failed: $Feature" }
-        Invoke-Expression $generated -ErrorAction Stop
-        if ($Feature -eq 'starship') {
-          Install-DotsPrompt -Renderer (Get-Item Function:prompt).ScriptBlock
-          if ($global:__ShellInteg_Installed) { __ShellInteg_Rearm }
-        }
+      { $_ -in 'starship', 'zoxide', 'mise', 'vfox', 'atuin', 'direnv', 'tv' } {
+        . (Join-Path $env:DOTS 'lib/dots/shell/tools.ps1') $Feature
       }
       chocolatey {
         if (-not $env:ChocolateyInstall) { throw 'ChocolateyInstall is not set.' }

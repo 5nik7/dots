@@ -190,7 +190,7 @@ class StatusIcons(unittest.TestCase):
         fixture = test_profiles.Profiles()
         fixture.setUp(); self.addCleanup(fixture.doCleanups); fixture.public()
         shutil.copytree(fixtures.ROOT/'default', fixture.root/'default')
-        icons = fixture.root/'default/icons.toml'
+        icons = fixture.root/'default/config.json'
         original = icons.read_text()
         for shell in ('bash', 'zsh'):
             if not shutil.which(shell): continue
@@ -198,7 +198,8 @@ class StatusIcons(unittest.TestCase):
             cold = fixture.run_shell(shell, code)
             self.assertEqual(cold.returncode, 0, cold.stderr)
             self.assertEqual(cold.stdout, '')
-            icons.write_text(original.replace('modified = ""', 'modified = "EDIT"'))
+            doc = json.loads(original);doc['icons']['git']['status']['modified']='EDIT'
+            icons.write_text(json.dumps(doc))
             changed = fixture.run_shell(shell, code)
             self.assertEqual(changed.returncode, 0, changed.stderr)
             self.assertEqual(changed.stdout, 'EDIT')

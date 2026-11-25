@@ -145,6 +145,12 @@ Core setup installs the generated `man/dots.1` as `dots:manual`. Termux uses the
 The manual is linked by default through the same installer receipt as the command. Existing files and reviewed foreign leaf links are backed up, and correct preexisting links remain unowned. Core-only removal includes an installer-owned manual, restores its original target, and refuses post-install drift. A missing/nonregular manual in a declared `man` directory blocks setup; older/minimal checkouts without that directory remain compatible. Native Windows creates no POSIX manual link and uses the generated wiki command reference. No system package or shell search-path setting is changed. Configuration/menu review: no additional integration is needed beyond existing core selection and preview.
 
 
+## Shell startup files
+
+The Files component previews and installs standalone Bash, Zsh, Fish, Nushell, Xonsh, and native PowerShell entries for the applicable platform. The rc and the cold-path helper survive a missing checkout. The checkout continues to own the shell configuration loaded by those entries. For example, preview the Bash entry with `dots files install --component files --resource dots:bashrc --dry-run`.
+
+Existing regular rc files and recognized links to the old checkout entries receive the ordinary installer backup. Fresh Fish setups seed missing universal variables, Fisher declarations and bundled themes. Existing user assets keep their contents. For a Fish or Nushell directory already linked directly to the matching repository shell directory, setup offers a transaction that preserves access to its other members, installs an independent rc, and retains the prior link for restoration. A later uninstall preserves the entry and its helper if the rc was edited or the migrated directory contains new files. A foreign directory link requires review. Native Windows uses each installed PowerShell engine’s all-hosts profile. See [shell startup and recovery](profiles.md#missing-checkout-bootstrap).
+
 ## Fresh-machine bootstrap
 
 Use standalone `sh bootstrap.sh --dry-run` or native `./bootstrap.ps1 --dry-run`,
@@ -175,8 +181,7 @@ Windows bootstrap probes link capability after approval. It can explicitly offer
 Developer Mode with the operating system's administrator prompt. `--yes` alone
 does not approve this setting: separate interactive approval or
 `--developer-mode` is required. Shell configuration never changes the login shell.
-Setup discovers each installed PowerShell engine's all-hosts profile and links
-`shells/powershell/profile.ps1`, retaining host-specific profiles. Native scripts
+Setup discovers each installed PowerShell engine’s all-hosts profile and copies the standalone Dots entry there, retaining host-specific profiles. Native scripts
 and shared controllers remain the architecture, with portable navigation, Git,
 listing, editor and backup helpers and no eager whole-command module import.
 
@@ -190,7 +195,7 @@ Theme preparation generates family/full-ID POSIX and PowerShell shortcuts.
 Blastoff setup prepares the saved theme's Dots palette and links the active
 Starship path directly to the selected saved theme (default `dots`). Nonempty
 `STARSHIP_CONFIG` selects the destination; otherwise it is
-`~/.config/starship.toml`. An existing saved-theme link retains its selection.
+`~/.config/starship.toml`. An existing saved-theme link retains its selection. On Termux, the Files mapping and Blastoff can select the same active file. Combined setup records that link once under its Files mapping, so uninstall can restore its original target.
 
 New setup backups share [the backup catalog](backups.md). `--no-backup`
 (`-NoBackup` in `install.ps1`) explicitly discards newly replaced originals,

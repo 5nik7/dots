@@ -73,6 +73,17 @@ class FlatProfiles(unittest.TestCase):
         self.assertEqual(reader.mapping_layers['linux','same']['id'], 'linux')
         self.assertFalse(state_root().exists())
 
+    def test_child_override_keeps_parent_position_and_new_ids_append(self):
+        from profile_config import file_rows
+        extra = dict(self.shared, id='extra', target='${CONFIG}/extra')
+        override = dict(self.shared, target='${CONFIG}/changed')
+        self.profile(self.child, 'linux/example', [extra, override])
+        rows = [(key, layer['id'], row['target']) for key, layer, row in
+                file_rows(self.root, selected(self.root, 'linux/example'))]
+        self.assertEqual(rows, [('dots:same', 'linux/example', '${CONFIG}/changed'),
+                                ('linux:same', 'linux', '${CONFIG}/local'),
+                                ('dots:extra', 'linux/example', '${CONFIG}/extra')])
+
     def test_overrides_remove_inherited_and_metadata_undo(self):
         reader = self.catalog()
         source = reader.profile_owner(reader.profile['layers'][0])
@@ -129,6 +140,9 @@ class FlatProfiles(unittest.TestCase):
 
     def test_shipped_flat_profiles_use_portable_sources_and_canonical_ids(self):
         import shutil
+        from profile_config import file_rows
+        from config_namespace import Namespace, resolve_request
+        from config_menu import Inventory, tree_rows
         for name in ('sources.json', 'files.json'):
             shutil.copyfile(ROOT/'.dots'/name, self.root/'.dots'/name)
         for platform in self.all_platforms:
@@ -150,6 +164,39 @@ class FlatProfiles(unittest.TestCase):
                     self.assertIn(name, rows)
                 self.assertNotIn('dots:vivid', rows)
                 self.assertNotIn('dots:file-config-eza-themes-catppuccin-mocha-mauve-yml', rows)
+                profile = selected(self.root, platform)
+                mappings = {key: spec for key, _, spec in file_rows(self.root, profile)}
+                inventory = Namespace((), files=mappings.items())
+                labels = {'termux:config-json': 'pkgs', 'termux:config': 'codex-termux',
+                          'termux:config-toml': 'mise', 'termux:method': 'zsh-system-clipboard'}
+                for key, app in labels.items():
+                    spelling = f'apps.{app}.files["{key}"]'
+                    previous = f'apps.config.files["{key}"]'
+                    self.assertEqual(mappings[key]['app'], app)
+                    self.assertEqual(inventory.forms[spelling], 'files.' + key)
+                    self.assertEqual(inventory.forms[previous], 'files.' + key)
+                    self.assertEqual(inventory.view_key('files.' + key, 'apps'), spelling)
+                    self.assertEqual(inventory.query_key('files.' + key, previous), previous)
+                result = resolve_request(self.root, profile, 'files.config', 'get')[1]['value']
+                self.assertEqual(result, [row for key, row in mappings.items()
+                                          if row['app'] == 'config' or key in labels])
+                key = 'termux:config-toml'
+                for group in ('apps.mise.files', 'config.files', 'files.apps.config'):
+                    owner, report = resolve_request(self.root, profile, f'{group}["{key}"]', 'explain')
+                    self.assertEqual((owner, report['value']), ('files.' + key, mappings[key]))
+                    self.assertEqual(Path(report['source']), self.root/'profiles/termux/profile.json')
+                shutil.copytree(ROOT/'default', self.root/'default')
+                browser = Inventory(self.root, platform)
+                for group in ('apps.config.files', 'apps.mise.files', 'files.apps.config', 'files.apps.mise'):
+                    self.assertIn(f'{group}["{key}"]', [row.key for row in tree_rows(browser, group)])
+            if platform == 'wsl':
+                inherited = {key: spec for key, _, spec in file_rows(self.root, selected(self.root, 'linux'))}
+                local = {'dots:vivid', 'dots:file-config-eza-themes-catppuccin-mocha-mauve-yml'}
+                wsl = {key: (layer['id'], spec) for key, layer, spec in file_rows(self.root, selected(self.root, 'wsl'))}
+                self.assertEqual(list(wsl), list(inherited))
+                self.assertEqual({key for key, (layer, _) in wsl.items() if layer == 'wsl'}, local)
+                for key, spec in inherited.items():
+                    self.assertEqual(wsl[key], ('wsl', dict(spec, enabled=False)) if key in local else ('linux', spec))
             self.assertFalse(any(r['status']=='conflict' for r in rows.values()))
             self.assertFalse(state_root().exists())
 

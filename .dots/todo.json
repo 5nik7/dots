@@ -2470,6 +2470,606 @@
       "updated": "2026-11-13T21:40:17.525754+00:00",
       "completed": "2026-11-13T21:40:17.525754+00:00",
       "removed": null
+    },
+    {
+      "id": "0f3fffa3266f423e9ab74844c53d85db",
+      "alias": null,
+      "title": "Refactor and optimize dots init",
+      "notes": "Verified five faster warm first-input medians on Termux, six bootstrap emitters, real prompt/Tab/directory hooks, and fresh journaled Termux install/repeat/uninstall restoration. Cold, first-use, all-tools opt-in, and outstanding native Windows/Linux/WSL host evidence are documented in plans/init-config-refactor.md. All four profiles, the manual and Wiki checks passed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "A repeatable faster input-ready Termux Zsh prompt with existing first interactions preserved; report cold, warm and first-use results for all available shells.",
+        "One maintained interactive entry per shell, Git-only missing-checkout acquisition, profile overrides and compatible native workflows; transaction-backed installer integration."
+      ],
+      "created": "2026-11-24T21:43:32.118538+00:00",
+      "updated": "2026-11-24T22:54:18.796610+00:00",
+      "completed": "2026-11-24T22:54:18.796610+00:00",
+      "removed": null
+    },
+    {
+      "id": "0a5f0e26ecb94d1ca50f5e15e7509838",
+      "alias": null,
+      "title": "Unify dots config and expand FZF previews",
+      "notes": "All four children verified. Config storage and inheritance preserved, aliases and browser round-tripped, real FZF/fzf-tab insertion at three widths and twenty native FZF option-ownership cases passed. Local Wiki and generated manual checked. Native Windows functional acceptance has a registered suite.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Shared app/type aliases, exact owning fields, inheritance and redaction; one browser with two paths; ordered on-demand file and completion previews."
+      ],
+      "created": "2026-11-24T21:43:49.592100+00:00",
+      "updated": "2026-11-24T22:30:47.814195+00:00",
+      "completed": "2026-11-24T22:30:47.814195+00:00",
+      "removed": null
+    },
+    {
+      "id": "9ce892179f434ffc84ba904c742c2870",
+      "alias": null,
+      "title": "Baseline startup and inventory dependencies",
+      "notes": "Recorded paired first input, first directory completion/change and first uv Tab from real PTYs on five Termux shells for cold and warm runs. Warm tool-present Zsh went from 1874 to 529 ms. See plans/init-config-refactor.md for both fixture matrices and shell inventory.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0f3fffa3266f423e9ab74844c53d85db",
+      "acceptance": [
+        "Measure input-ready and first-use costs; inventory startup files, globals, exports and their consumers."
+      ],
+      "created": "2026-11-24T21:43:50.831140+00:00",
+      "updated": "2026-11-24T22:47:58.102457+00:00",
+      "completed": "2026-11-24T22:47:58.102457+00:00",
+      "removed": null
+    },
+    {
+      "id": "57961b96cd8c48f4b81f5c0bf7153fca",
+      "alias": null,
+      "title": "Simplify shell entry files and bootstrap",
+      "notes": "Installed standalone entries for all six shells. Isolated Git-only bootstrap tests verify warm/cold operation, no noninteractive acquisition, relocation, failure, interruption and concurrency. Install/undo fixtures cover preserved directory members and edited rc files. Windows ACL, timeout and native prompt execution have dedicated Windows acceptance tests pending on Windows.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0f3fffa3266f423e9ab74844c53d85db",
+      "acceptance": [
+        "Six shells use Git-only missing-checkout acquisition on interactive startup and preserve local, relocated and noninteractive operation. Verify journaled RC installation and conflicts."
+      ],
+      "created": "2026-11-24T21:43:52.065817+00:00",
+      "updated": "2026-11-24T22:22:14.121836+00:00",
+      "completed": "2026-11-24T22:22:14.121836+00:00",
+      "removed": null
+    },
+    {
+      "id": "f5b567b2c80d439eb6477008e958903d",
+      "alias": null,
+      "title": "Move shared shell policy into the backend",
+      "notes": "Moved common environment, installed-tool paths and native integration policy into lib/dots. Native profile-layer and tool-path fixtures passed in five available shells. PowerShell implementation and native-host acceptance are documented.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0f3fffa3266f423e9ab74844c53d85db",
+      "acceptance": [
+        "Unify platform, environment, PATH and native tool workflows; retain default and inherited profile shell customizations."
+      ],
+      "created": "2026-11-24T21:43:53.285972+00:00",
+      "updated": "2026-11-24T22:48:04.930318+00:00",
+      "completed": "2026-11-24T22:48:04.930318+00:00",
+      "removed": null
+    },
+    {
+      "id": "2f392f7f001f4acf810e42597718081f",
+      "alias": null,
+      "title": "Load integrations on first use and retire duplication",
+      "notes": "Verified genuinely lazy first Tab, first cd and real optional providers, per-shell first-prompt overrides, 20 FZF ownership cases, and retry/ownership tests for completion caching. Five available shells improved on both warm first-input benchmarks. Keep .profile and .zshenv for independent users.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0f3fffa3266f423e9ab74844c53d85db",
+      "acceptance": [
+        "Keep first prompt, key, command, directory hooks and completion functional. Validate reload, retire proven redundant sources, record speed gate."
+      ],
+      "created": "2026-11-24T21:43:54.473298+00:00",
+      "updated": "2026-11-24T22:48:10.175556+00:00",
+      "completed": "2026-11-24T22:48:10.175556+00:00",
+      "removed": null
+    },
+    {
+      "id": "9c662a68572a445aaa867a06640b387c",
+      "alias": null,
+      "title": "Resolve app-first and type-first keys through one owner",
+      "notes": "Verified app/type resolver equivalence, merged native and semantic FZF color fields, canonical owners, profile precedence, mixed-owner rejection and safe grouped files/env reads in the Config discovery and storage fixtures.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0a5f0e26ecb94d1ca50f5e15e7509838",
+      "acceptance": [
+        "Keep existing stores and exact legacy keys; validate aliases, files views, grouped env exports, redaction and reset."
+      ],
+      "created": "2026-11-24T21:43:55.513962+00:00",
+      "updated": "2026-11-24T22:22:35.871553+00:00",
+      "completed": "2026-11-24T22:22:35.871553+00:00",
+      "removed": null
+    },
+    {
+      "id": "f2af7022a0734f49a97debb3e62db522",
+      "alias": null,
+      "title": "Unify Config CLI, browser and completion",
+      "notes": "Verified both Config browsing directions and canonical get/explain/path/set/unset. Bash and native completion now derive bootstrap values from metadata. All 1,158 catalog contexts passed across the sweep and focused reruns.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0a5f0e26ecb94d1ca50f5e15e7509838",
+      "acceptance": [
+        "Resolve aliases in reads, writes, explain and dry-run; browse types and apps once per view; complete the typed spelling on each shell."
+      ],
+      "created": "2026-11-24T21:43:56.594034+00:00",
+      "updated": "2026-11-24T22:30:42.687999+00:00",
+      "completed": "2026-11-24T22:30:42.687999+00:00",
+      "removed": null
+    },
+    {
+      "id": "032804e4b2a14ba19425a91314543979",
+      "alias": null,
+      "title": "Share an on-demand preview renderer",
+      "notes": "On-demand file and completion renderer supports ordered built-ins, bounded native renderers, Wiki Markdown, font samples and literal custom argument arrays. Real Termux FZF, Chafa and font probes and fallback fixtures passed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0a5f0e26ecb94d1ca50f5e15e7509838",
+      "acceptance": [
+        "Configurable ordered built-ins and literal custom argv; verify markdown, text, directories, images, fonts, binary/unreadable files, shell widgets and eff."
+      ],
+      "created": "2026-11-24T21:43:57.710316+00:00",
+      "updated": "2026-11-24T22:22:53.746931+00:00",
+      "completed": "2026-11-24T22:22:53.746931+00:00",
+      "removed": null
+    },
+    {
+      "id": "d69e6f1bd34245c2a86cae117f346a87",
+      "alias": null,
+      "title": "Preserve completion and picker behavior",
+      "notes": "Verified real fzf-tab and FZF at 40, 80 and 120 columns, preserving selection/insertion of literal filenames, native/typed completion previews, provider metadata and picker overrides. Native Windows editor acceptance remains a separate host check.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "0a5f0e26ecb94d1ca50f5e15e7509838",
+      "acceptance": [
+        "Use specialized completions and action picker previews, preserve raw identity, user frontend, options and group switching; test 40/80/120 columns."
+      ],
+      "created": "2026-11-24T21:43:58.893508+00:00",
+      "updated": "2026-11-24T22:23:09.689334+00:00",
+      "completed": "2026-11-24T22:23:09.689334+00:00",
+      "removed": null
+    },
+    {
+      "id": "61b26c0888e546959e504467ae108ebe",
+      "alias": null,
+      "title": "Fix the Config and Zsh audit findings",
+      "notes": "Start with the audit in ~/dots-audit-2026-11-25. Capture the current working tree before changing startup or configuration. This work precedes the storage and startup refactors.\n\nFour subgoals complete. Pre-edit snapshot and all-profile before/after data: ~/dots-audit-2026-11-25/startup-baseline-52duu8m_/README.md. The audit changes passed 49 Config/Clipboard tests (2 native PowerShell skips), 18 native-CLI alias probes, 41 Files/profile/ownership tests, Zsh profile/key and seven-plugin PTY checks. The two pre-existing full-suite Zsh failures are recorded in plans/init-config-refactor.md. Local Wiki rebuilt and checked healthy. No live shell reload, package installation or publication.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Each confirmed behavior change has an isolated regression check and a recorded disposition.",
+        "The four base profiles have an effective before/after comparison with every intended difference identified."
+      ],
+      "created": "2026-11-25T02:49:17.113069+00:00",
+      "updated": "2026-11-25T03:08:35.137286+00:00",
+      "completed": "2026-11-25T03:08:35.137286+00:00",
+      "removed": null
+    },
+    {
+      "id": "3f056440be5f4b4892008a00bfefe34a",
+      "alias": null,
+      "title": "Capture the Config, Zsh sourcing and shell readiness baseline",
+      "notes": "Preserve a reproducible baseline for all later subgoals using the current working checkout, the saved audit catalog and disposable linked and standalone installations.\n\nFrozen pre-edit public checkout, inputs manifest, per-profile Config snapshots, raw PTY samples and five-mode Zsh source traces: ~/dots-audit-2026-11-25/startup-baseline-52duu8m_/README.md. 200 launches over five shells, two RC layouts and two tool sets. Separate minimal and seven-real-plugin Zsh fixtures verified first input, Tab+cd, backspace, and in-shell reload for both RC layouts. Source trace confirmed seven plugin providers. Native desktop/Windows timings are pending. Timing samples include device load and are a baseline, not a speedup result.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "61b26c0888e546959e504467ae108ebe",
+      "acceptance": [
+        "Record effective Config values/types and qualified file mappings for all four profiles, plus Zsh source order for login, interactive and noninteractive modes.",
+        "Time first input, first command, first Tab and cd, first widget and reload with both minimal and configured public plugins. Record fixture and native coverage."
+      ],
+      "created": "2026-11-25T02:49:19.869044+00:00",
+      "updated": "2026-11-25T03:05:11.405903+00:00",
+      "completed": "2026-11-25T03:05:11.405903+00:00",
+      "removed": null
+    },
+    {
+      "id": "9625839d8fa545eeb701b36d6301798f",
+      "alias": null,
+      "title": "Correct clipboard defaults, Config map types and redundant style overrides",
+      "notes": "Make clipboard history opt-in everywhere by default. Follow the saved style audit for the Codex alias, unsupported plural menu icons, CLI modified glyph and WSL inactive-window colors.\n\nVerified seven isolated checks covering a mocked clipboard provider, opt-in history, five dynamic map root types, four empty-group aliases, browser/completion visibility, WSL inheritance and glyph compatibility. Per-profile baseline comparison found the intended differences to clipboard recording, Neovim map type and the two unbound menu glyphs.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "61b26c0888e546959e504467ae108ebe",
+      "acceptance": [
+        "Verify an eligible copy with recording off and with an explicit opt-in using test providers. Preserve existing history and watcher state.",
+        "An empty Neovim icon group returns {}, FZF bindings report an object with string children, and consumers inherit the expected glyphs and colors after the redundant shipped declarations are removed."
+      ],
+      "created": "2026-11-25T02:49:21.594822+00:00",
+      "updated": "2026-11-25T02:59:28.321689+00:00",
+      "completed": "2026-11-25T02:59:28.321689+00:00",
+      "removed": null
+    },
+    {
+      "id": "a595e50332bb442c8f7b63069b8f0a1e",
+      "alias": null,
+      "title": "Repair Zsh profile hooks, options and reload behavior",
+      "notes": "Move the Termux and WSL defaults to the discovered profile phases. Recognize old links by file identity while preserving independent personal hooks and plugin/key order.\n\nVerified Termux and simulated WSL hook order, legacy-link deduplication, distinct home hooks, native ZLE keys, shared history, LOCAL_OPTIONS, Perl path idempotence and FZF/Zinit failure retry. Two disposable Termux PTYs with seven real public plugins passed first input, directory and uv Tab, and no stray 1 file. Full Zsh suite passed 34/36. Both failures reproduced against the frozen baseline: obsolete MSYS platform expectation and incomplete historical theme/FZF fixture. Native WSL pending.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "61b26c0888e546959e504467ae108ebe",
+      "acceptance": [
+        "Clean and migrated installations run each intended hook once. Reload preserves vi, clipboard, FZF, shared history, Perl paths and the caller's LOCAL_OPTIONS behavior.",
+        "Remove the misspelled option and leaked helper. Mark FZF ready only after successful loading, allow explicit retry, and check that startup or completion creates no stray file named 1 in the working directory."
+      ],
+      "created": "2026-11-25T02:49:23.241485+00:00",
+      "updated": "2026-11-25T03:08:28.291055+00:00",
+      "completed": "2026-11-25T03:08:28.291055+00:00",
+      "removed": null
+    },
+    {
+      "id": "beaf6d2a29dd443bbd93df613ad84b95",
+      "alias": null,
+      "title": "Correct WSL mapping inheritance and Termux ownership reporting",
+      "notes": "Have WSL inherit 57 qualified mappings from Linux. Keep the two explicit eza and Vivid disables. Correct CLICOLOR source attribution and the generic app label on four Termux mappings.\n\nCompared ordered Config file arrays with the frozen pre-edit source. Counts 71/59/59/51; four intended Termux app-label changes, 57 WSL declaring-layer changes, and no other mapping/order changes. Both CLI adapters resolved old and new names. Flat profile (12), profile backend (14), lifecycle (13), Config browser/routing (1) and environment diagnostics (1) passed in owned fixtures.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "61b26c0888e546959e504467ae108ebe",
+      "acceptance": [
+        "All 59 WSL rows retain their effective IDs, paths, strategies and enabled states. Verify the intended declaring-layer change, a WSL-only edit, and undo.",
+        "The pkgs, codex-termux, mise and zsh-system-clipboard groups and the old lookup resolve the same resource IDs. Preserve historical renames, registered unmapped identities and distinct Termux preferences."
+      ],
+      "created": "2026-11-25T02:49:24.772823+00:00",
+      "updated": "2026-11-25T03:03:39.952494+00:00",
+      "completed": "2026-11-25T03:03:39.952494+00:00",
+      "removed": null
+    },
+    {
+      "id": "fe0349ab8b4a44088cd837618d5f0b37",
+      "alias": null,
+      "title": "Unify Dots preference storage and Config types",
+      "notes": "Follow-up to completed Config goal 0a5f0e26ecb94d1ca50f5e15e7509838. Use the audit baseline and corrected behavior as the reference for migration and compatibility.\n\nAll four children verified. schema2 store readback matches corrected baseline. Mixed-layout imports and atomic migration retain exact undo; Config, completion and previews share existing owners and retain legacy aliases.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Three shipped app-first preference files serve the four base profiles. Every supported app-first and type-first spelling routes to its owning value.",
+        "Migration, undo, appearance import and FZF preview selection are verified against actual consumers."
+      ],
+      "created": "2026-11-25T02:49:26.466891+00:00",
+      "updated": "2026-11-25T03:41:52.459157+00:00",
+      "completed": "2026-11-25T03:41:52.459157+00:00",
+      "removed": null
+    },
+    {
+      "id": "61315b87dda94a86a8dcf71cad805d08",
+      "alias": null,
+      "title": "Consolidate shipped preferences into sparse app-first JSON",
+      "notes": "Use one config.json per layer with explicit preferences. Keep structural data in profile.json and native Weather, pkgs and Codex settings in their application files.\n\n15 shipped preference files became three. Full snapshots across four profiles matched exact values, types, environment and mappings after storage migration. New schema tests cover sparse first write, final reset, legacy suppression, null/false/empty and same-layer inheritance. StyleConfig 9/9, ConfigLive 16/16 verified with reruns.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "fe0349ab8b4a44088cd837618d5f0b37",
+      "acceptance": [
+        "The 15 shipped preference files become default/config.json, profiles/linux/config.json and profiles/termux/config.json. First write creates a needed profile file and an empty import creates none.",
+        "Profile over parent over shared inheritance, same-layer app precedence, explicit empty/false and nullable values reach the same consumers."
+      ],
+      "created": "2026-11-25T02:49:27.665066+00:00",
+      "updated": "2026-11-25T03:38:26.271833+00:00",
+      "completed": "2026-11-25T03:38:26.271833+00:00",
+      "removed": null
+    },
+    {
+      "id": "32de04c88f0f4d228baf5f4c2bce1024",
+      "alias": null,
+      "title": "Unify Config key resolution across commands, completion and the browser",
+      "notes": "Provide colors, icons, formatting, settings, env and files views over one owner. Preserve the distinction between bare files and apps.files.\n\nCompared 82,746 visible spelling/profile combinations with zero owner discrepancies. All 16 discovery cases and the separate scalar-owner isolation regression passed. Direct scalar get no longer constructs full discovery, loads native stores, or enumerates all style bindings. Group and mixed-owner write semantics remain covered.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "fe0349ab8b4a44088cd837618d5f0b37",
+      "acceptance": [
+        "get, set, unset, explain, path, completion and the browser resolve app-first/type-first/legacy names consistently, including quoted literal keys and native color slots.",
+        "Compare the audit's 5,385 named records and open-map grammars across profiles. Scalar reads use the selected owner and inheritance chain without full discovery."
+      ],
+      "created": "2026-11-25T02:49:28.897428+00:00",
+      "updated": "2026-11-25T03:41:37.831292+00:00",
+      "completed": "2026-11-25T03:41:37.831292+00:00",
+      "removed": null
+    },
+    {
+      "id": "39e0cbf7da8248fd9f0144cb9f81bcdd",
+      "alias": null,
+      "title": "Implement reversible unified-layout migration and appearance import",
+      "notes": "Extend dots config migrate with --layout unified. Keep older layouts readable and the existing bare --layout invocation compatible with older installations.\n\nVerified 13 migration and appearance-import cases, both completion protocols and native CLI dispatch. Conflicts aggregate before writes, repeated conversion is empty, and undo restores original BOM/CRLF JSON and commented TOML bytes.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "fe0349ab8b4a44088cd837618d5f0b37",
+      "acceptance": [
+        "Preview differing aliases before writing. Use one guarded transaction, retain original JSON and commented TOML for exact undo, and produce zero writes on a repeated migration.",
+        "Transfer only explicit declarations. Appearance import selects portable fields by purpose and leaves structural, machine-specific and native preferences with their owners."
+      ],
+      "created": "2026-11-25T02:49:30.598666+00:00",
+      "updated": "2026-11-25T03:25:13.049054+00:00",
+      "completed": "2026-11-25T03:25:13.049054+00:00",
+      "removed": null
+    },
+    {
+      "id": "728bf8d1343040d18e5c0e7657b4b916",
+      "alias": null,
+      "title": "Finish configurable FZF and fzf-tab preview fallbacks",
+      "notes": "Apply ordered renderer choices to completion descriptions, directories, Markdown, text/code, images, fonts and binary files. Keep domain-specific action previews and local FZF overrides.\n\nMissing Markdown renderer falls through to the next configured renderer. Explicit Wiki plain mode, empty chains and bounded pythonless output passed. Real generic FZF and fzf-tab preserved literal selections/insertion at 40, 80 and 120 columns. Native Windows launcher fixture remains pending on Windows.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "fe0349ab8b4a44088cd837618d5f0b37",
+      "acceptance": [
+        "An unavailable Markdown renderer yields to the next configured choice. Empty previews, explicit plain mode and inherited FZF option files retain their meaning.",
+        "Verify bounded plain output with missing tools, literal insertion and selection, and fzf-tab at 40, 80 and 120 columns."
+      ],
+      "created": "2026-11-25T02:49:32.010612+00:00",
+      "updated": "2026-11-25T03:25:19.188890+00:00",
+      "completed": "2026-11-25T03:25:19.188890+00:00",
+      "removed": null
+    },
+    {
+      "id": "ce11f4a707bd43a6ba2a0cbac74422fe",
+      "alias": null,
+      "title": "Optimize shell bootstrap, lazy plugins and startup caches",
+      "notes": "Follow-up to completed startup goal 0f3fffa3266f423e9ab74844c53d85db. Use the recorded baseline and corrected hooks. Target Bash, Zsh, Fish, Nushell, Xonsh and PowerShell.\n\nAll four children verified. Two independent seven-pair public-plugin Zsh login comparisons show improved warm first input. Per-profile cache/guard, six standalone RC entries, lazy acquisition and explicit retry, retained historical cleanup and first interaction behavior have isolated coverage.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Each shell has a minimal primary rc and the common checkout and optional-plugin behavior. Warm startup, first interactions and native exceptions are verified.",
+        "Bounded publication, reader-safe retention and recovery work in isolated installations."
+      ],
+      "created": "2026-11-25T02:49:33.445126+00:00",
+      "updated": "2026-11-25T03:58:47.534719+00:00",
+      "completed": "2026-11-25T03:58:47.534719+00:00",
+      "removed": null
+    },
+    {
+      "id": "4fbce9adb8104d48abbef604fb50c7da",
+      "alias": null,
+      "title": "Simplify the six shell entry points and prepare the early environment once",
+      "notes": "Prefer a valid explicit override, installed dots checkout or recorded checkout, then ~/dots. Only an interactive shell with a missing checkout may clone. The backend owns platform, environment and tool paths.\n\nSix shell bootstrap entries use the selected checkout/pin and guarded missing-checkout acquisition. Shell tests cover explicit selection, relocation, conflicting/absent destinations, missing Git, retry and concurrent startup. Warm Zsh login/scripts use zero Python; explicit POSIX, Bash login and Zsh early consumers are retained. Native Windows 5.1/7 remains an external acceptance check.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ce11f4a707bd43a6ba2a0cbac74422fe",
+      "acceptance": [
+        "Verify installed, relocated, occupied, missing Git, offline, concurrent and interrupted cases. Ordinary dots init SHELL continues to emit native code.",
+        "Warm Zsh -c, -lc and interactive login run zero Python settings readers. Preserve independent POSIX profile, Bash login and Zsh early-environment consumers."
+      ],
+      "created": "2026-11-25T02:49:35.097573+00:00",
+      "updated": "2026-11-25T03:58:14.264806+00:00",
+      "completed": "2026-11-25T03:58:14.264806+00:00",
+      "removed": null
+    },
+    {
+      "id": "0e21dcc6e19445f48209193a329231c0",
+      "alias": null,
+      "title": "Load optional features and install missing plugins on first use",
+      "notes": "Serve the first key or command with an installed feature or an immediate native fallback. Queue a single bounded fetch for a missing configured plugin and activate at a safe prompt.\n\nVerified first-use native Tab fallback, bounded detached acquisition, safe-prompt activation, offline failure and explicit retry with five worker tests, five key tests and the seven-public-plugin PTY. No network, private plugins or live installation was used; native Deja releases exercised with fixtures.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ce11f4a707bd43a6ba2a0cbac74422fe",
+      "acceptance": [
+        "First Tab, prompt, keys and directory hooks work. Passive editor plugins can queue after the first accepted interactive command. Scripts and warm startup perform no acquisition.",
+        "Explicit setup and retry recover failed acquisitions. Repeated keypresses and reloads avoid duplicate work."
+      ],
+      "created": "2026-11-25T02:49:36.567781+00:00",
+      "updated": "2026-11-25T03:49:53.195074+00:00",
+      "completed": "2026-11-25T03:49:53.195074+00:00",
+      "removed": null
+    },
+    {
+      "id": "5319a28b6c224ec6bd1c50c5fac9e7d6",
+      "alias": null,
+      "title": "Eliminate repeated startup work and consolidate shell files",
+      "notes": "Give PATH reconciliation, theme refresh and compinit one owner at each necessary stage. Retire the three dormant Zsh platform files and fold the four Fish wrappers into their guarded native entries.\n\nSeven redundant Fish/Zsh implementation files were folded. A relative historical Zsh FZF link, both Fish layouts, local provider precedence, repaired compdump, prompt registration, guarded theme refresh, status, personal PATH/hooks and real first-input/Tab/reload tests passed.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ce11f4a707bd43a6ba2a0cbac74422fe",
+      "acceptance": [
+        "The two Fish layouts, existing public source paths and user-local completion priority work. Validate both success and early-exit branches.",
+        "Preserve previous command status, first Tab, explicit completion rebuild, compdump repair, private-hook provenance and late personal PATH changes."
+      ],
+      "created": "2026-11-25T02:49:38.736670+00:00",
+      "updated": "2026-11-25T03:58:30.045825+00:00",
+      "completed": "2026-11-25T03:58:30.045825+00:00",
+      "removed": null
+    },
+    {
+      "id": "49a26866bd294f9daf2a02d29ad6218b",
+      "alias": null,
+      "title": "Bound startup cache growth and protect concurrent readers",
+      "notes": "Keep the current and previous successful new-format Bash/Zsh generations. Prune superseded new-format caches at publication and expose historic caches in reviewed Cleanup.\n\nBash and Zsh readers paused inside the first bundle completed it after two later publications retired the path. Interrupted pointer replacement and retry preserved coherence. A private Cleanup fixture proved active publication lock, current/previous, foreign file, size accounting and deletion gates. Debug mapping now validates every line in compressed ranges.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ce11f4a707bd43a6ba2a0cbac74422fe",
+      "acceptance": [
+        "A paused reader, concurrent publisher, interrupted publication and retry all use a coherent bundle. No warm-start cache-directory scan occurs.",
+        "Cleanup reports historic sizes, validates ownership and protects active generations and foreign files. Compact diagnostics retain source mapping."
+      ],
+      "created": "2026-11-25T02:49:40.849053+00:00",
+      "updated": "2026-11-25T03:25:25.132989+00:00",
+      "completed": "2026-11-25T03:25:25.132989+00:00",
+      "removed": null
+    },
+    {
+      "id": "77ed91b248a24cd6b6cad21d97b857b4",
+      "alias": null,
+      "title": "Verify shell parity, speed and audit closure",
+      "notes": "Use the baseline from the audit fixes and the finished Config/startup branches. Record native evidence separately from platform fixtures.\n\nAll three verification children passed. Five native Termux shells, public Zsh plugins, four validated profile manifests, scoped Config aliases and mixed-layout recovery were exercised. The shipped manual and local generated Wiki match the implementation. Final native Config completion passed 10/10 and group read/edit compatibility passed 2/2. The paired timing data and remaining external-platform checks are recorded in plans/init-config-refactor.md.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Publish before/after timings and file counts with repeatable warm Termux Zsh improvement and any remaining native acceptance clearly identified.",
+        "All audit findings have a disposition and affected CLI, guides, manual and Wiki match the delivered behavior."
+      ],
+      "created": "2026-11-25T02:49:42.895199+00:00",
+      "updated": "2026-11-25T04:16:35.462143+00:00",
+      "completed": "2026-11-25T04:16:35.462143+00:00",
+      "removed": null
+    },
+    {
+      "id": "43b4f66c7f4446e8a8096742a8749461",
+      "alias": null,
+      "title": "Benchmark shell readiness, first interactions and Config lookup",
+      "notes": "Compare the current pre-follow-up tree to the candidate in disposable homes. Use minimal tools and real configured public plugins.\n\nRecorded initial three cold and seven warm pairs in each of five shells with both tool sets, seven-pair command and first-key rechecks, and two real-public-plugin login runs. Zsh plugin first input improved from 7106 to 4821 ms and 4674 to 2063 ms. Warm noninteractive Zsh improved from 2063 to 238 ms; the first empty-cache script cost 442 ms more. Config scalar, group, scoped completion and inventory, plus file and diagnostic map counts, are in plans/init-config-refactor.md. The plan reports Fish/Xonsh variability, final offline Zsh timings, and slower first-use cases.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "77ed91b248a24cd6b6cad21d97b857b4",
+      "acceptance": [
+        "Collect at least three cold runs and seven alternating warm pairs per available shell. Measure first input, command, Tab plus cd, first widget/tool completion and reload separately.",
+        "Require repeatable warm Termux Zsh login and real-plugin improvement. Recheck regressions exceeding the greater of 20 ms or 10%, and report Config scalar, group, completion and browser timings."
+      ],
+      "created": "2026-11-25T02:49:44.904258+00:00",
+      "updated": "2026-11-25T04:08:45.101257+00:00",
+      "completed": "2026-11-25T04:08:45.101257+00:00",
+      "removed": null
+    },
+    {
+      "id": "7b352b19dde74244a66508e1afbcbf25",
+      "alias": null,
+      "title": "Verify six-shell parity, installation, migration and recovery",
+      "notes": "Use isolated native entry points and fixture homes for all lifecycle checks. Distinguish native Linux, WSL and Windows PowerShell 5.1/7 from Termux fixtures.\n\nTermux native sessions exercised five shells, first input and first Tab through the real editor, Zsh vi/backspace, Ctrl-R, FZF/fzf-tab, theme reload and profile overrides. Fresh installation, repeat and uninstall passed on Termux and a WSL fixture; Fish directory migration and undo restored the original. Offline and concurrent startup, acquisition interruption/retry, relocation, unwritable cache, profile changes, guarded history and private-link fixtures passed. Native desktop Linux, WSL and Windows PowerShell 5.1/7 are named pending host checks.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "77ed91b248a24cd6b6cad21d97b857b4",
+      "acceptance": [
+        "Exercise first prompt, first Tab, vi keys, Ctrl-R, first cd, FZF and theme refresh, alongside fresh install, repeat install, upgrade, migration, undo and uninstall.",
+        "Exercise offline and concurrent startup, stale or read-only cache, checkout relocation, profile changes and personal links. Record native passes and named pending checks."
+      ],
+      "created": "2026-11-25T02:49:47.175378+00:00",
+      "updated": "2026-11-25T04:02:50.667594+00:00",
+      "completed": "2026-11-25T04:02:50.667594+00:00",
+      "removed": null
+    },
+    {
+      "id": "2c43106cfe5147ec95d12aa603f473e0",
+      "alias": null,
+      "title": "Close the audit and synchronize Dots documentation and discovery",
+      "notes": "Review every original finding and explain retained behavior that has an independent caller. Summarize source file reductions, timing changes and platform gaps.\n\nRecorded historical audit findings, final dispositions, source count and byte changes, complete measurements and pending native platform checks in plans/init-config-refactor.md. Updated the searchable 5,385-record offline audit and ordered Zsh guide. The 10-test native Config completion suite, 12 live fzf-tab cases, real Config browser at 40/80/120 and installer checks passed. The manual matches its source, all 1540 documentation links passed and the generated local Wiki is healthy with zero differences. The existing root README links remain sufficient.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "77ed91b248a24cd6b6cad21d97b857b4",
+      "acceptance": [
+        "Publish the audit disposition, before/after file counts and performance results in the focused plan and canonical guides.",
+        "Verify CLI metadata, aliases and six-shell completions, Config and installer menus, manual, README relevance and generated Wiki against implemented behavior."
+      ],
+      "created": "2026-11-25T02:49:49.723972+00:00",
+      "updated": "2026-11-25T04:15:16.483186+00:00",
+      "completed": "2026-11-25T04:15:16.483186+00:00",
+      "removed": null
     }
   ]
 }

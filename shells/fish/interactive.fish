@@ -5,35 +5,12 @@ set -gx fish_cursor_insert line blink
 set -gx fish_cursor_visual block
 set -gx fish_cursor_replace_one underscore
 
-# Path
-fish_add_path --path /bin
-fish_add_path --path ~/.cargo/bin
-fish_add_path --path ~/.local/bin
-# fish_add_path --path ~/.luarocks/bin
-# fish_add_path --path ~/Library/Python/3.{8,9}/bin
-# fish_add_path --path /usr/local/opt/sqlite/bin
-fish_add_path --path /usr/local/sbin
-# fish_add_path --path ~/.gem/ruby/2.6.0/bin
-# fish_add_path --path ~/.local/bin/pnpm-bins
-# fish_add_path --path ~/.local/share/bob-nvim/bin
-# fish_add_path --path ~/.local/share/bob-nvim/nvim-linux64/bin
-fish_add_path --path /var/lib/flatpak/exports/bin/
-fish_add_path --path ~/.dotnet/tools
-# fish_add_path --path ~/.local/share/mise/shims
-
-# set -gx DENO_INSTALL "~/.deno"
-# fish_add_path --path ~/.deno/bin
-
-command -q nvim; and set -gx EDITOR nvim
-set -gx VISUAL $EDITOR
-set -gx SUDO_EDITOR $EDITOR
-
-# Fish
-set fish_emoji_width 2
-
-if status is-interactive
-    # Commands to run in interactive sessions can go here
+# Desktop system paths follow the prepared checkout/profile/tool directories.
+if contains -- "$DOTS_PLATFORM" linux wsl
+    fish_add_path --append --path /bin /usr/local/sbin /var/lib/flatpak/exports/bin
 end
+set -q SUDO_EDITOR; or set -gx SUDO_EDITOR $EDITOR
+set fish_emoji_width 2
 
 function d
     set tmp (mktemp -t "yazi-cwd.XXXXXX")

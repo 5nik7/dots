@@ -35,7 +35,7 @@ class PowerShellInitTests(unittest.TestCase):
                      'shells/powershell/Microsoft.PowerShell_profile.ps1',
                      'shells/powershell/profile.ps1', 'shells/powershell/helpers.ps1',
                      'shells/powershell/optional.ps1', 'shells/powershell/coreutils.ps1',
-                     'shells/shared/starship-default.ps1', 'scripts/pdiff.ps1',
+                     'scripts/pdiff.ps1',
                      'shells/powershell/Scripts/Invoke-Wh.ps1'):
             (self.repo / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(REPO / name, self.repo / name)
@@ -214,13 +214,7 @@ $clipboard=Invoke-DotsClipboard $env:DOTS cpy @() @('owned input') $true; $clipb
 
     def test_bootstrap_warm_avoids_discovery_and_cold_disables_acquisition(self):
         shadow = self.python_guard_environment()
-        # Replace the embedded bootstrap payload with an inert owned probe. It
-        # fails before checkout preparation and cannot install/fetch anything.
-        (self.repo / 'lib/dots/bootstrap.py').write_text(
-            "import json, os\nfrom pathlib import Path\n"
-            "Path(os.environ['HOME'], 'bootstrap-guard.json').write_text(json.dumps("
-            "[os.environ.get('PYTHON_MANAGER_AUTOMATIC_INSTALL'), "
-            "os.environ.get('PYLAUNCHER_ALLOW_INSTALL'), os.environ.get('PYLAUNCHER_ALWAYS_INSTALL')]))\nraise SystemExit(7)\n")
+        shutil.copytree(REPO / 'shells/bootstrap', self.repo / 'shells/bootstrap')
         generated = subprocess.run([sys.executable, '-B',
             str(self.repo / 'lib/dots/bootstrap_snippet.py'), 'powershell'],
             env=self.env, capture_output=True, text=True, timeout=30)
@@ -237,7 +231,7 @@ $clipboard=Invoke-DotsClipboard $env:DOTS cpy @() @('owned input') $true; $clipb
             '\n@{manager=$env:PYTHON_MANAGER_AUTOMATIC_INSTALL; launcher=$env:PYLAUNCHER_ALLOW_INSTALL; always=$env:PYLAUNCHER_ALWAYS_INSTALL} | ConvertTo-Json -Compress',
             prepare=False)
         self.assertEqual(cold.returncode, 0, cold.stderr)
-        self.assertEqual(json.loads((self.home / 'bootstrap-guard.json').read_text()), ['false', None, None])
+        self.assertFalse((self.home / 'bootstrap-guard.json').exists())
         self.assertEqual(json.loads(cold.stdout), {'manager': 'true', 'launcher': '1', 'always': '1'})
         self.assertFalse((self.root / 'missing checkout').exists())
 
@@ -386,6 +380,22 @@ if (($forwarded -join '|') -ne '__complete|theme|fixturepalette-theme|bl') { exi
             f". {entry}; [Console]::Write($esc + '|' + $ESC + '|')")
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(p.stdout.encode(), b'\x1b|' * 4)
+
+    def test_profile_hooks_surround_shared_personal_configuration(self):
+        for platform in ('windows', 'linux', 'wsl'):
+            directory = self.repo/'profiles'/platform/'shells'
+            directory.mkdir()
+            (directory/'init.ps1').write_text(f"$global:DotsStages += ',init-{platform}'\n")
+            (directory/'local.ps1').write_text(f"$global:DotsStages += ',local-{platform}'\n")
+        (self.repo/'shells/powershell/interactive.ps1').write_text("$global:DotsStages += ',shared'\n")
+        entry = literal(self.repo/'shells/powershell/profile.ps1')
+        p = self.run_interactive(f". {entry}; [Console]::Write($env:DOTS_PROFILE_LAYERS + '|' + $global:DotsStages)")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        layers, stages = p.stdout.split('|')
+        names = layers.split()
+        self.assertTrue(names)
+        self.assertEqual(stages.split(',')[1:],
+                         [*('init-' + name for name in names), 'shared', *('local-' + name for name in names)])
 
     def test_lean_startup_and_repeat_preserve_prompt_exit_and_paths(self):
         entry = literal(self.repo / 'shells/powershell/profile.ps1')
@@ -555,6 +565,32 @@ __ShellInteg_Rearm
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(json.loads(p.stdout), {'first': 'first', 'retained': 'first',
                         'current': 'second', 'color': '#445566', 'ls': 'di=34'})
+
+    def test_published_fzf_and_caller_owned_options(self):
+        root = self.home/'state/dots/themes'
+        generation = root/'generations/g.opts'
+        generation.mkdir(parents=True)
+        (root/'current').write_text('g.opts')
+        (generation/'shell.tsv').write_text('@theme\tid\tfixture\n@theme\tfamily\tfixture\n@theme\tflavor\tdark\n'
+                                             '@palette\tblue\t#112233\n@role\tforeground\t#ffffff\n')
+        (generation/'visual.tsv').write_text('env\tDOTS_THEME_FZF_COLORS\tfg:#123456\n'
+                                             'env\tDOTS_THEME_FZF_OPTS\t--pointer=▎ --preview=\n'
+                                             'env\tDOTS_THEME_FZF_PREVIEW\t1\n', encoding='utf-8')
+        entry = literal(self.repo/'shells/powershell/profile.ps1')
+        for mode in ('options', 'file', 'configured-empty'):
+            setup = {'options': "$env:FZF_DEFAULT_OPTS = '--height=37%'",
+                     'file': "$env:FZF_DEFAULT_OPTS_FILE = 'fixture.opts'",
+                     'configured-empty': '$null = 0'}[mode]
+            with self.subTest(mode=mode):
+                p = self.run_interactive(f"{setup}; . {entry}; "
+                                         "@{opts=$env:FZF_DEFAULT_OPTS;file=$env:FZF_DEFAULT_OPTS_FILE; "
+                                         "color=$env:DOTS_THEME_FZF_COLORS} | ConvertTo-Json -Compress")
+                self.assertEqual(p.returncode, 0, p.stderr)
+                data = json.loads(p.stdout)
+                self.assertEqual(data['color'], 'fg:#123456')
+                self.assertEqual(data['file'], 'fixture.opts' if mode == 'file' else None)
+                self.assertEqual(data['opts'], {'options': '--height=37%', 'file': None,
+                                 'configured-empty': '--pointer=▎ --preview= --color=fg:#123456'}[mode])
 
     def test_helpers_preserve_touch_contents_and_forward_literal_backup_paths(self):
         target = self.home / '-file [a] ü.txt'
@@ -805,6 +841,78 @@ $status=$LASTEXITCODE
             "@{imports=$imports; loaded=$global:_DotsOptionalFeatures['icons']} | ConvertTo-Json -Compress")
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(json.loads(p.stdout), {'imports': 2, 'loaded': True})
+
+    def test_native_tool_opt_in_arguments_retries_and_fzf_chords(self):
+        optional = literal(self.repo / 'shells/powershell/optional.ps1')
+        script = """
+$global:providerCalls=@()
+$global:bound=@()
+function Get-Module { param($Name); if ($Name -eq 'PSReadLine') { 'loaded' } }
+function Get-PSReadLineKeyHandler { param([switch]$Bound)
+    [pscustomobject]@{ Key='Ctrl+t'; Function='FzfProvider' }
+}
+function Set-PSReadLineKeyHandler { param($Chord, $ScriptBlock); $global:bound += $Chord }
+function Get-Command {
+    param($Name, $CommandType, $TotalCount, $ErrorAction)
+    $global:providerName=$Name
+    {
+        $global:providerCalls += ($global:providerName + ' ' + ($args -join ' '))
+        $global:LASTEXITCODE=0
+        if ($global:providerName -eq 'atuin' -and -not $global:retryAtuin) {
+            $global:LASTEXITCODE=1
+            '$global:partialRan=$true'
+        } elseif ($global:providerName -eq 'tv') {
+            'function global:TvFixture { "tv" }'
+            "Set-PSReadLineKeyHandler -Chord 'Ctrl+t' -ScriptBlock {}"
+            "Set-PSReadLineKeyHandler -Chord 'Ctrl+r' -ScriptBlock {}"
+        } else {
+            '$global:toolActive=$true'
+        }
+    }
+}
+foreach ($feature in 'mise','zoxide','vfox','tv') {
+    . OPTIONAL $feature
+    . OPTIONAL $feature
+}
+try { . OPTIONAL atuin } catch {}
+$global:retryAtuin=$true
+. OPTIONAL atuin
+. OPTIONAL atuin
+try { . OPTIONAL direnv } catch {
+   if ($PSVersionTable.PSVersion -ge [version]'7.2') { throw }
+}
+@{calls=$global:providerCalls; bound=$global:bound; tv=(TvFixture); partial=[bool]$global:partialRan;
+  direnvExpected=($PSVersionTable.PSVersion -ge [version]'7.2')} | ConvertTo-Json -Compress
+"""
+        result = self.run_ps('-Command', script.replace('OPTIONAL', optional), prepare=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        found = json.loads(result.stdout)
+        expected = ['mise activate pwsh', 'zoxide init powershell', 'vfox activate pwsh', 'tv init power-shell',
+                    *['atuin init powershell --disable-ctrl-r --disable-up-arrow'] * 2]
+        if found['direnvExpected']:
+            expected.append('direnv hook pwsh')
+        self.assertEqual(found['calls'], expected)
+        self.assertEqual(found['bound'], ['Ctrl+r'])
+        self.assertEqual(found['tv'], 'tv')
+        self.assertFalse(found['partial'])
+
+    def test_early_and_local_profile_prompts_preserve_refresh_on_reload(self):
+        for platform in ('windows', 'linux', 'wsl'):
+            directory = self.repo / 'profiles' / platform / 'shells'
+            directory.mkdir()
+            (directory / 'init.ps1').write_text("function global:prompt { 'early' }")
+            (directory / 'local.ps1').write_text(
+                "if ($global:useLate) { function global:prompt { 'late' } }")
+        entry = literal(self.repo / 'shells/powershell/profile.ps1')
+        p = self.run_interactive(
+            "function Get-Command { throw 'custom prompt must not probe starship' }; "
+            f". {entry}; $first=prompt; $firstWrapped=$function:prompt -eq $global:_DotsPromptWrapper; "
+            f"$global:useLate=$true; . {entry}; $global:LASTEXITCODE=29; $last=prompt; "
+            "@{first=$first; last=$last; status=$LASTEXITCODE; wrapped=($function:prompt -eq "
+            "$global:_DotsPromptWrapper); firstWrapped=$firstWrapped} | ConvertTo-Json -Compress")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(json.loads(p.stdout), dict(first='early', last='late', status=29,
+                                                   wrapped=True, firstWrapped=True))
 
     def test_optional_generated_prompt_keeps_dots_hooks_and_rejects_failed_code(self):
         entry = literal(self.repo / 'shells/powershell/profile.ps1')

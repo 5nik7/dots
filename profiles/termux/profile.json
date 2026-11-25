@@ -48,15 +48,15 @@
       "app": "bash",
       "category": "shell",
       "target": "${HOME}/.bash_profile",
-      "strategy": "link"
+      "strategy": "copy"
     },
     {
       "id": "bashrc",
-      "source": "${DOTS}/shells/bash/.bashrc",
+      "source": "${DOTS}/shells/bootstrap/rc.sh",
       "app": "bash",
       "category": "shell",
       "target": "${HOME}/.bashrc",
-      "strategy": "link"
+      "strategy": "copy"
     },
     {
       "id": "bat",
@@ -120,9 +120,9 @@
     },
     {
       "id": "fish",
-      "source": "${DOTS}/shells/fish",
-      "target": "${CONFIG}/fish",
-      "strategy": "directory-link",
+      "source": "${DOTS}/shells/bootstrap/config.fish",
+      "target": "${CONFIG}/fish/config.fish",
+      "strategy": "copy",
       "app": "fish",
       "category": "shell"
     },
@@ -267,9 +267,9 @@
     },
     {
       "id": "nushell",
-      "source": "${DOTS}/shells/nushell",
-      "target": "${CONFIG}/nushell",
-      "strategy": "directory-link",
+      "source": "${DOTS}/shells/bootstrap/config.nu",
+      "target": "${CONFIG}/nushell/config.nu",
+      "strategy": "copy",
       "app": "nushell",
       "category": "shell"
     },
@@ -337,11 +337,11 @@
     },
     {
       "id": "xonshrc",
-      "source": "${DOTS}/shells/xonsh/.xonshrc",
+      "source": "${DOTS}/shells/bootstrap/rc.xsh",
       "app": "xonsh",
       "category": "shell",
       "target": "${HOME}/.xonshrc",
-      "strategy": "link"
+      "strategy": "copy"
     },
     {
       "id": "yazi",
@@ -361,11 +361,11 @@
     },
     {
       "id": "zshrc",
-      "source": "${DOTS}/shells/zsh/zshrc",
+      "source": "${DOTS}/shells/bootstrap/rc.sh",
       "app": "zsh",
       "category": "shell",
       "target": "${HOME}/.zshrc",
-      "strategy": "link"
+      "strategy": "copy"
     },
     {
       "id": "todo-skill",
@@ -558,7 +558,7 @@
       "id": "config-json",
       "source": "${PROFILE}/config/pkgs/config.json",
       "target": "${CONFIG}/pkgs/config.json",
-      "app": "config",
+      "app": "pkgs",
       "category": "config",
       "strategy": "link"
     },
@@ -566,7 +566,7 @@
       "id": "config",
       "source": "${PROFILE}/config/codex-termux/config",
       "target": "${CONFIG}/codex-termux/config",
-      "app": "config",
+      "app": "codex-termux",
       "category": "config",
       "strategy": "link"
     },
@@ -574,7 +574,7 @@
       "id": "config-toml",
       "source": "${PROFILE}/config/mise/config.toml",
       "target": "${CONFIG}/mise/config.toml",
-      "app": "config",
+      "app": "mise",
       "category": "config",
       "strategy": "link"
     },
@@ -590,7 +590,7 @@
       "id": "method",
       "source": "${PROFILE}/config/zsh-system-clipboard/method",
       "target": "${CONFIG}/zsh-system-clipboard/method",
-      "app": "config",
+      "app": "zsh-system-clipboard",
       "category": "config",
       "strategy": "link"
     }

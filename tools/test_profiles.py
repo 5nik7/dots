@@ -232,6 +232,7 @@ class Profiles(unittest.TestCase):
         source=self.home/'source';source.mkdir()
         for relative in ('bin/dots','bin/dots.ps1','lib/dots/shell/startup.bash'):
             p=source/relative;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('# fixture\n')
+        (source/'bin/dots').chmod(0o755)
         env=dict(self.env,GIT_CONFIG_GLOBAL=os.devnull,GIT_CONFIG_NOSYSTEM='1')
         for args in (['init','-b','main'],['add','.'],['-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-m','fixture']):
             subprocess.run(['git','-C',str(source),*args],check=True,env=env,capture_output=True)

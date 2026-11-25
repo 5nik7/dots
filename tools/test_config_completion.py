@@ -8,6 +8,7 @@ import shutil
 import signal
 import time
 import unittest
+from unittest.mock import patch
 import test_config_alignment as fixtures
 
 FZF_TAB=Path(os.environ.get('DOTS_TEST_FZF_TAB') or Path.home()/'.local/share/zinit/plugins/Aloxaf---fzf-tab')
@@ -15,6 +16,43 @@ FZF_TAB=Path(os.environ.get('DOTS_TEST_FZF_TAB') or Path.home()/'.local/share/zi
 
 class Completion(unittest.TestCase):
     setUp=fixtures.Alignment.setUp
+
+    def test_typed_key_candidates_match_full_inventory(self):
+        from config_completion import key_candidates
+
+        profile = json.loads(self.path.read_text())
+        profile['environment'] = {'FZF_OPTION': 'fixture'}
+        self.path.write_text(json.dumps(profile))
+        queries = ('fzf.colors.', 'apps.fzf.colors.', 'colors.fzf.', 'colors.apps.fzf.',
+                   'fzf.settings.preview_w', 'icons.git.', 'colors.git.', 'colors.ui.',
+                   'settings.files.', 'fzf.env.', 'apps.wttr.colors.icon_colors[',
+                   'colors.apps.cli.menu.', 'apps.f', 'preview_win')
+        # Disable recognition of complete app/type prefixes for the reference.
+        # Both inventories must produce the same insertion text, labels and order.
+        with patch('config_namespace.field_path', return_value=None):
+            full = {query: key_candidates(self.root, query) for query in queries}
+        for query, expected in full.items():
+            with self.subTest(query=query):
+                self.assertTrue(expected)
+                self.assertEqual(key_candidates(self.root, query), expected)
+        self.assertEqual(set(dict(full['settings.files.'])),
+                         {'settings.files.backup', 'settings.files.list_view', 'settings.files.group_by_status'})
+
+    def test_typed_key_candidates_skip_unrelated_native_stores_and_keep_substring_fallback(self):
+        from config_completion import key_candidates
+
+        with patch('config_pkgs.Native', side_effect=AssertionError('opened unrelated pkgs configuration')):
+            with patch('config_wttr.Native', side_effect=AssertionError('opened unrelated wttr configuration')):
+                for query in ('fzf.colors.', 'apps.fzf.colors.', 'colors.apps.fzf.', 'colors.fzf.'):
+                    with self.subTest(query=query):
+                        rows = dict(key_candidates(self.root, query))
+                        self.assertIn(query + 'ui.', rows)
+                        self.assertIn(query + 'border', rows)
+            self.assertIn('wttr.settings.units', dict(key_candidates(self.root, 'wttr.settings.unit')))
+
+        embedded = 'apps.nvim.highlights["fzf.colors.custom"]'
+        with patch('profile_config.keys', return_value=[embedded]):
+            self.assertEqual([key for key, _ in key_candidates(self.root, 'fzf.colors.custom')], [embedded])
 
     def test_markdown_viewer_choice_native_tab(self):
         for shell in ('bash','zsh','fish'):
@@ -56,6 +94,24 @@ class Completion(unittest.TestCase):
             try:os.kill(pid,signal.SIGKILL)
             except ProcessLookupError:pass
             os.close(fd);os.waitpid(pid,0)
+
+    def test_app_and_type_alias_native_tab(self):
+        for shell in ('bash','zsh','fish'):
+            if not shutil.which(shell):continue
+            for typed, expected in (('fzf.settings.preview_w', 'fzf.settings.preview_window '),
+                                    ('settings.git.view sho', 'settings.git.view short ')):
+                with self.subTest(shell=shell, typed=typed):
+                    self.assertEqual(self.capture(shell,'dots config set '+typed+'\t'), 'dots config set '+expected)
+
+    def test_data_shells_receive_typed_alias_and_value(self):
+        from native_completion import complete
+        for shell in ('nu','xonsh','powershell'):
+            for words, expected in ((['config','set','fzf.settings.preview_w'],'fzf.settings.preview_window'),
+                                    (['config','get','colors.fzf.ui.cursor.f'],'colors.fzf.ui.cursor.fg'),
+                                    (['config','set','settings.git.view','sho'],'short')):
+                with self.subTest(shell=shell, words=words):
+                    rows=complete(self.root,shell,['dots',*words])
+                    self.assertEqual([row['value'] for row in rows],[expected])
 
     def test_branch_and_leaf_native_tab(self):
         for shell in ('bash','zsh','fish'):

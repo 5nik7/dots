@@ -17,6 +17,6 @@ if [[ -z ${_DOTS_BASH_PROMPT_READY:-} ]]; then
   _DOTS_BASH_PROMPT_READY=1
 fi
 # Starship owns PS1 after activation. The fallback uses only Bash expansions.
-if [[ -z ${_DOTS_BASH_TOOL_READY[starship]:-} ]]; then
+if [[ -z ${_DOTS_TOOL_READY[starship]:-} ]]; then
   PS1='\[\e[1;32m\]\u@\h\[\e[0m\] \[\e[1;34m\]\w\[\e[0m\] [$?]\n\$ '
 fi

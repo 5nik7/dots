@@ -43,86 +43,35 @@ def --wrapped _dots-python [...args: string] {
     }
 }
 do --env {
-    let resolved = (_dots-python -B ($env.DOTS | path join 'lib/dots/native_completion.py') --environment)
-    if $resolved.exit_code == 0 {
-        let document = ($resolved.stdout | from json)
-        $env._DOTS_NATIVE_PATHS = $document.shell_paths
-        $env._DOTS_COMPLETION_NAMES = $document.completion_commands
-        let data = $document.exports
-        for name in $document.unset { hide-env --ignore-errors $name }
-        for name in ($env._dots_profile_map_names? | default []) { hide-env --ignore-errors $name }
-        mut names = []
-        for row in ($document.maps | transpose name paths) {
-            let name = $'($row.name)_map'
-            load-env {($name): $row.paths}
-            $names = ($names | append $name)
-        }
-        $env._dots_profile_map_names = $names
-        load-env ($data | reject PATH)
-        $env.PATH = ($data.PATH | split row (char esep))
-    } else { error make {msg: 'dots: native environment preparation failed'} }
+    let prepared = ($env._DOTS_PREPARED_NU? | default {})
+    hide-env --ignore-errors _DOTS_PREPARED_NU
+    let document = if ($prepared | describe | str starts-with 'record') and ($prepared.exports?.DOTS_PROFILE_CHECKOUT? | default '') == $env.DOTS {
+        $prepared
+    } else {
+        let resolved = (_dots-python -B ($env.DOTS | path join 'lib/dots/native_completion.py') --environment)
+        if $resolved.exit_code != 0 { error make {msg: 'dots: native environment preparation failed'} }
+        $resolved.stdout | from json
+    }
+    $env.dots_options = $document.settings.values
+    $env.dots_option_sources = $document.settings.origins
+    $env._DOTS_NATIVE_PATHS = ($document.shell_paths | upsert config $document.settings.path)
+    $env._DOTS_COMPLETION_NAMES = $document.completion_commands
+    let data = $document.exports
+    for name in $document.unset { hide-env --ignore-errors $name }
+    for name in ($env._dots_profile_map_names? | default []) { hide-env --ignore-errors $name }
+    mut names = []
+    for row in ($document.maps | transpose name paths) {
+        let name = $'($row.name)_map'
+        load-env {($name): $row.paths}
+        $names = ($names | append $name)
+    }
+    $env._dots_profile_map_names = $names
+    load-env ($data | reject PATH)
+    $env.PATH = ($data.PATH | split row (char esep))
 }
 
-# Native Nu environment records are retained by Nu, not exported as shell code.
-def _dots-valid [kind: string, value: string] {
-    match $kind {
-        bool => ($value in ['0' '1'])
-        style => ($value in ['auto' 'always' 'never'])
-        suggestions => ($value in ['deja' 'autosuggestions' 'none'])
-        id => ($value =~ '^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$')
-        _ => false
-    }
-}
+# Build native Nu maps from the same resolved settings as the other adapters.
 def --env _dots-load [] {
-    mut config = ($env.DOTS_CONFIG_FILE? | default $env._DOTS_NATIVE_PATHS.config)
-    mut values = {}
-    mut origins = {}
-    mut kinds = {}
-    for line in (open --raw ($env.DOTS | path join 'lib/dots/shell/settings.tsv') | lines) {
-        let fields = ($line | split row "\t")
-        $values = ($values | upsert $fields.0 $fields.2)
-        $kinds = ($kinds | upsert $fields.0 $fields.1)
-        $origins = ($origins | upsert $fields.0 default)
-    }
-    mut seen = []
-    if ($config | path exists) {
-        for raw in (open --raw $config | lines) {
-            let line = ($raw | str trim)
-            if ($line | is-empty) or ($line | str starts-with '#') { continue }
-            let parts = ($line | split row -n 2 '=')
-            if ($parts | length) != 2 { error make {msg: 'dots: invalid setting'} }
-            let key = ($parts.0 | str trim)
-            if $key not-in ($kinds | columns) or $key in $seen { error make {msg: 'dots: unknown or duplicate setting'} }
-            let value = ($parts.1 | str trim | str replace -r '^"(.*)"$' '$1' | str replace -r "^'(.*)'$" '$1')
-            if not (_dots-valid ($kinds | get $key) $value) { error make {msg: $'dots: invalid ($key)'} }
-            $values = ($values | upsert $key $value)
-            $origins = ($origins | upsert $key config)
-            $seen = ($seen | append $key)
-        }
-    }
-    if ($env.DOTS_CONFIG_FILE? | default '' | is-empty) {
-        let profile_result = (_dots-python -B ($env.DOTS | path join 'lib/dots/profile_config.py') __settings-json)
-        if $profile_result.exit_code != 0 { error make {msg: 'dots: native settings preparation failed'} }
-        let profile_config = ($profile_result.stdout | from json)
-        let profile_settings = $profile_config.settings
-        $config = $profile_config.path
-        for key in ($profile_settings | columns) {
-            if $key in ($kinds | columns) {
-                $values = ($values | upsert $key ($profile_settings | get $key | get value))
-                $origins = ($origins | upsert $key ($profile_settings | get $key | get source))
-            }
-        }
-    }
-    for key in ($kinds | columns) {
-        let override = ($env | get -o $key | default '')
-        if $override != '' {
-            if not (_dots-valid ($kinds | get $key) $override) { error make {msg: $'dots: invalid override ($key)'} }
-            $values = ($values | upsert $key $override)
-            $origins = ($origins | upsert $key environment)
-        }
-    }
-    $env.dots_options = $values
-    $env.dots_option_sources = $origins
     mut paths = {}
     mut exports = {}
     for line in (open --raw ($env.DOTS | path join 'lib/dots/shell/paths.tsv') | lines) {
@@ -131,7 +80,7 @@ def --env _dots-load [] {
         if $fields.0 != '-' { $exports = ($exports | upsert $fields.0 $value) }
         if $fields.1 != '-' { $paths = ($paths | upsert $fields.1 $value) }
     }
-    $env.dot = ($paths | upsert config $config | upsert state $env._DOTS_NATIVE_PATHS.state)
+    $env.dot = ($paths | upsert config $env._DOTS_NATIVE_PATHS.config | upsert state $env._DOTS_NATIVE_PATHS.state)
     load-env $exports
     $env.THEME = ($env.dot.state | path join 'current/theme')
     $env.THEMESCMD = $env._DOTS_NATIVE_PATHS.theme_command
@@ -181,15 +130,20 @@ def --env _dots-refresh-theme [] {
             }
         }
         load-env $visual_env
-        if 'DOTS_THEME_FZF_COLORS' in $visual_env {
-            if '_DOTS_VISUAL_FZF_BASE' not-in $env { $env._DOTS_VISUAL_FZF_BASE = ($env.FZF_DEFAULT_OPTS? | default '') }
-            $env.FZF_DEFAULT_OPTS = (($env.DOTS_THEME_FZF_OPTS? | default $env._DOTS_VISUAL_FZF_BASE) + ' --color=' + $env.DOTS_THEME_FZF_COLORS)
+        if 'DOTS_THEME_FZF_COLORS' in $visual_env and $env._DOTS_VISUAL_FZF_BASE?.pid? == $nu.pid and 'FZF_DEFAULT_OPTS_FILE' not-in $env {
+            let base = ($visual_env.DOTS_THEME_FZF_OPTS? | default $env._DOTS_VISUAL_FZF_BASE.options)
+            let preview = if ($visual_env.DOTS_THEME_FZF_PREVIEW? == '0') { " --preview='_dots-fzf-preview --selection {f}'" } else { '' }
+            $env.FZF_DEFAULT_OPTS = ($base + $preview + ' --color=' + $env.DOTS_THEME_FZF_COLORS)
         }
     }
     $env._DOTS_THEME_GENERATION = $generation
 }
 _dots-load
 if $nu.is-interactive {
+    if 'FZF_DEFAULT_OPTS' not-in $env and 'FZF_DEFAULT_OPTS_FILE' not-in $env {
+        $env.FZF_DEFAULT_OPTS = "--bind=ctrl-x:toggle-preview --preview-window=right:hidden:50% --preview='_dots-fzf-preview --selection {f}'"
+        $env._DOTS_VISUAL_FZF_BASE = {pid: $nu.pid, options: $env.FZF_DEFAULT_OPTS}
+    }
     if $env.dots_options.DOTS_INIT_COLORS == '0' { $env.dots_colors = {} }
     $env.esc = "\u{1b}"
     $env.ESC = $env.esc

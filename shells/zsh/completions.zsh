@@ -8,18 +8,9 @@ zstyle ':fzf-tab:*' use-fzf-default-opts yes
 zstyle ':fzf-tab:*' switch-group '<' '>'
 source "$DOTS/lib/dots/completion/styles.zsh"
 
-local extract="
-local in=\${\${\"\$(<{f})\"%\$'\0'*}#*\$'\0'}
-local -A ctxt
-for entry in \${(@ps:\2:)CTXT}; do
-      local key=\${entry%%=*}
-      local value=\${entry#*=}
-      ctxt[\$key]=\$value
-done
-local realpath=\${ctxt[IPREFIX]}\${ctxt[hpre]}\$in
-realpath=\${(Qe)~realpath}
-"
-zstyle ':fzf-tab:complete:*:*' fzf-flags --preview=$extract';$_PREVIEW_ $realpath'
+# fzf-tab supplies the original word, its description/group and real path.
+# Candidate text travels in quoted arguments and cannot become shell syntax.
+zstyle ':fzf-tab:complete:*:*' fzf-preview '"$DOTS/scripts/_dots-fzf-preview" --completion "$word" "${realpath:-}" "${desc:-}" "${group:-}"'
 
 # Only a displayed FZF-tab menu allocates preview storage. Ordinary completion
 # and shell startup never invoke Anodize's engine. Dynamic scope carries words.
@@ -43,8 +34,8 @@ for _dots_preview_command in anodize patina theme; do
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-flags --preview-window=down,70%
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-preview '
     python3 -B "$DOTS/plugins/anodize/completion_preview.py" "$DOTS_COMPLETION_PREVIEW_DIR" "$word" "${(@Q)words}"
-    if (( $? == 3 )) && [[ -n ${realpath:-} && -n ${_PREVIEW_:-} ]]; then
-      "$_PREVIEW_" "$realpath"
+    if (( $? == 3 )); then
+      "$DOTS/scripts/_dots-fzf-preview" --completion "$word" "${realpath:-}" "${desc:-}" "${group:-}"
     fi'
 done
 unset _dots_preview_command
@@ -103,5 +94,5 @@ zstyle -e ':fzf-tab:complete:dots:*' fzf-preview '
     reply=("python3 -B \"\$DOTS/lib/dots/config_completion.py\" preview \"\$word\"")
   elif _dots_theme_completion_context; then
     zstyle -s ":fzf-tab:complete:anodize:" fzf-preview reply
-  else reply=()
+  else zstyle -s ":fzf-tab:complete:__dots_preview_fallback__:" fzf-preview reply
   fi'

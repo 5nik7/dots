@@ -395,3 +395,5 @@ Separated preferences and portable appearance import use shared Python controlle
 ### Retained tmux widgets
 
 Battery and sunrise/sunset clock consumers remain Termux-only. The tracked Termux profile enables the optional six-hour location worker; it uses the existing Android helper only while a client is attached. Git snapshots and reserved status space apply to tmux on Termux/Linux/WSL. Native Windows has no tmux or Android acquisition destination in this change; PowerShell retains the shared Config and weather interfaces. See [widget controls and activation](tmux.md#retained-widget-readings). Private Termux tests do not establish native Linux/WSL terminal or Windows PowerShell acceptance.
+
+The [standalone startup entries](profiles.md#missing-checkout-bootstrap) share Git acquisition policy. Termux, Linux and WSL use the POSIX helper. Native Windows PowerShell, Nushell and Xonsh use native PowerShell for first acquisition. Fresh native Windows 5.1/7 and desktop Linux/WSL startup, editor and latency acceptance are tracked separately from Termux fixtures.

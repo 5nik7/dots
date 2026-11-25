@@ -410,7 +410,10 @@ undecorated.
 `lib/dots/platform_info.py` owns controller platform facts; native Bash/Zsh
 detection follows the same contract. `profiles.py` resolves literal definitions
 and inheritance. `environment.py` combines the settings and application registry
-for diagnostics and preparation. `startup.py` compiles Bash/Zsh bundles;
+for diagnostics and preparation. `startup.py` compiles Bash/Zsh bundles. A
+noninteractive Zsh can populate the shared selector with an early environment
+generation. The first full rc upgrades it under the same cache lock. Every
+reader checks the generation's mode and inputs before applying it.
 `native_startup.py` prepares PowerShell/Fish environment adapters. Personal
 interactive modules remain under `shells`, with shared session setup consolidated
 in `shells/shared/session.sh`. See [profiles](profiles.md) and
@@ -541,3 +544,14 @@ registers it independently of theme initialization; the theme adapter also
 reconnects it. Exact executable-path checks avoid catalog scans or command
 execution during redraw. Existing user callbacks and native shell syntax retain
 their ownership. Completion-list preferences do not change the input theme.
+
+## Startup entries and Config views
+
+Standalone startup entries live under `shells/bootstrap`. The native acquisition helpers live in `lib/dots/shell/bootstrap`. Setup copies them and the entries with the managed-file transaction engine. Both `dots init --bootstrap` frontends compose their standalone output from those same sources. Shared environment, tool paths and native hook preparation belong to the shell backend. The checkout’s shell defaults and profile-specific native hooks supply the user’s configuration.
+
+`config_namespace.py` projects application and type paths onto existing preference, style, environment and file owners. The shell FZF preview renderer reads ordered bindings on demand. Markdown and font previews reuse the Wiki and Fonts implementations. See [Config views and previews](configuration.md#browse-by-app-or-by-type).
+
+
+### Configuration ownership
+
+`lib/dots/config_namespace.py` resolves app-first and type-first forms for the Config CLI, browser and value completion. A scalar spelling selects its existing control, style, environment or file owner. Composite views enumerate the contributing owners on demand. `preference_files.py` handles sparse schema-2 application preferences and compatibility with earlier split files. Structural mappings, platform environments, native application settings and published theme snapshots keep their own data contracts.

@@ -331,6 +331,8 @@ def complete(root, directories, words):
         position = 1
         literal = False
         for arg in args:
+            if waiting_option == '--layout' and waiting == 'choice:unified' and arg.startswith('-'):
+                waiting = None
             if waiting:
                 option_values[waiting_option] = arg
                 waiting = None
@@ -343,6 +345,8 @@ def complete(root, directories, words):
             elif literal or not arg.startswith('-'):
                 position += 1
                 positionals.append(arg)
+        if waiting_option == '--layout' and waiting == 'choice:unified' and current.startswith('-'):
+            waiting = None
         if waiting:
             values(waiting)
         elif '=' in current and current.split('=')[0] in options:
@@ -417,8 +421,9 @@ def main(argv=None):
         print((LIB / 'completion' / args[1]).read_text(), end='')
         return 0
     if args[:2] == ['init', '--bootstrap']:
-        if len(args) != 3: raise UsageError('dots init --bootstrap bash|zsh|powershell')
-        from bootstrap_snippet import snippet
+        from bootstrap_snippet import ENTRIES, snippet
+        if len(args) != 3 or args[2] not in ENTRIES:
+            raise UsageError('dots init --bootstrap bash|zsh|fish|powershell|nu|xonsh')
         print(snippet(args[2]), end='')
         return 0
     if args[:2] == ['init', '--setup']:

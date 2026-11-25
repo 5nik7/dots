@@ -2537,15 +2537,15 @@ Select a profile without activating it
 .B "\-\-json"
 Print structured configuration data
 .TP
-.B "Argument * (choice:all,icons,colors,formatting,apps,files,profile,settings,environment)"
+.B "Argument * (choice:all,icons,colors,formatting,apps,files,profile,settings,environment,env)"
 Categories to list together; omit for all
 .SS "dots config migrate"
 Preview or migrate legacy Dots configuration into a profile
 .PP
-.B "dots config migrate [OPTIONS]"
+.B "dots config migrate [\-\-layout [unified]] [OPTIONS]"
 .TP
-.B "\-\-layout"
-Separate profile preferences into config.json, colors.toml and icons.toml
+.B "\-\-layout unified"
+Separate legacy preferences or use unified to consolidate them in config.json
 .TP
 .B "\-\-keys"
 Migrate legacy configuration key names
@@ -4761,7 +4761,64 @@ font
 .SS "dots git"
 Inspect, publish and synchronize Git repositories recursively
 .PP
-.B "dots git [SUBCOMMAND]"
+.B "dots git [SUBCOMMAND] [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the target directory
+.TP
+.B "\-\-status, \-s"
+Show recursive status
+.TP
+.B "\-\-sync"
+Synchronize the repository tree
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.TP
+.B "\-\-outermost"
+Start at the outermost verified parent
 .SS "dots git info"
 Show repository identity, tracking and submodule counts
 .PP
@@ -4787,6 +4844,51 @@ Use compact human output
 .TP
 .B "\-\-verbose, \-v"
 Show metadata and action details without patches
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git it"
 Run standalone git\-it in the current working directory
 .PP
@@ -4939,6 +5041,15 @@ List fields
 .TP
 .B "\-\-no\-newline, \-n"
 Suppress the final newline
+.TP
+.B "\-\-no\-wiki"
+Exclude the associated wiki
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Show compact output
 .SS "dots git it path"
 Show the worktree path and verified ancestry
 .PP
@@ -5064,6 +5175,15 @@ Set the commit message
 .TP
 .B "\-\-yes"
 Accept the publication preview
+.TP
+.B "\-\-no\-wiki"
+Exclude the associated wiki
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Show compact output
 .SS "dots git it status"
 Show recursive local worktree and cached tracking status
 .PP
@@ -5113,6 +5233,196 @@ Use compact status
 .TP
 .B "\-\-full\-paths"
 Show absolute status paths
+.TP
+.B "\-\-no\-wiki"
+Exclude the associated wiki
+.SS "dots git it submodule"
+Navigate a registered submodule by name
+.PP
+.B "dots git it submodule NAME [info|status|publish|submodules|submodule CHILD] [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Initial repository directory
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.PP
+.nf
+dots git submodule nvim info
+.fi
+.PP
+.nf
+dots git submodule 5ui7e status
+.fi
+.SS "dots git it submodules"
+Inspect the registered submodule tree
+.PP
+.B "dots git it submodules [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-details"
+Show remote, owner and commit details
+.TP
+.B "\-\-depth VALUE"
+Maximum submodule levels (positive integer)
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.SS "dots git it submodules info"
+Show repository info for registered descendants
+.PP
+.B "dots git it submodules info [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-depth VALUE"
+Maximum submodule levels (positive integer)
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.SS "dots git it submodules publish"
+Preview and publish selected submodule subtrees
+.PP
+.B "dots git it submodules publish PATH|\-\-all\-submodules [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-all\-submodules"
+Select every direct child subtree, excluding the outer repository
+.TP
+.B "\-\-dry\-run"
+Local preview without changes or network
+.TP
+.B "\-\-all"
+Include unstaged ordinary files
+.TP
+.B "\-\-yes"
+Accept the publication preview
+.TP
+.B "\-\-message, \-m VALUE"
+Commit message
+.TP
+.B "\-\-config VALUE"
+Owner configuration file
+.TP
+.B "\-\-no\-config"
+Ignore owner configuration
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.TP
+.B "Argument 1 (git\-submodule)"
+Registered submodule path relative to the selected repository
+.SS "dots git it submodules status"
+Inspect changes in registered submodule subtrees
+.PP
+.B "dots git it submodules status [PATH] [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-dirty"
+Show local changes, pointer differences and blockers
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.TP
+.B "Argument 1 (git\-submodule)"
+Registered submodule path relative to the selected repository
 .SS "dots git it sync"
 Fast\-forward the repository and synchronize submodules
 .PP
@@ -5159,6 +5469,291 @@ Preview with local information
 .TP
 .B "\-\-remote"
 Advance configured submodule branches
+.TP
+.B "\-\-init"
+Initialize missing registered submodules
+.TP
+.B "\-\-no\-wiki"
+Exclude the associated wiki
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Show compact output
+.SS "dots git it wiki"
+Inspect the wiki Git repository
+.PP
+.B "dots git it wiki [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.SS "dots git it wiki info"
+Inspect only the wiki repository
+.PP
+.B "dots git it wiki info [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.SS "dots git it wiki publish"
+Publish only the wiki repository
+.PP
+.B "dots git it wiki publish [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-dry\-run"
+Local preview without changes or network
+.TP
+.B "\-\-all"
+Include unstaged ordinary files
+.TP
+.B "\-\-yes"
+Accept the publication preview
+.TP
+.B "\-\-message, \-m VALUE"
+Commit message
+.TP
+.B "\-\-config VALUE"
+Owner configuration file
+.TP
+.B "\-\-no\-config"
+Ignore owner configuration
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.SS "dots git it wiki status"
+Show status for only the wiki repository
+.PP
+.B "dots git it wiki status [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.SS "dots git it wiki sync"
+Synchronize only the wiki repository
+.PP
+.B "dots git it wiki sync [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Repository or subtree directory
+.TP
+.B "\-\-json"
+Emit versioned JSON
+.TP
+.B "\-\-full\-paths"
+Show absolute human paths
+.TP
+.B "\-\-view default,short,verbose"
+Select the human output view
+.TP
+.B "\-\-short, \-s"
+Use compact human output
+.TP
+.B "\-\-verbose, \-v"
+Show metadata and action details without patches
+.TP
+.B "\-\-dry\-run"
+Local preview without changes or network
+.TP
+.B "\-\-remote"
+Advance to configured submodule branches
+.TP
+.B "\-\-init"
+Permit initializing missing submodules
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.SS "dots git path"
+Show the repository root and verified submodule ancestry
+.PP
+.B "dots git path [OPTIONS]"
+.TP
+.B "\-\-directory, \-C VALUE"
+Select the target directory
+.TP
+.B "\-\-json"
+Print path and remote metadata
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git publish"
 Preview and publish children before parents
 .PP
@@ -5205,6 +5800,18 @@ Owner configuration file
 .TP
 .B "\-\-no\-config"
 Ignore owner configuration
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.TP
+.B "\-\-outermost"
+Start at the outermost verified parent
 .SS "dots git status"
 Inspect repository and submodule changes
 .PP
@@ -5230,6 +5837,18 @@ Use compact human output
 .TP
 .B "\-\-verbose, \-v"
 Show metadata and action details without patches
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.TP
+.B "\-\-outermost"
+Start at the outermost verified parent
 .SS "dots git submodule"
 Navigate a registered submodule by name
 .PP
@@ -5237,6 +5856,15 @@ Navigate a registered submodule by name
 .TP
 .B "\-\-directory, \-C VALUE"
 Initial repository directory
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .PP
 .nf
 dots git submodule nvim info
@@ -5273,6 +5901,15 @@ Show remote, owner and commit details
 .TP
 .B "\-\-depth VALUE"
 Maximum submodule levels (positive integer)
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git submodules info"
 Show repository info for registered descendants
 .PP
@@ -5298,6 +5935,15 @@ Show metadata and action details without patches
 .TP
 .B "\-\-depth VALUE"
 Maximum submodule levels (positive integer)
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git submodules publish"
 Preview and publish selected submodule subtrees
 .PP
@@ -5342,6 +5988,15 @@ Owner configuration file
 .B "\-\-no\-config"
 Ignore owner configuration
 .TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.TP
 .B "Argument 1 (git\-submodule)"
 Registered submodule path relative to the selected repository
 .SS "dots git submodules status"
@@ -5369,6 +6024,15 @@ Show metadata and action details without patches
 .TP
 .B "\-\-dirty"
 Show local changes, pointer differences and blockers
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .TP
 .B "Argument 1 (git\-submodule)"
 Registered submodule path relative to the selected repository
@@ -5406,6 +6070,18 @@ Advance to configured submodule branches
 .TP
 .B "\-\-init"
 Permit initializing missing submodules
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
+.TP
+.B "\-\-outermost"
+Start at the outermost verified parent
 .SS "dots git wiki"
 Inspect the wiki Git repository
 .PP
@@ -5428,6 +6104,15 @@ Use compact human output
 .TP
 .B "\-\-verbose, \-v"
 Show metadata and action details without patches
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git wiki info"
 Inspect only the wiki repository
 .PP
@@ -5450,6 +6135,51 @@ Use compact human output
 .TP
 .B "\-\-verbose, \-v"
 Show metadata and action details without patches
+.TP
+.B "\-\-remote VALUE"
+Select the inspection remote
+.TP
+.B "\-\-icon, \-i"
+Print the host icon
+.TP
+.B "\-\-owner, \-o"
+Print the owner or namespace
+.TP
+.B "\-\-host, \-H"
+Print the host
+.TP
+.B "\-\-repo, \-r"
+Print the repository name
+.TP
+.B "\-\-protocol, \-p"
+Print the remote protocol
+.TP
+.B "\-\-url, \-R"
+Print the sanitized fetch URL
+.TP
+.B "\-\-https"
+Print the selected remote as HTTPS
+.TP
+.B "\-\-get root,remote,url,https_url,protocol,host,owner,repo,owned,icon,current,parent,outermost,parent_dirname,parent_basename,submodule_prefix,submodule_basename,cwd_prefix,path_parent,path_outermost,chain_length,chain_repos,chain_paths,is_submodule"
+Print one field
+.TP
+.B "\-\-format, \-f VALUE"
+Render a field format
+.TP
+.B "\-\-list\-fields"
+List fields
+.TP
+.B "\-\-no\-newline, \-n"
+Suppress the final newline
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git wiki publish"
 Publish only the wiki repository
 .PP
@@ -5490,6 +6220,15 @@ Owner configuration file
 .TP
 .B "\-\-no\-config"
 Ignore owner configuration
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git wiki status"
 Show status for only the wiki repository
 .PP
@@ -5512,6 +6251,15 @@ Use compact human output
 .TP
 .B "\-\-verbose, \-v"
 Show metadata and action details without patches
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots git wiki sync"
 Synchronize only the wiki repository
 .PP
@@ -5543,6 +6291,15 @@ Advance to configured submodule branches
 .TP
 .B "\-\-init"
 Permit initializing missing submodules
+.TP
+.B "\-\-color auto,always,never"
+Select terminal colors
+.TP
+.B "\-\-no\-color"
+Disable terminal colors
+.TP
+.B "\-\-no\-progress"
+Disable terminal progress
 .SS "dots keys"
 Choose a category and browse readable keybindings
 .PP
@@ -6542,7 +7299,7 @@ export exact installed version pins
 .B "\-\-yes, \-y"
 approve removal, restore or file replacement
 .SS "dots pkgs install"
-Install exact names or open a picker
+Install by name or browse packages with installed entries hidden by default
 .PP
 .B "dots pkgs install [OPTIONS] [ARGUMENTS]"
 .TP
@@ -8922,12 +9679,12 @@ Show global or command help
 .SS "dots init"
 Print native shell initialization or explicitly set up files
 .PP
-.B "dots init [bash|zsh|fish|powershell|nu|xonsh] | \-\-bootstrap bash|zsh|powershell | \-\-setup [OPTIONS]"
+.B "dots init [bash|zsh|fish|powershell|nu|xonsh] | \-\-bootstrap bash|zsh|fish|powershell|nu|xonsh | \-\-setup [OPTIONS]"
 .TP
 .B "\-\-verbose, \-v"
 Show setup actions and backups
 .TP
-.B "\-\-bootstrap bash,zsh,powershell"
+.B "\-\-bootstrap bash,zsh,fish,powershell,nu,xonsh"
 Print standalone missing\-checkout startup bootstrap
 .TP
 .B "\-\-setup"

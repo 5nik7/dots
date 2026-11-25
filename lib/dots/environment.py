@@ -87,6 +87,33 @@ def settings(root):
 TOKEN = re.compile(r'\$\{([A-Z][A-Z0-9_]*)\}')
 
 
+# Directory checks and substitutions happen in the receiving shell. The tuple
+# order matches the legacy prepath/extpath calls and retains inherited order.
+TOOL_PATHS = (
+    ('prepend', 'GOBIN', ''),
+    ('prepend', 'HOME', '.cargo/bin'),
+    ('prepend', 'CARGO_HOME', 'bin'),
+    ('prepend', 'HOME', '.local/bin'),
+    ('prepend', 'HOME', 'bin'),
+    ('prepend', 'HOME', '.bun/bin'),
+    ('prepend', 'BUN_INSTALL', 'bin'),
+    ('append', 'HOME', '.fzf/bin'),
+    ('append', 'HOME', '.dotnet/tools'),
+    ('append', 'XDG_DATA_HOME', 'gem/ruby/4.0.0/bin'),
+)
+
+
+def tool_paths(context):
+    seen = set()
+    for placement, variable, relative in TOOL_PATHS:
+        base = context.get(variable)
+        if base:
+            path = Path(base) / relative
+            if path not in seen and path.is_dir():
+                seen.add(path)
+                yield placement, str(path), variable if variable == 'GOBIN' else 'user-tools'
+
+
 def application_value(key, current, default):
     """Keep inherited pager flags while adding the configured mouse default."""
     if (key == 'LESS' and default == '--mouse' and current
@@ -141,11 +168,8 @@ def inspect(root):
     for relative in ('bin', 'scripts'):
         path = root / relative
         if path.is_dir(): paths.append(dict(path=str(path), source='checkout'))
-    for key in ('GOBIN',):
-        if Path(context[key]).is_dir(): paths.append(dict(path=context[key], source=key))
-    for relative in ('.cargo/bin', '.local/bin', 'bin', '.fzf/bin'):
-        path = Path(context['HOME']) / relative
-        if path.is_dir(): paths.append(dict(path=str(path), source='user-tools'))
+    for _, path, source in tool_paths(context):
+        paths.append(dict(path=path, source=source))
     if values['DOTS_INIT_COMMANDS']['value'] == '1':
         paths.append(dict(path=str(state_root() / 'themes/commands/current/bin'), source='theme-commands'))
     for row in paths: row['present'] = row['path'] in os.environ.get('PATH', '').split(os.pathsep)

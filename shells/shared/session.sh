@@ -1,16 +1,9 @@
 # shellcheck disable=SC1090,SC1091,SC2153
 # Portable interactive environment. Private compatibility modules stay native.
 export UTIL="$DOTS/bin/lib/common.sh"
-source "$UTIL"
+[[ -n ${_dots_login_common:-} && $_dots_login_common -ef $UTIL ]] || source "$UTIL"
 # Application defaults are resolved by the startup registry before this file.
 
 # User tool paths; never put completion directories in executable PATH.
 [[ ! -r $XDG_DATA_HOME/bob/env/env.sh ]] || _dots_hook_source "$XDG_DATA_HOME/bob/env/env.sh" bob
-prepath "$GOBIN"
-prepath "$HOME/.cargo/bin"
-prepath "$HOME/.local/bin"
-prepath "$HOME/bin"
-extpath "$HOME/.fzf/bin"
-# Ruby 4.0 user-installed gem executables.
-extpath "${XDG_DATA_HOME:-$HOME/.local/share}/gem/ruby/4.0.0/bin"
 true

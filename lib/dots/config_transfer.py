@@ -1,15 +1,13 @@
 """Guarded layout migration and portable appearance transfer."""
-import copy
 import json
 from pathlib import Path
-from preference_files import (PreferencePlan, GROUPS, FILES, appearance_file,
-    combined, overlay, partition, encode_style, controls)
+from preference_files import (PreferencePlan, FILES, appearance_file, unified_operation,
+    combined, overlay, partition, encode_style, style_layers)
 from config_values import leaves, name, parts, assign
 from config_keys import canonical
 from profile_config import context
 from style_config import Styles, read as read_styles, encode as encode_styles, validate as validate_styles
-from files.transactions import digest, parents_safe, Store
-from files.file_platform import state_root
+from files.transactions import digest, parents_safe
 
 
 DISPLAY_KEYS = {
@@ -34,6 +32,11 @@ def portable(key):
     key = canonical(key)
     return (appearance_file(key) != 'config.json' or key.startswith('formatting.') or
             key in DISPLAY_KEYS or key.startswith('apps.tmux.indicators.') and key.endswith('.text'))
+
+
+def canonical_styles(group, values):
+    from preference_files import unified_document, unified_values
+    return unified_values(unified_document({}, {group: values}))[1][group]
 
 
 class TransferPlan:
@@ -72,9 +75,10 @@ class TransferPlan:
                     path=directory/filename;parents_safe(path);guard_values({str(path):digest(path)})
                 values=overlay(values,combined(directory,legacy))
                 for group in appearances:
-                    appearances[group].update(read_styles(directory/(group+'.toml')))
+                    for _, declarations in style_layers(directory, group):
+                        appearances[group].update(canonical_styles(group, declarations))
             for path,value in leaves(values):
-                if not path or value is None or value == {}: continue
+                if not path or value == {}: continue
                 key=name(path)
                 if portable(key):
                     from preference_files import put
@@ -82,21 +86,31 @@ class TransferPlan:
                     self.items.append(dict(action='import',key=canonical(key)))
             for group, values in appearances.items():
                 path=target.directory/(group+'.toml')
-                updated={canonical(group+'.'+k).partition('.')[2]:v for k,v in read_styles(path).items()}
-                updated.update({canonical(group+'.'+k).partition('.')[2]:v for k,v in values.items()})
+                target_styles = target.style_values[group] if target.unified else read_styles(path)
+                updated=canonical_styles(group, target_styles)
+                changed=any(key not in updated or updated[key] != value for key, value in values.items())
+                if not changed: continue
+                updated.update(values)
                 validate_styles(group,updated)
-                self.styles[path]=updated
+                if target.unified: target.style_values[group] = updated
+                else: self.styles[path]=updated
                 self.items += [dict(action='import',key=canonical(group+'.'+k)) for k in values]
             if promote:
                 if source=='defaults':raise ValueError('cannot remove shared declarations')
                 leaf=scope_plan(source_scope)
                 for path,value in list(leaves(leaf.data)):
                     if path and portable(name(path)):assign(leaf.data,path,None,unset=True)
-                for group in appearances:self.styles[leaf.directory/(group+'.toml')]={}
+                for group in appearances:
+                    if leaf.unified: leaf.style_values[group] = {}
+                    else: self.styles[leaf.directory/(group+'.toml')]={}
         replacements={}
         for directory,plan in self.plans.items():
             plan.finish();guard_values(plan.guards);replacements.update(plan.replacements)
-            self.operations.extend(plan.operations)
+            for operation in plan.operations:
+                if 'data' in operation:
+                    # Text writes preserve the exact pre-edit JSON for Store undo.
+                    operation=unified_operation(operation['path'], operation['data'])
+                self.operations.append(operation)
             if source is None:self.items += [dict(action='separate-preferences',path=op['path']) for op in plan.operations]
         for path, values in self.styles.items():
             plan=self.plans[path.parent]
@@ -108,7 +122,8 @@ class TransferPlan:
         for plan in self.plans.values():
             effective=Controls(root,plan.selected,defaults=plan.defaults,replacements=replacements)
             from config_values import validate_effective
-            style=Styles(root,plan.selected,defaults=plan.defaults,replacements=self.styles)
+            style=Styles(root,plan.selected,defaults=plan.defaults,replacements={
+                **self.styles, **{p:v for p,v in replacements.items() if p.name=='config.json' and v.get('schema')==2}})
             validate_effective(effective.values,effective.defaults,style,plan.selected['facts']['platform'])
             settings(root,plan.selected,defaults=plan.defaults,replacements=replacements)
         if source is None:
@@ -124,8 +139,8 @@ class TransferPlan:
         self.replacements=replacements
 
     def apply(self, action='import'):
-        return Store(state_root()).apply('config-'+action,self.operations,self.guards,retain=True,
-                                         catalogs=[Path(p) for p in self.guards])
+        from config_migration import apply_operations
+        return apply_operations(action, self.operations, self.guards, [Path(p) for p in self.guards])
 
 
 def review(plan, context=None):
@@ -140,9 +155,18 @@ def run(root,selected,args):
     from config_cli import render
     importing=args.action=='import'
     if importing and not args.key:raise ValueError('import requires a source profile')
-    plan=TransferPlan(root,selected,source=args.key if importing else None,
-                      all_profiles=args.all_profiles,defaults=not args.profile if importing else False)
-    result=dict(schema=1,profile='defaults' if importing and not args.profile else selected['current'],
+    if not importing and args.layout == 'unified':
+        from config_migration import UnifiedLayoutPlan, LayoutReviewError
+        try:
+            plan = UnifiedLayoutPlan(root, selected, all_profiles=args.all_profiles, defaults=args.defaults)
+        except LayoutReviewError as error:
+            if not args.json: raise
+            print(json.dumps(dict(schema=1, status='blocked', problems=error.problems)))
+            return 1
+    else:
+        plan=TransferPlan(root,selected,source=args.key if importing else None,
+                          all_profiles=args.all_profiles,defaults=not args.profile if importing else False)
+    result=dict(schema=1,profile='defaults' if args.defaults or importing and not args.profile else selected['current'],
                 path=str(plan.path),status='preview',items=plan.items)
     apply=args.apply and args.yes and not args.dry_run
     from interaction import terminal

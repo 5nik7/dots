@@ -54,9 +54,29 @@ class ConfigLive(unittest.TestCase):
         (self.state/'current').mkdir();(self.state/'current/theme').symlink_to(gen,target_is_directory=True)
         return gen
 
+    def test_shipped_wsl_colors_and_cli_glyphs_inherit_from_their_owners(self):
+        style = Styles(ROOT, context(ROOT, 'wsl'))
+        for field, expected in (('fg', 'muted'), ('bg', 'default')):
+            resolved = style.resolve('colors', 'apps.tmux.windows.inactive.' + field)
+            self.assertEqual(resolved['value'], expected)
+            self.assertEqual(Path(resolved['source']).parent.name, 'linux')
+        modified = style.resolve('icons', 'git.status.modified', 'cli')
+        self.assertEqual(modified['value'], '')
+        self.assertEqual([row['key'] for row in modified['declarations']], ['icons.git.status.modified'])
+        codex = style.resolve('icons', 'navigation.codex', 'cli')
+        self.assertEqual([row['key'] for row in codex['declarations']], ['icons.applications.codex'])
+        projected = snapshot({}, self.root, styles=style)['apps']
+        for app in ('tmux','cli'):
+            self.assertEqual(projected[app]['icons']['navigation.codex'], projected[app]['icons']['applications.codex'])
+        self.assertNotIn('navigation.codex',style.values['icons'])
+        for name in ('menu.profiles', 'menu.themes'):
+            self.assertFalse(style.resolve('icons', name)['declarations'])
+
     def test_layer_first_alias_and_field_origins(self):
-        default=self.root/'default/icons.toml'
-        default.write_text(default.read_text()+'\n[apps.cli.applications]\ncodex="default-app"\n')
+        default=self.root/'default/config.json'
+        doc=json.loads(default.read_bytes())
+        doc['apps']['cli'].setdefault('icons', {})['applications']={'codex':'default-app'}
+        default.write_text(json.dumps(doc))
         self.icon.write_text('[navigation]\ncodex="legacy-profile"\n[applications]\ncodex="profile"\n')
         self.color.write_text('[ui.heading]\nfg="#123456"\nbold=false\n')
         style=Styles(self.root)

@@ -20,12 +20,12 @@ class Config(unittest.TestCase):
 
     def test_published_options_highlights_icons_and_placement(self):
         path=self.repo/'default/config.json';doc=json.loads(path.read_text())
-        doc['apps']['nvim']['options'].update(wrap=False,number=True)
-        doc['apps']['nvim']['theme']['transparent']=False
-        doc['apps']['nvim']['highlights']={'@variable.member':{'fg':'#123456','bold':True}}
+        doc['apps']['nvim']['settings']['options'].update(wrap=False,number=True)
+        doc['apps']['nvim']['settings']['theme']['transparent']=False
+        doc['apps']['nvim']['colors']['highlights']={'@variable.member':{'fg':'#123456','bold':True}}
         doc['apps']['nvim']['icons']={'diagnostics':{'Error':'TEST'}}
-        doc['apps']['nvim']['icon_styles']={'diagnostics.Error':{'fg':'#654321'}}
-        layout=doc['formatting']['apps']['nvim']['lualine']
+        doc['apps']['nvim']['colors']['icon_styles']={'diagnostics.Error':{'fg':'#654321'}}
+        layout=doc['apps']['nvim']['formatting']['lualine']
         layout['sections'].update(a=[],c=['mode','path'],x=['diagnostics'])
         layout.update(padding_left=0,padding_right=2,component_separator_left='L',
                       component_separator_right='R',section_separator_left='S',section_separator_right='T')

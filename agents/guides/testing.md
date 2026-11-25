@@ -409,3 +409,5 @@ reload compatibility and unchanged-prompt subprocess counts. Keep native desktop
 and optional binary-plugin evidence separate; see [completion checks](../../docs/testing.md#shell-completion-colors).
 
 For the optional Codex quota widget, run `tools/test_tmux_quota.py` and the affected widget/Gitmux/status/Config suites sequentially. Use only synthetic aistat providers and owned credential metadata; follow [quota acceptance](../../docs/testing.md#codex-quota-widget).
+
+For startup timing use the isolated shell-readiness PTY runner serially with stable before/after inputs. For bootstrap acquisition keep Git transport local and use temporary homes. Use the [startup verification guide](../../docs/testing.md#platform-profiles-and-startup-bundles) for interactive first-use, installer migration and preview regressions.

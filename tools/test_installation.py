@@ -68,6 +68,80 @@ class InstallationTests(unittest.TestCase):
     def receipt(self):
         return json.loads((self.home/'.state/dots/installation.json').read_text())
 
+    def starship_profile(self, *, unrelated=False):
+        from catalog import platform
+        self.env['STARSHIP_CONFIG'] = str(self.home/'.config/starship.toml')
+        self.env['BLASTOFF_HOME'] = str(self.home/'.config/blastoff')
+        env = mock.patch.dict(os.environ, self.env, clear=True)
+        env.start()
+        self.addCleanup(env.stop)
+        selected = platform()
+        folder = self.repo/'profiles'/selected
+        folder.mkdir(parents=True)
+        self.write('.dots/files.json', dict(schema=3, resources=[], renames={}))
+        rows = [dict(id='dots-toml', app='blastoff', category='config', strategy='link',
+                     source='${DOTS}/config/example/settings' if unrelated else '${DOTS}/config/blastoff/themes/dots.toml',
+                     target='${CONFIG}/starship.toml'),
+                dict(id='blastoff', app='blastoff', category='config', strategy='directory-link',
+                     source='${DOTS}/config/blastoff', target='${CONFIG}/blastoff')]
+        self.write(f'profiles/{selected}/profile.json', dict(schema=1, id=selected, files=rows))
+        saved = self.repo/'config/blastoff/themes/dots.toml'
+        saved.parent.mkdir(parents=True)
+        saved.write_text('palette = "dots"\n[palettes.dots]\nred = "#ff0000"\n')
+        module = self.repo/'lib/dots/themes/starship.py'
+        module.parent.mkdir(parents=True)
+        shutil.copy2(ROOT/'lib/dots/themes/starship.py', module)
+        self.generation = self.base/'rendered'
+        self.generation.mkdir()
+        (self.generation/'blastoff.toml').write_text('[palettes.dots]\nred = "#ff0000"\n')
+        active = Path(self.env['STARSHIP_CONFIG'])
+        active.parent.mkdir(parents=True)
+        return 'dots:dots-toml', active, saved
+
+    def test_blastoff_and_files_share_starship_link_and_uninstall_baseline(self):
+        from setup_starship import plan
+        identity, active, saved = self.starship_profile()
+        active.write_text('# previous Starship config\n')
+        installation = Installation(self.repo)
+        installation.plan_install(['files', 'blastoff'])
+        installation.theme_payload = self.generation
+        plan(installation)
+        writes = [op for op in installation.operations if op['path'] == str(active)]
+        self.assertEqual([row['link'] for row in writes], [str(saved)])
+        self.assertEqual(installation.entries[str(active)]['id'], identity)
+        installation.apply('install')
+        self.assertEqual(active.resolve(), saved)
+        repeated = Installation(self.repo)
+        repeated.plan_install(['files', 'blastoff'])
+        repeated.theme_payload = self.generation
+        plan(repeated)
+        self.assertFalse(any(op['path'] == str(active) for op in repeated.operations))
+        removal = Installation(self.repo)
+        removal.plan_uninstall(['files'], [identity])
+        removal.apply('uninstall')
+        self.assertEqual(active.read_text(), '# previous Starship config\n')
+
+    def test_combined_starship_setup_keeps_selected_saved_theme(self):
+        from setup_starship import plan
+        identity, active, default = self.starship_profile()
+        chosen = default.with_name('custom.toml')
+        chosen.write_text('palette = "dots"\n[palettes.dots]\nred = "#00ff00"\n')
+        active.symlink_to(chosen)
+        installation = Installation(self.repo)
+        installation.plan_install(['files', 'blastoff'])
+        installation.theme_payload = self.generation
+        plan(installation)
+        self.assertFalse(any(op['path'] == str(active) for op in installation.operations))
+        self.assertIn('#ff0000', next(op['text'] for op in installation.operations if op['path'] == str(chosen)))
+        files = Installation(self.repo)
+        files.plan_install(['files'], [identity])
+        self.assertEqual(next(op['link'] for op in files.operations if op['path'] == str(active)), str(default))
+
+    def test_starship_setup_rejects_unrelated_catalog_target(self):
+        self.starship_profile(unrelated=True)
+        with self.assertRaisesRegex(ValueError, 'Blastoff active destination conflicts'):
+            Installation(self.repo).plan_install(['files', 'blastoff'])
+
     def yazi_profile(self):
         scoped = mock.patch.dict(os.environ, self.env, clear=True)
         scoped.start()
@@ -104,6 +178,71 @@ class InstallationTests(unittest.TestCase):
         preview = Installation(self.repo)
         getattr(preview, 'plan_'+action)({'files'}, {'theme:yazi'})
         return preview.apply(action)
+
+    def test_durable_shell_rc_migrates_legacy_directory_and_undoes(self):
+        from catalog import platform
+        with mock.patch.dict(os.environ, self.env, clear=True):
+            profile = platform()
+            sources = json.loads((self.repo/'.dots/sources.json').read_text())
+            sources['schema'] = 2
+            sources['sources'][0]['roots'].append('shells')
+            self.write('.dots/sources.json', sources)
+            self.write('.dots/files.json', dict(schema=3, resources=[], renames={}))
+            (self.repo/'profiles'/profile).mkdir(parents=True)
+            self.write('profiles/'+profile+'/profile.json', dict(schema=1, id=profile, files=[
+                dict(id='fish', app='fish', category='shell', strategy='copy',
+                     source='${DOTS}/shells/bootstrap/config.fish', target='${CONFIG}/fish/config.fish')]))
+            shutil.copytree(ROOT/'shells/bootstrap', self.repo/'shells/bootstrap')
+            shutil.copytree(ROOT/'lib/dots/shell/bootstrap', self.repo/'lib/dots/shell/bootstrap')
+            legacy = self.repo/'shells/fish'
+            legacy.mkdir()
+            (legacy/'fish_variables').write_text('fixture variable')
+            (legacy/'fish_plugins').write_text('fixture plugin')
+            (legacy/'existing').write_text('private customization')
+            (legacy/'config.fish').write_text('original rc')
+            dest = self.home/'.config/fish'
+            dest.parent.mkdir(exist_ok=True)
+            dest.symlink_to(legacy, target_is_directory=True)
+            def plan(action):
+                setup = Installation(self.repo)
+                getattr(setup, 'plan_'+action)({'files'}, {'dots:fish'})
+                return setup
+            first = plan('install')
+            self.assertFalse(first.blocked)
+            self.assertEqual(dest.resolve(), legacy)
+            first.apply('install')
+            self.assertFalse((dest/'config.fish').is_symlink())
+            self.assertEqual((dest/'existing').read_text(), 'private customization')
+            self.assertEqual((legacy/'config.fish').read_text(), 'original rc')
+            self.assertEqual(plan('install').operations, [])
+            # A local addition keeps the directory and its checkout locator usable.
+            (dest/'private.fish').write_text('echo custom')
+            self.assertEqual(plan('uninstall').operations, [])
+            (dest/'private.fish').unlink()
+            original = (dest/'config.fish').read_bytes()
+            (dest/'config.fish').write_text('# edited startup')
+            self.assertEqual(plan('uninstall').operations, [])
+            (dest/'config.fish').write_bytes(original)
+            plan('uninstall').apply('uninstall')
+            self.assertEqual(dest.resolve(), legacy)
+            self.assertFalse((self.home/'.local/share/dots/bootstrap/locate.sh').exists())
+            # Foreign linked directories cannot redirect writes into the user's sources.
+            dest.unlink()
+            dest.symlink_to(self.repo/'config', target_is_directory=True)
+            self.assertTrue(plan('install').blocked)
+            dest.unlink()
+            dest.mkdir()
+            rc = dest/'config.fish'
+            rc.symlink_to(legacy/'config.fish')
+            (dest/'fish_variables').write_text('existing user variables')
+            plan('install').apply('install')
+            self.assertFalse(rc.is_symlink())
+            self.assertEqual((dest/'fish_variables').read_text(), 'existing user variables')
+            self.assertEqual((dest/'fish_plugins').read_text(), 'fixture plugin')
+            self.assertEqual(plan('install').operations, [])
+            plan('uninstall').apply('uninstall')
+            self.assertTrue(rc.is_symlink())
+            self.assertFalse((dest/'fish_plugins').exists())
 
     def test_yazi_migrate_child_receipts_and_restore_original_payloads(self):
         self.yazi_profile()

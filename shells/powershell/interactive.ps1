@@ -20,8 +20,10 @@ Set-Alias fixhistory Remove-DuplicatePSReadlineHistory
 
 # Replace only the personal prompt underneath Dots' existing refresh wrapper.
 $global:_DotsLeanPrompt = { '[' + $PWD.Path + '] $ ' }
-if ($global:_DotsPromptInstalled) { $global:_DotsPreviousPrompt = $global:_DotsLeanPrompt }
-else { Set-Item Function:global:prompt $global:_DotsLeanPrompt }
+if (-not $dotsProfilePrompt) {
+  if ($global:_DotsPromptInstalled) { $global:_DotsPreviousPrompt = $global:_DotsLeanPrompt }
+  else { Set-Item Function:global:prompt $global:_DotsLeanPrompt }
+}
 
 # PSReadLine is the sole interactive module loaded eagerly. No module inventory.
 if ($Host.Name -eq 'ConsoleHost' -and -not [Console]::IsInputRedirected) {
@@ -37,16 +39,18 @@ $global:_DotsLeanPowerShellReady = $true
 
 # Starship supports both Desktop 5.1 and Core. Generate its full script in one
 # process; optional completion generators and transient prompt hooks stay off.
-$dotsStarshipCommand = & {
-  # Missing executables must not trigger an inventory of installed modules.
-  $PSModuleAutoLoadingPreference = 'None'
-  Get-Command starship -CommandType Application -TotalCount 1 -ErrorAction Ignore
-}
-if ($dotsStarshipCommand) {
-  try { . (Join-Path $env:PWSH 'optional.ps1') starship }
-  catch {
-    Install-DotsPrompt -Renderer $global:_DotsLeanPrompt
-    Write-Warning ('Dots Starship: ' + $_.Exception.Message)
+if (-not $dotsProfilePrompt) {
+  $dotsStarshipCommand = & {
+    # Missing executables must not trigger an inventory of installed modules.
+    $PSModuleAutoLoadingPreference = 'None'
+    Get-Command starship -CommandType Application -TotalCount 1 -ErrorAction Ignore
+  }
+  if ($dotsStarshipCommand) {
+    try { . (Join-Path $env:PWSH 'optional.ps1') starship }
+    catch {
+      Install-DotsPrompt -Renderer $global:_DotsLeanPrompt
+      Write-Warning ('Dots Starship: ' + $_.Exception.Message)
+    }
   }
 }
 

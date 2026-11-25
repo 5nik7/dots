@@ -1,58 +1,69 @@
-"""Emit self-contained startup bootstrap code without executing it."""
+"""Emit a standalone rc using the same native sources as the installer."""
 import base64
 from pathlib import Path
+import shlex
 import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+ENTRIES = {'bash': 'rc.sh', 'zsh': 'rc.sh', 'fish': 'config.fish',
+           'powershell': 'profile.ps1', 'nu': 'config.nu', 'xonsh': 'rc.xsh'}
+
+
+def inline(entry, reference, replacement):
+    if entry.count(reference) != 1:
+        raise ValueError('bootstrap entry no longer has its expected helper reference')
+    return entry.replace(reference, replacement)
+
+
+def nu_literal(value):
+    fence = '#'
+    while "'" + fence in value:
+        fence += '#'
+    return 'r' + fence + "'" + value + "'" + fence
+
+
+def installed_nu_entry(root):
+    template = (root / 'lib/dots/shell/bootstrap/entry.nu').read_text(encoding='utf-8')
+    # Nu parses source paths before reading the runtime environment. Embed only
+    # the installed checkout path; the existence check also works after removal.
+    return inline(template, "($nu.home-dir | path join '.local/share/dots/bootstrap/init.nu')",
+                  nu_literal(str(root / 'shells/nushell/init.nu')))
+
+
+def encoded_command(source, arguments):
+    script = '& {\n' + source + '\n} ' + arguments
+    return base64.b64encode(script.encode('utf-16le')).decode('ascii')
 
 
 def snippet(shell):
-    code=(Path(__file__).with_name('bootstrap.py')).read_text()
-    payload=base64.b64encode(code.encode()).decode()
-    python="import base64; exec(compile(base64.b64decode("+repr(payload)+"), 'dots-bootstrap', 'exec'))"
-    if shell in ('bash','zsh'):
-        import shlex
-        return '''# Dots: acquire a missing checkout, then load full shell configuration.
-if [[ -r ${DOTS_BOOTSTRAP_DIR:-$HOME/dots}/lib/dots/shell/startup.bash ]]; then
-  export DOTS="${DOTS_BOOTSTRAP_DIR:-$HOME/dots}"
-  source "$DOTS/shells/'''+shell+'/init.'+shell+'''"
-elif command -v python3 >/dev/null 2>&1; then
-  if command python3 -B -c '''+shlex.quote(python)+'''; then
-    export DOTS="${DOTS_BOOTSTRAP_DIR:-$HOME/dots}"
-    source "$DOTS/shells/'''+shell+'/init.'+shell+'''"
-  fi
-else
-  printf 'dots: Python is needed for first-time preparation; continuing without Dots\\n' >&2
-fi
-'''
-    if shell=='powershell':
-        return '''# Dots native PowerShell bootstrap.
-$dotsBootstrapRoot = if ($env:DOTS_BOOTSTRAP_DIR) { $env:DOTS_BOOTSTRAP_DIR } else { Join-Path $HOME 'dots' }
-if (Test-Path -LiteralPath (Join-Path $dotsBootstrapRoot 'lib/dots/shell/startup.bash') -PathType Leaf) {
-    $env:DOTS = $dotsBootstrapRoot
-    . (Join-Path $env:DOTS 'shells/powershell/profile.ps1')
-} else {
-  $dotsBootstrapPython = Get-Command python3, python -CommandType Application -All -ErrorAction SilentlyContinue |
-      Where-Object { $_.Source -notlike '*\\Microsoft\\WindowsApps\\*' -and
-          ([IO.Path]::GetExtension($_.Source) -eq '.exe' -or $env:OS -ne 'Windows_NT') } |
-      Select-Object -First 1
-  if ($dotsBootstrapPython) {
-    $dotsOldManagerInstall, $dotsOldLauncherInstall = $env:PYTHON_MANAGER_AUTOMATIC_INSTALL, $env:PYLAUNCHER_ALLOW_INSTALL
-    $dotsOldLauncherAlways = $env:PYLAUNCHER_ALWAYS_INSTALL
-    try {
-      $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = 'false'; $env:PYLAUNCHER_ALLOW_INSTALL = $null; $env:PYLAUNCHER_ALWAYS_INSTALL = $null
-      & $dotsBootstrapPython.Source -B -c '''+"'"+python.replace("'","''")+"'"+'''
-    } finally {
-      $env:PYTHON_MANAGER_AUTOMATIC_INSTALL = $dotsOldManagerInstall; $env:PYLAUNCHER_ALLOW_INSTALL = $dotsOldLauncherInstall
-      $env:PYLAUNCHER_ALWAYS_INSTALL = $dotsOldLauncherAlways
-    }
-    if ($LASTEXITCODE -eq 0) {
-        $env:DOTS = if ($env:DOTS_BOOTSTRAP_DIR) { $env:DOTS_BOOTSTRAP_DIR } else { Join-Path $HOME 'dots' }
-        . (Join-Path $env:DOTS 'shells/powershell/profile.ps1')
-    }
-  } else { Write-Warning 'dots: Python is needed for first-time preparation; continuing without Dots' }
-}
-'''
-    raise ValueError('bootstrap supports bash, zsh and powershell')
+    if shell not in ENTRIES:
+        raise ValueError('bootstrap supports bash, zsh, fish, powershell, nu and xonsh')
+    sources = ROOT / 'shells/bootstrap'
+    helpers = ROOT / 'lib/dots/shell/bootstrap'
+    entry_file = helpers/'entry.nu' if shell == 'nu' else sources/ENTRIES[shell]
+    entry = entry_file.read_text(encoding='utf-8')
+    # Inline the cold path for a manually distributed snippet. Installed
+    # copies call the two independent helpers, leaving their rc files small.
+    if shell == 'powershell':
+        native = (helpers / 'locate.ps1').read_text(encoding='utf-8')
+        return inline(entry, "(Join-Path $HOME '.local/share/dots/bootstrap/locate.ps1')", '{\n' + native + '\n}')
+    posix = (helpers / 'locate.sh').read_text(encoding='utf-8')
+    if shell in ('bash', 'zsh', 'fish'):
+        quoted = shlex.quote(posix) if shell != 'fish' else "'" + posix.replace('\\', '\\\\').replace("'", "\\'") + "'"
+        return inline(entry, 'sh "$HOME/.local/share/dots/bootstrap/locate.sh"', 'sh -c ' + quoted + ' dots-bootstrap')
+    native = (helpers / 'locate.ps1').read_text(encoding='utf-8')
+    if shell == 'xonsh':
+        # Windows PowerShell's -EncodedCommand uses UTF-16LE.
+        encoded = encoded_command(native, '$env:DOTS_RC_MODE -Utf8 -Shell xonsh')
+        entry = inline(entry, "'-File', str(data / 'locate.ps1'), mode, '-Utf8', '-Shell', 'xonsh'", "'-EncodedCommand'," + repr(encoded))
+        entry = inline(entry, "['sh', str(data / 'locate.sh'),", "['sh','-c'," + repr(posix) + ",'dots-bootstrap',")
+        return inline(entry, 'text=True, env=env', 'text=True, env=dict(env, DOTS_RC_MODE=mode)')
+    encoded = encoded_command(native, 'interactive -Utf8 -Shell nu')
+    entry = inline(entry, "^sh ($nu.home-dir | path join '.local/share/dots/bootstrap/locate.sh')",
+                   '^sh -c ' + nu_literal(posix) + ' dots-bootstrap')
+    return inline(entry, "-File ($nu.home-dir | path join '.local/share/dots/bootstrap/locate.ps1') interactive -Utf8 -Shell nu",
+                  "-EncodedCommand '" + encoded + "'")
 
 
-if __name__=='__main__':
-    print(snippet(sys.argv[1]),end='')
+if __name__ == '__main__':
+    print(snippet(sys.argv[1]), end='')

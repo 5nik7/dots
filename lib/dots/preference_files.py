@@ -1,10 +1,11 @@
-"""Separated preference files and portable typed appearance declarations.
+"""Unified application preferences and compatible split preference files.
 
 The small literal TOML dialect also works on Python 3.9. The reserved [controls]
 section stores canonical Config keys; { inherit = true } declares a nullable
 control, and {} declares an extensible empty map. No expressions are evaluated.
 """
 import copy
+from functools import lru_cache
 import json
 from pathlib import Path
 import re
@@ -23,13 +24,199 @@ def text(path):
 
 
 def json_document(path):
-    raw = text(path)
-    data = json.loads(raw) if raw else {'schema': 1}
-    if not isinstance(data, dict) or data.get('schema') != 1 or set(data)-{'schema', *GROUPS}:
-        raise ValueError('invalid preference document: ' + str(path))
-    if any(not isinstance(data.get(g, {}), dict) for g in GROUPS):
+    return copy.deepcopy(_parsed(text(path)))
+
+
+@lru_cache(maxsize=16)
+def _parsed(raw):
+    # A content key notices same-size edits, atomic replacements and newly created
+    # inputs. Cached documents stay private so plans can freely edit their copies.
+    def unique_fields(pairs):
+        values = {}
+        for key, value in pairs:
+            if key in values and (type(values[key]) is not type(value) or values[key] != value):
+                raise ValueError('conflicting duplicate preference field: ' + key)
+            values[key] = value
+        return values
+
+    data = json.loads(raw, object_pairs_hook=unique_fields) if raw else {'schema': 1}
+    schema = data.get('schema') if isinstance(data, dict) else None
+    groups = GROUPS if schema == 1 else ('settings', 'apps', 'colors', 'icons')
+    if type(schema) is not int or schema not in (1, 2) or set(data)-{'schema', *groups}:
+        raise ValueError('invalid preference document')
+    if any(not isinstance(data.get(g, {}), dict) for g in groups):
         raise ValueError('preference groups must be objects')
     return data
+
+
+def unified_document(typed, styles):
+    """Encode one layer. Reject conflicting owners before returning a document."""
+    from config_keys import document, public_styles
+    from config_namespace import app_field
+    from config_values import leaves, name, parts
+    from style_catalog import canonical as icon_role, split
+    result = {'schema': 2}
+
+    def place(path, value):
+        node = result
+        for part in path[:-1]:
+            node = node.setdefault(part, {})
+            if not isinstance(node, dict):
+                raise ValueError('overlapping preference keys: ' + name(path))
+        key = path[-1]
+        if key in node and (type(node[key]) is not type(value) or node[key] != value):
+            raise ValueError('conflicting configuration aliases: ' + name(path))
+        node[key] = copy.deepcopy(value)
+
+    public = document({g: typed[g] for g in GROUPS if typed.get(g)}, strict=True)
+    for path, value in leaves(public):
+        if not path:
+            continue
+        if path[0] == 'settings':
+            place(path, value)
+        else:
+            field = app_field(name(path))
+            if not field:
+                if value == {} and path[0] in ('apps', 'formatting'):
+                    continue
+                raise ValueError('unknown typed preference owner: ' + name(path))
+            app, kind, tail = field
+            place(('apps', app, kind, *tail), value)
+    for group in ('colors', 'icons'):
+        for key, value in public_styles(group, styles.get(group, {}), strict=True).items():
+            app, role = split(key)
+            relative = parts(icon_role(role) if group == 'icons' else role)
+            if app and typed_style(app, group, relative):
+                raise ValueError('semantic style overlaps a native control: ' + group + '.' + key)
+            place(('apps', app, group, *relative) if app else (group, *relative), value)
+    return result
+
+
+def typed_style(app, group, tail):
+    """Native map fields and semantic roles can share an app's colors or icons."""
+    if app == 'nvim':
+        return group == 'icons' or group == 'colors' and tail[:1] in (('highlights',), ('icon_styles',))
+    if group != 'colors':
+        return False
+    if app == 'fzf':
+        return len(tail) <= 1
+    if app == 'menu':
+        from config_keys import MOVES
+        from config_values import name
+        return tail[:1] == ('entries',) or (tail[:1] == ('popup',) and
+            any(public == name(('colors', 'apps', app, *tail)) for _, public in MOVES))
+    return False
+
+
+def unified_values(document):
+    """Decode schema 2 into existing typed values and literal flat style maps."""
+    from config_keys import document as translate, MOVES
+    from config_namespace import NATIVE_GROUPS
+    from config_values import leaves, name, parts, lookup, MISSING
+    typed = {'schema': 1}
+    styles = {'colors': {}, 'icons': {}}
+    if not isinstance(document, dict) or type(document.get('schema')) is not int or document.get('schema') != 2:
+        raise ValueError('expected preference schema 2')
+    if set(document) - {'schema', 'settings', 'apps', *styles}:
+        raise ValueError('unknown unified preference group')
+    if any(not isinstance(value, dict) for key,value in document.items() if key != 'schema'):
+        raise ValueError('preference groups must be objects')
+    if document.get('settings'):
+        typed['settings'] = copy.deepcopy(document['settings'])
+    for group in styles:
+        if 'apps' in document.get(group, {}):
+            raise ValueError('application preferences belong under apps: ' + group)
+        for path, value in leaves(document.get(group, {})):
+            if path:
+                styles[group][name(path)] = value
+    for app, groups in document.get('apps', {}).items():
+        if not isinstance(groups, dict) or set(groups) - {'settings', 'formatting', *styles}:
+            raise ValueError('unknown application preference group: ' + app)
+        for group, values in groups.items():
+            if not isinstance(values, dict):
+                raise ValueError('application preference groups must be objects: ' + app)
+            if group in ('settings', 'formatting'):
+                if values:
+                    if group == 'settings':
+                        reserved = {'settings','formatting','colors','icons'} | {k for a,k in NATIVE_GROUPS if a == app}
+                        if reserved & values.keys():
+                            raise ValueError('preference belongs to another application group: ' + app)
+                    prefix = ('apps', app) if group == 'settings' else ('formatting', 'apps', app)
+                    for old, _ in MOVES:
+                        path = parts(old)
+                        if path[:len(prefix)] == prefix and lookup(values, path[len(prefix):], MISSING) is not MISSING:
+                            raise ValueError('preference belongs to another application group: ' + old)
+                    node = typed
+                    for part in prefix:
+                        node = node.setdefault(part, {})
+                    node.update(copy.deepcopy(values))
+                continue
+            for tail, value in leaves(values):
+                if typed_style(app, group, tail):
+                    if app == 'menu':
+                        path = ('colors', 'apps', app, *tail)
+                    elif app == 'nvim' and group == 'colors':
+                        path = ('apps', app, *tail)
+                    else:
+                        path = ('apps', app, group, *tail)
+                    put(typed, name(path), value)
+                elif tail:
+                    styles[group][name(('apps', app, *tail))] = value
+    return translate(typed, public=False, strict=True), styles
+
+
+@lru_cache(maxsize=16)
+def _decoded(raw):
+    return unified_values(_parsed(raw))
+
+
+def _layer(directory, replacements):
+    path = directory/'config.json'
+    if path in replacements:
+        data = replacements[path]
+        return (data, unified_values(data) if data.get('schema') == 2 else None)
+    raw = text(path)
+    data = _parsed(raw)
+    return data, _decoded(raw) if data['schema'] == 2 else None
+
+
+def legacy_inputs(directory):
+    if any((directory/f).exists() or (directory/f).is_symlink() for f in FILES[1:]):
+        return True
+    manifest = text(directory/'profile.json')
+    profile = json.loads(manifest) if manifest else {}
+    return any(profile.get(group) for group in GROUPS)
+
+
+def uses_unified(directory, root):
+    directory = Path(directory)
+    path = directory/'config.json'
+    if path.exists() or path.is_symlink():
+        return _parsed(text(path))['schema'] == 2
+    if directory == Path(root)/'default' or legacy_inputs(directory):
+        return False
+    return _parsed(text(Path(root)/'default'/'config.json'))['schema'] == 2
+
+
+def preference_path(directory, key, root):
+    directory = Path(directory)
+    if uses_unified(directory, root):
+        return directory/'config.json'
+    if key == 'icons' or key.startswith('icons.'):
+        return directory/'icons.toml'
+    return directory/appearance_file(key)
+
+
+def style_layers(directory, group, replacements=None):
+    from style_config import read
+    directory = Path(directory)
+    replacements = replacements or {}
+    path = directory/'config.json'
+    _, decoded = _layer(directory, replacements)
+    if decoded is not None:
+        return [(path, dict(decoded[1][group]))]
+    path = directory/(group+'.toml')
+    return [(path, replacements[path] if path in replacements else read(path))]
 
 
 def style_sections(raw):
@@ -99,6 +286,16 @@ def overlay(base, other):
     return result
 
 
+def setting_layers(directory, legacy=None):
+    """Shell settings live only in the manifest and JSON owner at each layer."""
+    directory = Path(directory)
+    path = directory/'config.json'
+    data = _parsed(text(path))
+    if data['schema'] == 1 and legacy is not None:
+        yield directory/'profile.json', legacy.get('settings', {})
+    yield path, data.get('settings', {})
+
+
 def layers(directory, legacy=None, replacements=None):
     from config_keys import document
     directory = Path(directory); replacements = replacements or {}
@@ -108,8 +305,10 @@ def layers(directory, legacy=None, replacements=None):
         data = replacements.get(path, legacy)
         result.append((path, document({g: data[g] for g in GROUPS if g in data}, public=False)))
     path = directory/'config.json'
-    data = replacements.get(path)
-    if data is None: data = json_document(path)
+    data, decoded = _layer(directory, replacements)
+    if decoded is not None:
+        inputs = [(directory/'profile.json', {})] if legacy is not None else []
+        return [*inputs, (path, copy.deepcopy(decoded[0]))]
     data = document(data, public=False)
     if data.get('colors'): raise ValueError('unrecognized typed colors in configuration')
     result.append((path, data))
@@ -165,19 +364,48 @@ def compact(value):
     return result
 
 
+def unified_operation(path, data, *, sparse=False):
+    # Store's literal text operation selects UTF-8 on every platform.
+    # Keep the schema marker when deleting it would reactivate legacy overrides.
+    if sparse and data == {'schema': 2} and not legacy_inputs(Path(path).parent):
+        return dict(path=str(path), delete=True)
+    return dict(path=str(path), text=json.dumps(data, ensure_ascii=False, indent=2)+'\n')
+
+
+def clear_current():
+    from config_values import current as controls
+    from style_config import current as styles
+    styles.cache_clear()
+    controls.cache_clear()
+
+
+def preference_guards(root, selected, defaults=False):
+    from files.transactions import digest, parents_safe
+    paths = [Path(root)/'default'/name for name in FILES]
+    if not defaults:
+        for layer in selected['layers']:
+            paths.extend(Path(layer['root'])/name for name in (*FILES, 'profile.json'))
+    guards = {}
+    for path in paths:
+        parents_safe(path)
+        guards[str(path)] = digest(path)
+    return guards
+
+
 class PreferencePlan:
     """One retained Store transaction for a scope's preference files."""
     def __init__(self, root, selected, defaults=False):
-        from files.transactions import digest, parents_safe
         from config_values import Controls
         self.root = Path(root); self.selected = selected; self.defaults = defaults
         self.directory = self.root/'default' if defaults else Path(selected['layers'][-1]['root'])
         self.path = self.directory/'config.json'
+        self.guards = preference_guards(root, selected, defaults)
         self.controls = Controls(root, selected, defaults=defaults)
-        self.guards = {}
-        for path in self.controls.paths:
-            parents_safe(path); self.guards[str(path)] = digest(path)
         self.legacy = None if defaults else json.loads(text(self.directory/'profile.json'))
+        self.unified = uses_unified(self.directory, root)
+        self.style_values = {group: {} for group in ('icons', 'colors')}
+        if self.unified and self.path.is_file():
+            self.style_values = unified_values(json_document(self.path))[1]
         self.before = combined(self.directory, self.legacy)
         self.data = copy.deepcopy(self.before)
         self.items = []; self.operations = []; self.replacements = {}
@@ -190,6 +418,15 @@ class PreferencePlan:
     def finish(self):
         self.check()
         from config_keys import document
+        if self.unified:
+            path = self.directory/'config.json'
+            data = unified_document(self.data, self.style_values)
+            self.replacements = {path: data}
+            self.operations = []
+            previous = json_document(path) if path.exists() else {'schema': 2}
+            if data != previous:
+                self.operations.append(unified_operation(path, data, sparse=not self.defaults))
+            return
         if not self.defaults:
             self.data=compact(self.data)
         pieces = partition(self.data)
@@ -214,8 +451,11 @@ class PreferencePlan:
     def apply(self, action):
         from files.transactions import Store
         from files.file_platform import state_root
-        return Store(state_root()).apply('config-'+action, self.operations, self.guards,
-                                         retain=True, catalogs=list(self.replacements))
+        result = Store(state_root()).apply('config-'+action, self.operations, self.guards,
+                                           retain=True, catalogs=list(self.replacements))
+        if self.operations:
+            clear_current()
+        return result
 
 
 class SettingsPlan(PreferencePlan):
@@ -233,5 +473,7 @@ class SettingsPlan(PreferencePlan):
         if unset: values.pop(name,None)
         else: values[name] = value
         self.items.append(dict(action='unset' if unset else 'set',key='settings.'+name))
-        if compact(self.data)==compact(self.before):return
+        if compact(self.data)==compact(self.before):
+            self.operations, self.replacements = [], {}
+            return
         self.finish()

@@ -182,7 +182,7 @@ class Browsing(unittest.TestCase):
             self.assertIs(ui._icon_paints,previous)
             self.assertTrue(all(cells(line)<=columns for line in plain.splitlines()),plain)
             self.assertIn('\x1b[0;1;38;2;18;52;86mG\x1b[0m',text)
-            self.assertIn('\x1b[0;4;38;2;101;67;33mG\x1b[0m',text)
+            self.assertIn('\x1b[0;2;4;38;2;101;67;33mG\x1b[0m',text)
             self.assertIn('\x1b[0;1;4;38;2;170;187;0m',text)
             self.assertIn('\x1b[0;1;38;2;255;255;255;48;2;17;34;68m',text)
             self.assertIn('\x1b[0;1;38;5;208mS\x1b[0m',text)
@@ -221,24 +221,24 @@ class Browsing(unittest.TestCase):
         self.assertEqual(clock.annotation,'colors.apps.tmux.clock.icon.fg')
         battery=icon_sample(styles,'apps.tmux.battery.low','B')
         self.assertIn('38;2;101;67;33',battery.code)
-        self.assertEqual(battery.annotation,'colors.apps.tmux.battery.low.icon.fg')
+        self.assertEqual(battery.annotation,'colors.apps.tmux.battery.low.icon.fg, colors.apps.tmux.battery.icon.bg')
         session=icon_sample(styles,'apps.tmux.session.default','S')
         self.assertIn('38;2;171;205;239',session.code)
         self.assertEqual(session.annotation,'colors.apps.tmux.session.icon.fg (active)')
         window=icon_sample(styles,'apps.tmux.window.default','W')
         self.assertIn('colors.apps.tmux.windows.active.fg',window.annotation)
 
-    def test_menu_icon_samples_match_menu_accent_and_unstyled_icons_have_no_annotation(self):
+    def test_menu_icon_samples_match_menu_style_and_unstyled_icons_have_no_annotation(self):
         from config_view import icon_sample,tree
         from style_config import Styles
         from menus import Menu,Entry,entry_spans
-        styles=Styles(self.root,palette={'colors':{'accent':'#123456','foreground':'#ffffff'}})
+        styles=Styles(self.root,palette={'colors':{'blue':'#123456','foreground':'#ffffff'}})
         ui=Presentation(io.StringIO(),terminal=True);ui.icons=True
         menu=Menu('example','Example',(Entry('wiki','Wiki',icon='W',icon_role='menu.wiki'),))
         sample=icon_sample(styles,'menu.wiki','W')
         rendered=entry_spans(menu,menu.entries[0],ui,preferences=styles,formatting={})[0]
         self.assertEqual(sample.code,'0;'+rendered[1])
-        self.assertIn('38;2;18;52;86',sample.code)
+        self.assertEqual(sample.code, '0;2;38;2;18;52;86')
         self.assertEqual(sample.annotation,'colors.apps.menu.icon.fg')
         (self.path.parent/'colors.toml').write_text('[icons.menu.wiki]\nfg="#abcdef"\nunderline=true\n')
         override=Styles(self.root,palette={'colors':{'accent':'#123456'}})

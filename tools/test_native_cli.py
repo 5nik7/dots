@@ -168,7 +168,7 @@ class NativeCLI(unittest.TestCase):
         examples = [
             (('commands', 'unexpected'), 'dots commands [--check]'),
             (('completion',), 'dots completion bash|zsh|fish|powershell'),
-            (('init', '--bootstrap'), 'dots init --bootstrap bash|zsh|powershell'),
+            (('init', '--bootstrap'), 'dots init --bootstrap bash|zsh|fish|powershell|nu|xonsh'),
             (('init', 'auto'), 'dots init SHELL | --setup [OPTIONS]'),
         ]
         for arguments, usage in examples:
@@ -270,6 +270,9 @@ class NativeCLI(unittest.TestCase):
         self.assertIn('--pick', self.command('__complete','files','link','--p').stdout)
         self.assertIn('dots:example',self.command('__complete','files','link','dots:').stdout)
         self.assertIn('--verbose',self.command('__complete','init','--setup','--v').stdout)
+        bootstrap = self.command('__complete', 'init', '--bootstrap', '').stdout.splitlines()
+        self.assertEqual({line.split('\t')[1] for line in bootstrap},
+                         {'bash', 'zsh', 'fish', 'powershell', 'nu', 'xonsh'})
         self.command('files','link','dots:example','--dry-run','--json')
         self.assertIn('--yes', self.command('__complete','files','repair','--y').stdout)
         self.assertIn('dots:example', self.command('__complete','files','repair','dots:').stdout)

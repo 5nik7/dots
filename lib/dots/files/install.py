@@ -130,6 +130,7 @@ class Installation:
         self.components = None
         self.resources = None
         self.catalog_records = []
+        self.bootstrap_outputs = set()
         self.receipt_changed = False
         self.blocked = False
         self.transaction = uuid.uuid4().hex
@@ -535,6 +536,8 @@ class Installation:
             for row in links:
                 if not row.eligible and self.resources and row.identity in self.resources:
                     self.item(row.identity, 'skipped', row.logical, reason='application destination unavailable')
+        from setup_shells import bootstrap_entry
+        from setup_starship import catalog_active
         for row in selected:
             if row['status'] in ('unmapped', 'unsupported-platform', 'source-missing', 'source-broken-link'):
                 self.item(row['id'], 'skipped', row['target'], reason=row['status'])
@@ -549,6 +552,10 @@ class Installation:
             if target == source or target in source.parents or source in target.parents:
                 raise ValueError('overlapping source and target: ' + str(target))
             self.guard(source)
+            if bootstrap_entry(self, row, source, target):
+                continue
+            if catalog_active(self, row, selected, source, target):
+                continue
             if row['strategy'] == 'copy':
                 if not source.is_file():
                     self.item(row['id'], 'conflict', target, reason='copy strategy requires a regular file source')
@@ -687,6 +694,10 @@ class Installation:
     def plan_uninstall(self, components=None, resources=None):
         self.components = None if components is None else set(components)
         self.resources = None if resources is None else set(resources)
+        from setup_shells import bootstrap_retention, unused_helpers
+        retain_bootstrap = bootstrap_retention(self, self.resources) if self.components is None or 'files' in self.components else set()
+        if self.resources is not None:
+            self.resources.update(unused_helpers(self.entries, self.resources))
         retired = (self.resources or set()) & {'theme:yazi-flavor', 'theme:yazi-syntax'}
         if retired:
             recorded = {identity for entry in self.entries.values()
@@ -717,6 +728,9 @@ class Installation:
             if self.components is not None and owner not in self.components and not requested_connector:
                 continue
             if owner == 'files' and self.resources is not None and entry['id'] not in self.resources:
+                continue
+            if entry['id'] in retain_bootstrap:
+                self.item(entry['id'], 'preserved', path, reason='required by a retained shell configuration')
                 continue
             self.guard(path)
             if self.guards[path] != entry['after']:

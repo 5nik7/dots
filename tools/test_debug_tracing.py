@@ -146,12 +146,56 @@ python3 -B "$DOTS/lib/dots/debug_cli.py" record status --json
         self.assertEqual(len(collector.changes),1);self.assertTrue(collector.truncated)
         self.assertNotIn('secret',repr(collector.previous));self.assertNotIn('secret',repr(collector.changes))
 
+    def test_publication_retains_current_previous_and_open_reader(self):
+        from startup import Compiler, prepare, pointer, generation_version
+        for shell in ('bash', 'zsh'):
+            exe = shutil.which(shell)
+            if not exe:
+                continue
+            cache = self.base / ('generations-' + shell)
+            source = self.home / 'input'
+            source.write_text('fixture')
+            version = subprocess.check_output([exe, '-fc', 'echo "${ZSH_VERSION:-$BASH_VERSION}"'],
+                                              text=True).strip()
+            def build(compiler):
+                compiler.inputs.add(source)
+                return ('printf "ready\\n"; IFS= read -r reply; echo ' + label + '\n', {'current':'fixture'})
+            with patch.object(Compiler, 'build', build), patch.dict(os.environ, DOTS_BUILD_SHELL_VERSION=version):
+                label = 'first'
+                first = prepare(self.root, shell, cache)
+                self.assertEqual(generation_version(first), 2)
+                process = subprocess.Popen([exe, '-fc', 'source "$_dots_startup_cache/$_dots_startup_generation/bundle"'],
+                                           env=dict(os.environ, DOTS=str(self.root), _dots_startup_cache=str(cache),
+                                                    _dots_startup_generation=first.name),
+                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+                self.addCleanup(lambda p=process: p.kill() if p.poll() is None else None)
+                import select
+                self.assertTrue(select.select([process.stdout], [], [], 5)[0])
+                self.assertEqual(process.stdout.readline(), 'ready\n')
+                label = 'second'
+                second = prepare(self.root, shell, cache)
+                label = 'third'
+                with patch('startup.publish_pointer', side_effect=OSError('injected interrupted publication')):
+                    with self.assertRaises(OSError):
+                        prepare(self.root, shell, cache)
+                self.assertEqual(pointer(cache/'current'), second.name)
+                third = prepare(self.root, shell, cache)
+                self.assertEqual(pointer(cache/'previous'), second.name)
+                self.assertEqual(pointer(cache/'current'), third.name)
+                self.assertFalse(first.exists())
+                stdout, _ = process.communicate('continue\n', timeout=5)
+                self.assertEqual((stdout, process.returncode), ('first\n', 0))
+                self.assertEqual(prepare(self.root, shell, cache), third)
+                self.assertEqual(pointer(cache/'previous'), second.name)
+
     def test_compiler_maps_authored_lines(self):
         from startup import Compiler
         compiler=Compiler(self.root,'bash');body,_=compiler.build();mapping=compiler.source_map(body)
         self.assertTrue(mapping)
         for row in mapping:
-            self.assertEqual(body.splitlines()[row['generated_start']-1],Path(row['file']).read_text().splitlines()[row['line']-1])
+            count = row['generated_end'] - row['generated_start'] + 1
+            self.assertEqual(body.splitlines()[row['generated_start']-1:row['generated_end']],
+                             Path(row['file']).read_text().splitlines()[row['line']-1:row['line']-1+count])
         directory=self.base/'generation';directory.mkdir();(directory/'manifest.json').write_text(json.dumps({'source_map':mapping}))
         first=mapping[0]
         self.assertEqual(source_location(str(directory/'bundle'),first['generated_start'],{}),(first['file'],first['line']))

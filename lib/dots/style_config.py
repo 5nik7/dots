@@ -7,9 +7,8 @@ import re
 import stat
 
 from profile_config import checkout, context
-from style_catalog import canonical, split, ALIASES as ICON_ALIASES
+from style_catalog import APPS, canonical, split, ALIASES as ICON_ALIASES
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr', 'completion')
 LIMIT = 2 * 1024 * 1024
 NAME = re.compile(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*\Z')
 ATTRS = dict(bold=1, dim=2, italic=3, underline=4, reverse=7, strikethrough=9)
@@ -121,15 +120,17 @@ class Styles:
         self._native_palette = palette.get('palette', {}) if isinstance(palette,dict) and 'colors' in palette else palette
         self._codes = {}
         self._resolved = {}
+        self._destinations = {}
         replacements = replacements or {}
+        from preference_files import style_layers
+        directories = [self.root/'default']
+        if not defaults:
+            directories.extend(Path(layer['root']) for layer in self.selected['layers'])
         for group in ('icons','colors'):
-            paths = [self.root/'default'/(group+'.toml')]
-            if not defaults: paths += [Path(layer['root'])/(group+'.toml') for layer in self.selected['layers']]
             values, sources, layers = {}, {}, []
-            for path in paths:
-                self.paths.append(path)
-                doc = replacements.get(path)
-                if doc is None: doc = read(path)
+            for directory in directories:
+                [(path, doc)] = style_layers(directory, group, replacements)
+                if path not in self.paths: self.paths.append(path)
                 validate(group, doc)
                 from config_keys import internal
                 projected={internal(group+'.'+key).partition('.')[2]:value for key,value in doc.items()}
@@ -143,10 +144,14 @@ class Styles:
                 self.color(value)
 
     def path(self, group):
+        from preference_files import preference_path
         if group not in ('icons','colors'): raise ValueError('unknown style group')
-        if self.defaults: return self.root/'default'/(group+'.toml')
-        if not self.selected['layers']: raise ValueError('no profile definition in this checkout')
-        return Path(self.selected['layers'][-1]['root'])/(group+'.toml')
+        if group not in self._destinations:
+            if not self.defaults and not self.selected['layers']:
+                raise ValueError('no profile definition in this checkout')
+            directory = self.root/'default' if self.defaults else Path(self.selected['layers'][-1]['root'])
+            self._destinations[group] = preference_path(directory, group, self.root)
+        return self._destinations[group]
 
     def resolve(self, group, name, app=None):
         """Fold general then app-specific values inside each inheritance layer."""
@@ -178,6 +183,11 @@ class Styles:
     def icon(self, name, fallback='', app=None):
         result = self.resolve('icons', name, app)
         return result['value'] if result['source'] else fallback
+
+    def icon_names(self):
+        """Include legacy consumer names while retaining one stored icon."""
+        shared = [key for key in self.values['icons'] if not key.startswith('apps.')]
+        return [*shared, *(alias for alias, role in ICON_ALIASES.items() if role in shared and alias not in shared)]
 
     @property
     def palette(self):
@@ -266,25 +276,32 @@ class Styles:
         return '90'
 
     def rows(self):
-        for key in self.values['icons']:
-            if not key.startswith('apps.'): yield '__icon.'+key, self.icon(key, app='cli'), 'style'
+        for key in self.icon_names():
+            yield '__icon.'+key, self.icon(key, app='cli'), 'style'
         for code in ROLES: yield '__color.'+code, self.code(code), 'style'
         yield '__color.git_guide', self.git_guide_foreground(), 'style'
         from progress_preferences import ROLES as PROGRESS_ROLES, fields
         for role in PROGRESS_ROLES:
             yield '__color.progress.'+role, self.sgr_fields(fields(self, role)), 'style'
 
-    def startup_inputs(self):
+    def preference_inputs(self, controls=None):
+        from config_values import Controls
+        from preference_files import FILES
+        layers = [self.root/'default', *(Path(layer['root']) for layer in self.selected['layers'])]
+        candidates = (directory/name for directory in layers for name in FILES)
+        return {*self.paths, *(controls or Controls(self.root, self.selected)).paths, *candidates}
+
+    def startup_inputs(self, controls=None):
         from files.file_platform import state_root
         paths = {Path(__file__), Path(__file__).with_name('style_catalog.py'),Path(__file__).with_name('config_keys.py')}
         palette = state_root()/'current/theme/palette.json'
         if palette.is_file(): paths.add(palette)
-        from config_values import Controls
+        paths.add(Path(__file__).with_name('config_namespace.py'))
         paths.add(Path(__file__).with_name('preference_files.py'))
         paths.add(Path(__file__).with_name('config_values.py'))
         paths.add(Path(__file__).with_name('progress_preferences.py'))
         paths.add(Path(__file__).with_name('completion_preferences.py'))
-        for path in [*self.paths,*Controls(self.root,self.selected).paths]:
+        for path in self.preference_inputs(controls):
             if path.exists(): paths.add(path)
             if path.parent.is_dir(): paths.add(path.parent)
         return paths

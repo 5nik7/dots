@@ -269,7 +269,7 @@ class ConfigMenu(unittest.TestCase):
                                                         palette={'fixture_extra':'#abcdef','blue':'#aaaabb','rosewater':'#f5e0dc'})))
         current.cache_clear()
         key='colors.todo.field.acceptance.value.fg'
-        destination=self.path.parent/'colors.toml'
+        destination=self.path.parent/'config.json'
         seen=[]
         def choose(title,items,context=None,review=None):
             seen.append((title,items,review))
@@ -283,8 +283,7 @@ class ConfigMenu(unittest.TestCase):
              redirect_stdout(io.StringIO()) as output:
             self.assertEqual(config_cli.main(['set',key,'--profile',self.platform,'--no-refresh']),0)
         self.assertIn('undo: dots files undo',output.getvalue())
-        from style_config import read
-        self.assertEqual(read(destination)['apps.todo.field.acceptance.value.fg'],'palette.fixture_extra')
+        self.assertEqual(json.loads(destination.read_bytes())['apps']['todo']['colors']['field']['acceptance']['value']['fg'],'palette.fixture_extra')
         labels=dict(seen[0][1]);self.assertIn('accent · #123456',labels.values())
         self.assertNotIn('invalid',labels.values())
         self.assertIn('palette.rosewater · #f5e0dc',labels.values());self.assertIn('palette.blue · #aaaabb',labels.values())
@@ -318,7 +317,7 @@ class ConfigMenu(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'supply an explicit value'):config_cli.main(['set',key])
             with patch.object(menu,'browser_available',return_value=True):
                 with self.assertRaisesRegex(ValueError,'unknown or noneditable'):config_cli.main(['set','colors.no_such_key.fg'])
-        self.assertFalse((self.path.parent/'colors.toml').exists())
+        self.assertFalse(any((self.path.parent/name).exists() for name in ('config.json','colors.toml')))
 
     def test_private_preview_numeric_identity_and_widths(self):
         from resources import cells
@@ -337,12 +336,17 @@ class ConfigMenu(unittest.TestCase):
             self.assertEqual(kwargs['query'],'branch')
             self.assertIsNotNone(kwargs['focus_index'])
             path=Path(args[3][2]['DOTS_CONFIG_PREVIEW'])
-            self.assertEqual(read_request(path)['rows'][kwargs['focus_index']]['key'],'icons.git.branch')
+            rows = read_request(path)['rows']  # The private reader enforces its 4 MiB limit.
+            self.assertEqual(rows[kwargs['focus_index']]['key'],'icons.git.branch')
+            if category == 'all':
+                self.assertIn('settings.DOTS_COLOR', {row['key'] for row in rows})
             with redirect_stdout(io.StringIO()) as output:menu.preview(str(path),str(kwargs['focus_index']))
             self.assertIn('Saved',output.getvalue())
+            self.assertIn('Winning source',output.getvalue())
             return [kwargs['focus_index']]
-        with patch.object(menu.RichSelector,'fzf',side_effect=select):
-            self.assertEqual(menu.pick(inventory,'icons',frame,None).key,'icons.git.branch')
+        for category in ('icons', 'all'):
+            with self.subTest(category=category), patch.object(menu.RichSelector,'fzf',side_effect=select):
+                self.assertEqual(menu.pick(inventory,category,frame,None).key,'icons.git.branch')
 
     @patch.dict(os.environ, TERM='xterm-256color')
     def test_home_paths_in_details_nested_values_and_file_mappings(self):
@@ -453,12 +457,11 @@ class NativeConfig(NativeMenuFixture):
             path=self.root/'profiles'/name;path.mkdir(parents=True)
             (path/'profile.json').write_text(json.dumps(dict(schema=1,id=name,environment={'TEST_LABEL':'界 café value'},settings={})))
         (self.root/'default').mkdir()
-        for name in ('icons','colors'):shutil.copy2(ROOT/'default'/(name+'.toml'),self.root/'default'/(name+'.toml'))
+        shutil.copy2(ROOT/'default/config.json',self.root/'default/config.json')
         self.platform=menu.profile_context(self.root)['layers'][-1]['id']
 
     def test_smart_endpoint_fields_and_filter_binding_on_exact_client(self):
         import time
-        shutil.copy2(ROOT/'default/config.json',self.root/'default/config.json')
         code="""import os,json
 from config_menu import Inventory,pick
 from menu_tmux import TmuxContext
@@ -510,7 +513,7 @@ except SelectionEvent as event:print(json.dumps([row.key,field.key,event.action]
 
     def test_review_choices_visible_together_after_popup_sizing(self):
         import time
-        defaults=self.root/'default/config.json';shutil.copy2(ROOT/'default/config.json',defaults)
+        defaults=self.root/'default/config.json'
         code="""import os
 from config_menu import select
 from menu_tmux import TmuxContext
@@ -519,7 +522,7 @@ print(select('Review change',[('cancel','Cancel'),('save','Save')],TmuxContext.c
         cases=((40,30,'auto','auto'),(80,24,'fit','50%'),(120,30,'90%',14),(40,14,'auto','fit'),(80,20,'auto',6))
         for number,(columns,lines,width,height) in enumerate(cases):
             with self.subTest(columns=columns,lines=lines,height=height):
-                doc=__import__('config_keys').document(json.loads(defaults.read_text()),public=False);doc['apps']['menu']['popup'].update(width=width,height=height)
+                doc=json.loads(defaults.read_text());doc['apps']['menu']['formatting']['popup'].update(width=width,height=height)
                 defaults.write_text(json.dumps(doc))
                 self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',lines,columns,0,0))
                 time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
@@ -561,7 +564,7 @@ with request_file(dict(schema=1,context=asdict(context))) as path:
     code=subprocess.call([*cmd,'config','set','colors.todo.field.acceptance.value.fg','--no-refresh'],env=dict(os.environ,DOTS_MENU_CONTEXT=str(path)))
 Path(sys.argv[2]).write_text(str(code))
 ''')
-        destination=self.root/'default/colors.toml'
+        destination=self.root/'default/config.json'
         for width,frontend in ((40,'bash'),(80,'native'),(120,'bash')):
             (theme/'palette.json').write_text(json.dumps(dict(palette={'fixture_extra':'#abcdef'},colors={'accent':'#123456',
                 'foreground':'#202020' if width==120 else '#cdd6f4','background':'#fafafa' if width==120 else '#181825'})))
@@ -584,8 +587,7 @@ Path(sys.argv[2]).write_text(str(code))
                 self.drain(self.first[1]);time.sleep(.02)
             self.assertTrue(status.exists());self.assertEqual(status.read_text(),'130' if width==120 else '0')
             if width==80:
-                from style_config import read
-                self.assertEqual(read(destination)['apps.todo.field.acceptance.value.fg'],'palette.fixture_extra')
+                self.assertEqual(json.loads(destination.read_bytes())['apps']['todo']['colors']['field']['acceptance']['value']['fg'],'palette.fixture_extra')
             else:self.assertEqual(destination.read_bytes() if destination.exists() else None,before)
 
     def test_standalone_terminal_and_shared_input_handoff(self):

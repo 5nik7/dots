@@ -315,9 +315,10 @@ class NativeLauncher(NativeMenuFixture):
         self.env.update(DOTS_COLOR='always', DOTS_ICONS='always', COLORTERM='truecolor')
         defaults = self.root/'default'
         defaults.mkdir()
-        shutil.copy2(ROOT/'default/config.json', defaults/'config.json')
-        (defaults/'icons.toml').write_text('[menu]\nanodize="A"\nbak="B"\n')
-        (defaults/'colors.toml').write_text('[apps.menu.icon]\nfg="#123456"\n[apps.menu.label]\nfg="#abcdef"\n')
+        config=json.loads((ROOT/'default/config.json').read_bytes())
+        config['icons']['menu'].update(anodize='A',bak='B')
+        config['apps']['menu']['colors'].update(icon={'fg':'#123456'},label={'fg':'#abcdef'})
+        (defaults/'config.json').write_text(json.dumps(config))
         for field in ('label.bold', 'icon.dim'):
             saved = subprocess.run([str(self.root/'bin/dots'), 'config', 'set', 'colors.apps.menu.'+field, 'true'],
                                    env=self.env, capture_output=True, text=True, timeout=20)

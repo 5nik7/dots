@@ -4,6 +4,7 @@ Native adapters keep their own vocabulary. These translations are data only;
 they are also used by migration, discovery and the existing consumer readers.
 """
 import copy
+from functools import lru_cache
 
 FEATURES = ('todo', 'fonts', 'wiki', 'menu', 'pkgs', 'clipboard')
 MOVES = (
@@ -27,31 +28,43 @@ def under(key, prefix):
     return key == prefix or key.startswith(prefix+'.') or key.startswith(prefix+'[')
 
 
+@lru_cache(maxsize=8192)
 def canonical(key):
-    for group in ("toast", "vibrate"):
-        prefix="apps.codex."+group
-        if under(key,prefix):return "apps.codex.alerts.regular."+group+key[len(prefix):]
-    for old, new in MOVES:
-        if under(key, old): return new+key[len(old):]
-    for feature in FEATURES:
-        for old in ('colors.apps.cli.'+feature, 'colors.'+feature):
-            if under(key, old): return 'colors.apps.'+feature+key[len(old):]
-    for old,new in (('colors.apps.tmux.window.attention','colors.apps.tmux.windows.alert'),
-                    ('colors.apps.tmux.window','colors.apps.tmux.windows')):
-        if under(key,old):return new+key[len(old):]
+    if key.startswith('apps.codex.'):
+        for group in ('toast', 'vibrate'):
+            prefix = 'apps.codex.' + group
+            if under(key, prefix):
+                return 'apps.codex.alerts.regular.' + key[11:]
+    if key.startswith(('apps.menu.', 'apps.fonts.', 'formatting.apps.menu.')):
+        for old, new in MOVES:
+            if under(key, old):
+                return new + key[len(old):]
+    if key.startswith('colors.'):
+        role = key.removeprefix('colors.apps.cli.') if key.startswith('colors.apps.cli.') else key[7:]
+        if role.split('.', 1)[0].split('[', 1)[0] in FEATURES:
+            return 'colors.apps.' + role
+        for old, new in (('colors.apps.tmux.window.attention', 'colors.apps.tmux.windows.alert'),
+                         ('colors.apps.tmux.window', 'colors.apps.tmux.windows')):
+            if under(key, old):
+                return new + key[len(old):]
     return key
 
 
+@lru_cache(maxsize=8192)
 def internal(key):
     """Resolve a public path to the existing owning controller's vocabulary."""
-    for old, new in MOVES:
-        if under(key,new):return old+key[len(new):]
-    for feature in FEATURES:
-        prefix='colors.apps.'+feature
-        if under(key,prefix):return 'colors.'+feature+key[len(prefix):]
-    for new,old in (('colors.apps.tmux.windows.alert','colors.apps.tmux.window.attention'),
-                    ('colors.apps.tmux.windows','colors.apps.tmux.window')):
-        if under(key,new):return old+key[len(new):]
+    if key.startswith(('colors.apps.menu.', 'formatting.apps.menu.', 'formatting.apps.fonts.')):
+        for old, new in MOVES:
+            if under(key, new):
+                return old + key[len(new):]
+    if key.startswith('colors.apps.'):
+        role = key[12:]
+        if role.split('.', 1)[0].split('[', 1)[0] in FEATURES:
+            return 'colors.' + role
+        for new, old in (('colors.apps.tmux.windows.alert', 'colors.apps.tmux.window.attention'),
+                         ('colors.apps.tmux.windows', 'colors.apps.tmux.window')):
+            if under(key, new):
+                return old + key[len(new):]
     return key
 
 

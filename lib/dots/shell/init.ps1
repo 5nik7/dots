@@ -134,6 +134,10 @@ $env:PATH = (@($ownedEntries + $profileEntries + $entries | Select-Object -Uniqu
 $dotsArgs = [Environment]::GetCommandLineArgs()
 $dotsInteractive = $dotsArgs -notcontains '-NonInteractive' -and ($dotsArgs -contains '-NoExit' -or -not ($dotsArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
 if ($dotsInteractive) {
+    if ($null -eq $env:FZF_DEFAULT_OPTS -and $null -eq $env:FZF_DEFAULT_OPTS_FILE) {
+        $global:DotsVisualFzfBase = "--bind=ctrl-x:toggle-preview --preview-window=right:hidden:50% --preview='_dots-fzf-preview --selection {f}'"
+        $env:FZF_DEFAULT_OPTS = $global:DotsVisualFzfBase
+    }
     . (Join-Path $env:DOTS 'lib/dots/shell/less.ps1')
     if ($dots_options.DOTS_INIT_COLORS -eq '0') { $global:dots_colors = @{} }
     # PowerShell identifiers are case insensitive: esc/ESC and rst/RST share values.
@@ -196,10 +200,12 @@ if ($dotsInteractive) {
             }
             $global:DotsStyleIcons = $visualIcons; $global:DotsStyleColors = $visualColors
             foreach ($name in $visualEnv.Keys) { [Environment]::SetEnvironmentVariable($name, $visualEnv[$name], 'Process') }
-            if ($visualEnv.ContainsKey('DOTS_THEME_FZF_COLORS')) {
-                if ($null -eq $global:DotsVisualFzfBase) { $global:DotsVisualFzfBase = [string]$env:FZF_DEFAULT_OPTS }
+            if ($visualEnv.ContainsKey('DOTS_THEME_FZF_COLORS') -and $null -ne $global:DotsVisualFzfBase -and $null -eq $env:FZF_DEFAULT_OPTS_FILE) {
                 $fzfBase = $global:DotsVisualFzfBase
                 if ($visualEnv.ContainsKey('DOTS_THEME_FZF_OPTS')) { $fzfBase = $visualEnv['DOTS_THEME_FZF_OPTS'] }
+                if ($visualEnv['DOTS_THEME_FZF_PREVIEW'] -eq '0') {
+                    $fzfBase += " --preview='_dots-fzf-preview --selection {f}'"
+                }
                 $env:FZF_DEFAULT_OPTS = $fzfBase + ' --color=' + $visualEnv['DOTS_THEME_FZF_COLORS']
             }
         }

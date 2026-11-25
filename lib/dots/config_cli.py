@@ -15,7 +15,7 @@ from profiles import definition, public_report, SENSITIVE
 from catalog import Catalog, Presentation, read_json, relative
 from transactions import Store, digest, parents_safe, exists
 from file_platform import state_root
-from style_config import Styles, read as read_styles, encode as encode_styles, nested, flatten, validate as validate_styles
+from style_config import Styles, encode as encode_styles, nested, flatten, validate as validate_styles
 
 
 def validate(root, selected, data):
@@ -187,20 +187,32 @@ class Plan:
 
 class StylePlan:
     def __init__(self, root, selected, group, defaults=False):
+        from preference_files import json_document, preference_guards, style_layers, unified_values
+        self.guards = preference_guards(checkout(root), selected, defaults=defaults)
         self.style = Styles(root, selected, defaults=defaults)
         self.group, self.defaults = group, defaults
         self.path = self.style.path(group)
-        paths = [*self.style.paths, *[Path(row['root'])/'profile.json' for row in selected['layers']]]
-        self.guards = {}
-        for path in paths:
-            parents_safe(path); self.guards[str(path)] = digest(path)
-        self.before = read_styles(self.path)
+        self.unified = self.path.name == 'config.json'
+        self.before = style_layers(self.path.parent, group)[0][1]
+        self.replacements = {}
+        if self.unified:
+            raw = json_document(self.path) if self.path.exists() else {'schema': 2}
+            self.typed, self.style_values = unified_values(raw)
         self.data = dict(self.before)
         self.items, self.operations = [], []
 
     def edit(self, name, value, unset=False, json_value=False):
-        from config_keys import canonical, style_names
-        name=canonical(self.group+'.'+name).partition('.')[2]
+        from config_keys import canonical
+        from style_catalog import canonical as icon_role, split
+
+        def style_name(key):
+            key=canonical(self.group+'.'+key).partition('.')[2]
+            if self.group == 'icons':
+                app, role = split(key)
+                return ('apps.'+app+'.' if app else '')+icon_role(role)
+            return key
+
+        name=style_name(name)
         if not name: raise ValueError('select an individual style option')
         if json_value and not unset:
             try: value = json.loads(value)
@@ -211,7 +223,7 @@ class StylePlan:
                 unset=True
         if unset:
             if self.defaults: raise ValueError('shared defaults must remain defined; use set')
-            self.data = {key: val for key,val in self.data.items() if canonical(self.group+'.'+key) != self.group+'.'+name and not canonical(self.group+'.'+key).startswith(self.group+'.'+name+'.')}
+            self.data = {key: val for key,val in self.data.items() if style_name(key) != name and not style_name(key).startswith(name+'.')}
         else:
             if not json_value and self.group == 'colors' and name.rsplit('.',1)[-1] not in ('fg','bg') and value in ('true','false'):
                 value = value == 'true'
@@ -227,17 +239,29 @@ class StylePlan:
                 recognized = base in known or self.group == 'colors' and any(k.startswith(role+'.') for k in known)
                 if key not in known and not recognized and not supported(self.group, key):
                     raise ValueError('unknown style option: '+self.group+'.'+key)
-            for key in updates:
-                for alias in style_names(self.group,key): self.data.pop(alias,None)
+            self.data = {key: val for key,val in self.data.items() if style_name(key) not in updates}
             self.data.update(updates)
-        Styles(self.style.root, self.style.selected, defaults=self.defaults, replacements={self.path:self.data})
+        from preference_files import unified_document, unified_operation
+        if self.unified:
+            updated = unified_document(self.typed, {**self.style_values, self.group:self.data})
+        else:
+            updated = self.data
+        self.replacements = {self.path: updated}
+        Styles(self.style.root, self.style.selected, defaults=self.defaults, replacements=self.replacements)
         self.items.append(dict(action='unset' if unset else 'set', key=self.group+'.'+name))
-        if self.data != self.before:
+        self.operations = []
+        if self.unified and self.data != self.before:
+            self.operations=[unified_operation(self.path, updated, sparse=not self.defaults)]
+        elif self.data != self.before:
             from preference_files import encode_style, controls
             self.operations=[dict(path=str(self.path),text=encode_style(self.path,controls(self.path),encode_styles(self.data)))]
 
     def apply(self, action):
-        return Store(state_root()).apply('config-'+action, self.operations, self.guards, retain=True, catalogs=[self.path])
+        from preference_files import clear_current
+        result=Store(state_root()).apply('config-'+action, self.operations, self.guards, retain=True, catalogs=[self.path])
+        if self.operations:
+            clear_current()
+        return result
 
 
 from preference_files import PreferencePlan, SettingsPlan
@@ -249,6 +273,8 @@ class ControlPlan(PreferencePlan):
         from config_values import parts,assign,validate_value,Controls
         from config_keys import internal,document
         key=internal(key)
+        from preference_files import preference_path
+        self.path=preference_path(self.directory, key, self.root)
         path=parts(key)
         if not unset:
             if json_value:
@@ -278,7 +304,9 @@ class ControlPlan(PreferencePlan):
             from config_values import validate_groups
             validate_groups(self.root,self.data)
         from preference_files import compact
-        if compact(self.data)==compact(self.before):
+        unchanged = self.data == self.before if self.unified else compact(self.data) == compact(self.before)
+        if unchanged:
+            self.operations, self.replacements = [], {}
             self.items.append(dict(action='unset' if unset else 'set',key=key))
             return
         self.finish()
@@ -288,9 +316,6 @@ class ControlPlan(PreferencePlan):
         styles=Styles(self.root,self.selected,defaults=self.defaults)
         validate_effective(proposed,self.controls.defaults,styles,self.selected['facts']['platform'])
         self.items.append(dict(action='unset' if unset or value is None else 'set',key=key))
-        from preference_files import appearance_file
-        self.path=self.directory/appearance_file(key)
-        self.finish()
 
 
 
@@ -330,7 +355,7 @@ def render_value(ui, name, value, prefix=''):
             ui.emit()
             if isinstance(item,dict) and 'source' in item:
                 owner = name if prefix.rstrip('.') == 'files' else name.rsplit('.',1)[-1]
-                ui.heading(str(item.get('id',index+1)) if name == 'files' else owner+':'+str(item.get('id',index+1)))
+                ui.heading(str(item.get('id',index+1)) if name == 'files' or name.endswith('.files') else owner+':'+str(item.get('id',index+1)))
                 for key in ('source','target'):
                     if item.get(key) is not None: ui.resource_detail(key.title(),item[key],display=item[key])
                 for key in ('strategy','app','category','platforms','replaces','targets'):
@@ -361,7 +386,9 @@ def render(result):
         return
     ui.heading('Dots config')
     ui.detail('Profile', result['profile'], '94')
-    ui.resource_detail('File', result['path'])
+    if result.get('path'): ui.resource_detail('File', result['path'])
+    if result.get('owners'): ui.detail('Owning fields', str(len(result['owners'])))
+    if result.get('source'): ui.detail('Source', result['source'])
     if 'status' in result: ui.detail('Result', result['status'], '92' if result['status'] == 'complete' else '93')
     for row in result.get('items', []):
         ui.detail('Action', row['action'] + (' ' + row['key'] if 'key' in row else ''))
@@ -409,7 +436,8 @@ def main(argv=None):
     parser.add_argument('--defaults', action='store_true', help='Inspect or edit shared visual, formatting and application defaults')
     for option in ('json','json-value','dry-run','apply','yes'):
         parser.add_argument('--'+option, action='store_true')
-    parser.add_argument('--layout', action='store_true', help='Separate preferences from profile manifests')
+    parser.add_argument('--layout', nargs='?', const=True, choices=('unified',),
+                        help='Separate legacy preferences, or consolidate them with --layout unified')
     parser.add_argument('--keys', action='store_true', help='Migrate legacy configuration key names')
     parser.add_argument('--all-profiles', action='store_true', help='Migrate every declared profile')
     args = parser.parse_intermixed_args(argv)
@@ -422,8 +450,7 @@ def main(argv=None):
         args.key=args.value=None
     elif len(args.operands)>2:parser.error('too many arguments')
     from config_keys import internal,canonical
-    if args.key and args.action!='import': args.key=internal(args.key)
-    if (args.keys or args.layout or args.all_profiles) and args.action!='migrate':parser.error('--keys/--all-profiles require migrate')
+    if (args.keys or args.layout or args.all_profiles) and args.action!='migrate':parser.error('--keys/--layout/--all-profiles require migrate')
     if args.all_profiles and (not (args.keys or args.layout) or args.profile):parser.error('--all-profiles requires --keys or --layout and no --profile')
     automatic = args.action is None
     args.action = args.action or 'list'
@@ -446,10 +473,21 @@ def main(argv=None):
     if args.no_refresh and args.action not in ('set','unset','migrate','import'): parser.error('--no-refresh requires a preference edit')
     if args.action == 'refresh' and (args.profile or args.defaults): parser.error('refresh uses the active profile')
     if args.defaults and args.profile: parser.error('--defaults and --profile are mutually exclusive')
-    if args.defaults and args.action == 'migrate': parser.error('migration requires a profile')
+    if args.defaults and args.action == 'migrate' and (args.layout != 'unified' or args.all_profiles):
+        parser.error('--defaults requires migrate --layout unified without --all-profiles')
     root = checkout()
     selected = context(root, args.profile)
     if not selected['layers'] and not args.defaults: raise ValueError('no profile definition in this checkout')
+    if args.key and args.action != 'import':
+        from config_namespace import resolve_request
+        args.key, view = resolve_request(root, selected, args.key, args.action, defaults=args.defaults, value=args.value)
+        if view is not None:
+            if args.action == 'explain' and not args.json:
+                render(dict(view, key=args.key))
+            else:
+                print_value(view, args.key, view['value'], args.json)
+            return 0
+        args.key = internal(args.key)
     if args.keys and args.layout: parser.error('--keys and --layout are mutually exclusive')
     if args.action=='import' or args.action=='migrate' and args.layout:
         from config_transfer import run
@@ -466,8 +504,8 @@ def main(argv=None):
     implicit_shared = not args.profile and not args.defaults and args.key != 'files' and not (args.key or '').startswith(('apps.wttr','apps.pkgs','apps.codex','environment.','files.','profile.'))
     from interaction import terminal
     browser_intent=(args.action=='browse' and not args.json) or (automatic and terminal() and not args.json)
-    preference_path=args.action=='path' and (not args.key or args.key=='config.json' or args.key.startswith(('apps.','formatting.','colors','icons','settings.','DOTS_')))
-    if implicit_shared and (args.action in ('set','unset') or preference_path or browser_intent): args.defaults=True
+    preference_destination=args.action=='path' and (not args.key or args.key=='config.json' or args.key.startswith(('apps.','formatting.','colors','icons','settings.','DOTS_')))
+    if implicit_shared and (args.action in ('set','unset') or preference_destination or browser_intent): args.defaults=True
     if guided and args.key is not None:
         from config_menu import browse
         return browse(root, selected, args)
@@ -520,8 +558,9 @@ def main(argv=None):
         result=dict(schema=1,key=canonical(args.key),description=description(args.key),profile='defaults' if args.defaults else selected['current'],
                     constraints=constraints(controls.defaults,args.key),**resolved)
         result['consumer'],result['activation']=activation(args.key)
-        from preference_files import appearance_file
-        result['destination']=str((Path(selected['layers'][-1]['root']) if args.profile else root/'default')/appearance_file(args.key))
+        from preference_files import preference_path
+        directory = Path(selected['layers'][-1]['root']) if args.profile else root/'default'
+        result['destination']=str(preference_path(directory, args.key, root))
         if args.key == 'apps.menu' or args.key.startswith('apps.menu.'):
             result['activation'] = 'next popup'
         if args.key == 'apps.fonts' or args.key.startswith('apps.fonts.'):
@@ -559,8 +598,8 @@ def main(argv=None):
         from config_refresh import explain
         result = explain(args.key, root, selected, args.defaults, args.app)
         if not args.profile:
-            group=args.key.split('.',1)[0]
-            for row in result['consumers']:row['destination']=str(root/'default'/(group+'.toml'))
+            from preference_files import preference_path
+            for row in result['consumers']:row['destination']=str(preference_path(root/'default', args.key, root))
         if args.json: print(json.dumps(result, ensure_ascii=True))
         else:
             ui = Presentation(); ui.heading('Effective configuration'); ui.detail('Key', canonical(args.key))
@@ -592,19 +631,80 @@ def main(argv=None):
     is_setting = group=='settings' or (args.key or '').startswith('DOTS_')
     if args.defaults and args.action in ('get','set','unset') and not (is_style or is_control or is_setting):
         parser.error('--defaults supports colors, icons, formatting, apps and settings')
-    if args.action == 'get' and is_control and (args.key == 'apps.yazi.tab_bar' or args.key.startswith('apps.yazi.tab_bar.')):
-        # The managed Yazi setup only needs typed preferences at startup.
-        from config_values import Controls
-        resolved = Controls(root, selected, defaults=args.defaults).resolve(args.key)
-        result['path'] = resolved['source'] or str((root/'default' if args.defaults else Path(layer['root']))/'config.json')
-        print_value(result, args.key, resolved['value'], args.json)
+    if args.action == 'get' and args.key != 'apps':
+        from config_values import Controls, lookup, parts, MISSING, merge
+        from config_keys import document
+        from preference_files import preference_path
+        directory = root/'default' if args.defaults else Path(layer['root'])
+        if is_control:
+            controls = Controls(root, selected, defaults=args.defaults)
+            resolved = controls.resolve(args.key)
+            value = resolved['value']
+            if isinstance(value, dict):
+                value = lookup(document(controls.values), parts(canonical(args.key)), value)
+            result['path'] = resolved['source'] or str(preference_path(directory, args.key, root))
+        elif is_style:
+            styles = Styles(root, selected, defaults=args.defaults)
+            result['path'] = str(styles.path(group))
+            # Some typed controls share the public color tree (e.g. menu
+            # entries). Their scalar keys already route to the typed owner.
+            from style_catalog import supported
+            scalar = style_key and (supported(group, style_key) or style_key in styles.values[group])
+            if scalar:
+                value = styles.resolve(group, style_key)['value']
+            else:
+                controls = Controls(root, selected, defaults=args.defaults)
+                typed = lookup(document(controls.values), parts(canonical(args.key)), MISSING)
+                try:
+                    value = style_value(styles, group, style_key)
+                except ValueError:
+                    if typed is MISSING:
+                        raise
+                    value = typed
+                    result['path'] = str(controls.paths[-1])
+                if isinstance(value, dict) and isinstance(typed, dict):
+                    value = merge(value, typed)
+        else:
+            group, key = key_parts(args.key)
+            if group == 'settings':
+                from profile_config import settings as resolved_settings
+                row = resolved_settings(root, selected, defaults=args.defaults).get(key)
+                if row is None and key not in schema() and key != 'files.backup':
+                    raise ValueError('key is not configured in this profile or its parents')
+                if row:
+                    value, result['path'] = row['value'], row['source']
+                else:
+                    value = False if key == 'files.backup' else schema()[key][1]
+                    result['path'] = str(preference_path(directory, args.key, root))
+            elif group == 'profile':
+                value = layer.get('alias')
+            elif group == 'files':
+                if any(isinstance(item.get('files'), list) for item in selected['layers']):
+                    from profile_config import file_rows
+                    files = {identity: row for identity, _, row in file_rows(root, selected)}
+                    value = list(files.values()) if not key else files.get(key) or [
+                        row for identity, row in files.items() if identity.split(':', 1)[0] == key]
+                    if key and not value:
+                        raise ValueError('no file mapping matches ' + key)
+                else:
+                    files = {}
+                    for item in selected['layers']:
+                        files.update(item.get('files', {}))
+                    if key and key not in files:
+                        raise ValueError('key is not configured in this profile or its parents')
+                    value = files[key] if key else files
+            else:
+                raise ValueError('unknown configuration key: ' + args.key)
+        print_value(result, args.key, value, args.json)
         return 0
     if args.action == 'path':
-        if not args.key or is_control or is_setting:
-            from preference_files import appearance_file
-            path=(root/'default' if args.defaults else Path(layer['root']))/appearance_file(args.key or '')
-        elif is_style and '.' in args.key:
-            path=(root/'default' if args.defaults else Path(layer['root']))/(group+'.toml')
+        if group in ('files','profile','environment') and (args.key in ('environment','files') or '.' in args.key):
+            if args.defaults: raise ValueError('structural configuration belongs to a profile')
+            path=Path(layer['root'])/'profile.json'
+        elif not args.key or is_control or is_setting or is_style:
+            from preference_files import preference_path
+            directory = root/'default' if args.defaults else Path(layer['root'])
+            path=preference_path(directory, args.key or '', root)
         elif args.key:
             name = Path(args.key+'.toml' if args.key in ('icons','colors') else args.key)
             if not name.parts or name.is_absolute() or '..' in name.parts or any(ord(c)<32 for c in str(name)): raise ValueError('invalid configuration name')
@@ -665,7 +765,7 @@ def main(argv=None):
             file_items = {}
             flat_files = not args.defaults and any(isinstance(i.get('files'), list) for i in selected['layers'])
             for item in selected['layers'] if not args.defaults else []:
-                for key in ('settings','environment'): merged[key].update(item.get(key, {}))
+                merged['environment'].update(item.get('environment', {}))
                 if not flat_files: merged['files'].update(item.get('files', {}))
             if flat_files:
                 from profile_config import file_rows
@@ -686,38 +786,14 @@ def main(argv=None):
             if not args.defaults and selected['current']==context(root)['current'] and (root/'config/tmux/codex-alerts.toml').is_file() and sys.version_info>=(3,11):
                 from config_codex import Native
                 merged.setdefault('apps',{})['codex']=Native(root,selected).values
-            if args.action == 'get':
-                from config_keys import document
-                from config_values import lookup,parts,MISSING,merge
-                typed=lookup(document(controls.values),parts(canonical(args.key)),MISSING) if is_style or is_control else MISSING
-                if is_style:
-                    style_path=True
-                    try:value = style_value(styles,group,style_key)
-                    except ValueError:
-                        if typed is MISSING:raise
-                        value=typed;style_path=False
-                    if isinstance(value,dict) and isinstance(typed,dict):value=merge(value,typed)
-                    result['path'] = str(styles.path(group) if style_path else controls.paths[-1])
-                elif is_control:
-                    resolved=controls.resolve(args.key)
-                    value=typed if typed is not MISSING else resolved['value']
-                    from preference_files import appearance_file
-                    result['path']=resolved['source'] or str((root/'default' if args.defaults else Path(layer['root']))/appearance_file(args.key))
-                else:
-                    group, key = key_parts(args.key)
-                    if group == 'files' and not key:
-                        value = merged[group]
-                    elif group == 'files' and flat_files:
-                        value = file_items.get(key) or [r for identity, r in file_items.items() if identity.split(':',1)[0] == key]
-                        if not value: raise ValueError('no file mapping matches ' + key)
-                    else:
-                        if key not in merged[group]: raise ValueError('key is not configured in this profile or its parents')
-                        value = merged[group][key]
-                print_value(result,args.key,value,args.json)
-                return 0
             from config_keys import document,public_styles
             merged.update({g:nested(public_styles(g,styles.values[g])) for g in ('icons','colors')})
             result['config'] = document(merged)
+            if args.action == 'get':  # Complete application tree, including native stores.
+                value = result.pop('config')['apps']
+                result['path'] = controls.resolve('apps')['source'] or str(controls.paths[-1])
+                print_value(result, args.key, value, args.json)
+                return 0
             if args.action=='list':
                 categories=getattr(args,'categories',[])
                 if categories:

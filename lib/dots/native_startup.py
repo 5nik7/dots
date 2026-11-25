@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
-from environment import declarations, TOKEN
+from environment import declarations, TOKEN, TOOL_PATHS
 from profiles import resolve, SENSITIVE
 
 LIB=Path(__file__).resolve().parent
@@ -61,6 +61,7 @@ def generate(root,shell, metadata=None):
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append("if ([string]$env:"+key+" -cne "+q(os.environ.get(key,''))+") { return $false }")
         lines += ["$global:DotsProfileSettings = @{}", "$global:DotsProfileSettingOrigins = @{}", "$global:DotsProfileConfigPath = "+q(config_path)]
+        lines.append('$global:DotsProfileShellDirs = @(' + ','.join(q(Path(row['root'])/'shells') for row in profile['layers']) + ')')
         for key, row in options.items():
             if key == 'files.backup': continue
             lines += ["$global:DotsProfileSettings["+q(key)+"] = "+q(row['value']), "$global:DotsProfileSettingOrigins["+q(key)+"] = "+q(row['source'])]
@@ -83,6 +84,14 @@ def generate(root,shell, metadata=None):
                 expr="$(if ($editor) { $editor.Name } else { 'vi' })"
             else:expr=expression(value,shell)
             lines.append('Set-DotsEnvironmentDefault '+q(key)+' '+expr)
+        lines.append("$toolPaths = @($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator))")
+        for placement, variable, suffix in TOOL_PATHS:
+            base = "$(if ($env:HOME) { $env:HOME } else { $HOME })" if variable == 'HOME' else "$env:" + variable
+            path = f"(Join-Path {base} {q(suffix)})" if suffix else base
+            operation = "@($directory) + $toolPaths" if placement == 'prepend' else "$toolPaths + @($directory)"
+            lines += [f"if ({base}) {{", f"  $directory = {path}",
+                      f"  if ($toolPaths -notcontains $directory -and (Test-Path -LiteralPath $directory -PathType Container)) {{ $toolPaths = {operation} }}", "}"]
+        lines.append("$env:PATH = $toolPaths -join [IO.Path]::PathSeparator")
         lines.append("$previousProfilePaths = @($env:DOTS_PROFILE_PATHS -split [regex]::Escape([string][IO.Path]::PathSeparator))")
         lines.extend('$env:'+key+' = '+q(value) for key,value in identity.items())
         paths=[str(Path(row['root'])/p) for row in reversed(profile['layers']) for p in row.get('path',['bin','scripts'])]
@@ -93,6 +102,7 @@ def generate(root,shell, metadata=None):
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append('test "$'+key+'" = '+q(os.environ.get(key,''))+'; or return 1')
         lines += ['set -g _dots_profile_setting_keys', 'set -g _dots_profile_config_path '+q(config_path)]
+        lines.append('set -g _dots_profile_shell_dirs ' + ' '.join(q(Path(row['root'])/'shells') for row in profile['layers']))
         for key, row in options.items():
             if key == 'files.backup': continue
             lines += ['set -a _dots_profile_setting_keys '+q(key), 'set -g _dots_profile_setting_'+key+' '+q(row['value']), 'set -g _dots_profile_source_'+key+' '+q(row['source'])]
@@ -106,6 +116,11 @@ def generate(root,shell, metadata=None):
                 lines += ['if test -n "$LESS"; and not string match -rq '+q(r'(^|\s)--(mouse|MOUSE)([=\s]|$)')+' -- "$LESS"',
                           '  set -gx LESS "--mouse $LESS"', 'end']
             lines += ['if not set -q '+key+'; or test -z "$'+key+'"; or test "$'+key+'" = "$_dots_applied_'+key+'"', '  set -gx '+key+' '+expr, '  set -g _dots_applied_'+key+' "$'+key+'"', 'end']
+        for placement, variable, suffix in TOOL_PATHS:
+            path = f'"${variable}' + ('/' + suffix if suffix else '') + '"'
+            flag = '-p' if placement == 'prepend' else '-a'
+            lines += [f'if test -n "${variable}"; and test -d {path}; and not contains -- {path} $PATH',
+                      f'  set -gx {flag} PATH {path}', 'end']
         lines.extend('set -gx '+key+' '+q(value) for key,value in identity.items())
         paths=[str(Path(row['root'])/p) for row in reversed(profile['layers']) for p in row.get('path',['bin','scripts'])]
         lines += ['set -l previous_profile_paths (string split : -- \"$DOTS_PROFILE_PATHS\")', 'set -l profile_paths']

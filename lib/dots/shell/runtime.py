@@ -20,8 +20,10 @@ def valid(kind, value):
                     'suggestions': ('deja', 'autosuggestions', 'none')}[kind]
 
 
-def settings(root, env):
+def settings(root, env, selected=None):
     config = Path(env.get('DOTS_CONFIG_FILE') or paths(root, env)['config'])
+    if not config.is_absolute():
+        raise ValueError('dots: DOTS_CONFIG_FILE must be absolute')
     schema = {}
     for line in (Path(root) / 'lib/dots/shell/settings.tsv').read_text().splitlines():
         key, kind, default, _ = line.split('\t')
@@ -48,7 +50,8 @@ def settings(root, env):
         from profile_config import settings as profile_settings
         from platform_info import detect
         from profiles import resolve
-        selected = resolve(root, detect(env=env))
+        if selected is None:
+            selected = resolve(root, detect(env=env))
         if selected['layers']: config = Path(selected['layers'][-1]['root']) / 'config.json'
         for key, row in profile_settings(root, selected).items():
             if key in schema: values[key], origins[key] = row['value'], row['source']

@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 
 IDENTIFIER = re.compile(r'[A-Za-z_][A-Za-z0-9_-]*')
+DOTTED_IDENTIFIERS = re.compile(IDENTIFIER.pattern + r'(?:\.' + IDENTIFIER.pattern + r')*')
 MISSING = object()
 GROUPS = ('formatting', 'apps')
 YAZI_TAB_LABELS = ('auto', 'name', 'number')
@@ -28,7 +29,15 @@ NULL_TYPES = {'number':False,'relativenumber':False,'expandtab':False,'list':Fal
 
 def parts(key):
     """Dot identifiers and JSON-quoted bracket keys; never evaluate input."""
-    if not isinstance(key, str) or not key: raise ValueError('empty configuration key')
+    if not isinstance(key, str) or not key:
+        raise ValueError('empty configuration key')
+    return _parse_parts(key)
+
+
+@lru_cache(maxsize=8192)
+def _parse_parts(key):
+    if DOTTED_IDENTIFIERS.fullmatch(key):
+        return tuple(key.split('.'))
     out=[]; pos=0
     while pos < len(key):
         if key[pos] == '[' and out:
@@ -75,11 +84,20 @@ def merge(base, overlay):
 
 def assign(doc,path,value,unset=False):
     node=doc
+    parents=[]
     for part in path[:-1]:
-        if part not in node:node[part]={}
+        if part not in node:
+            if unset or value is None:return
+            node[part]={}
         if not isinstance(node[part],dict):raise ValueError('configuration path overlaps a scalar')
+        parents.append((node,part))
         node=node[part]
-    if unset or value is None:node.pop(path[-1],None)
+    if unset or value is None:
+        if path[-1] not in node:return
+        del node[path[-1]]
+        for parent,key in reversed(parents):
+            if parent[key]:break
+            del parent[key]
     else:node[path[-1]]=value
 
 
@@ -123,6 +141,10 @@ def style(value):
 def validate_value(defaults,path,value):
     if not recognized(defaults,path):raise ValueError('unknown configuration key: '+name(path))
     if value is None:return
+    if path[:3] == ('apps', 'fzf', 'previewers') and len(path) == 4:
+        from fzf_config import validate_previewers
+        validate_previewers(path[-1], value)
+        return
     if path == ('apps', 'yazi', 'tab_bar', 'labels'):
         if value not in YAZI_TAB_LABELS:
             raise ValueError('Yazi tab labels require ' + ', '.join(YAZI_TAB_LABELS))
@@ -282,7 +304,8 @@ def validate_value(defaults,path,value):
 def validate_groups(root,data,defaults=None):
     from config_keys import document
     data=document(data,public=False)
-    if data.get('colors'):raise ValueError('profile colors support only popup and menu entries; use colors.toml for visual styles')
+    if data.get('colors'):
+        raise ValueError('inline profile colors support only popup and menu entries; put semantic styles in schema 2 config.json or legacy colors.toml')
     defaults=read_defaults(root) if defaults is None else defaults
     for group in GROUPS:
         values=data.get(group,{})
@@ -301,6 +324,11 @@ def constraints(defaults, key):
         from markdown_viewer import CHOICES, PRIORITY
         return dict(type='string', choices=list(CHOICES),
                     syntax='Auto: ' + ' > '.join(PRIORITY) + '; next document view; no theme publication or reload')
+    if key.startswith('apps.fzf.previewers.'):
+        from fzf_config import PREVIEWERS, preview_constraints
+        kind = key.removeprefix('apps.fzf.previewers.')
+        if kind in PREVIEWERS:
+            return dict(preview_constraints(kind), examples=[lookup(defaults, parts(key)), []])
     if key in ('apps.cli.progress', 'apps.git.view'):
         from cli_preferences import PROGRESS_MODES, VIEWS
         return dict(type='string',choices=list(PROGRESS_MODES if key.endswith('progress') else VIEWS),
@@ -359,6 +387,8 @@ def constraints(defaults, key):
         return dict(type='column-width', examples=['25%','40%','50%',16,24,0],
                     syntax='Integer 0..4096 cells or 1%..100% of the terminal/popup width; 0 uses label_gap only')
     prefix, kind = dynamic(path)
+    if path == prefix:
+        return dict(type='object')
     if kind in ('highlights', 'entries'):
         field_depth = len(prefix) + (2 if kind=='highlights' else 3)
         if len(path) < field_depth: return dict(type='object')
@@ -399,6 +429,8 @@ def constraint_details(spec):
 def activation(key):
     from config_keys import internal
     path=parts(internal(key))
+    if path[:3] == ('apps', 'fzf', 'previewers'):
+        return 'fzf', 'next preview'
     app=path[1] if path[0]=='apps' else path[2] if path[:2]==('formatting','apps') else ''
     return (app, {'tmux':'visual publication; verified tmux servers receive owned controls',
                   'yazi':'next Yazi launch',

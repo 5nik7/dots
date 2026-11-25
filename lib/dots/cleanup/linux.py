@@ -2,13 +2,14 @@
 from pathlib import Path
 import os
 
-from .core import Target, inside, inventory, safe_path, directory_fd
+from .core import historic_startup, startup_guard, Target, inside, inventory, safe_path, directory_fd
 from .termux import Termux, ORDINARY, CHECKPOINTS, LOGS
 
 
 class Linux:
     supported_groups = ORDINARY
     can_delete = True
+    guard = staticmethod(startup_guard)
 
     def __init__(self, env=None, platform='linux'):
         if os.name == 'nt':
@@ -68,6 +69,11 @@ class Linux:
             located('npm-cache','downloads','npm_config_cache',self.home/'.npm','_cacache')
             located('pip-cache','downloads','PIP_CACHE_DIR',self.cache/'pip')
         if 'builds' in groups:
+            try:
+                for path in historic_startup(self.cache, self.boundary):
+                    add('dots-startup-history', 'builds', path, 'root')
+            except (ValueError, OSError) as error:
+                issues.append(dict(group='builds', rule='dots-startup-history', reason=str(error)))
             for rule, key, fallback in (
                 ('go-module-cache','GOMODCACHE',self.home/'go/pkg/mod'),
                 ('go-build-cache','GOCACHE',self.cache/'go-build'),
