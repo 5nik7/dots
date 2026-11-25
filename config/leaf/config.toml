@@ -38,13 +38,13 @@ theme = "themes/dots.toml"
 #
 # Use {$line} to open the editor at the first visible source line at Ctrl+E:
 # editor = 'nano +{$line}'
-# editor = 'nvim +{$line} +"normal! zz"'
+editor = 'nvim +{$line} +"normal! zz"'
 #
 # Also, {$path} offers more customization options:
 # editor = 'code -g {$path}:{$line}'
 #
 # Priority: --editor flag > LEAF_EDITOR > this setting > nano (notepad on Windows)
-editor = "nvim"
+# editor = "nvim"
 
 # Maximum content width (number of columns)
 # Limits how wide the rendered content can be.
