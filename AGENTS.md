@@ -16,7 +16,6 @@ Maintain the existing dotfiles, scripts, configurations and command framework. T
 - `dots git` provides recursive status/publish/sync under [decision 0010](docs/decisions/0010-git-and-managed-file-operations.md).
 - Themes use bounded publication and profile-declared app connectors, evolving [decision 0008](docs/decisions/0008-config-catalog-and-theme-apps.md).
 - Platform resources live under `profiles/{termux,linux,wsl,windows}`; Androidots/Windots IDs and root compatibility paths remain during migration. See [profiles](docs/profiles.md).
-- `config/` is canonical; retain temporary `configs -> config` aliases until a separately reviewed cleanup.
 - Termux is the primary local development target. Preserve native Linux, WSL and Windows boundaries and distinguish local fixtures from native evidence.
 
 Focused work and acceptance criteria are indexed in [plans](plans/README.md). Never present a proposed feature as currently usable.
