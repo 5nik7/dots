@@ -42,7 +42,7 @@
     "yazi": {
       "settings": {
         "tab_bar": {
-          "hide_in_tmux": true,
+          "hide_in_tmux": false,
           "only_with_multiple_tabs": true,
           "labels": "auto",
           "width": 20
@@ -82,7 +82,7 @@
     },
     "cli": {
       "settings": {
-        "markdown_viewer": "auto",
+        "markdown_viewer": "leaf",
         "progress": "both",
         "logo_gradient": "installer",
         "tagline": "Manage your dotfiles and more..."
