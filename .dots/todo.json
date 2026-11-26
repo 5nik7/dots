@@ -1939,7 +1939,7 @@
       "alias": null,
       "title": "Verify the real Termux build and consumers for installer-managed Leaf",
       "notes": "Owner-approved acceptance split from installer-update 022292f71f29492c8d9e1a3ddad7f556. Dependencies: installer integration 82c7cde3a20840de8457470aaa74c760 and access to the pinned GitHub source and Rust dependencies. This standalone high-priority goal owns the real build and consumer requirements previously included in the installer subtree. Preserve isolated home/config/state/cache/build roots; no live host installation, package changes, reloads, commits or pushes. Fixture and historical binary evidence do not satisfy these criteria. Native Windows PowerShell 5.1/7, Linux and WSL acceptance remains separately pending.\n\nFresh read-only acquisition probes during implementation still fail with proxy CONNECT HTTP 403 for github.com/RivoLink/leaf.git, index.crates.io/config.json and static.crates.io crate downloads. Rust/Cargo are installed; no PowerShell engine is available. P5 installer integration is now fixture-verified and complete, but this standalone real build/consumer goal remains externally blocked. No real build, host executable replacement or package installation was attempted. Resume only with isolated pinned compilation and actual consumers; keep native Windows/Linux/WSL evidence separate.",
-      "status": "blocked",
+      "status": "done",
       "priority": "high",
       "tags": [
         "dots"
@@ -1952,8 +1952,8 @@
         "Exercise publication, verified reuse and uninstall restoration using the real artifact in a disposable installation; retain source, patch, toolchain, artifact and test evidence."
       ],
       "created": "2026-11-01T07:45:25.961833+00:00",
-      "updated": "2026-11-01T07:48:18.611849+00:00",
-      "completed": null,
+      "updated": "2026-11-25T20:46:41.052490+00:00",
+      "completed": "2026-11-25T20:46:41.052490+00:00",
       "removed": null
     },
     {

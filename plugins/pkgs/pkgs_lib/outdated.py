@@ -26,7 +26,7 @@ def semver(value):
             tuple((0, int(p)) if p.isdigit() else (1, p) for p in (pre or '').split('.')))
 
 
-def candidates(backend, installed):
+def candidates(backend, installed, *, on_checked=None):
     """Return name/current/candidate records from a manager's native query."""
     manager = backend.name
     rows = []
@@ -55,7 +55,7 @@ def candidates(backend, installed):
         # Explicit module queries run outside the user's project and cannot
         # download a toolchain or edit go.mod/go.sum in the working directory.
         with tempfile.TemporaryDirectory(prefix='pkgs-go-query-') as directory:
-            for package in installed:
+            for checked, package in enumerate(installed, 1):
                 module = package.details.get('module')
                 if not module: raise Error('Go module identity unavailable for '+package.name)
                 validate_names([module], 'go')
@@ -67,6 +67,7 @@ def candidates(backend, installed):
                     latest[module] = data['Version']
                 version = latest[module]
                 if semver(version) > semver(current[package.name]): add(package.name, current[package.name], version)
+                if on_checked: on_checked(checked, len(installed))
     else:
         commands = {
             'apt': ['apt','list','--upgradable'],

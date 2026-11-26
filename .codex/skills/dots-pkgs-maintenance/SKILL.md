@@ -34,6 +34,11 @@ batch, rechecking metadata and capturing final nested dependency build outputs.
 
 Automatic Termux pip and uv-tool upgrades default to compatible wheels (`--only-binary=:all:` and `--no-build`); named targets, native build/binary controls and replacement recipes retain their behavior. Preserve uv receipt settings and local wheel sources; unavailable compatible resolutions stay failures. Verify uv with owned local wheel/source fixtures and no network or host tool mutations. Automatic gem upgrades include protected native RubyGems self-update even with empty user inventory, configurable with apps.pkgs.upgrade.gem_system.
 
+In compact output, filter Bundler's private-file warnings only for a successful
+built-in Termux RubyGems self-update. Keep bounded failure context and native
+raw output. Protect sudo's controlling-terminal prompt from progress redraws.
+Test detached sudo and helper-owned repeated prompts with private PTYs.
+
 Ordinary pip upgrades isolate each selected package recipe, continuing other
 targets after failure while retaining nonzero status and explicit Failed names.
 Manager hooks and replacement recipes remain boundaries; interruptions stop.

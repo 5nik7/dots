@@ -108,7 +108,7 @@ The repository path is configurable. Runtime state must not depend on the reposi
 ## Privilege
 
 - Termux does not use `sudo` for its ordinary userland package and configuration paths.
-- Linux and WSL may or may not provide `sudo`; query the required operation and available mechanism.
+- On Linux and WSL, non-root APT, pacman, DNF and XBPS package transactions require `sudo`. Sudo authenticates on the controlling terminal and runs in noninteractive mode when detached. Arch helpers manage their own elevation. See [package upgrades](packages.md#upgrade-and-scope).
 - Native Windows elevation is distinct from Developer Mode and link capability.
 - User-owned dotfile operations should not request elevation merely for convenience.
 - A future privileged/system mode requires a separate safety design and is outside the current managed operations.

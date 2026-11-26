@@ -102,6 +102,11 @@ elif name=='pkg':
     print('2 packages can be upgraded. Run apt list --upgradable to see them.')
     print('Calculating upgrade... Done')
     sys.stdout.flush(); time.sleep(float(os.environ.get('TEST_STAGE_DELAY','0')))
+    for line in ('1 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.',
+                 'Get:1 https://mirror.invalid changed 2 [30 kB]',
+                 'Fetched 30 kB in 1s', 'Unpacking changed (2) over (1) ...', 'Setting up changed (2) ...'):
+        print(line, flush=True)
+        time.sleep(float(os.environ.get('TEST_PACKAGE_DELAY','0')))
     print('W: Unavailable download held back: kept',file=sys.stderr)
     versions['changed']='2'; db.write_text(json.dumps(versions))
 else: raise SystemExit('unexpected native invocation: '+name)
@@ -186,6 +191,9 @@ else: raise SystemExit('unexpected native invocation: '+name)
         import termios
         import time
         self.fake_apt()
+        config = self.home/'config/pkgs/config.json'
+        config.parent.mkdir(parents=True)
+        config.write_text(json.dumps({'upgrade': {'managers': ['apt', 'npm']}}))
         for width in (40, 80, 120):
             for color in ('always', 'never'):
                 with self.subTest(width=width, color=color):
@@ -195,11 +203,11 @@ else: raise SystemExit('unexpected native invocation: '+name)
                             fcntl.ioctl(1, termios.TIOCSWINSZ, struct.pack('HHHH', 24, width, 0, 0))
                             env = dict(os.environ, COLUMNS=str(width), TERM='xterm-256color',
                                        DOTS_COLOR=color, DOTS_ICONS='never', DOTS_PROGRESS='auto',
-                                       TEST_STAGE_DELAY='.8', TERMUX_PKG_NO_MIRROR_SELECT='')
+                                       TEST_STAGE_DELAY='.8', TEST_PACKAGE_DELAY='.35', TERMUX_PKG_NO_MIRROR_SELECT='')
                             if color == 'never': env['NO_COLOR'] = '1'
                             else: env.pop('NO_COLOR', None)
-                            os.execve(sys.executable, [sys.executable, '-B', str(fixtures.APP/'main.py'),
-                                                      'up', '--manager', 'apt'], env)
+                            args = ['up'] if color == 'always' else ['up', '--manager', 'apt']
+                            os.execve(sys.executable, [sys.executable, '-B', str(fixtures.APP/'main.py'), *args], env)
                         except BaseException: os._exit(99)
                     data = b''; status = None; start = time.monotonic()
                     try:
@@ -222,6 +230,10 @@ else: raise SystemExit('unexpected native invocation: '+name)
                     plain = streams.ESCAPES.sub('', data.decode())
                     for stage in ('Checking mirrors', 'Updating repositories', 'Upgrading'):
                         self.assertIn(stage, plain)
+                    percentages = re.findall(r'\]\s+(\d+(?:\.\d+)?%)', plain)
+                    expected = (['19.4%', '22.2%', '25.0%', '27.7%', '30.5%'] if color == 'always' else
+                                ['38.8%', '44.4%', '50.0%', '55.5%', '61.1%'])
+                    self.assertEqual(list(dict.fromkeys(p for p in percentages if p in expected)), expected, plain)
                     self.assertNotIn('mirror.invalid', plain)
                     self.assertNotIn('Picking mirror', plain)
                     self.assertIn('complete', plain)

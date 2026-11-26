@@ -171,9 +171,27 @@ class Widgets(unittest.TestCase):
 
     def test_real_git_worker_failure_and_branch_invalidation(self):
         repo=self.repo();self.provider('gitmux','print("main")');self.provider('git-it','print(\'{"remote":"origin","icon":"󰊤"}\')')
-        self.assertIn('?',git.cached_status(repo));deadline=time.monotonic()+5
+        self.assertIn('?',git.cached_status(repo))
+        deadline=time.monotonic()+5
         while 'main' not in git.cached_status(repo):
             self.assertLess(time.monotonic(),deadline);time.sleep(.05)
+        with patch.object(git,'compact_fields',side_effect=AssertionError('icon expanded Git text')):
+            self.assertEqual(git.cached_status(repo, icon_only=True), '󰊤')
+        # A published host override affects only the display reader. Existing
+        # cached rows and snapshot clients continue to use the provider glyph.
+        published=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme/preferences.json'
+        published.parent.mkdir(parents=True)
+        host_prefs={'options':{'session':{'repository_color':True}},
+                    'icons':{'hosts.github':'HOST#'},
+                    'colors':{'hosts.github':{'fg':'#112233'}}}
+        def icon_output():
+            published.write_text(json.dumps({'schema':1,'apps':{'tmux':host_prefs}}))
+            return subprocess.check_output([sys.executable,'-B',str(ROOT/'config/tmux/gitmux-status.py'),
+                                            '--icon',str(repo)],env=self.env,text=True).rstrip('\n')
+        self.assertEqual(icon_output(),'#[fg=#112233]HOST###[default]')
+        host_prefs['icons']['hosts.github']=''
+        self.assertEqual(icon_output(),'')
+        self.assertTrue(git.cached_status(repo).startswith('󰊤|'))
         self.provider('gitmux','raise SystemExit(1)')
         for path in (self.root/'cache/dots/tmux-widgets').glob('git-*.json'):
             row=json.loads(path.read_text());row['next_at']=0;path.write_text(json.dumps(row))
@@ -183,7 +201,9 @@ class Widgets(unittest.TestCase):
             self.assertLess(time.monotonic(),deadline);time.sleep(.05)
         self.assertIn('main',git.cached_status(repo))
         (repo/'.git/HEAD').write_text('ref: refs/heads/new\n')
-        with patch.object(Cache,'schedule'):self.assertNotIn('main',git.cached_status(repo))
+        with patch.object(Cache,'schedule'):
+            self.assertNotIn('main',git.cached_status(repo))
+            self.assertEqual(git.cached_status(repo, icon_only=True), '')
 
     def test_solar_boundaries_rollover_expiry_timezone(self):
         now=self.now.replace(hour=12,minute=0,second=0)

@@ -40,7 +40,9 @@ def _progress(label, cfg):
         from .presentation import styles, progress as package_progress
         configure(True)
         colors=styles()
-        return package_progress(label, colors)
+        meter = package_progress(label, colors)
+        meter.show_tenths = cfg.get('_upgrade_tenths', False)
+        return meter
     except (ImportError, OSError): return nullcontext()
 
 
@@ -68,13 +70,14 @@ def work_sequence(label, total, cfg, *, unit='step'):
 
 
 def pause():
-    from . import reports  # shared renderer import path
-    try: from progress import permanent_output
+    try:
+        from . import reports  # shared renderer import path
+        from progress import permanent_output
     except ImportError: return nullcontext()
     return permanent_output()
 
 
-def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
+def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False, preparation=None):
     names = validate_names(names, backend.name)
     explicit = bool(names)
     skipped = []
@@ -93,6 +96,7 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
             expand = backend.name not in SYSTEM or bool(policy.get('skip') or policy.get('packages'))
             if expand:
                 rows = scopes.inventory(backend, owned=backend.name == 'pip' and bulk)
+                if preparation: preparation.credit(1, 3)
                 if backend.name == 'go': backend.go_rows = [p for p, _, _ in rows]
                 if backend.name == 'go' and names:
                     by_name = {alias: p.name for p, _, _ in rows for alias in (p.name, p.details['binary'])}
@@ -125,7 +129,11 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
                             if 'replace' in rules.get(action, {})}
             native = go_tools.select([n for n in names if n not in replacements], backend.go_rows)
             with progress('Checking updates · go', cfg):
-                newer = {p['name'] for p in outdated.candidates(backend, native)} if native else set()
+                # Inventory, candidate selection and the before-snapshot share preparation.
+                def checked(done, total):
+                    preparation.credit(total + done, 3 * total)
+                candidates = outdated.candidates(backend, native, on_checked=checked if preparation else None) if native else []
+                newer = {p['name'] for p in candidates}
             names = [n for n in names if n in replacements or n in newer]
             if not names: return Plan(backend, action, skipped=skipped)
         backend.bulk_system = action == 'upgrade' and not explicit and backend.name in SYSTEM
@@ -189,14 +197,19 @@ def apply(plan, cfg, *, data=False):
         with scope as commands:
             if plan.steps: return apply_steps(plan, cfg, data=data, sequence=commands)
             for index, command in enumerate(plan.commands):
-                with commands.step(plan.backend.name+' · '+plan.action, index):
+                with commands.step(plan.backend.name+' · '+plan.action, index) as work:
                     if hasattr(plan.backend,'revalidate'): plan.backend.revalidate()
+                    if output: output.command_work = work
+                    bundler_check = output and isinstance(command, policies.RubyGemsSelfUpdate) and plan.backend.termux
+                    if bundler_check: output.begin_bundler_validation()
                     rc = streams.run(command, dict(cfg, _manager=plan.backend.name), unattended=plan.action in UNATTENDED_ACTIONS,
                                      env=getattr(plan.backend, 'operation_env', None), data=data)
+                    if bundler_check: output.finish_bundler_validation(rc)
                     if rc in (130, 143, -2, -15): commands.cancel()
                 if rc: return rc if rc > 0 else 128-rc
         return 0
     finally:
+        if output: output.command_work = None
         try:
             Cache(plan.backend.cache_key).clear()
             invalidate_evidence(plan.backend)
@@ -246,9 +259,11 @@ def execute(backend, action, names, args, cfg):
     if action in ('install', 'upgrade', 'uninstall'):
         from . import upgrade_output
         if upgrade_output.enabled(args, cfg):
-            def prepare():
+            cfg['_upgrade_tenths'] = action == 'upgrade'
+            def prepare(work):
                 return plan(backend, action, names, cfg, yes=args.yes,
-                            override=getattr(args,'ignore_skip',False))
+                            override=getattr(args,'ignore_skip',False),
+                            preparation=work if action == 'upgrade' else None)
             def review(item):
                 with pause():
                     upgrade_output.heading(cfg, backend, action=action)
@@ -309,14 +324,15 @@ def apply_compact(item, cfg, *, prepare=None, manager=None, review=None):
     from .upgrade_output import Output, STAGES
     manager = item.backend.name if item is not None else manager
     with work_sequence(manager, 3, cfg) as stages:
-        with stages.step(manager+' · Preparing'):
-            if prepare is not None: item = prepare()
+        with stages.step(manager+' · Preparing') as preparation:
+            if prepare is not None: item = prepare(preparation)
             if review is not None and not review(item):
                 stages.cancel()
                 human_message('Cancelled; no packages changed.','muted')
                 return 0
             before = None
             if item.action == 'upgrade' and item.commands and not item.error:
+                if preparation: preparation.credit(2, 3)
                 with progress(manager+' · Reading installed versions', cfg):
                     before = installed_versions(item.backend)
         with stages.step(manager+' · '+STAGES[item.action]):
@@ -331,14 +347,16 @@ def apply_compact(item, cfg, *, prepare=None, manager=None, review=None):
                         del output.errors[2:]
                 finally:
                     output.close()
-        with stages.step(manager+' · Finalizing'):
+        with stages.step(manager+' · Finalizing') as finalizing:
             if manager == 'npm' and output.pending:
                 rc = output.pending.review(item, cfg, output, rc)
+                if finalizing and item.action == 'upgrade': finalizing.credit(1, 3)
             if item.action == 'upgrade' and item.commands and (not rc or item.completed):
                 after = None
                 if before is not None:
                     with progress(manager+' · Checking updated packages', cfg):
                         after = installed_versions(item.backend)
+                    if finalizing: finalizing.credit(2, 3)
                 output.updated = changed_packages(item, before, after)
                 if rc and output.updated is not None:
                     completed = {policies.identity(name, manager) for name in item.completed}
@@ -354,6 +372,7 @@ def upgrade(args, cfg):
     cfg = dict(cfg, _quiet_progress=args.dry_run or getattr(args, 'json', False))
     from . import upgrade_output
     compact = upgrade_output.enabled(args, cfg)
+    cfg['_upgrade_tenths'] = compact
     if compact: upgrade_output.heading(cfg)
     entries, failed = [], False
     with progress('Finding upgrade managers', cfg):
@@ -362,11 +381,12 @@ def upgrade(args, cfg):
             for index, (manager, scope) in enumerate(selection):
                 with managers.step(manager, index):
                     try:
-                        def prepare():
+                        def prepare(work=None):
                             if not available(manager): raise Error('configured manager is unavailable')
                             with budget(45):
                                 backend = scopes.make(manager, scope)
-                                return plan(backend, 'upgrade', [], cfg, override=args.ignore_skip, bulk=True)
+                                return plan(backend, 'upgrade', [], cfg, override=args.ignore_skip, bulk=True,
+                                            preparation=work)
                         if compact:
                             rc = apply_compact(None, cfg, prepare=prepare, manager=manager)
                             entries.append((manager, 'failed' if rc else 'complete'))
@@ -375,6 +395,9 @@ def upgrade(args, cfg):
                             display(item, cfg)
                             rc = 0 if args.dry_run else apply(item, cfg)
                             entries.append((manager, 'failed' if rc else 'planned' if args.dry_run else 'complete' if item.commands else 'unchanged'))
+                        if rc in (130, 143):
+                            managers.cancel()
+                            return rc
                         failed |= bool(rc)
                     except (Error, OSError, ValueError) as error:
                         with pause():

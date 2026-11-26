@@ -17,6 +17,9 @@ and skip counts. Routine manager output and full command arrays are hidden.
 Use --raw for full native output or --dry-run for complete plans and skip reasons.
 Ordinary redirected output retains its full format. Child terminal settings are
 restored on completion or interruption.
+On Linux and WSL, sudo reads any required password from the controlling terminal.
+Progress pauses during authentication. Without a controlling terminal, sudo runs
+with \-n and fails promptly if a password is required.
 Successful installs/removals add one Installed/Removed field with requested names.
 Failed, cancelled and empty plans omit it; already-satisfied installs may succeed.
 Removals show manager, scope and targets before the existing confirmation.
@@ -30,6 +33,8 @@ The skipped suffix uses the theme's muted foreground, independently of status.
 Manager names default to bold theme accent and package names to bold theme bright_magenta.
 All owned package colors use colors.apps.pkgs controls with existing CLI/preview
 fallbacks; changes apply on the next invocation without theme publication.
+The overall upgrade bar shows tenths of a percent. APT package operations,
+direct pacman transaction counts and Go tool version checks advance the bar.
 Compact npm output hides deprecation notices and the exact routine force and
 allow-scripts override notices, excluding them from diagnostic counts. Other warnings/errors and raw/ordinary redirected notices are retained.
 Install progress names the current package when known and otherwise shows the
@@ -43,6 +48,8 @@ version when newer dependencies require source builds. Named targets, native
 format controls and replacement recipes retain native behavior. Automatic gem
 upgrades include gem update --system --no-document; upgrade.gem_system=false
 disables that step. Native permissions and distribution protections remain.
+Successful Termux self-updates omit Bundler's private-file readability warnings
+from the compact summary. Use \-\-raw to see the native warnings.
 Pip progress shows the package, download bytes with pip 25.1 or newer, build
 stages and elapsed silence after 15 seconds without output. Silence does not
 prove a hang or cause termination. Explicit native progress overrides are kept.

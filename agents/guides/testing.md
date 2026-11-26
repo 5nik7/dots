@@ -381,6 +381,8 @@ For package picker styling, run `python3 -B tools/test_pkgs_styles.py` and `pyth
 
 Termux pkgs upgrade changes also require the package-core mirror/flag fixtures and `tools/test_pkgs_integration.py`; follow [package workflow acceptance](../../docs/testing.md#package-workflow-acceptance). Use fake pkg/APT/pacman and private terminals for mirror stages, failures and raw output. Never rotate live mirrors or upgrade host packages as a test.
 
+Exercise sudo password handling with fake sudo on a private controlling terminal and in a detached session. For RubyGems diagnostic changes, replay native messages through both entry points with a fixture gem executable.
+
 For npm upgrade/receipt changes, run package-core `test_npm_updates`, `test_script_receipts`, `test_npm_scripts` and `test_npm_global`, then the integration and bundled checks. Use owned prefixes/config/state and the loopback registry for native evidence; verify unchanged repeats, nested rebuilds, recipe boundaries, query failure and approval drift without touching host packages or receipts.
 
 Application relocation and migration use `tools/test_bundled_apps.py` and `tools/test_app_migration.py`; synthetic legacy roots must never inherit the host Termux prefix. Keep core application checks and shared menu/native checks alongside them. See [application plugins](../../docs/plugins.md).

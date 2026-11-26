@@ -319,6 +319,12 @@ else:sys.exit(99)
         config=Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json';config.parent.mkdir(parents=True,exist_ok=True)
         config.write_text('{"upgrade":{"managers":["gem"]}}')
         self.env.update(TEST_GEM_STATE=str(state),TEST_GEM_CALLS=str(calls),TEST_GEM_HOME=str(self.home/'gems'),DOTS_MENU_CAPTURE='1')
+        self.env.update(TERMUX_VERSION='fixture', TEST_GEM_WARNINGS=str(self.home/'gem-warnings'))
+        self.env.pop('BUNDLE_GEMFILE', None)
+        files = ['MIT.txt', 'bundler.gemspec', *(f'lib/bundler/file_{i}.rb' for i in range(343))]
+        warnings = ''.join(f'WARNING:  {name} is not world-readable\n' for name in files)
+        warnings += 'WARNING:  See https://guides.rubygems.org/specification-reference/ for help\n'
+        Path(self.env['TEST_GEM_WARNINGS']).write_bytes(warnings.encode())
         ruby=self.repo/'bin/ruby'
         ruby.write_text('#!'+sys.executable+'\nimport os,sys\nprint(os.environ["TEST_GEM_HOME"] if "Gem.user_dir" in sys.argv[-1] else "[]")\n');ruby.chmod(0o755)
         gem=self.repo/'bin/gem'
@@ -328,19 +334,34 @@ state=Path(os.environ['TEST_GEM_STATE']);args=sys.argv[1:]
 with open(os.environ['TEST_GEM_CALLS'],'a') as f:f.write(json.dumps(args)+'\\n')
 if args==['--version']:print(state.read_text())
 elif args==['update','--system','--no-document']:
+    sys.stderr.buffer.write(Path(os.environ['TEST_GEM_WARNINGS']).read_bytes())
+    sys.stderr.buffer.flush()
     if os.environ.get('TEST_GEM_FAIL'):print('ERROR: distribution protection',file=sys.stderr);sys.exit(23)
     state.write_text('4.0.2');print('RubyGems system software updated')
 else:sys.exit(99)
 ''');gem.chmod(0o755)
-        outputs=[]
-        for argv in self.surfaces('pkgs',['up']):
-            state.write_text('4.0.1');calls.write_text('')
-            outputs.append(self.call(argv))
-            self.assertEqual(state.read_text(),'4.0.2')
-            recorded=[json.loads(line) for line in calls.read_text().splitlines()]
-            self.assertEqual(recorded.count(['update','--system','--no-document']),1)
-        self.assertTrue(all(output==outputs[0] for output in outputs))
-        self.assertRegex(outputs[0][0],rb'Updated\s+RubyGems')
+        for width in (40, 80, 120):
+            self.env['COLUMNS'] = str(width)
+            outputs = []
+            for argv in self.surfaces('pkgs', ['up']):
+                state.write_text('4.0.1')
+                calls.write_text('')
+                outputs.append(self.call(argv))
+                self.assertEqual(state.read_text(), '4.0.2')
+                recorded = [json.loads(line) for line in calls.read_text().splitlines()]
+                self.assertEqual(recorded.count(['update','--system','--no-document']), 1)
+            self.assertTrue(all(output == outputs[0] for output in outputs))
+            out, err, _ = outputs[0]
+            self.assertRegex(out, rb'Updated\s+RubyGems')
+            self.assertEqual(err, b'')
+            self.assertNotIn(b'diagnostic lines', out)
+        for args in (['up', '--raw'], ['up']):
+            if '--raw' not in args:
+                self.env.pop('DOTS_MENU_CAPTURE')
+            for argv in self.surfaces('pkgs', args):
+                _, err, _ = self.call(argv)
+                self.assertEqual(err, warnings.encode())
+        self.env['DOTS_MENU_CAPTURE'] = '1'
         self.env['TEST_GEM_FAIL']='1'
         out,err,_=self.call(next(self.surfaces('pkgs',['up'])),code=1)
         self.assertIn(b'failed (exit 23)',out);self.assertIn(b'distribution protection',err)

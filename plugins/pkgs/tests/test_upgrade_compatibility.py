@@ -146,6 +146,83 @@ class Compatibility(unittest.TestCase):
         self.assertEqual(changed,['rake','RubyGems'])
         policies.validate({'upgrade':{'gem_system':False}})
 
+    @unittest.skipIf(os.name == 'nt', 'fake Termux gem uses a POSIX executable')
+    def test_compact_bundler_permission_diagnostics_follow_native_step_and_status(self):
+        gem = self.bin/'gem'
+        gem.write_text('#!'+sys.executable+'\n'+'''import os, sys
+args = sys.argv[1:]
+if args == ['list', '--local']: sys.exit(0)
+if args == ['--version']: print('4.1.1'); sys.exit(0)
+if args == ['hook']: print('error: after-hook failed', file=sys.stderr); sys.exit(29)
+if args == ['silent-hook']: sys.exit(29)
+files = ['MIT.txt', 'bundler.gemspec', 'exe/bundle', 'lib/bundler.rb', 'lib/bundler/man/.document']
+files += [f'lib/bundler/tool_{i}.rb' for i in range(340)]
+if os.environ.get('GEM_TEST_OTHER_PATH'):
+    print('WARNING:  lib/other_tool.rb is not world-readable', file=sys.stderr)
+for name in files: print('WARNING:  '+name+' is not world-readable', file=sys.stderr)
+if os.environ.get('GEM_TEST_MIXED'):
+    print('WARNING:  exe/bundle is not executable', file=sys.stderr)
+print('WARNING:  See https://guides.rubygems.org/specification-reference/ for help', file=sys.stderr)
+if os.environ.get('GEM_TEST_FAIL'):
+    print('ERROR:  installation directory is not writable', file=sys.stderr)
+    sys.exit(27)
+print('RubyGems system software updated')
+''')
+        gem.chmod(0o755)
+        path = self.home/'config/pkgs/config.json'
+        path.parent.mkdir(parents=True)
+        native = ['gem', 'update', '--system', '--no-document']
+
+        def invoke(*args, output='styled', recipe=None, termux=True, **env):
+            path.write_text(json.dumps({'output':output, 'policies':{'gem':{'upgrade':recipe or {}}}}))
+            # A Termux host can place even the fixture directory beneath /com.termux/.
+            if not termux: env.update(HOME=os.path.relpath(self.home), PREFIX=os.path.relpath(self.home))
+            with patch.dict(os.environ, TERMUX_VERSION='fixture' if termux else '', **env):
+                return fixtures.Workflows.invoke(self, 'up', '--manager', 'gem', *args)
+
+        success = invoke()
+        self.assertEqual(success.returncode, 0, success.stderr)
+        self.assertIn('complete', success.stdout)
+        self.assertEqual(success.stderr, '')
+
+        mixed = invoke(GEM_TEST_MIXED='1')
+        self.assertEqual(mixed.returncode, 0, mixed.stderr)
+        self.assertIn('is not executable', mixed.stderr)
+        self.assertIn('specification-reference', mixed.stderr)
+        self.assertNotIn('world-readable', mixed.stderr)
+        self.assertNotIn('more diagnostic lines', mixed.stderr)
+        other_path = invoke(GEM_TEST_OTHER_PATH='1')
+        self.assertEqual(other_path.returncode, 0, other_path.stderr)
+        self.assertIn('lib/other_tool.rb is not world-readable', other_path.stderr)
+        self.assertIn('specification-reference', other_path.stderr)
+        self.assertNotIn('MIT.txt', other_path.stderr)
+
+        failure = invoke(GEM_TEST_FAIL='1')
+        self.assertEqual(failure.returncode, 27, failure.stderr)
+        self.assertIn('installation directory is not writable', failure.stderr)
+        self.assertIn('MIT.txt is not world-readable', failure.stderr)
+        self.assertLessEqual(len(failure.stderr.splitlines()), 4)
+        hook = invoke(recipe={'after':[['gem','hook']]})
+        self.assertEqual(hook.returncode, 29, hook.stderr)
+        self.assertIn('after-hook failed', hook.stderr)
+        self.assertNotIn('world-readable', hook.stderr)
+        self.assertNotIn('more diagnostic lines', hook.stderr)
+        silent = invoke(recipe={'after':[['gem','silent-hook']]})
+        self.assertEqual(silent.returncode, 29, silent.stderr)
+        self.assertEqual(silent.stderr, '')
+
+        for route, unchanged in [('named', invoke('rake')), ('linux', invoke(termux=False)),
+                                 ('replace', invoke('rake', recipe={'replace':[native]})),
+                                 ('before', invoke(recipe={'before':[native]}))]:
+            with self.subTest(route=route):
+                self.assertEqual(unchanged.returncode, 0, unchanged.stderr)
+                self.assertIn('MIT.txt is not world-readable', unchanged.stderr, unchanged.stdout)
+                self.assertIn('344 more diagnostic lines', unchanged.stderr)
+        for full in (invoke('--raw'), invoke(output='auto')):
+            self.assertEqual(full.returncode, 0, full.stderr)
+            self.assertEqual(full.stderr.count('is not world-readable'), 345)
+            self.assertIn('specification-reference', full.stderr)
+
     def test_native_pip_retains_compatible_version_without_executing_source_backend(self):
         root=self.home/'isolated python';venv.EnvBuilder(with_pip=True).create(root)
         python=root/('Scripts/python.exe' if os.name=='nt' else 'bin/python')

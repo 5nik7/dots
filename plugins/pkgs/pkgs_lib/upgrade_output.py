@@ -1,6 +1,6 @@
 """Compact human package transactions; subprocess status remains authoritative."""
 from collections import deque
-from contextlib import nullcontext
+from contextlib import contextmanager, ExitStack
 import re
 import sys
 import time
@@ -25,6 +25,10 @@ UV_HARDLINK_NOTICE = (
     'If the cache and target directories are on different filesystems, hardlinking may not be supported.',
     'If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.',
 )
+BUNDLER_PERMISSION = re.compile(
+    r'WARNING:  (?:MIT\.txt|bundler\.gemspec|exe/bundler?|lib/bundler\.rb|'
+    r'lib/(?:bundler|rubygems)/(?:\.?[\w-][\w.+-]*/)*\.?[\w-][\w.+-]*) is not world-readable')
+GEMSPEC_HELP = 'WARNING:  See https://guides.rubygems.org/specification-reference/ for help'
 PIP_CONFLICT = ("pip's dependency resolver does not currently take into account all the packages "
                 'that are installed. This behaviour is the source of the following dependency conflicts.')
 PIP_CONFLICT_ROW = re.compile(r'^\S+ \S+ requires .+, (?:which is not installed\.|'
@@ -78,6 +82,41 @@ def packages(cfg, label, names, *, placeholder=False):
     sys.stdout.flush()
 
 
+class AptPackageProgress:
+    """Measure archive requests and dpkg operations against APT's transaction plan."""
+    def __init__(self):
+        self.total = 0
+        self.archive_count = 0
+        self.archives = set()
+        self.operations = set()
+
+    def observe(self, text, work):
+        if not self.total:
+            summary = (re.fullmatch(r'(\d{1,9}) upgraded, (\d{1,9}) newly installed, (\d{1,9}) to remove and \d+ not upgraded\.?', text)
+                       or re.fullmatch(r'Upgrading: (\d{1,9}), Installing: (\d{1,9}), Removing: (\d{1,9}), Not Upgrading: \d+', text))
+            if summary:
+                upgraded, installed, removed = map(int, summary.groups())
+                self.archive_count = upgraded + installed
+                # Count archive requests, unpack/configure/remove operations,
+                # and three checkpoints: plan, available archives, command exit.
+                self.total = 3 * self.archive_count + removed + 3
+                work.credit(1, self.total)
+            return
+        request = re.match(r'^Get:(\d{1,9})\s', text)
+        if request and len(self.archives) < self.archive_count:
+            self.archives.add(request[1])
+            work.credit(1 + len(self.archives), self.total)
+            return
+        archives_ready = self.archive_count + 2
+        if re.match(r'^Fetched \d', text):
+            work.credit(archives_ready, self.total)
+            return
+        event = re.match(r'^(Unpacking|Setting up|Removing) ([a-z0-9][a-z0-9+.:~-]*) \(', text)
+        if event and archives_ready + len(self.operations) < self.total - 1:
+            self.operations.add(event.groups())
+            work.credit(archives_ready + len(self.operations), self.total)
+
+
 class Output:
     """Keep bounded diagnostics and a failure tail, without storing full logs."""
     def __init__(self, manager, cfg, progress=None, *, action='upgrade'):
@@ -88,8 +127,10 @@ class Output:
         self.tail = deque(maxlen=3)
         self.extra = 0
         self.pause = None
+        self.authentication_pause = None
         self.mirror_sync = False
         self.uv_notice_advice = {}
+        self.bundler_validation = None
         self.updated = None
         self.failed, self.partial_result, self.target = [], False, ''
         if manager == 'npm' and action in ('install', 'upgrade'):
@@ -109,8 +150,19 @@ class Output:
         self.command_active = False
         self.success_extra = 0
         self.native_done, self.native_total = 0, 0
+        self.command_work = None
+        self.apt_packages = None
+        self.count_pacman = False
         self.pkg_apt = False
         self.apt_phase = ''
+
+    def begin_bundler_validation(self):
+        self.bundler_validation = BundlerValidation()
+
+    def finish_bundler_validation(self, rc):
+        if not rc:
+            self.bundler_validation = None
+            self.tail.clear()  # A later recipe failure has its own native output.
 
     def begin_command(self):
         """Collect pip diagnostics until the command's real exit status is known."""
@@ -137,8 +189,15 @@ class Output:
     def begin(self, command=None):
         self.stage, self.package = self.default_stage, self.target
         self.uv_notice_advice.clear()
-        self.pkg_apt = bool(self.manager == 'apt' and self.action == 'upgrade' and command and
-                            re.split(r'[/\\]', command[0])[-1] == 'pkg')
+        argv = command or []
+        if argv and argv[0].rsplit('/', 1)[-1] == 'sudo':
+            argv = argv[2:] if argv[1:2] in (['-n'], ['--non-interactive']) else argv[1:]
+        program = re.split(r'[/\\]', argv[0])[-1] if argv else ''
+        counted = self.command_work is not None and self.action == 'upgrade'
+        self.apt_packages = (AptPackageProgress() if counted and self.manager == 'apt'
+                             and program in ('apt', 'apt-get', 'pkg') else None)
+        self.count_pacman = counted and self.manager == 'pacman' and program in ('pacman', 'pkg')
+        self.pkg_apt = self.manager == 'apt' and self.action == 'upgrade' and program == 'pkg'
         self.apt_phase = 'repositories' if self.pkg_apt else ''
         if self.pending: self.pending.begin(command)
         self.transferred, self.total = 0, 0
@@ -258,6 +317,8 @@ class Output:
             if counted:
                 index, total = int(counted[1]), int(counted[2])
                 self.native_done, self.native_total = (index - 1, total) if 1 <= index <= total else (0, 0)
+                if self.count_pacman and self.native_total:
+                    self.command_work.credit(self.native_done, self.native_total)
                 self.package = counted[3].removesuffix('...')
                 self.stage = 'Removing' if self.action == 'uninstall' else 'Installing'
                 return True
@@ -291,14 +352,28 @@ class Output:
             completed, total = 0, 0
         self.progress.update_spans(spans, completed, total)
 
+    @contextmanager
+    def authenticating(self):
+        from .workflows import pause
+        with ExitStack() as held:
+            held.enter_context(pause())
+            self.authentication_pause = held
+            try:
+                yield
+            finally:
+                self.authentication_pause = None
+
     def prompt(self, text, stream, ending=''):
         # Stop transient progress until the command finishes so it cannot obscure input.
         if self.pause is None:
-            try:
-                from progress import permanent_output
-                self.pause = permanent_output()
-            except ImportError: self.pause = nullcontext()
-            self.pause.__enter__()
+            if self.authentication_pause is not None:
+                # The native auth pause already owns the stopped renderer.
+                # Keep that pause for subsequent prompts in the same workflow.
+                self.pause = self.authentication_pause.pop_all()
+            else:
+                from .workflows import pause
+                self.pause = pause()
+                self.pause.__enter__()
         ui = renderer(self.cfg, stream)
         if ui and ending: ui.text(text, 'warning')
         elif ui: ui.prompt(text)
@@ -315,6 +390,10 @@ class Output:
         self.last_activity = time.monotonic()
         self.partial_seen = ''
         if self.pending and self.pending.observe(text): return
+        if ending and self.apt_packages and self.command_work is not None:
+            self.apt_packages.observe(text, self.command_work)
+        if ending and self.bundler_validation and stream is sys.stderr and self.bundler_validation.observe(text):
+            return
         if ending and self.manager == 'npm' and re.match(r'^npm warn deprecated\b', text, re.I):
             return  # Available in raw output; never inflate diagnostic counts/tails.
         if ending and self.manager == 'npm' and NPM_NOTICES.fullmatch(text): return
@@ -389,7 +468,13 @@ class Output:
         if self.pending: self.pending.result(self.cfg)
         fallback = (['--raw shows full failure output.'] if self.pip_steps else list(self.tail)[-2:]) if rc else []
         messages = [(s, 'error') for s in (self.errors or fallback)]
-        if not (rc and self.pip_steps): messages += [(s, 'warning') for s in self.warnings]
+        warnings = list(self.warnings)
+        extra = self.extra + (self.success_extra if not rc else 0)
+        if rc and self.bundler_validation:
+            restored = [sample for sample in self.bundler_validation.samples if sample not in warnings][:2-len(warnings)]
+            warnings.extend(restored)
+            extra += self.bundler_validation.count - len(restored)
+        if not (rc and self.pip_steps): messages += [(s, 'warning') for s in warnings]
         if self.conflicts:
             messages.append(('dependency conflicts; run python -m pip check', 'warning'))
         if rc and self.mirror_sync:
@@ -399,8 +484,32 @@ class Output:
         for message, role in messages:
             if error_ui: error_ui.row([(self.manager, 'manager'), (': ', 'value'), (message, role)])
             else: print('  '+self.manager+': '+message, file=sys.stderr)
-        extra = self.extra + (self.success_extra if not rc else 0)
         if extra:
             text = self.manager+': '+str(extra)+' more diagnostic lines; --raw shows full output.'
             if error_ui: error_ui.row([(self.manager, 'manager'), (text[len(self.manager):], 'muted')])
             else: print('  '+text, file=sys.stderr)
+
+
+class BundlerValidation:
+    """Hold only enough Termux Bundler packaging notices for a failed self-update."""
+    def __init__(self):
+        self.samples = []
+        self.count = 0
+        self.permissions = False
+        self.other_warning = False
+
+    def observe(self, text):
+        if BUNDLER_PERMISSION.fullmatch(text):
+            self.permissions = True
+        elif text == GEMSPEC_HELP:
+            standalone = self.permissions and not self.other_warning
+            self.permissions = self.other_warning = False
+            if not standalone: return False
+        else:
+            if WARNING.match(text) or ERROR.match(text): self.other_warning = True
+            self.permissions = False
+            return False
+        self.count += 1
+        message = text.removeprefix('WARNING:  ')
+        if len(self.samples) < 2 and message not in self.samples: self.samples.append(message)
+        return True

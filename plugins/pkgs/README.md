@@ -143,6 +143,10 @@ confirmation flags. Privilege checks, manager protections and custom recipe
 behavior still apply. `--dry-run` prints the transaction
 without running it, although preparation and previews may still query metadata.
 
+On Linux and WSL, enter your password at sudo's own terminal prompt when a
+system transaction requires it. Progress pauses for authentication. Detached
+commands use noninteractive sudo and fail promptly if a password is required.
+
 Human installs, removals and upgrades show one result per manager with transient progress, short
 failure/warning details and a count of skipped packages. Full commands, routine
 manager chatter and per-package skips are hidden; `--raw` streams them in full,
@@ -172,7 +176,9 @@ use compatible wheels (`--only-binary=:all:` and `--no-build` respectively), whi
 explicit native build/binary controls, targets and recipes retain native behavior.
 uv keeps its saved tool settings; unavailable compatible resolutions remain failures.
 See [upgrade scope and overrides](../../docs/packages.md#upgrade-and-scope). Automatic gem upgrades include RubyGems self-update unless
-`apps.pkgs.upgrade.gem_system` is false.
+`apps.pkgs.upgrade.gem_system` is false. On Termux, successful self-updates omit
+Bundler's private-file readability notices from the compact summary. Use
+`--raw` to see the native warnings.
 Compact global npm installs/upgrades offer default-no approval for blocked scripts,
 one exact installed package/version at a time. Approval uses a temporary
 name-specific allow flag with an exact rebuild target; --yes never supplies it,
@@ -207,7 +213,9 @@ ownership queries. See [package output and export](../../docs/packages.md#output
 
 `pkgs up` and `dots pkgs up` use the shared `apps.cli.progress` preference, defaulting
 to `both`. An overall bar tracks equal manager shares and their preparation,
-execution and finalization steps. A second row shows the current step, spinner
+execution and finalization steps. It shows tenths of a percent and advances as
+APT processes packages, direct pacman transactions move between packages, and
+Go checks tools for updates. A second row shows the current step, spinner
 and measured download/transaction progress. The overall row has only a full-width
 bar and percentage; the current row uses a bare count such as `1/2`. Bars expand
 to the available width and have configurable glyphs and colors; transient activity

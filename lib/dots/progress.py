@@ -71,6 +71,7 @@ class Progress(ContextDecorator):
         self.drawn = 0
         self.drawn_lines = ()
         self.overall = (Fraction(0), 'step', 1, 1)
+        self.show_tenths = False
         self.step_hint = None
         self.cancelled = False
         self.previous_term = None
@@ -210,7 +211,8 @@ class Progress(ContextDecorator):
                 text += ('\033['+code+'m'+piece+'\033[0m') if color and code else piece
             return text, used
 
-        percent = str(int(100 * fraction))+'%'
+        whole, tenth = divmod(int(1000 * fraction), 10)
+        percent = f'{whole}.{tenth}%' if self.show_tenths and whole < 100 else f'{whole}%'
         size = width-surrounds-1-len(percent)
         overall = bar(fraction, size)+[(' ', '')] if self.mode in ('bar','both') and size > 0 else []
         overall.append((percent, styles['percentage']))
@@ -366,6 +368,10 @@ class Work:
     def update(self, label, completed=0, total=0):
         """Measure this entire step, not an opaque command's individual download."""
         self.sequence.meter.update(label,completed,total)
+        self.credit(completed, total)
+
+    def credit(self, completed, total):
+        """Advance this step while keeping the current activity label and counters."""
         try:
             if int(total)>0 and self.sequence.tracking:
                 fraction = Fraction(min(max(0,int(completed)),int(total)),int(total))

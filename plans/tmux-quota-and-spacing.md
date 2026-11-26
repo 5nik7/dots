@@ -4,11 +4,19 @@
 
 ## Accepted behavior
 
-- Quota uses `aistat usage codex`, the single active account and `seven_day.remaining_percent`. Current-window foreground Codex detection gates display and acquisition. Missing aistat or disabled settings hide it.
+- Quota uses `aistat usage codex`, the single active account and `seven_day.remaining_percent`. A foreground Codex pane anywhere on the same tmux server gates display and acquisition. Missing aistat or disabled settings hide it.
 - Refresh every 90 seconds in a bounded 15-second detached worker, sharing the existing widget cache across clients. Retain failures with a trailing `~` for 300 seconds, then muted `?%`. No jq, daemon, direct credential parsing, account switching or automatic dependency installation.
 - Configured Codex icon and whole remaining percentage are bold. Theme green applies at 50%, yellow at 25%, orange at 10%, and red below 10%. Timing, thresholds, icon, span styles, padding, width/alignment and component placement use existing Config ownership and publication.
 - Main right order is quota, Gitmux, indicators. Preserve explicit layout overrides, native window scrolling/ranges and plain spacing without orphan dividers. Termux uses its second row; Linux/WSL use the main row. Native Windows has no tmux consumer; Config stays shared with PowerShell.
 - Reuse [presentation acceptance](../docs/presentation.md#acceptance-gate), existing Config menus and directory-managed tmux installation. Configuration assessment: add consumed quota controls. Menu assessment: existing Config browser suffices. No public command route or installer dependency change. Theme/configuration maintenance own this feature; existing Codex detection remains observational.
+
+## Server-wide quota and repository host position
+
+Use the existing socket-wide foreground inventory for quota. The Git component owns the automatic host icon and follows each client's active pane. Keep session badge overrides, the repository icon visibility control, literal Git names, and quota/Git separator preferences. Verify detached sessions, independent servers, narrow clients, custom layout publication and sustained streaming redraws before the approved live refresh. The existing Config menu, installer and command interfaces cover these changes. The root README needs no update because its setup and navigation are unaffected.
+
+Verification on Termux covered detached sessions, independent sockets, foreground suspension/resume, host changes, custom session badges, width clipping and provider coalescing. All 16 quota tests passed. Private streaming checks sampled 40, 70, 80 and 120 columns. The final settled run passed at every width. Earlier runs under concurrent load produced partial redraws. The published layout skips empty formatting spans, expands each styled window marker once and checks Git presence once for the default divider and Git segment. Native Linux and WSL visual acceptance remains pending.
+
+The final approved visual refresh published `g.e87bfd1742e44bd0a45b46674865a4ba`. The running client was 53 columns wide at verification. The live formats matched publication, with the same server, bindings, hooks and Catppuccin Mocha palette. The Yazi notification failed, leaving the overall refresh marked pending.
 
 ## Acceptance and delivery
 

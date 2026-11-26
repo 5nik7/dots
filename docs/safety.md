@@ -691,6 +691,11 @@ retain confirmation. Policies are trusted executable argv sequences, with no
 implicit shell. Read/preview/export never execute hooks. Direct-target skips
 are not dependency holds. Formatting cannot infer success from output text.
 
+For Linux and WSL system package transactions, sudo reads the password directly
+from the controlling terminal and manages cached credentials under the user's
+sudo policy. A detached process invokes sudo with `-n`. Termux uses its native
+package frontend.
+
 Termux automatic APT upgrades let `pkg --check-mirror` select from the user's configured mirrors and refresh indexes as part of the native upgrade; pkg owns any resulting repository-file changes and its mirror-selection opt-out remains effective. A conflicting bulk backend is refused before invoking pkg. The default `--fix-missing` may leave unavailable archives held back, with native status and verified version changes remaining authoritative. These native package/mirror effects have no Dots filesystem rollback. Named upgrades and replacement recipes retain their prior behavior; see [upgrade scope](packages.md#upgrade-and-scope).
 
 Compact uninstall output shows manager, scope and targets before the existing

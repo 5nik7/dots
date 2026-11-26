@@ -32,6 +32,48 @@ class Layout(unittest.TestCase):
         tmux('source-file',str(path))
         return text
 
+    def test_codex_status_widths_bound_styled_field_expansions(self):
+        tmux, _ = self.server('session-widths')
+        tmux('source-file', str(self.write_config(workspace_hooks=False)))
+        for published in (False, True):
+            if published:
+                self.publish(tmux)
+            with self.subTest(published=published):
+                # Verbose expansion counts repeated work independently of device speed.
+                tmux('set', '-g', '@dots-window-marker', '#[bold]M#[default]')
+                marker = tmux('display-message', '-vp', '#{E:@dots-window-styled-marker}')
+                self.assertEqual(marker.count("format '@dots-window-marker' found:"), 1)
+                self.assertIn('#[bold]M#[default]', marker.splitlines()[-1])
+                tmux('set', '-g', '@dots-session-marker', '#[bold]界#[default]')
+                tmux('set', '-g', '@dots-session-icon', 'G')
+                tmux('set', '-g', '@dots-session-number', '0')
+                for field, width, expected in (
+                    ('marker', 'marker-width', '3'), ('icon', 'name-width', '11'),
+                ):
+                    trace = tmux('display-message', '-vp', '#{E:@dots-session-' + width + '}')
+                    self.assertEqual(trace.splitlines()[-1], expected)
+                    self.assertEqual(trace.count("format '@dots-session-" + field + "' found:"), 1)
+                icon = tmux('display-message', '-vp', '#{E:@dots-remote-icon}')
+                self.assertNotIn("format '@dots-git-snapshot' found:", icon)
+                tmux('set', '-g', 'status-right', '')
+                client_width = int(tmux('display-message', '-p', '#{?client_width,#{client_width},80}'))
+                for quota, reserved in (('#[bold]Q 10#[default]', 6), ('', 0)):
+                    tmux('set', '-g', '@dots-codex-usage', quota)
+                    space = tmux('display-message', '-vp', '#{E:@dots-gitmux-space}')
+                    self.assertEqual(int(space.splitlines()[-1]), client_width - 10 - reserved)
+                    self.assertEqual(space.count("format '@dots-codex-usage' found:"), 1)
+                    self.assertNotIn("format '@dots-gitmux' found:", space)
+                tmux('set', '-g', '@dots-gitmux-space', '65')
+                tmux('set', '-g', '@dots-gitmux-limit', '48')
+                width = tmux('display-message', '-vp', '#{E:@dots-gitmux-width}')
+                self.assertEqual(width.splitlines()[-1], '48')
+                self.assertEqual(width.count("format '@dots-gitmux-space' found:"), 1)
+        self.defaults['apps']['tmux']['formatting']['codex_usage']['git_separator'] = ''
+        self.publish(tmux)
+        tmux('set', '-g', 'status-right', '')
+        tmux('set', '-g', '@dots-codex-usage', '#[bold]Q 10#[default]')
+        self.assertEqual(int(tmux('display-message', '-p', '#{E:@dots-gitmux-space}')), client_width - 14)
+
     def test_defaults_reorder_reset_and_invalid_components(self):
         tmux,_=self.server('placement')
         tmux('source-file',str(self.write_config(workspace_hooks=False)))
@@ -62,7 +104,7 @@ class Layout(unittest.TestCase):
         tmux('set-option','-g','@dots-workspace-label','multi')
         tmux('set-option','-g','@dots-workspace-project-count','2')
         tmux('set-option','-g','@dots-session-number','9')
-        tmux('set-option','-g','@dots-git-snapshot','HOST|')
+        tmux('set-option','-g','@dots-git-snapshot','HOST|BRANCH')
         tmux('rename-window','multi')
         tmux('set-option','-g','@dots-codex-snapshot','|@0:idle|')
         for multiple in (False,True):
@@ -74,21 +116,25 @@ class Layout(unittest.TestCase):
                 tmux('set-option','-g','@dots-window-name','')
                 tmux('set-option','-g','@dots-windows-visible','0')
                 self.publish(tmux)
+                tmux('set-option','-g','@dots-remote-icon','HOST')
                 self.assertEqual(tmux('display-message','-p','#{E:status-left}'),'')
                 self.assertEqual(tmux('display-message','-p','#{E:@dots-session-visible}'),'0')
                 self.assertEqual(tmux('display-message','-p','#{E:@dots-windows-visible}'),'1')
                 window=tmux('display-message','-p','#{E:@dots-window-format}')
                 self.assertEqual(re.sub(r'#\[[^]]*\]','',window),' multi  ')
                 self.assertNotIn('HOST',window)
+                git = tmux('display-message','-p','#{E:@dots-gitmux-segment}')
+                self.assertIn('HOST BRANCH',re.sub(r'#\[[^]]*\]','',git))
         self.defaults['apps']['tmux']['settings']['session']['multiple']=False
         self.publish(tmux)
+        tmux('set-option','-g','@dots-remote-icon','HOST')
         # This case checks visibility in a detached server. Give the name room
         # independently of the Termux client's current badge width.
         tmux('set-option','-g','@dots-session-width','31')
         # The literal project name multi is not evidence of multiple roots.
         tmux('set-option','-g','@dots-workspace-project-count','1')
         text=tmux('display-message','-p','#{E:status-left}')
-        self.assertIn('HOST',text);self.assertIn('multi',text)
+        self.assertNotIn('HOST',text);self.assertIn('multi',text)
         self.assertEqual(tmux('display-message','-p','#{E:@dots-windows-visible}'),'0')
         for count in ('0','', '2'):
             tmux('set-option','-g','@dots-workspace-project-count',count)
@@ -107,6 +153,10 @@ class Layout(unittest.TestCase):
         self.assertIn('@dots-gitmux-segment',row)
         self.assertIn('align=right',tmux('show-option','-gqv','@dots-gitmux-segment'))
         self.assertEqual(tmux('show-option','-gqv','@dots-codex-usage'),'')
+        tmux('set-option','-g','@dots-gitmux','BRANCH')
+        tmux('set-option','-g','@dots-remote-icon','HOST')
+        git = tmux('display-message','-p','#{E:@dots-gitmux-segment}')
+        self.assertIn('HOST BRANCH',re.sub(r'#\[[^]]*\]','',git))
         cfg.update(rows=1,main_left=['session'],main_right=['git'],termux_right=['codex_usage'])
         self.publish(tmux)
         self.assertEqual(tmux('show-option','-gqv','@dots-codex-usage'),'')
@@ -118,13 +168,24 @@ class Layout(unittest.TestCase):
         self.publish(tmux)
         tmux('set-option','-g','status-left','')
         tmux('set-option','-g','status-right','')
-        for quota,git,expected in (('Q 72%','BRANCH','Q 72% · BRANCH'),
-                                   ('','BRANCH','BRANCH'),('Q 72%','','Q 72%'),('','','')):
+        for quota,host,git,expected in (
+            ('󱙺 10%','󰊤','main !32 ?1 +558-83','󱙺 10% · 󰊤 main !32 ?1 +558-83'),
+            ('','󰊤','main','󰊤 main'), ('Q 72%','','BRANCH','Q 72% · BRANCH'),
+            ('Q 72%','󰊤','','Q 72%'), ('','󰊤','',''),
+        ):
+            tmux('set-option','-g','@dots-remote-icon',host)
             tmux('set-option','-g','@dots-codex-usage',quota)
             tmux('set-option','-g','@dots-gitmux',git)
             text=tmux('display-message','-p','#{E:status-format[1]}')
             text=re.sub(r'#\[[^]]*\]','',text)
             self.assertEqual(text.strip(),expected)
+        # A wide host badge yields the available cells to the branch first.
+        tmux('set-option','-g','@dots-remote-icon','WIDE-HOST')
+        tmux('set-option','-g','@dots-gitmux','BRANCH')
+        tmux('set-option','-g','@dots-gitmux-width','4')
+        narrow = re.sub(r'#\[[^]]*\]','',tmux('display-message','-p','#{E:@dots-gitmux-content}')).strip()
+        self.assertTrue(narrow.startswith('BR'),narrow)
+        self.assertLessEqual(len(narrow),4)
         fmt=self.defaults['apps']['tmux']['formatting']
         fmt['codex_usage']['git_separator']=''
         self.publish(tmux)

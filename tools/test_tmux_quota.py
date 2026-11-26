@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -282,29 +283,45 @@ class NativeQuota(GeneratedStatus):
         for name in ('codex-usage.py', 'codex_quota.py'):
             shutil.copy2(ROOT/'config/tmux'/name, self.tmux_config/name)
 
+    def install_provider(self):
+        provider=self.tools/'aistat'
+        provider.write_text('#!'+sys.executable+'\nimport json\nfrom pathlib import Path\np=Path.home()\nwith (p/"quota-calls").open("a") as f:f.write("call\\n")\nprint((p/"quota-response").read_text())\n');provider.chmod(0o700)
+        (self.home/'quota-response').write_text(json.dumps(report(72)))
+
     def test_quota_cells_visibility_modes_and_right_placement(self):
         profile=self.repo/'profiles/termux'
         (profile/'icons.toml').write_text('[apps.tmux]\ncodex_usage="Q"\n')
         self.write_theme()
-        provider=self.tools/'aistat'
-        provider.write_text('#!'+sys.executable+'\nimport json\nfrom pathlib import Path\np=Path.home()\nwith (p/"quota-calls").open("a") as f:f.write("call\\n")\nprint((p/"quota-response").read_text())\n');provider.chmod(0o700)
-        (self.home/'quota-response').write_text(json.dumps(report(72)))
+        self.install_provider()
         inner,base=self.server('quota-inner')
         config=self.write_config(workspace_hooks=False);inner('source-file',str(config))
         inner('set-option','-g','status-interval','1')
-        inner('set-option','-g','@dots-window-codex','#{==:#{window_name},codex-fixture}')
-        inner('set-option','-g','@dots-gitmux','#[fg=magenta]BRANCH#[default]')
+        inner('set-option','-g','@dots-codex-snapshot','')
+        inner('set-option','-g','@dots-git-snapshot','󰊤|#[fg=magenta]BRANCH#[default]')
+        inner('set-option','-g','@dots-remote-icon','󰊤')
         outer,_=self.server('quota-view',termux=False);outer('set-option','-g','status','off');outer('set-option','-g','default-terminal','tmux-256color')
         attach=shlex.join(['env','-u','TMUX','-u','TMUX_PANE',*base,'attach-session','-t','fixture'])
         outer('new-session','-d','-s','view','-x','80','-y','24',attach)
-        self.await_screen(outer,'view',lambda rows:len(rows)>1 and 'BRANCH' in rows[1])
+        rows=self.await_screen(outer,'view',lambda rows:len(rows)>1 and '󰊤 BRANCH' in rows[1])
+        self.assertNotIn('·',self.plain(rows[1]))
         self.assertFalse((self.home/'quota-calls').exists())
-        inner('rename-window','-t','fixture:0','codex-fixture')
+        # Exercise the published condition with an open window distinct from this client's.
+        quota_job=inner('show-options','-gqv','@dots-codex-usage-job')
+        inner('set-option','-g','@dots-codex-usage-job','quota-read')
+        for snapshot in ('', '<inventory not ready>', '|@7:attention|@7:question|'):
+            inner('set-option','-g','@dots-codex-snapshot',snapshot)
+            self.assertEqual(inner('display-message','-p','#{E:@dots-codex-usage}'),'')
+        for state in ('idle','working','waiting'):
+            inner('set-option','-g','@dots-codex-snapshot',f'|@7:{state}|')
+            self.assertEqual(inner('display-message','-p','#{E:@dots-codex-usage}'),'quota-read')
+        inner('set-option','-g','@dots-codex-usage-job',quota_job)
+        inner('set-option','-g','@dots-codex-snapshot','|@7:idle|')
         for width in (40,80,120):
             outer('resize-window','-t','view','-x',str(width),'-y','24')
             rows=self.await_screen(outer,'view',lambda rows:len(rows)>1 and 'Q 72%' in self.plain(rows[1]) and 'BRANCH' in rows[1] and self.plain(rows[1]).index('BRANCH')>=width-10 and len(self.plain(rows[1]))<=width)
             line=self.plain(rows[1]);self.assertLess(line.index('Q 72%'),line.index('BRANCH'))
-            self.assertIn('Q 72% · BRANCH',line)
+            self.assertIn('Q 72% · 󰊤 BRANCH',line)
+            self.assertEqual(line.count('󰊤'),1)
             self.assertEqual(self.colors_at(rows[1],'·')['fg'],(136,136,136))
             self.assertEqual(self.colors_at(rows[1],'·')['bg'],self.colors_at(rows[1],'BRANCH')['bg'])
             self.assertFalse(self.bold_at(rows[1],'·'))
@@ -325,16 +342,74 @@ class NativeQuota(GeneratedStatus):
         inner('new-session','-d','-s','ordinary',shutil.which('sleep')+' 60')
         attach_other=shlex.join(['env','-u','TMUX','-u','TMUX_PANE',*base,'attach-session','-t','ordinary'])
         outer('new-window','-d','-t','view:1','-n','other',attach_other)
-        self.await_screen(outer,'view:1',lambda rows:len(rows)>1 and 'BRANCH' in rows[1] and 'Q 72%' not in self.plain(rows[1]))
+        self.await_screen(outer,'view:1',lambda rows:len(rows)>1 and 'Q 72% · 󰊤 BRANCH' in rows[1])
         inner('set-option','-g','status-right','#[bold] MODE #[default]')
         rows=self.await_screen(outer,'view',lambda rows:len(rows)>1 and 'MODE' in rows[1] and 'Q 72%' in self.plain(rows[1]))
         line=self.plain(rows[1]);self.assertLess(line.index('BRANCH'),line.index('MODE'))
         inner('set-option','-g','@dots-gitmux','')
         rows=self.await_screen(outer,'view',lambda rows:len(rows)>1 and 'Q 72%' in self.plain(rows[1]) and 'BRANCH' not in rows[1])
         self.assertNotIn('·',self.plain(rows[1]))
-        inner('rename-window','-t','fixture:0','shell')
+        self.assertNotIn('󰊤',self.plain(rows[1]))
+        inner('set-option','-g','@dots-codex-snapshot','')
         self.await_screen(outer,'view',lambda rows:len(rows)>1 and 'Q 72%' not in self.plain(rows[1]))
         self.assertEqual((self.home/'quota-calls').read_text(),'call\n')
+
+    @unittest.skipUnless(sys.platform in ('linux', 'android') and Path('/proc/self/stat').exists(),
+                         'Linux or Termux foreground detection required')
+    def test_server_wide_quota_tracks_last_codex_and_isolates_sockets(self):
+        self.install_provider()
+        self.write_theme()
+        config = self.write_config(workspace_hooks=False)
+        primary, primary_base = self.server('quota-primary')
+        isolated, isolated_base = self.server('quota-isolated')
+        viewer, _ = self.server('quota-viewer', termux=False)
+        viewer('set', '-g', 'status', 'off')
+        for target, base, name in ((primary, primary_base, 'primary'), (isolated, isolated_base, 'isolated')):
+            target('source-file', str(config))
+            target('set', '-g', 'status-interval', '1')
+            target('set', '-g', '@dots-gitmux', name)
+            attach = shlex.join(['env', '-u', 'TMUX', '-u', 'TMUX_PANE', *base, 'attach-session', '-t', 'fixture'])
+            viewer('new-session', '-d', '-s', name, '-x', '80', '-y', '24', attach)
+
+        def expect(view, label, visible):
+            self.await_screen(viewer, view, lambda rows: len(rows) > 1 and label in rows[1]
+                              and ('72%' in rows[1]) == visible)
+
+        expect('primary', 'primary', False)
+        expect('isolated', 'isolated', False)
+        self.assertFalse((self.home/'quota-calls').exists())
+        # Record the fixture process itself. The pane PID can belong to its shell.
+        sleeper = self.root/'foreground.py'
+        sleeper.write_text('import ctypes, os, time\nfrom pathlib import Path\n'
+                           'assert ctypes.CDLL(None).prctl(15, b"codex", 0, 0, 0) == 0\n'
+                           'Path.home().joinpath(os.environ["TMUX_PANE"] + ".pid").write_text(str(os.getpid()))\n'
+                           'time.sleep(90)\n')
+        command = shlex.join([sys.executable, '-B', str(sleeper)])
+        detached = primary('new-session', '-d', '-s', 'agent', '-P', '-F', '#{pane_id}', command)
+        expect('primary', 'primary', True)
+        # tmux resumes a stopped direct child. A wrapper keeps the actual Codex suspended.
+        wrapped = shlex.join([self.env['SHELL'], '-c', command + ' & wait'])
+        local = primary('new-window', '-d', '-t', 'fixture:', '-P', '-F', '#{pane_id}', wrapped)
+        pidfile = self.home/(local + '.pid')
+        deadline = time.monotonic() + 4
+        while not pidfile.is_file() or not pidfile.read_text():
+            self.assertLess(time.monotonic(), deadline)
+            time.sleep(.03)
+        pid = int(pidfile.read_text())
+        primary('kill-pane', '-t', detached)
+        primary('set', '-g', '@dots-gitmux', 'local')
+        expect('primary', 'local', True)
+        isolated('set', '-g', '@dots-gitmux', 'separate')
+        expect('isolated', 'separate', False)
+        try:
+            os.kill(pid, signal.SIGSTOP)
+            expect('primary', 'local', False)
+        finally:
+            os.kill(pid, signal.SIGCONT)
+        expect('primary', 'local', True)
+        primary('kill-pane', '-t', local)
+        expect('primary', 'local', False)
+        self.assertEqual((self.home/'quota-calls').read_text(), 'call\n')
 
     def test_profile_quota_publication_inheritance_and_icon_sample(self):
         profile=self.repo/'profiles/termux'
@@ -355,7 +430,8 @@ class NativeQuota(GeneratedStatus):
 
 
 def load_tests(loader,tests,pattern):
-    return unittest.TestSuite([loader.loadTestsFromTestCase(Quota),NativeQuota('test_quota_cells_visibility_modes_and_right_placement'),NativeQuota('test_profile_quota_publication_inheritance_and_icon_sample')])
+    return unittest.TestSuite([loader.loadTestsFromTestCase(Quota),NativeQuota('test_quota_cells_visibility_modes_and_right_placement'),
+        NativeQuota('test_server_wide_quota_tracks_last_codex_and_isolates_sockets'),NativeQuota('test_profile_quota_publication_inheritance_and_icon_sample')])
 
 
 if __name__=='__main__':unittest.main()

@@ -1,5 +1,25 @@
 # Package workflows
 
+## Finer overall upgrade progress (2026-11-25)
+
+Count work reported by the running upgrade. APT supplies a transaction summary, archive requests and package operations. Pacman supplies the current package index and total. Go tool version comparisons and installed-version snapshots provide preparation and verification checkpoints. Keep equal manager shares, plan each manager on demand, and reserve command completion for its return. Display tenths of a percent during compact upgrades.
+
+The existing upgrade menu and all shell entry points use the shared Python workflow. No configuration integration change needed because the existing progress preference controls this display. The command grammar, completions, installer assets, Windows destinations and root README setup instructions still apply. The maintenance owner is `dots-pkgs-maintenance`.
+
+Verified on Termux with test-owned managers through both `pkgs up` and `dots pkgs up` at 40, 80 and 120 columns. In a two-manager fixture with 39 APT upgrades, the transaction summary and first two archive requests advanced overall progress through 16.8%, 16.9% and 17.0%. Focused tests also cover repeated or missing events, local transfer counters, cancellation and raw output. The broader suites retain the known standalone installer and completion migration failures. The Git status progress assertion also fails on the unmodified revision. Native Linux, WSL and Windows PowerShell 5.1/7 terminal checks remain pending.
+
+## Sudo prompts and Termux RubyGems diagnostics (2026-11-25)
+
+The shared runner pauses progress before spawning sudo and resumes on recognized package-manager activity. Linux and WSL system managers can authenticate through the controlling terminal. Progress stays paused throughout paru and yay commands because the helpers may request elevation again. Detached sudo receives its own noninteractive flag even if a manager operand also equals `-n`. A denied credential fails that manager. An interruption stops the bulk run.
+
+The built-in Termux RubyGems self-update omits Bundler's private-file readability notices and their standalone gemspec help line from a successful compact result. Other warnings, bounded failure context, full raw and redirected output, and on-disk permissions retain their existing behavior.
+
+The maintenance owner is `dots-pkgs-maintenance`. No configuration integration change needed. Sudo owns credential policy and existing output modes select diagnostic detail. The package menu already hands execution to a terminal. Grammar, six-shell completions, installer assets and Windows app destinations use the existing routes. The root README's setup and first commands still apply.
+
+On Termux, replaying the installed Bundler validator's 345 file warnings and help line produced zero compact warnings and zero overflow. The standalone, Dots Bash and Python entry points passed at 40, 80 and 120 columns, including byte-exact native warnings under `--raw` and ordinary redirection. Private-terminal tests covered sudo retries, hidden input, native progress resumption, helper-owned prompts and Ctrl-C. Detached fixtures covered denial, cached authorization and manager flags. Native Linux and WSL password-policy checks and native Windows PowerShell 5.1/7 regression checks remain pending.
+
+The package-core run reproduced the documented legacy completion-migration and standalone-installer failures. It also caught a POSIX executable lookup in the simulated Windows console. After restricting the lookup to POSIX, all nine applicable native-adapter tests and all seven sudo tests passed. The integration suite retained the known setup-prerequisite status mismatch (`preview` versus `incomplete`). Bundled launcher checks, plugin report checks, command validation and the local Wiki check passed.
+
 ## Package picker rows and colors (2026-11-23)
 
 Show `package · [i] · description` for visible installed packages in the FZF search and install pickers, and `package · description` in the installed-only uninstall view. Preserve cached `[e]` in both and omit empty fields and their separators. Keep versions and repository names available in the preview. Manager names use bold theme `accent`, package names use bold `bright_magenta`, descriptions use `light_foreground`, and separators use the theme's muted foreground. See [package picker rows](../docs/packages.md#package-picker-rows).

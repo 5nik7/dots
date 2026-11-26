@@ -3,7 +3,7 @@ import copy
 import json
 import subprocess
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 import test_workflows as fixtures
 from pkgs_lib import go_tools, outdated, workflows
@@ -30,14 +30,17 @@ class GoUpdates(unittest.TestCase):
             return subprocess.CompletedProcess(argv,0,json.dumps({'Version':versions[argv[-1][:-7]]}), '')
         cfg=copy.deepcopy(self.cfg);cfg['policies']={'go':{'upgrade':{'flags':['-trimpath']}}}
         backend=Backend('go')
+        preparation = Mock()
         with patch.object(backend,'installed',return_value=rows),patch.object(outdated,'query',side_effect=query) as run:
-            plan=workflows.plan(backend,'upgrade',[],cfg)
+            plan=workflows.plan(backend,'upgrade',[],cfg,preparation=preparation)
         self.assertEqual(plan.commands,[['go','install','-trimpath',p.name+'@latest'] for p in rows[:2]])
         self.assertEqual(plan.names,[p.name for p in rows[:2]])
         self.assertEqual(run.call_count,4)
-        for call in run.call_args_list:
-            self.assertIn('pkgs-go-query-',call.kwargs['cwd'])
-            self.assertEqual(call.kwargs['env'],dict(GOTOOLCHAIN='local',GOWORK='off',GO111MODULE='on',GOFLAGS=''))
+        self.assertEqual(preparation.credit.call_args_list,
+                         [call(1, 3), *(call(done, 15) for done in range(6, 11))])
+        for query_call in run.call_args_list:
+            self.assertIn('pkgs-go-query-',query_call.kwargs['cwd'])
+            self.assertEqual(query_call.kwargs['env'],dict(GOTOOLCHAIN='local',GOWORK='off',GO111MODULE='on',GOFLAGS=''))
 
     def test_current_tools_do_nothing_and_query_failures_refuse_preparation(self):
         backend=Backend('go');rows=[tool('example.org/tool')]

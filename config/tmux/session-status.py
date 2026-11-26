@@ -53,8 +53,7 @@ def render(rows,current,width,prefs=None,attention=None):
                 if len(roots)==1:name=Path(roots[0]).name or name
             except (ValueError,AttributeError,TypeError):pass
         pieces=[]
-        icon=glyph('hosts.'+host,glyph('git.repository','',prefs),prefs) if cfg.get('repository_icon',True) and repository else ''
-        icon=glyph('session.default',icon,prefs)
+        icon=glyph('session.default','',prefs)
         for part,text,visible in (('number',number,cfg.get('show_number',True)),('icon',icon,True),('name',name,cfg.get('show_name',True))):
             if not visible or not text:continue
             settings=fmt.get(part,{})

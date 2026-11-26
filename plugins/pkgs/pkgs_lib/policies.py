@@ -8,6 +8,12 @@ DEFAULTS = {'upgrade': {'managers': 'auto', 'gem_system': True}, 'output': 'auto
 ACTIONS = ('install', 'upgrade')
 
 
+class RubyGemsSelfUpdate(list):
+    """Identify the built-in step even when a user's recipe has identical argv."""
+    def __init__(self):
+        super().__init__(['gem', 'update', '--system', '--no-document'])
+
+
 def identity(name, manager):
     if manager == 'winget': return name.casefold()
     if manager == 'go': return name.partition('@')[0]
@@ -187,6 +193,6 @@ def commands(backend, action, names, cfg, yes=False):
                     result.append(add_flags(command, flags))
             result += expand(inner.get('after', []), group)
         if getattr(backend, 'update_system', False):
-            result.append(['gem', 'update', '--system', '--no-document'])
+            result.append(RubyGemsSelfUpdate())
     result += expand(outer.get('after', []), names)
     return result

@@ -272,13 +272,17 @@ class Discovery(unittest.TestCase):
         self.addCleanup(lambda:subprocess.run(['tmux','-S',socket,'kill-server'],env=self.env,capture_output=True))
         value='P,}#(touch '+str(self.home/'escaped')+')#{session_name}'
         data=json.loads(self.path.read_text())
-        data['apps']={'tmux':{'indicators':{'zoom':{'text':value}},'clock':{'icon_mode':'fixed'}}}
+        data['apps']={'tmux':{'indicators':{'zoom':{'text':value}},'clock':{'icon_mode':'fixed'},
+                              'session':{'repository_icon':False}}}
         data['formatting']={'apps':{'tmux':{'clock':{'format':'%H:%M'},'indicators':{'zoom':{'before':'<','after':'>','spacer':'!'}}}}}
         self.path.write_text(json.dumps(data))
         (self.path.parent/'colors.toml').write_text('[apps.tmux.indicators.zoom]\nfg="#112233"\n[apps.tmux.indicators.zoom.surround]\nfg="#445566"\n[apps.tmux.git]\nbg="#123456"\n')
+        (self.path.parent/'icons.toml').write_text('[apps.tmux.session]\ndefault="BADGE"\n')
         source=(self.root/'config/tmux/tmux.conf').read_text()
         generated=self.home/'components.conf';generated.write_text(fragment(self.root,context(self.root),source))
         tmux('source-file',str(generated))
+        self.assertEqual(tmux('display-message','-p','#{E:@dots-session-icon}'),'BADGE')
+        self.assertEqual(tmux('show-option','-gqv','@dots-remote-icon'),'')
         tmux('split-window','-d','sleep 60');tmux('resize-pane','-Z')
         text=tmux('display-message','-p','#{E:status-right}')
         self.assertIn('#[fg=#112233]',text)
@@ -313,7 +317,9 @@ class Discovery(unittest.TestCase):
         single=('$1','multi-456','multi','','',json.dumps(dict(metadata,projects=['/multi'])))
         prefs={'options':{'session':{}},'icons':{'hosts.github':'HOST'}}
         self.assertEqual(sessions.render([multi,single],'$0',120,prefs),'')
-        self.assertIn('HOST',sessions.render([multi,single],'$1',120,prefs))
+        self.assertNotIn('HOST',sessions.render([multi,single],'$1',120,prefs))
+        prefs['icons']['session.default']='BADGE'
+        self.assertIn('BADGE',sessions.render([multi,single],'$1',120,prefs))
         self.assertNotIn('multi-123',sessions.render([multi,single],'$1',120,prefs))
         unknown=('$2','manual','manual','','',json.dumps({'repository':{'host':'github'}}))
         self.assertNotIn('HOST',sessions.render([unknown],'$2',120,prefs))

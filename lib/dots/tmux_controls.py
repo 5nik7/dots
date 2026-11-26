@@ -53,12 +53,16 @@ def compile_options(root,selected,source,styles=None):
     options={}
     # These source-owned predicates also need visual-only refresh on existing
     # servers, without sourcing bindings, hooks or starting workers.
-    for key in ('@dots-session-multi','@dots-window-name','@dots-windows-visible',
+    for key in ('@dots-codex-usage-segment','@dots-gitmux-space','@dots-gitmux-width','@dots-gitmux-body','@dots-gitmux-clipped',
+                '@dots-window-marker-before','@dots-window-marker-after','@dots-window-styled-marker',
+                '@dots-session-multi','@dots-window-name','@dots-windows-visible',
                 '@dots-window-codex-question','@dots-window-native-alert','@dots-window-codex-finished','@dots-window-alert-style'):
         options[key]=original.get(key,'')
     options['@dots-icon-status-open']=literal(styles.icon('status.open','',app='tmux'))
     options['@dots-icon-status-question']=literal(styles.icon('status.question','',app='tmux'))
     def stored(text):
+        if not text:
+            return ''
         key='@dots-config-fragment-'+str(sum(k.startswith('@dots-config-fragment-') for k in options))
         options[key]=text
         return '#{E:'+key+'}'
@@ -67,6 +71,8 @@ def compile_options(root,selected,source,styles=None):
     def lit(text):
         # The value is expanded after the enclosing conditional is parsed.
         # Commas, braces and #() in user text cannot become format syntax.
+        if not text:
+            return ''
         key='@dots-config-literal-'+str(sum(k.startswith('@dots-config-literal-') for k in options))
         options[key]=literal(text)
         return '#{'+key+'}'
@@ -80,6 +86,8 @@ def compile_options(root,selected,source,styles=None):
             return style(styles,'session.active.'+role.split('.')[1],generic)
         return generic
     def span(role,text,base=''):
+        if not text:
+            return ''
         selected_style=state_style(role,base)
         return stored('#[default]'+selected_style+text+'#[default]'+base) if selected_style!=base else text
     def surround(component,text,state=None,base=None):
@@ -166,7 +174,9 @@ def compile_options(root,selected,source,styles=None):
     options['@dots-session-style']=style(styles,'session.active',style(styles,'session',original.get('@dots-session-style','')))
     # Keep the native width accounting and empty-name suppression.
     options['@dots-session-visible-number']='#{@dots-session-number}' if session.get('show_number',True) else ''
-    for key in ('@dots-session-prefix-width','@dots-session-has-separator','@dots-session-body-label','@dots-session-visible'):
+    for key in ('@dots-session-marker-width','@dots-session-prefix-width','@dots-session-name-width',
+                '@dots-session-has-tail','@dots-session-has-body','@dots-session-has-separator',
+                '@dots-session-body-label','@dots-session-visible'):
         options[key]=original.get(key,'').replace('#{E:@dots-session-number}','#{E:@dots-session-visible-number}').replace('#{@dots-session-number}','#{E:@dots-session-visible-number}')
     name=original.get('@dots-session-name','')
     if session.get('name_source')=='session':name='#{=/#{E:@dots-session-name-width}/;q/h:session_name}'
@@ -176,16 +186,16 @@ def compile_options(root,selected,source,styles=None):
     for host in ('github','gitlab','bitbucket') if session.get('repository_color',False) else ():
         host_style=style(styles,'hosts.'+host,repo_style)
         if host_style!=repo_style:repo_style=choice('#{==:#{@dots-workspace-repository-host},'+host+'}',host_style,repo_style)
-    if session.get('repository_color',False):repo_style=choice('#{||:#{!=:#{@dots-workspace-repository-name},},#{!=:#{E:@dots-remote-icon},}}',repo_style,sessionbase)
+    if session.get('repository_color',False):repo_style=choice('#{!=:#{@dots-workspace-repository-name},}',repo_style,sessionbase)
     options['@dots-session-name']=name
-    options['@dots-session-icon']=original.get('@dots-session-icon','')
-    override=styles.resolve('icons','session.default','tmux')
-    if override['source'] or not session.get('repository_icon',True):options['@dots-session-icon']=lit(override['value'] or '')
+    session_icon=styles.icon('session.default','',app='tmux')
+    options['@dots-session-icon']=lit(session_icon) if session_icon else ''
     text=original.get('@dots-session-text','').replace('#{E:@dots-session-number}',part('session','number','#{E:@dots-session-visible-number}',sessionbase))
-    text=text.replace('#{E:@dots-session-icon}',stored(repo_style+part('session','icon','#{E:@dots-session-icon}',repo_style)+sessionbase),1)
-    text=text.replace('#{?#{!=:#{E:@dots-session-name},},#{E:@dots-session-name},}',
-        choice('#{!=:#{E:@dots-session-name},}',repo_style+part('session','name','#{E:@dots-session-name}',repo_style)+sessionbase))
+    badge=stored(repo_style+part('session','icon','#{E:@dots-session-icon}',repo_style)+sessionbase) if session_icon else ''
+    text=text.replace('#{E:@dots-session-icon}',badge,1)
     spacer=span('session.spacer',lit(fmt.get('session',{}).get('spacer',' ')),sessionbase)
+    options['@dots-session-name-part']=(choice('#{!=:#{E:@dots-session-icon},}',spacer)
+        +repo_style+part('session','name','#{E:@dots-session-name}',repo_style)+sessionbase)
     text=text.replace(', ,}',','+spacer+',}')
     separator=span('session.spacer','#{E:@dots-label-separator}',sessionbase) if fmt.get('session',{}).get('spacer',' ')==' ' else spacer
     text=text.replace('#{E:@dots-label-separator}',separator)
@@ -202,12 +212,17 @@ def compile_options(root,selected,source,styles=None):
     separator=fmt.get('codex_usage',{}).get('git_separator',' ·')
     options['@dots-codex-git-separator-text']=style(styles,'codex_usage.git_separator','#[default,nobold,nodim]')+lit(separator)+'#[default]'
     options['@dots-codex-git-separator']=original.get('@dots-codex-git-separator','') if adjacent and separator else ''
+    options['@dots-gitmux-quota-padding']=original.get('@dots-gitmux-quota-padding','') if adjacent and separator else ''
     gitbase=style(styles,'git')
-    content=surround('git','#{=/#{e|-:#{E:@dots-gitmux-width},1}/…:#{E:@dots-gitmux}}',base=gitbase or '#[default]')
-    options['@dots-gitmux-segment']='#[nolist align=right norange default]'+choice('#{!=:#{E:@dots-gitmux},}',gitbase+'#[push-default]'+content+'#[pop-default]#[default]')
-    # Explicit custom row placement owns alignment; the default reserves right
-    # space so tmux's scrolling window list cannot consume the Git segment.
-    options['@dots-gitmux-content']=options['@dots-gitmux-segment'].replace(' align=right','',1)
+    options['@dots-remote-icon']=original.get('@dots-remote-icon','') if session.get('repository_icon',True) else ''
+    content=surround('git','#{E:@dots-gitmux-clipped}',base=gitbase or '#[default]')
+    git_visible='#{!=:#{E:@dots-gitmux},}'
+    git_content=gitbase+'#[push-default]'+content+'#[pop-default]#[default]'
+    # The Git presence check also gates the divider. Custom layouts place the
+    # divider themselves when the preceding component is quota.
+    options['@dots-gitmux-segment']='#[nolist align=right norange default]'+choice(
+        git_visible,'#{E:@dots-codex-git-separator}'+git_content)
+    options['@dots-gitmux-content']='#[nolist norange default]'+choice(git_visible,git_content)
     return options
 
 

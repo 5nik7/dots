@@ -109,6 +109,25 @@ def remote_icon(raw):
     return ''
 
 
+def display_icon(value, prefs):
+    """Apply tmux's host preferences to the validated git-it glyph."""
+    from status_styles import glyph, literal, style
+
+    roles = {'󰊤': 'hosts.github', '': 'hosts.gitlab', '': 'hosts.bitbucket', '': 'git.repository'}
+    role = roles.get(value)
+    if role is None:
+        return value
+    text = literal(glyph(role, value, prefs))
+    if not text:
+        return ''
+    color = ''
+    if prefs.get('options', {}).get('session', {}).get('repository_color'):
+        color = style('session.repository', prefs=prefs)
+        if role.startswith('hosts.'):
+            color = style(role, color, prefs)
+    return color + text + '#[default]' if color else text
+
+
 def status(directory, snapshot=False):
     output = collect(directory, snapshot)
     try:
@@ -146,9 +165,9 @@ def repository(directory):
     return None
 
 
-def cached_status(directory, token=None):
+def cached_status(directory, token=None, *, icon_only=False):
     identity=repository(directory)
-    if identity is None:return '|'
+    if identity is None:return '' if icon_only else '|'
     directory=identity[0]
     generated=Path(os.environ.get('XDG_STATE_HOME',str(Path.home()/'.local/state')))/'dots/current/theme/gitmux.conf'
     config=generated if generated.is_file() else Path.home()/'.gitmux.conf'
@@ -178,7 +197,7 @@ def cached_status(directory, token=None):
     row=cache.read();values=row.get('value',{})
     cache.schedule(__file__,[directory],timeout=3)
     rendered={};stale=False
-    for name in ('gitmux','icon'):
+    for name in (('icon',) if icon_only else ('gitmux','icon')):
         field=values.get(name,{})
         if not isinstance(field,dict):continue
         elapsed=age(field.get('updated'))
@@ -191,6 +210,8 @@ def cached_status(directory, token=None):
                 rendered[name]=value
                 if name=='gitmux':stale=bool(value) and bool(field.get('failed') or row.get('failed'))
         except (ValueError,KeyError,RecursionError):pass
+    if icon_only:
+        return rendered.get('icon','')
     text=rendered.get('gitmux','#[fg=#{@dots-gitmux-muted}] ?#[default]')
     if stale:text='#[fg=#{@dots-gitmux-muted}]~#[default] '+text
     return rendered.get('icon','')+'|'+text
@@ -202,6 +223,9 @@ if __name__ == '__main__':
             cached_status(sys.argv[3],sys.argv[2])
         elif len(sys.argv) == 3 and sys.argv[1] == '--snapshot':
             print(cached_status(sys.argv[2]))
+        elif len(sys.argv) == 3 and sys.argv[1] == '--icon':
+            from status_styles import preferences
+            print(display_icon(cached_status(sys.argv[2], icon_only=True), preferences()))
         else:
             print(status(sys.argv[1]) if len(sys.argv) == 2 else '')
     except (OSError, ValueError, subprocess.TimeoutExpired):

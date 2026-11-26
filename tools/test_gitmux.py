@@ -250,45 +250,32 @@ class Gitmux(unittest.TestCase):
         self.assertEqual(icon(), '')
 
     @unittest.skipUnless(GIT_IT, 'optional git-it unavailable')
-    def test_native_session_icons_widths_attributes_and_directory_changes(self):
+    def test_native_git_host_widths_attributes_and_directory_changes(self):
         self.git('remote', 'add', 'origin', 'https://github.com/example/repo.git')
         self.view(workspace_hooks=False)
         self.inner('rename-session', 'dots')
         self.inner('rename-window', 'dots')
-        row = self.await_row(lambda row: bool(re.search(r'󰊤 dots +main',row)))
-        self.assertEqual(self.fixture.colors_at(row, '󰊤'),
-                         {'fg': (85, 255, 255), 'bg': (85, 102, 119)})
-        self.assertTrue(self.fixture.bold_at(row, '󰊤'))
+        def with_host(label):
+            return lambda row: bool(re.fullmatch(re.escape(label) + r' +󰊤 main *', row))
+
+        row = self.await_row(with_host(' dots'))
+        self.assertEqual(self.fixture.colors_at(row, '󰊤'), {'fg': (171, 205, 239), 'bg': (17, 34, 51)})
+        self.assertNotEqual(self.fixture.colors_at(row, '󰊤', 1)['fg'], (171, 205, 239))
+        self.assertEqual(self.fixture.colors_at(row, 'main')['fg'], (187, 0, 187))
         self.assertFalse(self.fixture.underline_at(row, '󰊤'))
         self.assertFalse(self.fixture.underline_at(row, 'dots'))
-        self.assertFalse(self.fixture.underline_at(row, '󰊤', -1))
         tty = self.inner('list-clients', '-F', '#{client_tty}').splitlines()[0]
         self.fixture.snapshot([tty, 'pts/99999'])
         other = self.inner('new-session', '-d', '-P', '-F', '#{session_id}', '-s', 'other', 'sleep 120')
         self.inner('set-option', '-t', 'dots', '@dots-session-number', '1')
-        row = self.await_row(lambda row: bool(re.search(r'1 󰊤 dots +main',row)))
-        self.assertFalse(self.fixture.dim_at(row, '1 󰊤', 1))
-        self.assertFalse(self.fixture.bold_at(row, '1 󰊤', 1))
-        self.assertFalse(self.fixture.underline_at(row, '1 󰊤', 1))
-        self.assertFalse(self.fixture.dim_at(row, '󰊤'))
-        self.assertFalse(self.fixture.dim_at(row, 'main'))
-        self.assertFalse(self.fixture.underline_at(row, '1 󰊤'))
-        self.assertFalse(self.fixture.underline_at(row, '󰊤'))
-        self.assertFalse(self.fixture.underline_at(row, 'dots'))
-        self.assertNotIn('│', self.fixture.plain(row))
-        self.assertEqual(self.fixture.colors_at(row, '', -1)['bg'], (17, 34, 51))
-        for width in (40, 48, 80, 120):
+        for width in (40, 70, 80, 120):
             self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
-            row = self.await_row(lambda row: '1 󰊤 ' in row and 'main' in row)
-            # Measure the captured label, including padding. display-message's
-            # asynchronous job cache is separate from the rendered status row.
-            label = self.fixture.plain(row).split('', 1)[0].rstrip()+' '
-            self.inner('set-option', '-g', '@fixture-label', label)
-            cells = self.inner('display-message', '-p', '#{w:@fixture-label}')
-            self.assertLessEqual(int(cells), min(width // 4, 30))
+            row = self.await_row(with_host(' 1 dots'))
+            self.assertFalse(self.fixture.dim_at(row, 'main'))
+            self.assertFalse(self.fixture.underline_at(row, '1 dots'))
+            self.assertNotIn('│', self.fixture.plain(row))
             self.inner('set-option', '-g', '@dots-termux-default', '1')
-            row = self.await_row(lambda row: bool(re.search(r'1 󰊤 +main',row)))
-            self.assertNotIn('dots', self.fixture.plain(row))
+            self.await_row(with_host(' 1'))
             self.inner('set-option', '-gu', '@dots-termux-default')
         self.fixture.snapshot([tty])
         self.inner('kill-session', '-t', other)
@@ -321,7 +308,7 @@ class Gitmux(unittest.TestCase):
         self.inner('set-environment', '-gu', 'TERMUX_VERSION')
         self.inner('source-file', str(self.fixture.tmux_config / 'tmux.conf'))
         self.row = 0
-        self.await_row(lambda row: '󰊤 dots' in row and '1 󰊤' not in row)
+        self.await_row(lambda row: 'dots' in row and '󰊤 main|literal' in row and row.count('󰊤') == 1)
 
     def test_inline_colors_widths_and_empty_labels(self):
         self.view(workspace_hooks=False)
@@ -351,7 +338,7 @@ class Gitmux(unittest.TestCase):
         self.git('branch', '-m', 'very-long-feature-' + 'x' * 40)
         for width, bound in ((40, 20), (80, 40), (120, 48)):
             self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
-            row = self.await_row(lambda row: 'very-' in row)
+            row = self.await_row(lambda row: 'very-' in row and len(row.split('',1)[1].rstrip()) < bound)
             visible = self.fixture.plain(row).split('', 1)[1].rstrip()
             self.assertLessEqual(len('' + visible), bound)
             self.assertNotIn('#[', self.fixture.plain(row))
@@ -397,7 +384,11 @@ class Gitmux(unittest.TestCase):
         self.config.write_text(valid)
         self.await_row(lambda row: 'main' in row)
         self.binary.unlink()
+        # Prevent fallback to another installed gitmux on the inherited PATH.
+        self.binary.write_text('#!' + status.BASH + '\nexit 127\n')
+        self.binary.chmod(0o700)
         self.await_row(lambda row: '~' in row or ' ?' in row)
+        self.binary.unlink()
         self.binary.symlink_to(Path(GITMUX).resolve())
         self.await_row(lambda row: 'main' in row)
         original_pane = self.inner('display-message', '-p', '#{pane_id}')

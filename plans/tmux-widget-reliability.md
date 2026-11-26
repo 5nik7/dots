@@ -4,6 +4,16 @@
 
 ## Behavior and ownership
 
+### Codex streaming redraws
+
+The Termux reproduction used two Codex windows and a styled Git snapshot. During a streaming replay, the branch disappeared for a frame while the quota and separator remained visible. Fixed readings also reproduced the missing segment. tmux 3.8 limits each status-format expansion to 100 ms.
+
+The status layout now measures styled fields once per width calculation, checks label presence without constructing the entire label, and reads the repository icon independently of formatted Git text. Both readers share the existing worktree/HEAD cache and worker reservation. The common Git width calculation stops once the segment reaches its cap. Config refresh publishes these formats to existing servers.
+
+In private Termux clients, the Git branch and Codex quota stayed visible after warm-up across a replay of inline Codex output at 40, 70, 80 and 120 columns (1,609 captured frames including warm-up). The approved visual refresh completed on the running 70-column client. Its server, three panes, hooks and bindings survived the refresh. Native Linux and WSL visual checks remain pending. Native Windows has no tmux consumer. This corrects existing layout behavior and uses the existing Config refresh route, menu and installer. The root README and command surfaces need no updates.
+
+### Retained readings
+
 - Clock uses dated astronomy independently of weather freshness, then the last valid schedule for at most seven days. Recompute day/night; invalidate known location/timezone changes.
 - Termux clock worker may call `termux-geo --json`. Acquire at most every six hours after success; retry failures after 5/15/60 minutes, respecting helper cooldowns. Ordinary weather cache-only paths remain unchanged.
 - Battery refreshes every 30 seconds with a five-second provider deadline; retain failures with `~` for five minutes, then show unknown. Git refreshes every five seconds with a three-second deadline; retain failures for 30 seconds with `~`, scoped to directory/worktree/HEAD. Confirmed non-repositories clear the Git segment.

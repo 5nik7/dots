@@ -1,5 +1,6 @@
 """Bounded streaming presentation; the runner owns status, never the formatter."""
 import codecs
+from contextlib import ExitStack
 import os
 import queue
 import re
@@ -12,6 +13,19 @@ from .common import clean
 ESCAPES = re.compile(r'\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-_])')
 APT_SCRIPT_WARNING = 'WARNING: apt does not have a stable CLI interface. Use with caution in scripts.'
 
+# Only recognizable manager output can end the pause for a direct sudo command.
+# sudo/PAM may emit notices or retry authentication before starting the manager.
+SYSTEM_ACTIVITY = {
+    'apt': (('apt', 'apt-get'), re.compile(
+        r'^(?:Reading package lists|Building dependency tree|Calculating upgrade|(?:Get|Hit):\d+ |Unpacking |Setting up )')),
+    'pacman': (('pacman',), re.compile(
+        r'^(?::: (?:Synchronizing package databases|Starting full system upgrade|Processing package changes)|\(\s*\d+/\d+\) )')),
+    'dnf': (('dnf', 'dnf5'), re.compile(
+        r'^(?:Updating and loading repositories|Repositories loaded\.|Dependencies resolved\.|Downloading Packages:|Running transaction|Upgrading:|Installing:)')),
+    'xbps': (('xbps-install', 'xbps-remove'), re.compile(
+        r'^(?:\[\*\] Updating repository|Transaction (?:starts|successfully finished)|\S+: (?:updating to|unpacking|installing|removing) )')),
+}
+
 
 def styled(cfg, stream):
     return cfg.get('output') != 'raw' and (cfg.get('output') == 'styled' or stream.isatty() or
@@ -19,9 +33,10 @@ def styled(cfg, stream):
 
 
 class Formatter:
-    def __init__(self, stream, cfg, observer=None):
+    def __init__(self, stream, cfg, observer=None, *, resume_progress=None):
         self.stream, self.pending = stream, ''
         self.observer = observer
+        self.resume_progress = resume_progress
         self.after_cr = False
         self.manager = cfg.get('_manager')
         self.decoder = codecs.getincrementaldecoder('utf-8')('replace')
@@ -34,6 +49,10 @@ class Formatter:
 
     def emit(self, text, ending=''):
         text = re.sub(r'[\x00-\x08\x0b-\x1f\x7f-\x9f]', '', ESCAPES.sub('', text)).replace('\t', '    ')
+        if (self.resume_progress and ending and self.observer.pause is None
+                and SYSTEM_ACTIVITY[self.manager][1].match(text)):
+            self.resume_progress()
+            self.resume_progress = None
         if self.manager in (None, 'auto', 'apt') and text == APT_SCRIPT_WARNING: return
         if self.observer is not None:
             self.observer.line(text, ending, self.stream)
@@ -139,7 +158,9 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
             try: terminal_state = termios.tcgetattr(tty)
             except termios.error: pass
         except (ImportError, OSError): pass
-    if command[0] == 'sudo' and tty is None and '-n' not in command:
+    program = os.path.basename(command[0]) if os.name == 'posix' else None
+    sudo = program == 'sudo'
+    if sudo and tty is None and command[1:2] not in (['-n'], ['--non-interactive']):
         command.insert(1, '-n')
     stdin = tty if tty else subprocess.DEVNULL
     stdout = sys.stderr if data else sys.stdout
@@ -149,7 +170,19 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
     proc = None
     stopped = threading.Event()
     isolated = tty is None and os.name != 'nt'
+    authentication = ExitStack()
     try:
+        resume_progress = None
+        if tty is not None and capture and program in ('sudo', 'paru', 'yay'):
+            # Native password conversations use /dev/tty outside the captured
+            # pipes. Stop the renderer before the first possible prompt.
+            from .workflows import pause
+            authentication.enter_context(observer.authenticating() if observer is not None else pause())
+            manager = cfg.get('_manager')
+            if (sudo and observer is not None and manager in SYSTEM_ACTIVITY and len(command) > 1
+                    and os.path.basename(command[1]) in SYSTEM_ACTIVITY[manager][0]):
+                resume_progress = authentication.close
+            # AUR helpers may authenticate repeatedly between their own stages.
         if capture: environment.update(LC_ALL='C', NO_COLOR='1')
         if observer is not None:
             pip_progress_environment(command, environment)
@@ -177,8 +210,8 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
         workers = [threading.Thread(target=pump, args=(i, pipe), daemon=True)
                    for i, pipe in enumerate((proc.stdout, proc.stderr))]
         for worker in workers: worker.start()
-        formatters = [Formatter(stdout, cfg, cfg.get('_upgrade_output')),
-                      Formatter(sys.stderr, cfg, cfg.get('_upgrade_output'))]
+        formatters = [Formatter(stream, cfg, observer, resume_progress=resume_progress)
+                      for stream in (stdout, sys.stderr)]
         finished = 0
         while finished < 2:
             try: index, chunk = events.get(timeout=0.1)
@@ -213,3 +246,4 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
                 try: termios.tcsetattr(tty, termios.TCSANOW, terminal_state)
                 except (OSError, termios.error): pass
             if tty is not sys.stdin: tty.close()
+        authentication.__exit__(*sys.exc_info())

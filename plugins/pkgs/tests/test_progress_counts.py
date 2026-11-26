@@ -115,6 +115,67 @@ class ProgressCounts(unittest.TestCase):
         self.assertIsNotNone(meters[0])
         self.assertTrue(all(meter is meters[0] for meter in meters))
 
+    def test_apt_advances_during_a_command_using_its_transaction_total(self):
+        legacy = '1 upgraded, 1 newly installed, 1 to remove and 4 not upgraded.'
+        modern = 'Upgrading: 1, Installing: 1, Removing: 1, Not Upgrading: 4'
+        for command, summary in ((['pkg', 'upgrade'], legacy), (['sudo', '-n', 'apt-get', 'upgrade'], modern)):
+            cfg = dict(self.cfg, output='auto')
+            plan = workflows.Plan(Backend('apt'), 'upgrade', commands=[command])
+            with self.subTest(command=command), self.terminal(), workflows.progress('Upgrade', cfg) as meter:
+                output = upgrade_output.Output('apt', cfg, meter)
+                def run(argv, settings, **kwargs):
+                    output.begin(argv)
+                    for line, units in (
+                        ('Fetched 24 kB in 1s', 0), ('Unpacking before-plan (2) ...', 0),
+                        (summary, 1), ('Get:1 https://fixture.invalid aa 2 [20 kB]', 2),
+                        ('Get:1 https://fixture.invalid aa 2 [20 kB]', 2), ('Fetched 20 kB in 1s', 4),
+                        ('Unpacking aa (2) ...', 5), ('Unpacking aa (2) ...', 5),
+                        ('Unpacking bb:arm64 (1) ...', 6), ('Setting up aa (2) ...', 7), ('Removing cc (1) ...', 8),
+                        ('Setting up bb:arm64 (1) ...', 9), ('Processing triggers for aa (2) ...', 9),
+                    ):
+                        output.line(line, '\n', io.StringIO())
+                        self.assertEqual(meter.overall[0], Fraction(units, 10), line)
+                    return 0
+                with patch.object(streams, 'run', side_effect=run):
+                    self.assertEqual(workflows.apply(plan, dict(cfg, _upgrade_output=output)), 0)
+                self.assertEqual(meter.overall[0], 1)
+
+    def test_pacman_advances_only_for_a_known_transaction(self):
+        cfg = dict(self.cfg, output='auto')
+        for manager, program, counted in (('pacman', '/usr/bin/pacman', True), ('pacman', 'pkg', True),
+                                          ('pacman', 'custom-upgrade', False), ('yay', 'yay', False)):
+            with self.subTest(program=program), self.terminal(), workflows.progress('Upgrade', cfg) as meter:
+                output = upgrade_output.Output(manager, cfg, meter)
+                with progress.sequence('Commands', 1) as commands, commands.step('Upgrade') as work:
+                    output.command_work = work
+                    output.begin([program, '-Syu'])
+                    for index, done in ((1, 0), (2, 1), (2, 1), (5, 1), (3, 2)):
+                        output.line(f'({index}/3) upgrading hello...', '\n', io.StringIO())
+                        self.assertEqual(meter.overall[0], Fraction(done if counted else 0, 3))
+                self.assertEqual(meter.overall[0], 1)
+
+    def test_bulk_upgrade_displays_subpercent_changes_and_freezes_on_interrupt(self):
+        cfg = dict(self.cfg, output='styled')
+        labels = []
+        def plan(backend, *args, **kwargs):
+            return workflows.Plan(backend, 'upgrade', commands=[['apt', 'upgrade']])
+        def run(command, settings, **kwargs):
+            output = settings['_upgrade_output']
+            output.begin(command)
+            for line in ('39 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.',
+                         'Get:1 https://fixture.invalid pkg-a 2 [20 kB]', 'Get:2 https://fixture.invalid pkg-b 2 [20 kB]',
+                         'Unpacking pkg-a (2) ...', 'Unpacking pkg-b (2) ...'):
+                output.line(line, '\n', io.StringIO())
+                overall, _ = output.progress.lines(0, 40, False, False)
+                labels.append(overall[0].split()[-1])
+            return 130
+        with self.terminal(), patch.object(workflows.scopes, 'bulk', return_value=[('apt', 'system'), ('npm', 'global')]), \
+             patch.object(workflows, 'available', return_value=True), patch.object(workflows, 'plan', side_effect=plan), \
+             patch.object(workflows, 'installed_versions', return_value={}), patch.object(streams, 'run', side_effect=run) as native:
+            self.assertEqual(workflows.upgrade(self.args('up'), cfg), 130)
+        native.assert_called_once()
+        self.assertEqual(labels, ['16.8%', '16.9%', '17.0%', '22.5%', '22.6%'])
+
     def test_finalization_keeps_a_reserved_share_after_native_commands(self):
         from pkgs_lib.npm_scripts import Pending
         cfg = dict(self.cfg, output='styled'); seen = []
@@ -126,7 +187,8 @@ class ProgressCounts(unittest.TestCase):
         with self.terminal(), patch.object(workflows, 'installed_versions', side_effect=versions), \
              patch.object(streams, 'run', return_value=0), patch.object(Pending, 'review', new=review):
             self.assertEqual(workflows.apply_compact(item, cfg), 0)
-        self.assertEqual(seen, [('inventory', 0), ('review', Fraction(2, 3)), ('inventory', Fraction(2, 3))])
+        self.assertEqual(seen, [('inventory', Fraction(2, 9)), ('review', Fraction(2, 3)),
+                                ('inventory', Fraction(7, 9))])
 
     def test_explicit_preparation_and_execution_share_one_monotonic_meter(self):
         cfg = dict(self.cfg, output='styled'); seen = []

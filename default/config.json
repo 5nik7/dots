@@ -1083,7 +1083,6 @@
     "applications": {
       "all": "󰌌",
       "bash": "",
-      "codex": "󱙺",
       "fzf": "󰍉",
       "kitty": "󰄛",
       "nvim": "",
@@ -1091,7 +1090,8 @@
       "television": "󰔂",
       "tmux": "",
       "yazi": "󰉋",
-      "zsh": ""
+      "zsh": "",
+      "codex": ""
     },
     "files": {
       "archive": "󰀼",
