@@ -1,0 +1,16 @@
+# Dots file and Git style overrides; edit directly or use theme colors set/reset.
+
+[git."branch"]
+fg = "accent"
+bold = false
+
+[git."repo"]
+fg = "bright_blue"
+bold = true
+
+[git."repo_owned"]
+fg = "bright_cyan"
+bold = true
+
+[git."untracked"]
+fg = "magenta"
