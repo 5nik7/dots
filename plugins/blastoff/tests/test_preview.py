@@ -73,22 +73,27 @@ class Preview(unittest.TestCase):
         exe.write_text('#!'+sys.executable+'\nimport time\ntime.sleep(30)\n')
         with self.assertRaises(ValueError): preview.preset_bytes(str(exe),'alpha',self.session)
 
-    @unittest.skipUnless(os.name=='posix' and shutil.which('sh'),'POSIX shell required')
+    @unittest.skipUnless(shutil.which('pwsh' if os.name == 'nt' else 'sh'), 'preview shell required')
     def test_preview_command_quotes_paths_and_isolated_helper(self):
         (self.themes/'alpha.toml').write_text('[directory]\nstyle="purple"\n')
         shell, command=ui.preview_command(self.session)
-        import shlex
-        result=subprocess.run([*shlex.split(shell),command.replace('{1}',"'0'")],capture_output=True,timeout=10)
+        flags = ['-NoProfile', '-Command'] if os.name == 'nt' else ['-c']
+        env = dict(os.environ, HOME=str(self.root), USERPROFILE=str(self.root),
+                   APPDATA=str(self.root/'roaming'), LOCALAPPDATA=str(self.root/'local'),
+                   PSModuleAnalysisCachePath=str(self.root/'module-cache'),
+                   XDG_CONFIG_HOME=str(self.root/'config'), XDG_CACHE_HOME=str(self.root/'cache'))
+        result = subprocess.run([shell, *flags, command.replace('{1}', "'0'")],
+                                env=env, cwd=self.root, capture_output=True, timeout=10)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertIn(b'CONFIGURATION PREVIEW',result.stdout)
         self.assertFalse(self.marker.exists())
 
     def test_layout_and_color_policy(self):
-        narrow=ui.fzf_args(40,18,False,'sh -c','fixed {1}')
+        narrow=ui.fzf_args(40,18,False,'fixed {1}')
         self.assertIn('--color=bw',narrow)
         self.assertIn('--preview-window=right,60%,border-left,wrap,<60(down,45%,border-top,wrap)',narrow)
         self.assertIn('--bind=ctrl-x:toggle-preview',narrow)
-        wide=ui.fzf_args(100,30,True,'sh -c','fixed {1}',fancy='unicode')
+        wide=ui.fzf_args(100,30,True,'fixed {1}',fancy='unicode')
         self.assertIn('--preview-window=right,60%,border-left,wrap,<60(down,45%,border-top,wrap)',wide)
         self.assertTrue(any('#ff43bf' in arg for arg in wide))
 

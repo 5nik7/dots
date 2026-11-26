@@ -164,14 +164,6 @@
       "strategy": "link"
     },
     {
-      "id": "clink-themes",
-      "source": "${PROFILE}/config/clink/themes",
-      "app": "clink",
-      "category": "config",
-      "target": "${APP_CONFIG:clink}/themes",
-      "strategy": "directory-link"
-    },
-    {
       "id": "bat",
       "source": "${DOTS}/config/bat",
       "app": "bat",
@@ -388,10 +380,26 @@
       "strategy": "link"
     },
     {
+      "id": "clink",
+      "source": "${THEME}/dots.clinktheme",
+      "target": "${APP_CONFIG:clink}/themes/dots.clinktheme",
+      "app": "clink",
+      "category": "theme",
+      "strategy": "link"
+    },
+    {
       "id": "codex",
       "source": "${THEME}/bat.tmTheme",
       "target": "${APP_CONFIG:codex}/themes/dots.tmTheme",
       "app": "codex",
+      "category": "theme",
+      "strategy": "link"
+    },
+    {
+      "id": "claude-code",
+      "source": "${THEME}/claude-code.json",
+      "target": "${APP_CONFIG:claude-code}/themes/dots.json",
+      "app": "claude-code",
       "category": "theme",
       "strategy": "link"
     },

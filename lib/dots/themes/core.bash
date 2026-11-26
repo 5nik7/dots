@@ -205,7 +205,7 @@ dt_fingerprint() {
     [[ ! -f $input ]] || inputs+=("$input")
   done
   if [[ -n ${DT_THEME_DIR:-} ]]; then
-    for input in "$DT_THEME_DIR/"*.toml "$DT_THEME_DIR/"*.conf "$DT_THEME_DIR/"*.theme "$DT_THEME_DIR/"*.properties "$DT_THEME_DIR/"*.tmTheme "$DT_THEME_DIR/fzf.sh" "$DT_THEME_DIR/gum_env.sh" "$DT_THEME_DIR/pi.json" "$DT_THEME_DIR/vivid.yml" "$DT_THEME_DIR/fsh.ini" "$DT_THEME_DIR/eza.yml"; do
+    for input in "$DT_THEME_DIR/"*.toml "$DT_THEME_DIR/"*.conf "$DT_THEME_DIR/"*.theme "$DT_THEME_DIR/"*.properties "$DT_THEME_DIR/"*.tmTheme "$DT_THEME_DIR/fzf.sh" "$DT_THEME_DIR/gum_env.sh" "$DT_THEME_DIR/pi.json" "$DT_THEME_DIR/claude-code.json" "$DT_THEME_DIR/dots.clinktheme" "$DT_THEME_DIR/vivid.yml" "$DT_THEME_DIR/fsh.ini" "$DT_THEME_DIR/eza.yml"; do
       [[ ! -f $input ]] || inputs+=("$input")
     done
   fi

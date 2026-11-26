@@ -40,12 +40,22 @@ def preview(themes, identity, native=False):
         for key, value in sorted({**palette['colors'], 'mode': palette['mode']}.items()): print(key + '\t' + value)
 
 
-def shell_init(palette, shell):
+def shell_init(palette, shell, generation=None):
     from file_platform import state_root
     import shlex
     active = str(state_root() / 'current/theme')
     if shell == 'powershell':
         lines = ["$env:DOTS_THEME_ID = '" + palette['id'] + "'", "$env:THEME = '" + active.replace("'", "''") + "'", "$env:DOTS_THEME_FAMILY = '" + palette['theme'] + "'", "$env:FLAVOR = '" + palette['flavor'] + "'"]
+        directory = Themes().family_directory(palette)
+        lines.extend(["$env:THEMEDIR = '" + str(directory).replace("'", "''") + "'",
+                      "$env:THEMESRC = Join-Path $env:THEMEDIR 'src'"])
+        generation = generation or Path(active)
+        path = "'" + str(generation).replace("'", "''") + "'"
+        # A session-only palette can differ from the published application theme.
+        lines.extend(["if ([IO.File]::Exists((Join-Path " + path + " 'id')) -and",
+                      "    [IO.File]::ReadAllText((Join-Path " + path + " 'id')).Trim() -ceq $env:DOTS_THEME_ID) {",
+                      '    & {', (LIB.parent / 'shell/bat-cache.ps1').read_text(encoding='utf-8'),
+                      '    } ' + path, '}'])
         for key, data in (('dots_palette', palette['palette']), ('dots_roles', palette['roles'])):
             lines.append('$global:' + key + ' = @{')
             lines += ["  '" + k + "' = '" + v + "'" for k, v in data.items()]
@@ -119,12 +129,17 @@ def generated_commands(themes, out, verbose=False):
     (directory / 'manifest.json').write_text(json.dumps(files))
 
 
-def generation_complete(themes, directory):
+def generation_complete(themes, directory, bat_inputs=None):
     required = {'id','selection','fingerprint','palette.json','shell.tsv','init.ps1','init.zsh','init.fish',
                 'colors.json','colors.lua','ls_colors','file-styles.tsv','git-styles.tsv',
                 'yazi/flavor.toml','yazi/tmtheme.xml'}
     for base in (themes.config / 'themed', themes.templates):
         required.update(path.stem for path in base.glob('*.tpl'))
+    if bat_inputs and bat_inputs.executable:
+        for name in ('syntaxes.bin', 'themes.bin'):
+            asset = directory / 'bat-cache' / name
+            if not asset.is_file() or asset.is_symlink() or not asset.stat().st_size:
+                return False
     return all((directory / name).is_file() and not (directory / name).is_symlink() for name in required)
 
 
@@ -217,7 +232,7 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
                 if not re.fullmatch(r'g\.[a-zA-Z0-9]+', current): raise ValueError('invalid theme generation')
                 prior = themes.state / 'themes/generations' / current
                 if (prior / 'fingerprint').is_file() and (prior / 'id').is_file() and regular(prior / 'fingerprint').decode().strip() == fingerprint and regular(prior / 'id').decode().strip() == identity:
-                    if generation_complete(themes, prior) and active.is_symlink() and active.resolve() == prior and all(points_to(p, active / artifact) and (prior / artifact).exists() for p, artifact in links):
+                    if generation_complete(themes, prior, bat_inputs) and active.is_symlink() and active.resolve() == prior and all(points_to(p, active / artifact) and (prior / artifact).exists() for p, artifact in links):
                         if not dry: commands_refresh(themes, verbose, announce=False)
                         events('Unchanged', prior, reason='theme and connectors match')
                         with permanent_output(): ui.emit('  Theme unchanged: ' + identity)
@@ -241,16 +256,20 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
             with stages.step('Render application themes'):
                 palette = themes.render(identity, out, build_cache=True, bat_inputs=bat_inputs)
                 for shell in ('powershell', 'zsh', 'fish'):
-                    (out / ('init.' + ('ps1' if shell == 'powershell' else shell))).write_text(shell_init(palette, shell), encoding='utf-8')
+                    suffix = 'ps1' if shell == 'powershell' else shell
+                    encoding = 'utf-8-sig' if shell == 'powershell' else 'utf-8'
+                    (out / ('init.' + suffix)).write_text(shell_init(palette, shell, destination), encoding=encoding)
                 generated_commands(themes, out, verbose)
-                (out / 'status').write_text('committed\n')
+                (out / 'status').write_bytes(b'committed\n')
                 if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
             operations = [dict(path=str(destination), source=str(out))]
             connector_paths.validate_artifacts(themes.connector_rows, out)
             with tempfile.TemporaryDirectory(prefix='dots-theme-links-') as staging:
-                operations.extend(connector_paths.operations(themes.connector_rows, active, Path(staging), guards, themes.checkout))
                 operations += [dict(path=str(themes.state / 'themes/commands/current'), link=str(destination / 'commands'), directory=True),
                                dict(path=str(token), text=name + '\n'), dict(path=str(active), link=str(destination), directory=True)]
+                # Directory watchers can read a connector as soon as it appears.
+                # Publish the complete generation before notifying those consumers.
+                operations.extend(connector_paths.operations(themes.connector_rows, active, Path(staging), guards, themes.checkout))
                 store = Store(themes.state, events)
                 with stages.step('Publish theme'):
                     result = store.apply('theme-set', operations, guards, retain=True, catalogs=themes.connector_catalogs)

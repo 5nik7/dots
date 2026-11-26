@@ -38,7 +38,7 @@ class ThemeFiles(unittest.TestCase):
                         XDG_CONFIG_HOME=str(self.config), XDG_STATE_HOME=str(self.home/'state'),
                         XDG_CACHE_HOME=str(self.home/'cache'), XDG_DATA_HOME=str(self.home/'data'),
                         APPDATA=str(self.home/'Roaming'), LOCALAPPDATA=str(self.home/'Local'),
-                        CODEX_HOME=str(self.home/'codex'), PI_CODING_AGENT_DIR=str(self.home/'pi'),
+                        CODEX_HOME=str(self.home/'codex'), CLAUDE_CONFIG_DIR=str(self.home/'.claude'), PI_CODING_AGENT_DIR=str(self.home/'pi'),
                         PATH=os.environ.get('PATH',''), TERM='xterm-256color', DOTS_COLOR='never', DOTS_ICONS='never',
                         TMPDIR=str(self.root), PYTHONDONTWRITEBYTECODE='1')
         if 'LD_PRELOAD' in os.environ: self.env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
@@ -130,6 +130,9 @@ class ThemeFiles(unittest.TestCase):
         self.assertFalse(self.doc()['healthy'])
 
     def test_missing_artifacts_pointer_and_source(self):
+        # A bundled template makes an output required even on platforms
+        # without a tmux connector.
+        (self.templates/'tmux.conf.tpl').write_text('# tmux theme\n')
         (self.generation/'tmux.conf').unlink()
         self.assertEqual(self.row('tmux.conf')['status'],'missing')
         self.command('check','--json',code=1)

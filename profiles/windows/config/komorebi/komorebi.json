@@ -1,61 +1,49 @@
 {
-  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.38/schema.json",
-  "app_specific_configuration_path": "$Env:USERPROFILE/.config/komorebi/applications.json",
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.41/schema.json",
+  "app_specific_configuration_path": "$Env:USERPROFILE/applications.json",
   "window_hiding_behaviour": "Cloak",
   "cross_monitor_move_behaviour": "Insert",
-  "default_workspace_padding": 5,
-  "default_container_padding": 5,
-  "border": false,
-  "border_implementation": "Komorebi",
-  "border_style": "Square",
+  "default_workspace_padding": 10,
+  "default_container_padding": 10,
+  "border": true,
   "border_width": 2,
-  "border_offset": -1,
+  "border_offset": 0,
   "theme": {
     "palette": "Catppuccin",
-    "name": "Mocha",
-    "single_border": "Lavender",
-    "unfocused_border": "Surface1",
-    "floating_border": "Surface1"
-  },
-  "transparency": false,
-  "transparency_alpha": 255,
-  "animation": {
-    "enabled": true,
-    "duration": 200,
-    "style": "EaseOutSine",
-    "fps": 120
-  },
-  "floating_window_aspect_ratio": "Widescreen",
-  "display_index_preferences": {
-    "0": "GBT3215-5&2b15c5e0&0&UID4352",
-    "1": "BOE0995-5&215dd751&0&UID256"
-  },
+    "name": "Mocha"
+  }
   "monitors": [
-    // monitor 1, index 0
     {
       "workspaces": [
         {
-          "name": "1",
+          "name": "I",
           "layout": "BSP"
         },
         {
-          "name": "2",
+          "name": "II",
+          "layout": "VerticalStack"
+        },
+        {
+          "name": "III",
+          "layout": "HorizontalStack"
+        },
+        {
+          "name": "IV",
           "layout": "UltrawideVerticalStack"
         },
         {
-          "name": "3",
+          "name": "V",
+          "layout": "Rows"
+        },
+        {
+          "name": "VI",
           "layout": "Grid"
         },
         {
-          "name": "4",
+          "name": "VII",
           "layout": "RightMainVerticalStack"
-        },
-        {
-          "name": "5",
-          "layout": "Columns"
         }
       ]
     }
-  ],
-  "toggle_float_placement": "CenterAndResize"
+  ]
 }

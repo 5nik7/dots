@@ -6,15 +6,24 @@ from types import SimpleNamespace
 from transactions import digest
 
 
+CONSOLE_RESTORE = 'Use dots fonts restore classic-console to restore journaled HKCU font settings.'
+
+
 class Fonts:
     def __init__(self, installation, args):
         self.args = args
         self.installation = installation
         self.plan = None
 
+    def saved_keys(self, applications):
+        requested = self.args.font_target
+        if requested is not None and 'classic-console' in requested:
+            raise ValueError(CONSOLE_RESTORE)
+        return [key for key in (applications if requested is None else requested) if key != 'classic-console']
+
     def preview(self):
         from fonts.model import Library
-        from fonts.config import destination, TARGETS
+        from fonts.config import destination, SAVED_TARGETS
         library = Library(platform=self.installation.platform)
         library.setup_installation = self.installation
         self.installation.merge_plan([],{str(library.path):library.guard,
@@ -22,11 +31,13 @@ class Fonts:
         document = self.args.font_document or dict(schema=1,applications={})
         if document.get('schema') != 1 or not isinstance(document.get('applications'),dict):
             raise ValueError('invalid setup font preferences')
-        keys = self.args.font_target if self.args.font_target is not None else list(document['applications'])
+        keys = self.saved_keys(document['applications'])
+        if self.args.font_target is None and 'classic-console' in document['applications']:
+            self.installation.item('setup:font:classic-console', 'skipped', reason=CONSOLE_RESTORE)
         rows = []
         for key in keys:
             saved = document['applications'].get(key)
-            if not saved or saved.get('target') not in TARGETS or not all(saved.get(f) for f in ('id','version','face','variant','files')):
+            if not saved or saved.get('target') not in SAVED_TARGETS or not all(saved.get(f) for f in ('id','version','face','variant','files')):
                 raise ValueError('saved font choice is missing exact identity/files: '+key)
             import re
             from fonts.model import relative
@@ -48,18 +59,18 @@ class Fonts:
         from fonts.model import Library
         from fonts.workspace import Workspace
         from fonts.defaults import choose, synchronize
-        from fonts.config import TARGETS
+        from fonts.config import SAVED_TARGETS
         library = Library(platform=self.installation.platform)
         library.setup_installation = self.installation
         workspace = Workspace(library, temporary)
         document = self.args.font_document or dict(schema=1,applications={})
         if document.get('schema') != 1 or not isinstance(document.get('applications'), dict):
             raise ValueError('invalid setup font preferences')
-        selections = self.args.font_target if self.args.font_target is not None else list(document['applications'])
+        selections = self.saved_keys(document['applications'])
         for key in selections:
             saved = document['applications'].get(key)
             if not saved: raise ValueError('no saved default font for '+key)
-            if saved.get('target') not in TARGETS or key != saved['target']+(':'+saved['app_profile'] if saved.get('app_profile') else ''):
+            if saved.get('target') not in SAVED_TARGETS or key != saved['target']+(':'+saved['app_profile'] if saved.get('app_profile') else ''):
                 raise ValueError('invalid saved application font target')
             identity, version = saved['id'], saved['version']
             if saved.get('upstream'):

@@ -35,6 +35,13 @@ undo cleanup or safely discard its receipt history.
 
 ## Personal font transactions
 
+On Windows the explicit `all-terminals` target expands during preflight. The journal
+includes each changed user config and, for a verified classic Console face,
+the previous and desired `FaceName` strings under existing `HKCU\Console` keys.
+Undo checks both the receipts and registry values for drift. Existing external
+font registrations reused by Set remain externally owned. Explicit migration
+records the exact HKCU value name and refuses ambiguous registrations.
+
 Font plans use the shared Store, retained backups and complete preflight for
 library payloads, registrations, app settings and metadata. Downloads stage before
 review; archive traversal, links, duplicate filenames, invalid fonts, missing

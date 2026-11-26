@@ -27,6 +27,7 @@ end
 set -l _dots_cache_root "$HOME/.cache"
 set -q XDG_CACHE_HOME; and set _dots_cache_root "$XDG_CACHE_HOME"
 set -l _dots_environment_cache "$_dots_cache_root/dots/startup/environment.fish"
+set -l previous_profile_entries (string split -n : -- "$DOTS_PROFILE_PATHS")
 set -l _dots_environment_ready 0
 if test -f "$_dots_environment_cache"
     source "$_dots_environment_cache"; and set _dots_environment_ready 1
@@ -79,6 +80,10 @@ set -l profile_entries (string split -n : -- "$DOTS_PROFILE_PATHS")
 set -l ordered_path
 for entry in $owned_path $profile_entries $PATH
     contains -- "$entry" "$DOTS/themes/bin"; and continue
+    if string match -qr '[^/]/+$' -- "$entry"
+        set -l normalized (string trim -r -c / -- "$entry")
+        contains -- "$normalized" $profile_entries $previous_profile_entries; and continue
+    end
     if test "$entry" = "$THEMESBIN"; and test $_dots_option_DOTS_INIT_COMMANDS != 1
         continue
     end

@@ -6,8 +6,11 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 from environment import declarations, TOKEN, TOOL_PATHS
+from file_platform import lock, open_nofollow
 from profiles import resolve, SENSITIVE
+import mise_shims
 
 LIB=Path(__file__).resolve().parent
 
@@ -30,6 +33,9 @@ def generate(root,shell, metadata=None):
     profile=resolve(root)
     from profile_environment import Model
     generated = Model(root, profile)
+    shim_inputs = []
+    context, shim_guard = mise_shims.startup_context(root, profile, generated.scalars)
+    shim = mise_shims.resolve(context, profile['facts']['platform'] == 'windows', shim_inputs)
     paths=[LIB/'native_startup.py',LIB/'profile_config.py',LIB/'shell/settings.tsv',LIB/'profiles.py',LIB/'platform_info.py',LIB/'environment.py',LIB/'shell/environment.json']
     from style_config import Styles
     paths.extend(Styles(root, profile).startup_inputs())
@@ -39,6 +45,10 @@ def generate(root,shell, metadata=None):
         if (p/'distros').is_dir():
             paths.append(p/'distros');paths.extend(c for c in (p/'distros').iterdir() if c.is_dir())
     paths.extend(generated.inputs)
+    shim_adapter = LIB/'shell'/('mise-path.ps1' if shell == 'powershell' else 'mise-path.fish')
+    paths.extend((LIB/'mise_shims.py', shim_adapter))
+    paths.extend(path for path in shim_inputs if path.exists())
+    missing = [path for path in shim_inputs if not path.exists()]
     paths = list(dict.fromkeys(paths))
     if Path('/etc/os-release').exists():paths.append(Path('/etc/os-release'))
     if metadata is not None:
@@ -52,12 +62,16 @@ def generate(root,shell, metadata=None):
     if shell=='powershell':
         lines=["if ($env:DOTS -cne "+q(root)+") { return $false }"]
         for path in paths:
-            stat=path.stat()
+            stat=path.lstat() if path in shim_inputs and path.is_symlink() else path.stat()
             # Python epoch seconds -> .NET ticks. Milliseconds avoid filesystem
             # precision conversion differences while detecting normal changes.
             milliseconds=stat.st_mtime_ns//1_000_000
             lines.append("$item = Get-Item -LiteralPath "+q(path)+" -Force -ErrorAction SilentlyContinue")
             lines.append("if (-not $item -or [math]::Floor(($item.LastWriteTimeUtc.Ticks - 621355968000000000) / 10000) -ne "+str(milliseconds)+") { return $false }")
+        for path in missing:
+            lines.append("if (Test-Path -LiteralPath "+q(path)+") { return $false }")
+        for key, values in shim_guard.items():
+            lines.append("if (" + ' -and '.join("[string]$env:"+key+" -cne "+q(v) for v in values) + ") { return $false }")
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append("if ([string]$env:"+key+" -cne "+q(os.environ.get(key,''))+") { return $false }")
         lines += ["$global:DotsProfileSettings = @{}", "$global:DotsProfileSettingOrigins = @{}", "$global:DotsProfileConfigPath = "+q(config_path)]
@@ -95,10 +109,18 @@ def generate(root,shell, metadata=None):
         lines.append("$previousProfilePaths = @($env:DOTS_PROFILE_PATHS -split [regex]::Escape([string][IO.Path]::PathSeparator))")
         lines.extend('$env:'+key+' = '+q(value) for key,value in identity.items())
         paths=[str(Path(row['root'])/p) for row in reversed(profile['layers']) for p in row.get('path',['bin','scripts'])]
-        lines += ["$profilePaths = @("+','.join(map(q,paths))+")", "$entries = @($profilePaths | Where-Object { Test-Path -LiteralPath $_ -PathType Container }) + @($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $previousProfilePaths -cnotcontains $_ })", "$env:DOTS_PROFILE_PATHS = (@($profilePaths | Where-Object { Test-Path -LiteralPath $_ -PathType Container }) -join [IO.Path]::PathSeparator)", "$env:PATH = (@($entries | Select-Object -Unique) -join [IO.Path]::PathSeparator)", 'return $true']
+        lines.append("$profilePaths = @("+','.join(map(q,paths))+")")
+        if shim:
+            lines.append('$shim = '+q(shim))
+            lines.append(shim_adapter.read_text(encoding='utf-8'))
+        lines += ["$entries = @($profilePaths | Where-Object { Test-Path -LiteralPath $_ -PathType Container }) + @($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $previousProfilePaths -cnotcontains $_ })", "$env:DOTS_PROFILE_PATHS = (@($profilePaths | Where-Object { Test-Path -LiteralPath $_ -PathType Container }) -join [IO.Path]::PathSeparator)", "$env:PATH = (@($entries | Select-Object -Unique) -join [IO.Path]::PathSeparator)", 'return $true']
     else:
         signature=subprocess.check_output(['stat','-c','%d:%i:%s:%y:%z','--',*map(str,paths)],text=True).rstrip('\n')
         lines=['test "$DOTS" = '+q(root)+'; or return 1', 'set -l signature (command stat -c '+q('%d:%i:%s:%y:%z')+' -- '+' '.join(map(q,paths))+' 2>/dev/null | string collect)', 'test "$signature" = '+q(signature)+'; or return 1']
+        for path in missing:
+            lines.append('test ! -e '+q(path)+'; or return 1')
+        for key, values in shim_guard.items():
+            lines.append('contains -- "$'+key+'" '+' '.join(map(q,values))+'; or return 1')
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append('test "$'+key+'" = '+q(os.environ.get(key,''))+'; or return 1')
         lines += ['set -g _dots_profile_setting_keys', 'set -g _dots_profile_config_path '+q(config_path)]
@@ -123,10 +145,27 @@ def generate(root,shell, metadata=None):
                       f'  set -gx {flag} PATH {path}', 'end']
         lines.extend('set -gx '+key+' '+q(value) for key,value in identity.items())
         paths=[str(Path(row['root'])/p) for row in reversed(profile['layers']) for p in row.get('path',['bin','scripts'])]
-        lines += ['set -l previous_profile_paths (string split : -- \"$DOTS_PROFILE_PATHS\")', 'set -l profile_paths']
+        lines += ['set -l previous_profile_paths (string split : -- "$DOTS_PROFILE_PATHS")', 'set -l profile_paths']
         for path in paths:lines.append('if test -d '+q(path)+'; set -a profile_paths '+q(path)+'; end')
-        lines += ['set -l clean_path $profile_paths','for entry in $PATH', '  contains -- "$entry" $previous_profile_paths; and continue','  contains -- "$entry" $clean_path; or set -a clean_path "$entry"','end', 'set -gx DOTS_PROFILE_PATHS (string join : -- $profile_paths)','set -gx PATH $clean_path','return 0']
+        lines.append('set -l shim '+q(str(shim) if shim else ''))
+        lines.append(shim_adapter.read_text(encoding='utf-8'))
+        lines += ['set -l clean_path $profile_paths','for entry in $inherited_path', '  contains -- "$entry" $previous_profile_paths; and continue','  contains -- "$entry" $clean_path; or set -a clean_path "$entry"','end', 'set -gx DOTS_PROFILE_PATHS (string join : -- $profile_paths)','set -gx PATH $clean_path','return 0']
     return '\n'.join(lines)+'\n'
+
+
+def replace_cache_file(source, target):
+    # Windows readers can open a script without sharing delete access. Keep
+    # the existing complete cache available while waiting for the handle.
+    delays = iter((0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.4))
+    while True:
+        try:
+            os.replace(source, target)
+            return
+        except PermissionError as error:
+            delay = next(delays, None)
+            if delay is None or os.name != 'nt' or getattr(error, 'winerror', None) not in (5, 32, 33):
+                raise
+            time.sleep(delay)
 
 
 def prepare(root,shell,target):
@@ -139,12 +178,20 @@ def prepare(root,shell,target):
     fd,name=tempfile.mkstemp(prefix='.environment-',dir=target.parent)
     try:
         with os.fdopen(fd,'wb') as stream:stream.write(data);stream.flush();os.fsync(stream.fileno())
-        os.replace(name,target)
-        fd, name = tempfile.mkstemp(prefix='.metadata-', dir=target.parent)
-        with os.fdopen(fd,'w') as stream:
-            json.dump(dict(version=1,root=str(root),shell=shell,inputs=inputs,digest=hashlib.sha256(data).hexdigest()),stream)
-            stream.flush();os.fsync(stream.fileno())
-        os.replace(name,target.with_suffix(target.suffix+'.json'))
+        fd, manifest = tempfile.mkstemp(prefix='.metadata-', dir=target.parent)
+        try:
+            with os.fdopen(fd,'w') as stream:
+                json.dump(dict(version=1,root=str(root),shell=shell,inputs=inputs,digest=hashlib.sha256(data).hexdigest()),stream)
+                stream.flush();os.fsync(stream.fileno())
+            # Each cold writer publishes its script and matching diagnostic
+            # manifest together. Readers still use the existing atomic rename.
+            lock_path = target.with_suffix(target.suffix + '.lock')
+            with os.fdopen(open_nofollow(lock_path, os.O_CREAT | os.O_RDWR), 'r+b') as writer:
+                lock(writer, blocking=True)
+                replace_cache_file(name, target)
+                replace_cache_file(manifest, target.with_suffix(target.suffix+'.json'))
+        finally:
+            Path(manifest).unlink(missing_ok=True)
     finally:
         if os.path.exists(name):os.unlink(name)
 

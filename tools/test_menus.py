@@ -273,13 +273,20 @@ class Menus(MenuFixture):
     def test_native_selector_shell_arguments_are_literal(self):
         from types import SimpleNamespace
         # Adapter fixture, not a claim of native Windows execution.
-        fake_os = SimpleNamespace(name='nt', environ=dict(self.env))
-        with patch('interaction.os', fake_os), patch('interaction.native_shell', return_value=r'C:\Program Files\PowerShell\pwsh.exe'), \
-                patch('interaction.subprocess.run', return_value=subprocess.CompletedProcess([], 130, b'')) as run:
-            with self.assertRaises(SelectionEnded): RichSelector(backend='fzf').fzf('Native', ['literal'], False, None, False, False, '')
-        flags = run.call_args.args[0]
-        self.assertTrue(any(f.startswith('--with-shell="C:\\Program Files') for f in flags))
-        self.assertFalse(any('bash' in f for f in flags))
+        fake_os = SimpleNamespace(name='nt', environ=dict(self.env, SHELL='inherited-shell'))
+        shell = r'C:\Program Files\PowerShell\pwsh.exe'
+        with patch('interaction.os', fake_os), patch('interaction.native_shell', return_value=shell), \
+                patch('interaction.subprocess', wraps=subprocess) as child:
+            child.run.return_value = subprocess.CompletedProcess([], 130, b'')
+            preview = ('& $env:HELPER {1}', '', {})
+            with self.assertRaises(SelectionEnded):
+                RichSelector(backend='fzf').fzf('Native', ['literal'], False, preview, False, False, '',
+                                                environment={'SHELL': 'unrelated-shell'})
+        flags = child.run.call_args.args[0]
+        self.assertIn('--preview=' + preview[0], flags)
+        self.assertFalse(any(f.startswith('--with-shell') for f in flags))
+        self.assertEqual(child.run.call_args.kwargs['env']['SHELL'], shell)
+        self.assertEqual(fake_os.environ['SHELL'], 'inherited-shell')
 
     @unittest.skipIf(os.name == 'nt', 'tmux has no native Windows equivalent')
     def test_proxy_refuses_client_override_and_host_keeps_completed_hangup_status(self):

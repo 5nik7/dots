@@ -3243,7 +3243,7 @@ Save successful choices in the active profile
 .B "\-\-fonts VALUE"
 Restore exact font preferences
 .TP
-.B "\-\-font\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal"
+.B "\-\-font\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal,windows\-terminal\-stable,windows\-terminal\-preview,windows\-terminal\-unpackaged,msys2\-mintty,git\-bash\-mintty"
 Select saved font targets; repeat
 .SS "dots files link"
 Link a managed source to a target or link catalogued resources
@@ -4462,8 +4462,8 @@ Install all styles of this variant
 .B "\-\-face VALUE"
 Exact font filename or full face name
 .TP
-.B "\-\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal"
-Application target; repeat to select several
+.B "\-\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal,all\-terminals"
+Application target; all\-terminals selects installed Windows terminal hosts
 .TP
 .B "\-\-config VALUE"
 Explicit unmanaged app configuration
@@ -4716,8 +4716,8 @@ Install all styles of this variant
 .B "\-\-face VALUE"
 Exact font filename or full face name
 .TP
-.B "\-\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal"
-Application target; repeat to select several
+.B "\-\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal,all\-terminals"
+Application target; all\-terminals selects installed Windows terminal hosts
 .TP
 .B "\-\-config VALUE"
 Explicit unmanaged app configuration
@@ -9735,7 +9735,7 @@ Save successful choices in the active profile
 .B "\-\-fonts VALUE"
 Restore exact font preferences
 .TP
-.B "\-\-font\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal"
+.B "\-\-font\-target termux,kitty,wezterm,windows\-terminal,vscode\-editor,vscode\-terminal,windows\-terminal\-stable,windows\-terminal\-preview,windows\-terminal\-unpackaged,msys2\-mintty,git\-bash\-mintty"
 Select saved font targets; repeat
 .TP
 .B "Argument 1 (choice:bash,zsh,fish,powershell,nu,xonsh)"

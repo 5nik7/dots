@@ -172,6 +172,10 @@ def inspect(root):
         if path.is_dir(): paths.append(dict(path=str(path), source='checkout'))
     for _, path, source in tool_paths(context):
         paths.append(dict(path=path, source=source))
+    from mise_shims import resolve as shim_directory
+    shim = shim_directory(context, facts['platform'] == 'windows')
+    if shim and shim.is_dir():
+        paths.append(dict(path=str(shim), source='mise'))
     if values['DOTS_INIT_COMMANDS']['value'] == '1':
         paths.append(dict(path=str(state_root() / 'themes/commands/current/bin'), source='theme-commands'))
     for row in paths: row['present'] = row['path'] in os.environ.get('PATH', '').split(os.pathsep)

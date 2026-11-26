@@ -15,13 +15,14 @@ class SetupLeaf(unittest.TestCase):
     setUp = fixtures.InstallationTests.setUp
     write = fixtures.InstallationTests.write
 
-    def fixture(self):
+    def fixture(self, *, windows=None):
         (self.repo/'tools/patches').mkdir(parents=True)
         (self.repo/'tools/patches/leaf-1.28.2-dots-syntax.patch').write_text('fixture patch')
         (self.repo/'tools/test_leaf_theme.py').write_text('fixture consumer')
         self.sysroot = self.base/'rust toolchain'
         (self.sysroot/'bin').mkdir(parents=True)
-        self.suffix = '.exe' if os.name == 'nt' else ''
+        if windows is None: windows = os.name == 'nt'
+        self.suffix = '.exe' if windows else ''
         for tool in ('cargo','rustc'): (self.sysroot/'bin'/(tool+self.suffix)).write_text('fixture')
         self.calls = []
 

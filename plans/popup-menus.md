@@ -5,6 +5,14 @@ Current shared navigation and Wiki browsing changes are recorded in
 selectors and returning Wiki submenus; earlier one-shot Wiki handoff verification
 below remains historical evidence.
 
+## Windows preview shell paths
+
+The shared selector and bundled Blastoff pass the selected shell executable in FZF's child environment. This preserves spaces in the PowerShell installation path. Both pickers keep numeric preview identities. Bash retains its existing preview commands.
+
+Isolated Windows terminal checks with FZF 0.75.0 reproduced the truncated executable error using the original selector. Windows PowerShell 5.1, PowerShell 7 and Preview rendered file details, file contents after Alt-C, glyph metadata and a bundled Blastoff theme source. Escape closed each picker. Each PowerShell frontend also parsed a TTF through `dots fonts import --dry-run`. WSL ran the real Blastoff FZF preview check. The shared menu suite's filtered wraparound case selected the wrong row on WSL with both the original and repaired selector. Termux and native Linux terminal checks for this change remain pending.
+
+Menu assessment is **update** for existing previews. **No configuration integration change needed** because the invoking PowerShell already identifies the executable. Existing routes, completion, installer mappings and Windows application destinations suffice. **No README change needed** because setup and first commands stay the same.
+
 ## Launcher icon and label attributes
 
 The interactive launcher and family submenus now preserve each row's configured icon and label attributes as focus moves. The shared selector's row-style option removes FZF's unfocused foreground attributes while retaining its fallback color, selection background, pointer and match highlighting. Both shell frontends use this selector.

@@ -174,6 +174,24 @@ separate live authorization; fixtures cannot establish visible device activation
 
 ## Evidence
 
+### Windows terminal font selection
+
+Implemented `--target all-terminals` with the existing Fonts controller,
+reviewed transactions and Set picker. Configuration review found no additional
+control needed because saved application choices already belong in `fonts.json`.
+The selector and static option completions expose the group. The installer
+consumes the individual saved file targets. The root README still covers the
+same first commands and installation workflow.
+
+Native Windows Set for JetBrainsMono Nerd Font retained 16 existing styles
+and configured seven targets. Both Windows Terminal editions resolved the face
+for all 19 listed profiles. Fresh Git Bash and MSYS2 mintty processes
+reported reading their respective configured files. WezTerm and VS Code
+settings were verified on disk. Mintty and classic Console used the Win32 name
+`JetBrainsMono NF` from the same TTF. A newly created classic Console reported
+that face as its effective default. A second Set preview had zero operations. Visual glyph
+rendering in the individual terminal windows remains a separate check.
+
 ### Downloaded-font launcher repair
 
 The Downloaded fonts action keeps `fonts browse` in its command route and `--downloaded` in its fixed options. Previously the availability check incorrectly included the flag in the executable name, disabling a working browser. Menu assessment: **update** the existing action mapping; keep its identity, order, popup context and literal handoff. Configuration assessment: **no configuration integration change needed**; command availability is an implementation check, and existing menu styling/placement controls remain unchanged. Primary owner: `dots-fonts-maintenance`, with shared launcher behavior under `dots-menu-authoring`. Both Bash and native Windows argument construction share this mapping; native Windows visual execution remains a separate acceptance check.

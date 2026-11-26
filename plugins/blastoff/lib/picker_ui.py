@@ -17,14 +17,14 @@ def preview_command(root):
         if not shell:
             raise RuntimeError('Native PowerShell 7+ is required for Windows previews; invoke Blastoff from its PowerShell module')
         command = '& ' + ' '.join("'"+arg.replace("'", "''")+"'" for arg in args) + ' {1}'
-        return subprocess.list2cmdline([shell, '-NoProfile', '-NonInteractive', '-Command']), command
+        return shell, command
     shell = shutil.which('sh') or shutil.which('bash')
     if not shell:
         # Termux test/launcher environments can intentionally omit PATH tools.
         for candidate in (Path(sys.executable).parent/'sh', Path('/bin/sh')):
             if candidate.is_file():
                 shell = str(candidate); break
-    return (shlex.join([shell, '-c']), shlex.join(args)+' {1}') if shell else (None,None)
+    return (shell, shlex.join(args)+' {1}') if shell else (None,None)
 
 
 # Only nonexecuting options with understood arity reach the child.
@@ -149,7 +149,7 @@ def inherited_options(env, diagnostic=None):
     return values
 
 
-def fzf_args(width, height, color, shell, command, *, fancy=None, multi=False, kind='local', inherited=()):
+def fzf_args(width, height, color, command, *, fancy=None, multi=False, kind='local', inherited=()):
     args = ['fzf', *inherited]
     if fancy:
         args += ['--height=90%', '--layout=reverse', '--border=sharp', '--border-label= BLASTOFF ']
@@ -166,7 +166,7 @@ def fzf_args(width, height, color, shell, command, *, fancy=None, multi=False, k
              '--header=Enter '+action+' | Esc/Ctrl-C cancel'+(' | Tab/Shift-Tab select' if multi else '')+' | Ctrl-X preview']
     if multi: args += ['--bind=tab:toggle+down,shift-tab:toggle+up']
     if command:
-        args += ['--with-shell='+shell,'--preview='+command,
+        args += ['--preview='+command,
                  '--preview-window=right,60%,border-left,wrap,<60(down,45%,border-top,wrap)',
                  '--bind=ctrl-x:toggle-preview']
     return args
@@ -202,7 +202,10 @@ def choose_fzf(values, themes, color, env, *, fancy=None, multi=False, kind='loc
         (root/'choices.json').write_text(json.dumps(doc),encoding='utf-8')
         shell,command=preview_command(root)
         child_env={k:v for k,v in env.items() if not k.startswith('GUM_') and k not in ('FZF_DEFAULT_OPTS','FZF_DEFAULT_OPTS_FILE','FZF_DEFAULT_COMMAND','BASH_ENV','ENV','ZDOTDIR')}
-        arguments=fzf_args(size.columns,size.lines,color,shell,command,fancy=fancy,multi=multi,kind=kind,inherited=inherited)
+        if shell:
+            # FZF accepts an executable path with spaces verbatim in SHELL.
+            child_env['SHELL'] = shell
+        arguments=fzf_args(size.columns,size.lines,color,command,fancy=fancy,multi=multi,kind=kind,inherited=inherited)
         arguments[0]=resolved_tools['fzf'] or 'fzf'
         try:
             proc=subprocess.run(arguments,

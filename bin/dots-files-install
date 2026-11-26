@@ -19,6 +19,6 @@
 # dots:option=--with-dependencies||flag|Offer mapped missing prerequisites before preparation
 # dots:option=--save-choices||flag|Save successful choices in the active profile
 # dots:option=--fonts||file|Restore exact font preferences
-# dots:option=--font-target||choice:termux,kitty,wezterm,windows-terminal,vscode-editor,vscode-terminal|Select saved font targets; repeat
+# dots:option=--font-target||choice:termux,kitty,wezterm,windows-terminal,vscode-editor,vscode-terminal,windows-terminal-stable,windows-terminal-preview,windows-terminal-unpackaged,msys2-mintty,git-bash-mintty|Select saved font targets; repeat
 FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
 exec python3 -B "$FILES_LIB/install.py" install "$@"

@@ -228,6 +228,12 @@ source "$DOTS/shells/zsh/zshenv"
             python.write_text('#!' + shutil.which('sh') + '\nprintf "%s\\n" "$2" >> "$HOME/python.calls"\nexec "$REAL_PYTHON" "$@"\n')
             python.chmod(0o700)
             env['REAL_PYTHON'] = str(actual)
+            shims = home/'mise shims'
+            inherited = home/'parent profile bin'
+            for directory in (shims, inherited):
+                directory.mkdir()
+            env.update(MISE_SHIMS_DIR=str(shims), DOTS_PROFILE_PATHS=str(inherited),
+                       PATH=env['PATH'] + ':' + str(inherited) + ':' + str(shims) + '/')
             calls = home/'python.calls'
             def run(flags, code):
                 result = subprocess.run([argv[0], flags, code], env=env, cwd=home,
@@ -236,6 +242,11 @@ source "$DOTS/shells/zsh/zshenv"
                 return result.stdout.strip()
             early = 'print -r -- "${dots_options[DOTS_INIT_COMMANDS]}|${functions[is_wsl]:+yes}|${functions[_dots_compinit]:-quiet}|$DOTBIN"'
             self.assertEqual(run('-dc', early), '1|yes|quiet|' + str(repo/'bin'))
+            early_paths = run('-dc', 'print -r -- "$PATH"').split(':')
+            self.assertEqual([path.rstrip('/') for path in early_paths].count(str(shims)), 1)
+            self.assertLess(early_paths.index(str(inherited)), early_paths.index(str(shims)))
+            self.assertLess(early_paths.index(str(shims)), early_paths.index(str(python.parent)))
+            self.assertFalse(any(path.startswith(str(repo/'profiles') + '/') for path in early_paths))
             self.assertEqual(calls.read_text().splitlines(), [str(repo/'lib/dots/startup.py')])
             selector, = (Path(env['XDG_CACHE_HOME'])/'dots/startup').glob('zsh-*/current')
             def modules():

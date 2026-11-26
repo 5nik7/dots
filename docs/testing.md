@@ -427,6 +427,10 @@ The existing Neovim `tests/codex_colors.lua` probe uses `nvim -u NONE -i NONE`
 and a test-owned PTY child rather than live LazyVim or Codex. See the
 [Codex theme plan](../plans/codex-theme.md) for native loader evidence and limits.
 
+The workflow suite checks Claude Code theme rendering across selectable palettes,
+custom config paths, override precedence, unchanged refresh and rollback. The
+[Claude Code theme plan](../plans/claude-code-theme.md) records native watcher evidence.
+
 The workflow suite also checks Pi JSON rendering, light/dark selection, custom agent
 paths, optional absent directories, template/override refresh, connector backups,
 rollback and directory refusal. Set `PI_THEME_MODULE` to an installed Pi package's
@@ -1569,3 +1573,12 @@ Wiki return to the previous submenu at 40/80/120 columns on the originating clie
 Native Windows PowerShell and Linux/WSL acceptance is separate from Termux fixtures.
 
 The configuration fixture creates all four platform profiles and resolves the actual execution platform; `DOTS_PROFILE` is generated output, not a selection override. Fresh-interpreter and Bash frontend cases verify next-invocation dry-run reporting without `PYTHONPATH`, ANSI output or writes to the owned tree. The Bash case explicitly skips when Bash is unavailable. Keep these process checks: importing `config_cli.ControlPlan` directly cannot detect the duplicate class identity created when that controller runs as `__main__`. Preview classification uses its canonical `preference_files.PreferencePlan` base; style plans retain their separate branch. Native PowerShell 5.1/7 lifecycle evidence and the separate accepted phone receipt are recorded in the [Overkill plan](../plans/overkill-parity.md#termux-updates-windows-refresh--2026-11-19-utc).
+
+## Windows terminal fonts and bat acceptance
+
+Run `python -B tools/test_windows_font_targets.py` for group selection and
+`python -B tools/test_console_fonts.py` for registry drift, rollback and undo.
+Use the Fonts workflow and setup suites for existing registrations and saved
+editions. Run `tools/test_bat_cache.py` with Python and the
+`test_bat_published_theme_and_gcode_in_fresh_shells` PowerShell init case for
+real bat discovery and rendering in isolated native shells.

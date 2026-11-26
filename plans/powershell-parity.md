@@ -206,3 +206,12 @@ Profile backend acceptance: shared registry/profile controllers and generated na
 Portable pkgs `format` and `manifest` use the shared controller on native Windows. Static routes/options/file completion cover export/update/restore, Git publication `--update-packages` and setup `--packages`/`-Packages`. The earlier blanket Windows package/setup refusal is superseded by the WinGet adapter and explicit package preparation stage. Native Config uses APPDATA or explicit XDG_CONFIG_HOME. Actual package acquisition and native interactive acceptance remain separate from fixture evidence; see [package workflow acceptance](pkgs-workflows.md) and [current parity work](overkill-parity.md).
 
 Shared preference/import and Bak completion follow `plans/config-preferences-completion.md`: native route/controller and completion registration are updated; real Windows PowerShell 5.1/7 acceptance remains a named pending check on this Termux host.
+
+## Native Windows bat acceptance
+
+Fresh Windows PowerShell 5.1 and PowerShell 7 sessions listed the published
+`Dots` theme and G-code syntax. Profile-loaded scripts and generated theme
+initialization were exercised with native bat in isolated homes. The live
+catppuccin-mocha refresh reused the selection and a repeat reported unchanged.
+Native Starship link traversal now recognizes Windows symlink substitute paths
+in the stored link target while retaining the owner and drift checks.

@@ -3,7 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from fonts import operations as ops
-from fonts.config import configure, destination, TARGETS
+from fonts.config import configure, destination, selected_targets, SAVED_TARGETS
 from fonts.destinations import Destinations
 from fonts.model import read, digest, sha, relative
 from fonts.payloads import retain
@@ -75,13 +75,13 @@ def synchronize(workspace, *, save_preferences=True):
     if save_preferences:plan.put(path,data=document)
 
 
-def choose(workspace,identity,version,source,args, *, saved=None):
+def choose(workspace,identity,version,source,args, *, saved=None,inventory=None):
     plan=workspace.user
     targets=list(dict.fromkeys(args.target or []))
     if not targets:raise ValueError('set requires at least one --target')
     if args.config and (len(targets)!=1 or targets==['termux']):raise ValueError('--config requires one desktop target')
     if args.app_profile and targets!=['windows-terminal']:raise ValueError('--app-profile requires the windows-terminal target only')
-    for target in targets:destination(plan.library,target,args.config)
+    selections = selected_targets(plan, targets, args.config, args.app_profile)
     origin,version=workspace.obtain(identity,version,source,dry_run=args.dry_run)
     if origin is None:return
     record=origin.document['families'][identity]['versions'][version]
@@ -104,12 +104,17 @@ def choose(workspace,identity,version,source,args, *, saved=None):
     if origin is not plan:retain(origin,plan,identity,version,workspace.temporary)
     row=plan.document['families'][identity]
     if row.get('pin') and row['pin']!=version:raise ValueError('family is pinned; unpin before switching versions')
-    if any(t!='termux' for t in targets):ops.install(plan,identity,version,variant)
-    for target in targets:configure(plan,identity,version,face,target,explicit=args.config,app_profile=args.app_profile)
+    if any(t!='termux' for t in targets):
+        from fonts.inventory import registered_variant
+        if not registered_variant(plan,record,variant,inventory):
+            ops.install(plan,identity,version,variant)
+    for target, config, found in selections:
+        configure(plan, identity, version, face, target, explicit=config, app_profile=args.app_profile, found=found)
 
 
 def set_font(library,args,temporary):
     workspace=Workspace(library,temporary)
+    installed=None
     source=str(library.directory) if library.directory else None
     if bool(args.operand)==bool(args.file):raise ValueError('set requires a FONT or --file, but not both')
     if args.file:
@@ -123,7 +128,7 @@ def set_font(library,args,temporary):
         args=deepcopy(args);args.face=args.face or face;source='personal'
     else:
         identity=workspace.resolve(args.operand,source,catalog=True);version=args.version
-    choose(workspace,identity,version,source,args)
+    choose(workspace,identity,version,source,args,inventory=installed)
     synchronize(workspace)
     return workspace.finish()
 
@@ -135,7 +140,7 @@ def restore(library,args,temporary):
     for key in selections:
         saved=document['applications'].get(key)
         if not saved:raise ValueError('no saved default for '+key)
-        if saved.get('target') not in TARGETS or key!=saved['target']+(':'+saved['app_profile'] if saved.get('app_profile') else ''):
+        if saved.get('target') not in SAVED_TARGETS or key!=saved['target']+(':'+saved['app_profile'] if saved.get('app_profile') else ''):
             raise ValueError('invalid saved application target')
         identity,version=saved['id'],saved['version']
         # Saved official source descriptions allow exact recovery after catalog refresh.

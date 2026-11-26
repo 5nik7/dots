@@ -14,7 +14,7 @@ OPTIONS = {
     'version': ('string', 'Exact release tag or saved revision'),
     'variant': ('choice:nerd,mono,propo,original', 'Install all styles of this variant'),
     'face': ('string', 'Exact font filename or full face name'),
-    'target': ('choice:termux,kitty,wezterm,windows-terminal,vscode-editor,vscode-terminal', 'Application target; repeat to select several'),
+    'target': ('choice:termux,kitty,wezterm,windows-terminal,vscode-editor,vscode-terminal,all-terminals', 'Application target; all-terminals selects installed Windows terminal hosts'),
     'config': ('file', 'Explicit unmanaged app configuration'),
     'app-profile': ('string', 'Exact Windows Terminal profile GUID'),
     'output': ('directory', 'Export destination directory'),

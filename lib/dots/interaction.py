@@ -22,8 +22,7 @@ def rich_fzf_available():
         return bool(shutil.which('bash'))
     if not native_shell():
         return False
-    # Old fzf Windows versions only support cmd previews. Do not interpolate
-    # paths into cmd syntax or start a UI whose previews cannot work.
+    # Keep the existing capability floor for native PowerShell previews.
     try:
         return b'--with-shell' in subprocess.run(['fzf', '--help'], capture_output=True, timeout=5).stdout
     except (OSError, subprocess.TimeoutExpired):
@@ -271,9 +270,7 @@ class RichSelector:
             env.update(environment)
         env.update(FZF_DEFAULT_OPTS='', FZF_DEFAULT_OPTS_FILE='',
                    FZF_DEFAULT_COMMAND='', BASH_ENV='', ENV='')
-        if os.name == 'nt':
-            flags += ['--with-shell=' + subprocess.list2cmdline([native_shell(), '-NoLogo', '-NoProfile', '-NonInteractive', '-Command'])]
-        else:
+        if os.name != 'nt':
             env['SHELL'] = shutil.which('bash')
         if color:
             env.pop('NO_COLOR', None)
@@ -288,6 +285,10 @@ class RichSelector:
             env.update(environment)
             env.update(FZF_DEFAULT_OPTS='', FZF_DEFAULT_OPTS_FILE='',
                        FZF_DEFAULT_COMMAND='', BASH_ENV='', ENV='')
+        if os.name == 'nt':
+            # FZF splits --with-shell on whitespace. SHELL takes the literal
+            # executable path and selects FZF's profile-free PowerShell invocation.
+            env['SHELL'] = native_shell()
         sys.stdout.flush()
         sys.stderr.flush()
         # Display text is inert; only the first field is an identity. NUL framing

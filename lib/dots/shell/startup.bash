@@ -73,7 +73,7 @@ fi
 unset _dots_startup_path _dots_startup_roots
 unset _dots_prepare_args
 _dots_debug_event end startup phase 0
-unset _dots_editor _dots_candidate _dots_profile_path _DOTS_INHERITED_PROFILE_PATHS _DOTS_PREVIOUS_CHECKOUT
+unset _dots_editor _dots_candidate _dots_profile_path _dots_mise_shims _DOTS_INHERITED_PROFILE_PATHS _DOTS_PREVIOUS_CHECKOUT
 unset _dots_startup_prepared _dots_startup_shell _dots_startup_cache _dots_startup_generation _dots_startup_entered _dots_startup_attempt _dots_startup_last _dots_startup_file _dots_startup_status _dots_header _dots_bundle_inputs
 # Attachment blocks until detach/exit. Finish startup before handing over the
 # terminal, including when preparation fell back to minimal integration.

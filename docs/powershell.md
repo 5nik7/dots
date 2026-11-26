@@ -9,6 +9,8 @@ Help distinguishes uppercase metavariables using case-sensitive matching.
 These checks do not establish desktop rendering, real profile activation, or
 the native Nu/Xonsh runtime gates.
 
+PowerShell 7 and Windows PowerShell 5.1 use **Tab** and **Alt+F** for fuzzy completion in Vi insert mode. Open a new console after updating the checkout. PowerShell 7 loads PSFzf on first use. Windows PowerShell 5.1 uses fzf directly. [PowerShell profile and key behavior](shell-init.md#powershell-profile)
+
 Python probes select native applications, exclude WindowsApps execution aliases,
 and disable automatic acquisition only for the invocation. The legacy launcher
 install flags must be absent, since any value enables them; the Python install
@@ -39,9 +41,10 @@ values are journaled; Windows Terminal defaults/GUIDs, WezTerm and separate VS C
 fields use managed mappings or explicit files. Termux activation and tmux insertion
 are unavailable here; copy/print and optional FZF remain available. Parsing uses
 the Python 3.11+ standard library. Import, show and repeat import passed through
-both launchers on Windows PowerShell 5.1 and PowerShell 7.7 RC. Native desktop
-registration, recovery, clipboard and visible app-font acceptance are tracked in
-the [fonts plan](../plans/fonts.md).
+both launchers on Windows PowerShell 5.1 and PowerShell 7.7 RC. Native checks
+also cover import dry runs and FZF glyph previews. The [fonts guide](fonts.md)
+describes Windows terminal selection. The [fonts plan](../plans/fonts.md) tracks
+desktop registration, recovery, clipboard and visual checks.
 
 `fonts install FONT --directory DOTFONTS --version VERSION` only stores that version in the checkout; `fonts use FONT --directory DOTFONTS --version VERSION` explicitly registers it for the current user. Backend profile aliases and `$env:DOTFONTS` paths work through the shared resolver. Directory uninstall keeps history and other copies, and the Fonts picker exposes the same directory chooser on native FZF. Installed, Copy/Migrate, batch Install with `--from`, Set and explicit Restore use the same controller and active-profile preferences as Bash. Windows migration requires the existing matching HKCU user-font registration and keeps its lookup path; system fonts are copy-only. These routes need no Bash; native execution/desktop acceptance is still pending.
 
@@ -169,7 +172,7 @@ The [parity plan](../plans/powershell-parity.md) records implementation and veri
 
 Owner acceptance must exercise both real profiles, Unicode and quoted paths, denied link privileges, repeat setup/uninstall, occupied targets and retained backups, interrupted apply/recover, theme switching and undo, FZF previews/keybinds, Ctrl-C/Ctrl-Break, and 40/80/120-column light/dark terminal views. Check actual app config locations and wallpaper separately from fixtures. Linux and WSL likewise need native runtime/terminal evidence; Termux fixtures do not establish those platforms.
 
-Native Git and theme panels share semantic/rendering primitives but have not received visual equivalence acceptance. The native publisher builds an isolated bat cache when bat is available and the PowerShell theme hook exposes it. Its shared builder includes custom syntaxes discovered through Bat's native `--config-dir`, honoring `BAT_CONFIG_DIR`; see [custom Bat syntaxes](themes.md#custom-bat-syntaxes). Native Delta/bat and eza consumer acceptance is pending. The eza connector and renderer use the shared destination resolver and native transaction engine; Termux controller fixtures do not establish Windows PowerShell 5.1/7 link or rendering acceptance. Known-folder resolution relies on the host profile and app environment/default paths, not a general Windows Known Folder API. Do not describe those outstanding checks as completed parity.
+Native Git and theme panels share semantic/rendering primitives and await visual equivalence acceptance. The native publisher builds an isolated bat cache. Fresh PowerShell 5.1 and 7 sessions loaded the published Dots theme and rendered a G-code sample with ANSI syntax highlighting. The theme hook also exports `THEMEDIR` and `THEMESRC` for the active family. See [custom bat syntaxes](themes.md#custom-bat-syntaxes). Separate native Delta and eza rendering checks remain pending. The eza connector and renderer use the shared destination resolver and native transaction engine. Known-folder resolution uses the host profile and application environment/default paths.
 
 Anodize user saves use the existing platform configuration adapter: XDG when
 explicit, otherwise `~/.config/dots/themes` on POSIX and `%APPDATA%/dots/themes`
@@ -220,7 +223,7 @@ coverage; it does not connect to WSL sockets or require Bash/Zsh startup.
 
 ## Shared menu library
 
-`menus.py` provides portable display records, inert JSON/plain views, ordinary terminal FZF selection and literal argument handoff. `dots_argv` selects the native Python frontend on Windows, and FZF previews retain the native PowerShell `--with-shell` adapter. `dots menu tmux sessions` has matching native dispatch, static help, flags and completion. Its native Windows execution returns status 2 with an unavailable diagnostic before probing tools. `dots menu` uses the same fixed registry and native frontend for available actions, with the tmux entry visibly unavailable; normal terminal FZF and existing PowerShell preview support apply. Tmux context is explicitly unavailable on native Windows, with no automatic WSL bridge or app-destination changes. The shared output reader uses optional native less or a read-only native FZF fallback, with the same menu navigation and command-status contract. The Git family and its preview/confirmation gate use the shared controller on both frontends. Fitted reader popups apply only to tmux; native Windows retains the ordinary terminal reader and existing Git controller. No Bash pager pipeline is required. Portable adapter fixtures cover arguments and status contracts; actual PowerShell 5.1/7 FZF rendering, input and interruption acceptance remains pending.
+`menus.py` provides portable display records, inert JSON/plain views, ordinary terminal FZF selection and literal argument handoff. `dots_argv` selects the native Python frontend on Windows. Dots supplies the invoking PowerShell executable as the FZF process's `SHELL`, so previews work with paths containing spaces. `dots menu tmux sessions` has matching native dispatch, static help, flags and completion. Its native Windows execution returns status 2 with an unavailable diagnostic before probing tools. `dots menu` uses the same fixed registry and native frontend for available actions, with the tmux entry visibly unavailable; normal terminal FZF and existing PowerShell preview support apply. Tmux context is explicitly unavailable on native Windows, with no automatic WSL bridge or app-destination changes. The shared output reader uses optional native less or a read-only native FZF fallback, with the same menu navigation and command-status contract. The Git family and its preview/confirmation gate use the shared controller on both frontends. Fitted reader popups apply only to tmux; native Windows retains the ordinary terminal reader and existing Git controller. No Bash pager pipeline is required. Native PowerShell 5.1/7 checks cover file and glyph preview rendering, file preview cycling and Escape.
 
 The native shell theme hook includes the shared [less override policy](shell-environment.md#global-less-colors). PowerShell on POSIX exports the themed standout/reset pair; native Windows less retains stock colors because its console renderer does not use termcap RGB overrides. No Windows application destinations or WSL bridge are added.
 

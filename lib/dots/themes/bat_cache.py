@@ -100,6 +100,20 @@ def inputs():
     # Resolve the real source before build() replaces BAT_CONFIG_DIR. A config
     # file override does not select Bat's asset directory, including on Windows.
     env = dict(os.environ, BAT_CONFIG_PATH=os.devnull, BAT_THEME='ansi')
+    if os.name == 'nt' and not env.get('BAT_CONFIG_DIR'):
+        # A portable Bat distribution can report its own executable directory.
+        # Prefer the managed asset location, including on a checkout before setup.
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'files'))
+        try:
+            from app_paths import config_directory
+            managed = config_directory('bat')
+        finally:
+            sys.path.pop(0)
+        checkout = Path(env.get('DOTS') or Path(__file__).resolve().parents[3])
+        if managed.is_dir() or env.get('DOTS_APP_BAT_CONFIG'):
+            env['BAT_CONFIG_DIR'] = str(managed)
+        elif (checkout / 'config/bat').is_dir():
+            env['BAT_CONFIG_DIR'] = str(checkout / 'config/bat')
 
     def query(option):
         result = subprocess.run([executable, option], env=env, capture_output=True, timeout=8)

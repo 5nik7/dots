@@ -36,7 +36,7 @@ class NativeCLI(unittest.TestCase):
                         XDG_CONFIG_HOME=str(self.home/'config'), XDG_STATE_HOME=str(self.home/'state'),
                         XDG_CACHE_HOME=str(self.home/'cache'), XDG_DATA_HOME=str(self.home/'data'),
                         APPDATA=str(self.home/'Roaming'), LOCALAPPDATA=str(self.home/'Local'),
-                        CODEX_HOME=str(self.home/'codex'), PI_CODING_AGENT_DIR=str(self.home/'pi'),
+                        CODEX_HOME=str(self.home/'codex'), CLAUDE_CONFIG_DIR=str(self.home/'.claude'), PI_CODING_AGENT_DIR=str(self.home/'pi'),
                         BAT_CONFIG_DIR=str(self.home/'config/bat'),
                         DOTS_COLOR='never', DOTS_ICONS='never', DOTS_PROGRESS='never',
                         PYTHONUTF8='1', PYTHONIOENCODING='utf-8',
@@ -371,6 +371,9 @@ class NativeCLI(unittest.TestCase):
                 self.assertEqual(config_directory('eza'), self.home / 'custom eza')
             self.assertEqual(config_directory('glaze-wm'), self.home / '.glzr/glazewm')
             self.assertIsNone(config_directory('wt'))
+            unpackaged = self.home / 'Local/Microsoft/Windows Terminal'
+            (unpackaged / 'Fragments/Dots').mkdir(parents=True)
+            self.assertIsNone(config_directory('wt'))
             stable = self.home / 'Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState'
             stable.mkdir(parents=True)
             self.assertEqual(config_directory('wt'), stable)
@@ -606,7 +609,7 @@ class NativeCLI(unittest.TestCase):
         generation = Path(prepared.stdout.decode().split('\0')[0])
         state = self.home / 'state/dots'
         self.assertEqual(generation.parent, state / 'themes/generations')
-        self.assertEqual((generation / 'status').read_text(), 'committed\n')
+        self.assertEqual((generation / 'status').read_bytes(), b'committed\n')
         self.assertTrue((generation / 'palette.json').is_file())
         for name in ('themes/current', 'current/theme', 'themes/commands/current'):
             self.assertFalse(os.path.lexists(state / name), name)

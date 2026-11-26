@@ -67,6 +67,8 @@ class ManagedManual(unittest.TestCase):
         self.prefix=self.base/'-termux prefix ü/usr';self.prefix.mkdir(parents=True)
         self.env.update(PREFIX=str(self.prefix),TERMUX__PREFIX=str(self.prefix),TERMUX_VERSION='fixture')
         self.patch=patch.dict(os.environ,self.env,clear=True);self.patch.start();self.addCleanup(self.patch.stop)
+        platform = patch('install.platform',return_value='termux')
+        platform.start();self.addCleanup(platform.stop)
 
     def plan(self,platform='termux',components=('core',)):
         with patch('install.platform',return_value=platform):
@@ -110,18 +112,19 @@ class ManagedManual(unittest.TestCase):
         self.plan().apply('install')
         self.assertNotIn(str(target),self.receipt()['entries'])
         target.unlink();target.symlink_to(self.base/'missing')
+        previous_link = os.readlink(target)
         # Reviewed installation retains even a pre-existing broken link, so
         # uninstall can restore its exact text after the replacement.
         replacement = self.plan()
         self.assertFalse(replacement.blocked)
         self.assertTrue(any(row['status'] == 'replace-with-backup' and
                             row.get('target') == str(target) for row in replacement.items))
-        self.assertEqual(os.readlink(target), str(self.base/'missing'))
+        self.assertEqual(os.readlink(target), previous_link)
         replacement.apply('install')
         removal = Installation(self.repo)
         removal.plan_uninstall(['core'])
         removal.apply('uninstall')
-        self.assertEqual(os.readlink(target), str(self.base/'missing'))
+        self.assertEqual(os.readlink(target), previous_link)
         target.unlink();self.plan().apply('install')
         target.unlink();target.write_text('user changed manual')
         removal=Installation(self.repo);removal.plan_uninstall(['core'])

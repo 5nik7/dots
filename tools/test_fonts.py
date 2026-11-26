@@ -230,6 +230,15 @@ class Fonts(unittest.TestCase):
             if value is None:self.registry.pop(name,None)
             else:self.registry[name]=value
         patch('font_registry.write',side_effect=registration_write).start()
+        if os.name=='nt':
+            # POSIX platform fixtures still create NTFS symlinks. Capture their
+            # actual mode and native substitution path for drift assertions.
+            def native_link_digest(source):
+                with tempfile.TemporaryDirectory(dir=self.home/'tmp') as temp:
+                    link=Path(temp)/'preview-link'
+                    link.symlink_to(source)
+                    return digest(link)
+            patch('fonts.operations.link_digest',side_effect=native_link_digest).start()
         self.source=self.home/'input fonts';self.source.mkdir()
         font(self.source/'-Fixture Regular.ttf')
         (self.source/'OFL.txt').write_text('Fixture license')
@@ -238,10 +247,11 @@ class Fonts(unittest.TestCase):
 
     def execute(self,*arguments,native=False,bash=False,powershell=False,code=0):
         engine = os.environ.get('DOTS_TEST_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell')
-        argv=([engine,'-NoLogo','-NoProfile','-NonInteractive','-File',str(ROOT/'bin/dots.ps1'),'fonts'] if powershell else
-              [str(ROOT/'bin/dots'),'fonts'] if bash else
-              [sys.executable,'-B',str(ROOT/'lib/dots/cli.py'),'fonts'] if native else
-              [sys.executable,'-B',str(ROOT/'lib/dots/fonts_cli.py')])
+        root=Path(os.environ['DOTS'])
+        argv=([engine,'-NoLogo','-NoProfile','-NonInteractive','-File',str(root/'bin/dots.ps1'),'fonts'] if powershell else
+              [str(root/'bin/dots'),'fonts'] if bash else
+              [sys.executable,'-B',str(root/'lib/dots/cli.py'),'fonts'] if native else
+              [sys.executable,'-B',str(root/'lib/dots/fonts_cli.py')])
         result=subprocess.run([*argv,*arguments],capture_output=True,text=True,env=os.environ.copy(),timeout=20)
         self.assertEqual(result.returncode,code,result.stdout+result.stderr)
         return result
@@ -468,7 +478,11 @@ class Fonts(unittest.TestCase):
         self.assertIn(identity,result.stdout)
         result=subprocess.run([*command,'set',identity,'--face',''],capture_output=True,text=True,env=os.environ.copy())
         self.assertIn('-Fixture Regular.ttf',result.stdout)
-        for shell in ('bash','zsh','fish'):
+        if os.name=='nt':
+            candidates=subprocess.check_output([sys.executable,'-B',str(self.fixture_root/'lib/dots/cli.py'),
+                                                '__complete','fonts','icons','--format',''])
+            self.assertIn(b'candidate\tglyph\t',candidates)
+        for shell in (() if os.name=='nt' else ('bash','zsh','fish')):
             args=[str(self.fixture_root/'bin/dots'),'__complete',shell]
             nf=subprocess.check_output([*args,'2','--','nf','--format',''])
             icons=subprocess.check_output([*args,'4','--','dots','fonts','icons','--format',''])

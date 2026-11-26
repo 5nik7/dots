@@ -144,6 +144,17 @@ class Themes:
     def current(self):
         return settings(self.checkout)['DOTS_THEME_ID']['value']
 
+    def family_directory(self, palette):
+        directory = self.directory(palette['id'])
+        family = palette['theme']
+        if not ID.fullmatch(family):
+            raise ValueError('invalid theme family')
+        for base in (self.root, directory.parent):
+            candidate = base / family
+            if candidate.is_dir():
+                return candidate
+        return directory
+
     def load(self, identity):
         directory = self.directory(identity)
         meta = literal(directory / 'theme.toml', 'metadata') if (directory / 'theme.toml').exists() else {}
@@ -241,7 +252,7 @@ class Themes:
         tokens['git_colors_starship'] = '\n'.join('git_' + key + ' = ' + json.dumps(value) for key, value in doc['colors']['git'].items())
         rendered = set()
         trusted = directory.is_relative_to(self.root)
-        overrides = 'kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini eza.yml television.toml leaf.toml'.split()
+        overrides = 'kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json claude-code.json dots.clinktheme vivid.yml fsh.ini eza.yml television.toml leaf.toml'.split()
         for name in overrides if trusted else ():
             if (directory / name).is_file() and not (directory / name).is_symlink():
                 (out / name).write_bytes(regular(directory / name)); rendered.add(name)
@@ -272,6 +283,10 @@ class Themes:
         fingerprint = self.publication_fingerprint(identity, bat_inputs) if build_cache else self.fingerprint(identity)
         (out / 'fingerprint').write_text(fingerprint + '\n')
         rows = [('@theme', 'id', identity), ('@theme', 'family', palette['theme']), ('@theme', 'flavor', palette['flavor'])]
+        family_directory = str(self.family_directory(palette))
+        if any(ord(char) < 32 for char in family_directory):
+            raise ValueError('invalid theme family directory')
+        rows.append(('@theme', 'directory', family_directory))
         for name, value in palette['palette'].items():
             rows.append(('@palette', name, value))
         for name, value in palette['colors'].items():

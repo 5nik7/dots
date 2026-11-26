@@ -142,7 +142,7 @@ class SetupFonts(unittest.TestCase):
         sys.path.insert(0,str(fixtures.ROOT/'plugins/pkgs'))
         self.repo=self.fixture_root;self.base=self.home
         fixtures.shutil.copytree(fixtures.ROOT/'default',self.repo/'default')
-        SetupLeaf.fixture(self)
+        SetupLeaf.fixture(self, windows=False)
         source=self.mapping();fixtures.font(source/'font.ttf','Original Mono')
         original_font=(source/'font.ttf').read_bytes()
         leaf=self.home/'.local/bin/leaf';leaf.parent.mkdir(parents=True);leaf.write_bytes(b'original leaf')
@@ -167,11 +167,13 @@ class SetupFonts(unittest.TestCase):
             return json.loads(output.getvalue())
         words=['install','--fonts',str(preferences),'--packages',str(packages),'--save-choices']
         for name in ('core','files','fonts','leaf','packages'):words+=['--component',name]
+        from platform_info import detect
+        facts = detect(system='Android', env={'TERMUX_VERSION': 'fixture', 'PREFIX': (self.home/'usr').as_posix()})
         # Only fixture generation uses fontTools. Setup also parses the previous
         # Termux face while retaining it for restoration.
         with (
             patch.dict(sys.modules, {'fontTools': None, 'fontTools.ttLib': None}),
-            patch('profiles.detect', return_value={'platform': 'termux', 'distro': 'termux'}),
+            patch('profiles.detect', return_value=facts),
             patch('install.platform', return_value='termux'),
             patch('package_setup.Stage', return_value=stage),
             patch('setup_leaf.execute', side_effect=lambda argv, **kw: SetupLeaf.execute(self, argv, **kw)),

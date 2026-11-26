@@ -30,7 +30,7 @@ def default_roots(resolver):
                 include(path, False)
         # These application roots can be external to XDG and have no file-
         # adoption registry. Limit discovery to their theme directories.
-        for app in ('codex', 'pi'):
+        for app in ('claude-code', 'codex', 'pi'):
             try:
                 path = catalog.target('${APP_CONFIG:' + app + '}/themes')
             except (OSError, ValueError):

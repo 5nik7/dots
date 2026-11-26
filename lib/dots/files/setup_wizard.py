@@ -155,7 +155,9 @@ def font_choices(selector, args):
     from fonts.config import TARGETS
     from fonts.model import Library
     from fonts.workspace import Workspace
-    apps = args.font_document.get('applications', {})
+    # Classic Console uses the Fonts registry journal and its own Restore route.
+    apps = {key: spec for key, spec in args.font_document.get('applications', {}).items()
+            if key != 'classic-console'}
     choice = selector.pick('choose', 'Fonts', ['Back', 'Select saved targets', 'Choose retained font'])
     if choice == 'Select saved targets':
         args.font_target = pick_many(selector, 'Saved font targets', [(k, k+' — '+v['id']) for k,v in apps.items()],

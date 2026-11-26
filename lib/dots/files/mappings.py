@@ -31,7 +31,7 @@ def target_spec(catalog, value):
     if getattr(catalog, 'flat', False):
         # Include configured native app roots outside HOME. Generic roots win
         # an exact tie (for instance when an app defaults to HOME itself).
-        apps = {'APP_CONFIG:codex', 'APP_CONFIG:pi', 'APP_CONFIG:leaf', 'APP_CONFIG:television',
+        apps = {'APP_CONFIG:claude-code', 'APP_CONFIG:codex', 'APP_CONFIG:pi', 'APP_CONFIG:leaf', 'APP_CONFIG:television',
                 'APP_CONFIG:eza', 'APP_CONFIG:windows-terminal'}
         for rows in catalog.effective.values():
             for row in rows.values():

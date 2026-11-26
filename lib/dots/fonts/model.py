@@ -233,7 +233,8 @@ class Plan:
         elif 'text' in operation and path.is_file() and not path.is_symlink():
             if read_text(path) == operation['text']: return
         elif 'data' in operation and path.is_file() and not path.is_symlink():
-            if json.loads(path.read_text()) == operation['data'] and 'font_registry' not in operation: return
+            if (json.loads(path.read_text(encoding='utf-8')) == operation['data']
+                    and 'font_registry' not in operation and 'console_face' not in operation): return
         elif operation.get('delete') and before is None and 'font_registry' not in operation: return
         elif 'link' in operation and link_target_matches(path, operation['link']): return
         row = dict(path=str(path), **operation)
@@ -252,7 +253,8 @@ class Plan:
 
     def report(self):
         return dict(schema=1, status='preview', items=self.items,
-                    operations=[dict(path=op['path'], kind='registration' if 'font_registry' in op else
+                    operations=[dict(path=op['path'], kind='console-face' if 'console_face' in op else
+                        'registration' if 'font_registry' in op else
                         'delete' if op.get('delete') else 'link' if 'link' in op else 'write') for op in self.operations])
 
     def apply(self, action):
@@ -260,16 +262,18 @@ class Plan:
         return dict(schema=1, status=result['status'], transaction=result.get('id'), items=self.items)
 
 
+def windows_family(path):
+    """Win32/GDI selects using the legacy family of the same OpenType face."""
+    from fonts.sfnt import windows_family_name
+    return windows_family_name(_font_data(Path(path)))
+
+
 def metadata(path):
     face, _ = metadata_with_revision(path)
     return face
 
 
-def metadata_with_revision(path):
-    """Return the stored face record and the internal revision used to match installed styles."""
-    from fonts.sfnt import face_fields
-
-    path = Path(path)
+def _font_data(path):
     if path.is_symlink() or not path.is_file() or path.suffix.lower() not in ('.ttf', '.otf'):
         raise ValueError('expected a regular TTF/OTF font of at most 64 MiB')
     size = path.stat().st_size
@@ -279,6 +283,15 @@ def metadata_with_revision(path):
         data = stream.read(size + 1)
     if len(data) != size:
         raise ValueError('font file changed while reading')
+    return data
+
+
+def metadata_with_revision(path):
+    """Return the stored face record and the internal revision used to match installed styles."""
+    from fonts.sfnt import face_fields
+
+    path = Path(path)
+    data = _font_data(path)
     try:
         fields, revision = face_fields(data)
     except ValueError as error:

@@ -59,7 +59,7 @@ class NativeInstallation(unittest.TestCase):
             'XDG_CONFIG_HOME':'home/config', 'XDG_DATA_HOME':'home/data',
             'XDG_STATE_HOME':'home/state', 'XDG_CACHE_HOME':'home/cache',
             'XDG_RUNTIME_DIR':'runtime', 'TEMP':'tmp', 'TMP':'tmp', 'TMPDIR':'tmp',
-            'CODEX_HOME':'home/codex', 'PI_CODING_AGENT_DIR':'home/pi',
+            'CODEX_HOME':'home/codex', 'PI_CODING_AGENT_DIR':'home/pi', 'CLAUDE_CONFIG_DIR':'home/.claude',
             'PSModulePath':'runtime/modules', 'GIT_TEMPLATE_DIR':'runtime/git-template',
             'GOPATH':'build/go', 'GOCACHE':'build/cache', 'GOMODCACHE':'build/modules',
             'GOTMPDIR':'build/tmp', 'DOTS_TEST_PROFILE_ROOT':'redirected Documents 雪',

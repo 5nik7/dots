@@ -19,6 +19,7 @@ sys.path.insert(0, str(LIB / 'files'))
 from file_platform import lock, open_nofollow
 from profiles import resolve, SENSITIVE
 from environment import declarations, TOKEN, TOOL_PATHS
+import mise_shims
 
 
 def shell_value(template):
@@ -118,6 +119,15 @@ class Compiler:
 
     def build(self):
         profile = resolve(self.root)
+        from profile_environment import Model
+        generated = Model(self.root, profile)
+        self.inputs.update(generated.inputs)
+        shim_inputs = []
+        context, self.mise_guard = mise_shims.startup_context(self.root, profile, generated.scalars)
+        shim = mise_shims.resolve(context, False, shim_inputs)
+        self.inputs.add(LIB / 'mise_shims.py')
+        for path in shim_inputs:
+            (self.inputs if path.exists() else self.missing_inputs).add(path)
         release = Path(os.environ.get('TERMUX__PREFIX') or os.environ.get('PREFIX', '/usr')) / 'etc/os-release' if profile['facts']['platform'] == 'termux' else Path('/etc/os-release')
         if release.is_file(): self.inputs.add(release)
         for name in ('startup.py', 'profile_config.py', 'profiles.py', 'platform_info.py', 'environment.py', 'shell/environment.json', 'shell/settings.tsv', 'shell/paths.tsv'):
@@ -162,12 +172,15 @@ class Compiler:
         body += 'typeset -ga _DOTS_PROFILE_SETTING_ROWS=(' + ' '.join(map(shlex.quote, setting_rows)) + ')\n'
         body += self.module('lib/dots/shell/config.bash', self.read('lib/dots/shell/config.bash') + '\n_dots_config_load || return\n')
         body += self.module('lib/dots/shell/environment.bash', self.read('lib/dots/shell/environment.bash')) + '\n'
-        body += 'if [[ ${_DOTS_STARTUP_MODE:-integration} == early ]]; then _dots_shell_paths; return 0; fi\n'
+        body += '_dots_mise_shims=' + shlex.quote(str(shim) if shim else '') + '\n'
+        body += 'if [[ ${_DOTS_STARTUP_MODE:-integration} == early ]]; then _dots_shell_paths early; return 0; fi\n'
         if self.early:
             return body, profile
-        from profile_environment import Model
-        generated = Model(self.root, profile)
-        self.inputs.update(generated.inputs)
+        profile_paths = [str(Path(row['root']) / p) for row in reversed(profile['layers'])
+                         for p in row.get('path', ['bin', 'scripts'])]
+        if shim:
+            profile_paths.append(str(shim))
+        body += '_dots_profile_path=(' + ' '.join(map(shlex.quote, profile_paths)) + ')\n'
         body += self.module('lib/dots/shell/environment_runtime.bash', self.read('lib/dots/shell/environment_runtime.bash')) + '\n'
         body += 'export DOTS_PROFILE=' + shlex.quote(profile['current']) + '\n'
         body += 'export DOTS_PROFILE_LAYERS=' + shlex.quote(' '.join(row['id'] for row in profile['layers'])) + '\n'
@@ -187,12 +200,8 @@ class Compiler:
             ending = '/' + suffix if suffix else ''
             body += f'[[ -z "${{{variable}:-}}" ]] || _dots_tool_path {placement} "${{{variable}}}{ending}"\n'
         body += '_dots_env_publish_origins\n'
-        profile_paths = []
-        for row in reversed(profile['layers']):
-            profile_paths.extend(str(Path(row['root']) / p) for p in row.get('path', ['bin','scripts']))
         body += 'export DOTS_PROFILE_CHECKOUT=' + shlex.quote(str(self.root)) + '\n'
         body += 'export DOTS_PROFILE_BIN_PATHS=' + shlex.quote(os.pathsep.join(str(Path(row['root'])/'bin') for row in reversed(profile['layers']))) + '\n'
-        body += '_dots_profile_path=(' + ' '.join(map(shlex.quote, profile_paths)) + ')\n'
         body += self.module('lib/dots/shell/profile-paths.bash', self.read('lib/dots/shell/profile-paths.bash')) + '\n'
         body += '[[ $- == *i* ]] || return 0\n'
         body += '_dots_startup_path=$PATH _dots_startup_roots="$DOTBIN:$DOTSCRIPTS:$THEMESBIN:${dots_options[DOTS_INIT_COMMANDS]}"\n'
@@ -326,6 +335,9 @@ def prepare(root, shell, destination, early=False, observed=None):
         guard = '[[ $DOTS == ' + shlex.quote(str(root)) + ' && ${ZSH_VERSION:-${BASH_VERSION:-}} == ' + shlex.quote(os.environ.get('DOTS_BUILD_SHELL_VERSION','')) + ' ]] || return 1\n'
         if early:
             guard += '[[ ${_DOTS_STARTUP_MODE:-integration} == early ]] || return 1\n'
+        for key, values in compiler.mise_guard.items():
+            comparisons = ['${' + key + ':-} == ' + shlex.quote(value) for value in values]
+            guard += '[[ ' + ' || '.join(comparisons) + ' ]] || return 1\n'
         for path in sorted(compiler.missing_inputs):
             guard += '[[ ! -e ' + shlex.quote(str(path)) + ' ]] || return 1\n'
         guard += '_dots_bundle_inputs=(' + ' '.join(map(lambda p: shlex.quote(str(p)),inputs)) + ')\n'

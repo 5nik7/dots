@@ -65,7 +65,10 @@ def _encoding(platform, encoding, language):
     return 'ascii'
 
 
-def _names(table):
+def _names(tables, *, prefer_win32=False):
+    if b'name' not in tables:
+        raise ValueError('missing name table')
+    table = tables[b'name']
     if len(table) < 6:
         raise ValueError('truncated name table')
     version, count, storage = struct.unpack_from('>HHH', table)
@@ -97,6 +100,9 @@ def _names(table):
         priority = 2
         if platform == 3 and language == 0x409:
             priority = 0
+            if prefer_win32 and name_id == 1 and encoding in (1, 10):
+                # GDI prefers US English Unicode BMP, then full Unicode.
+                priority = -2 if encoding == 1 else -1
         elif platform == 1 and language == 0:
             priority = 1
         order = -index if priority == 2 else index
@@ -171,12 +177,18 @@ def _variant(family):
     return 'original'
 
 
+def windows_family_name(data):
+    names = _names(_tables(memoryview(data)), prefer_win32=True)
+    value = names.get(1) or names.get(21) or names.get(16)
+    if not value or any(ord(c) < 32 for c in value):
+        raise ValueError('font has no usable Windows family name')
+    return value
+
+
 def face_fields(data):
     """Return the face fields in storage order and its internal version string."""
     tables = _tables(memoryview(data))
-    if b'name' not in tables:
-        raise ValueError('missing name table')
-    names = _names(tables[b'name'])
+    names = _names(tables)
     family = names.get(21) or names.get(16) or names.get(1)
     style = names.get(22) or names.get(17) or names.get(2) or 'Regular'
     full = names.get(4) or f'{family} {style}'

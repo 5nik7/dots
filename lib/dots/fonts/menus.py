@@ -113,7 +113,7 @@ def downloaded(args,*,context=None):
 def set_menu(args,*,context=None,selected=None):
     from fonts_cli import targets
     context=context or context_for(args);library=Library(directory=args.directory)
-    target=select('Application',[(r['target'],r['target']) for r in targets(library) if r['status']=='available'],context)
+    target=select('Application',[(r['target'],r.get('label',r['target'])) for r in targets(library) if r['status']=='available'],context)
     if target is None:return 0
     if selected is None:
         source=select('Font source',[('downloaded','Downloaded fonts'),('installed','Installed fonts'),('catalog','Saved catalogs')],context)

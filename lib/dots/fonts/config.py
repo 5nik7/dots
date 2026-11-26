@@ -7,13 +7,20 @@ import os
 from pathlib import Path
 import re
 import stat
+import tempfile
 
 from fonts.model import read, read_text
 from transactions import digest, parents_safe, exists
+from fonts.windows_terminals import GROUP, MINTTY, WT_EDITIONS, host_path
 
 TARGETS = {'termux': ('termux', 'font.ttf'), 'kitty': ('kitty', 'kitty.conf'),
            'wezterm': ('wezterm', 'wezterm.lua'), 'windows-terminal': ('wt', 'settings.json'),
            'vscode-editor': ('vscode', 'settings.json'), 'vscode-terminal': ('vscode', 'settings.json')}
+SAVED_TARGETS = frozenset((*TARGETS, *WT_EDITIONS, *MINTTY, 'classic-console'))
+
+
+class UnmanagedConfig(ValueError):
+    """An explicit target may select a regular, independently owned config."""
 
 
 @dataclass
@@ -104,6 +111,36 @@ def family_list(value, family):
 
 def edit(text, target, family, app_profile=None):
     if len(text.encode()) > 4 * 1024 * 1024: raise ValueError('application configuration is too large')
+    if text.startswith('\ufeff'):
+        return '\ufeff' + edit(text[1:], target, family, app_profile)
+    if target in MINTTY:
+        if any(ord(c) < 32 for c in family):
+            raise ValueError('invalid mintty font name')
+        setting = re.compile(r'(?im)^([ \t]*Font[ \t]*=[ \t]*)[^\r\n]*')
+        matches = list(setting.finditer(text))
+        if matches:
+            match = matches[-1]
+            return text[:match.start()] + match[1] + family + text[match.end():]
+        newline = '\r\n' if '\r\n' in text else '\n'
+        return text + (newline if text and not text.endswith('\n') else '') + 'Font=' + family + newline
+    if target in WT_EDITIONS:
+        profiles = child(json_tree(text), 'profiles')
+        listing = child(profiles, 'list') if profiles else None
+        if listing and not isinstance(listing.children, list):
+            raise ValueError('Windows Terminal profiles.list must be an array')
+        # Work backwards over original offsets, retaining inherited profiles.
+        for node in reversed(listing.children if listing else []):
+            font = child(node, 'font')
+            updated = text[node.start:node.end]
+            if font and child(font, 'face'):
+                updated = replace_json(updated, ['font','face'], lambda old: family_list(old, family))
+            if child(node, 'fontFace'):
+                updated = replace_json(updated, ['fontFace'], lambda old: family_list(old, family))
+            text = text[:node.start] + updated + text[node.end:]
+        defaults = child(profiles, 'defaults') if profiles else None
+        if defaults and child(defaults, 'fontFace'):
+            text = replace_json(text, ['profiles','defaults','fontFace'], lambda old: family_list(old, family))
+        return edit(text, 'windows-terminal', family)
     if target.startswith('vscode-'):
         key = 'editor.fontFamily' if target == 'vscode-editor' else 'terminal.integrated.fontFamily'
         return replace_json(text, [key], lambda old: family_list(old, family))
@@ -150,11 +187,52 @@ def edit(text, target, family, app_profile=None):
 
 
 def text_digest(path, text):
+    if not Path(path).exists():
+        from file_platform import prepare_text
+        with tempfile.TemporaryDirectory() as directory:
+            staged = Path(directory) / 'settings'
+            prepare_text(staged, text, path)
+            return digest(staged)
     mode = stat.S_IMODE(Path(path).stat().st_mode)
     return hashlib.sha256(b'.\0' + str(mode).encode() + b'\0F' + text.encode('utf-8') + b'\0').hexdigest()
 
 
 def destination(library, target, explicit=None):
+    if target in (*WT_EDITIONS, *MINTTY):
+        if library.platform != 'windows':
+            raise ValueError(target + ' requires native Windows')
+        path = host_path(library, target)
+        parents_safe(path)
+        receipt_path = library.state / 'installation.json'
+        receipt_guard = digest(receipt_path) if target in WT_EDITIONS else None
+        receipt = read(receipt_path, dict(schema=1)) if target in WT_EDITIONS else {}
+        owned = receipt.get('entries', {}).get(str(path))
+        if target in WT_EDITIONS and (path.is_symlink() or owned):
+            # Stable and Preview may both link the same profile source even
+            # when the generic Terminal mapping cannot choose an edition.
+            from files.catalog import Catalog
+            root = Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[3]).resolve()
+            catalog = Catalog(root, 'windows')
+            owners = [row for row in catalog.records() if row.get('app') == 'wt' and
+                      row['applicable'] and row.get('enabled', True) and row.get('source') and
+                      (Path(row['source']) == path.resolve() if path.is_symlink()
+                       else row['id'] == owned.get('id'))]
+            if len(owners) == 1:
+                found = dict(path=owners[0]['source'], source='managed', catalog=catalog, destination=str(path))
+                if path.is_symlink():
+                    return found
+                if (receipt.get('root') == str(root) and receipt.get('platform') == 'windows'
+                        and owned.get('after') == digest(path) == digest(found['path'])):
+                    return dict(found, receipt=receipt, receipt_path=str(receipt_path), active=str(path),
+                                guards={str(receipt_path): receipt_guard})
+            raise ValueError('Windows Terminal settings ownership changed; review dots files: ' + str(path))
+        if path.is_symlink() or (path.exists() and not path.is_file()):
+            raise ValueError('unsafe terminal configuration: ' + str(path))
+        return dict(path=str(path), source='local')
+    if target == 'classic-console':
+        if library.platform != 'windows':
+            raise ValueError('classic-console requires native Windows')
+        return dict(path=r'HKCU\Console', source='registry')
     if target not in TARGETS: raise ValueError('unknown font target')
     if target == 'termux':
         if library.platform != 'termux': raise ValueError('Termux activation is available only on Termux')
@@ -183,16 +261,26 @@ def destination(library, target, explicit=None):
     catalog = Catalog(root, library.platform)
     app, filename = TARGETS[target]
     rows = [r for r in catalog.records() if r.get('app') == app and r['applicable'] and r.get('enabled', True)
-            and r.get('target') and r['status'] != 'replaced']
-    if len(rows) != 1: raise ValueError('app mapping is missing or ambiguous; provide --config explicitly')
+            and r.get('repository') != 'theme' and r.get('target') and r['status'] != 'replaced']
+    if len(rows) != 1:
+        if target == 'windows-terminal':
+            local = Path(os.environ.get('LOCALAPPDATA', library.home / 'AppData/Local'))
+            candidates = [str(local / folder / filename) for folder in WT_EDITIONS.values()
+                          if (local / folder / filename).is_file()]
+            if len(candidates) > 1:
+                raise ValueError('multiple Windows Terminal settings files: ' + ', '.join(candidates) +
+                                 '; select one with --config or select --target all-terminals')
+        raise UnmanagedConfig('app mapping is missing or ambiguous; provide --config explicitly')
     row = rows[0]
-    if row['status'] in ('conflict', 'linked-elsewhere', 'source-missing', 'source-broken-link'):
+    if row['status'] == 'conflict':
+        raise UnmanagedConfig('app configuration ownership needs review: conflict')
+    if row['status'] in ('linked-elsewhere', 'source-missing', 'source-broken-link'):
         raise ValueError('app configuration ownership needs review: ' + row['status'])
     source, target_path = Path(row['source']), Path(row['target'])
     setup = getattr(library, 'setup_installation', None)
     pending = next((op for op in setup.operations if op['path'] == str(target_path)), None) if setup else None
     planned = pending and (pending.get('link') == str(source) or pending.get('source') == str(source))
-    if not exists(target_path) and not planned: raise ValueError('managed app destination is not installed; use dots files first')
+    if not exists(target_path) and not planned: raise UnmanagedConfig('managed app destination is not installed; use dots files first')
     directory = source.is_dir()
     path = source / filename if directory else source
     active = target_path / filename if directory else target_path
@@ -206,18 +294,70 @@ def destination(library, target, explicit=None):
     elif exists(target_path) and not linked:
         if directory: raise ValueError('managed app directory is not linked; review dots files first')
         receipt_path = library.state / 'installation.json'
+        receipt_guard = digest(receipt_path)
         receipt = read(receipt_path, dict(schema=1))
         owned = receipt.get('entries', {}).get(str(target_path))
         if (receipt.get('root') != str(root) or receipt.get('platform') != library.platform
                 or not owned or owned.get('id') != row['id'] or owned.get('after') != digest(target_path)
                 or target_path.is_symlink()):
             raise ValueError('app copy is unowned or changed; review dots files first')
-        result.update(receipt=receipt, receipt_path=str(receipt_path))
+        result.update(receipt=receipt, receipt_path=str(receipt_path), guards={str(receipt_path):receipt_guard})
     return result
 
 
-def configure(plan, identity, version, font, target, *, explicit=None, app_profile=None):
-    found = destination(plan.library, target, explicit)
+def desktop_group_destination(plan, target):
+    from app_paths import config_directory
+    app, filename = TARGETS[target]
+    base = config_directory(app)
+    path = base / filename if base else None
+    if target == 'wezterm':
+        override = os.environ.get('WEZTERM_CONFIG_FILE')
+        if override:
+            path = Path(override)
+        else:
+            candidates = [path, plan.library.home / '.config/wezterm/wezterm.lua', plan.library.home / '.wezterm.lua']
+            path = next((p for p in candidates if p and p.is_file()), path)
+    if not path or not path.is_file():
+        raise FileNotFoundError(target + ' has no detected user configuration')
+    try:
+        managed = destination(plan.library, target)
+    except UnmanagedConfig:
+        managed = None
+    if managed and path.resolve() == Path(managed['active']).resolve():
+        return None, managed
+    receipt = read(plan.library.state / 'installation.json', dict(schema=1))
+    if str(path) in receipt.get('entries', {}):
+        raise ValueError('managed application settings need review: ' + str(path))
+    return str(path), destination(plan.library, target, str(path))
+
+
+def selected_targets(plan, targets, explicit=None, app_profile=None):
+    targets = list(dict.fromkeys(targets))
+    if GROUP not in targets:
+        return [(target, explicit, destination(plan.library, target, explicit)) for target in targets]
+    if plan.library.platform != 'windows':
+        raise ValueError('all-terminals requires native Windows')
+    if len(targets) != 1 or explicit or app_profile:
+        raise ValueError('all-terminals selects its own destinations and profiles')
+    selected = []
+    for target in (*WT_EDITIONS, 'wezterm', 'vscode-terminal', *MINTTY, 'classic-console'):
+        try:
+            if target in ('wezterm', 'vscode-terminal'):
+                config, found = desktop_group_destination(plan, target)
+            else:
+                config, found = None, destination(plan.library, target)
+        except FileNotFoundError as error:
+            plan.items.append(dict(target=target, action='unavailable', reason=str(error)))
+            continue
+        selected.append((target, config, found))
+    return selected
+
+
+def configure(plan, identity, version, font, target, *, explicit=None, app_profile=None, found=None):
+    if target == 'classic-console':
+        from fonts.console import configure as configure_console
+        return configure_console(plan, identity, version, font)
+    found = found or destination(plan.library, target, explicit)
     plan.guards.update(found.get('guards', {}))
     path = Path(found['path'])
     plan.guard(path)
@@ -237,8 +377,12 @@ def configure(plan, identity, version, font, target, *, explicit=None, app_profi
             for input_path in found['catalog'].input_paths(): plan.guard(input_path)
             plan.guard(found['destination'])
         existing = next((op.get('text') for op in plan.operations if op['path'] == str(path)), None)
-        old = existing if existing is not None else read_text(path)
-        text = edit(old, target, font['family'], app_profile)
+        old = existing if existing is not None else read_text(path) if path.exists() else ''
+        family = font['family']
+        if target in MINTTY:
+            from fonts.model import windows_family
+            family = windows_family(plan.file(identity, version, font))
+        text = edit(old, target, family, app_profile)
         plan.put(path, text=text)
         after = text_digest(path, text)
         # Both VS Code selectors can share a file; keep their receipts coherent.

@@ -322,7 +322,8 @@ Only fixed shipped helpers with numeric IDs form preview commands; paths are
 shell-quoted, labels/names are data on stdin, and selected IDs are checked against
 the supplied inventory. Helpers resolve beside installed core under isolated
 Python. Shell startup hooks are removed. Windows requires a native PowerShell preview shell, using the invoking host when
-available; a missing shell is an explicit dependency error. Native execution remains deferred.
+available. Its literal path travels in FZF's child environment, including when
+PowerShell lives under `Program Files`. A missing shell is an explicit dependency error.
 
 Previews are sanitized source, never rendered prompts or theme commands. Local
 reads retain 4 MiB bounds; displayed content is limited to 64 KiB/200 lines/512

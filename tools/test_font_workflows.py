@@ -275,17 +275,44 @@ class Workflows(unittest.TestCase):
                     if value is not None:self.assertEqual(Path(value).parent,base)
             patch('font_registry.validate',side_effect=validate).start()
         path=base/'External.ttf';path.parent.mkdir(parents=True);font(path,'External Mono')
-        self.registry['External Mono Regular (TrueType)']=str(path)
-        patch('fonts_cli.system_fonts',return_value=[dict(path=str(path),name='External Mono',source='user')]).start()
+        name='External Mono Custom Display (TrueType)'
+        self.registry[name]=str(path)
+        patch('fonts_cli.system_fonts',return_value=[dict(path=str(path),name=name,source='user')]).start()
         identity=snapshot(library)[0][0]['id']
         result=self.action('migrate',identity,'--directory','DOTFONTS',platform='windows')
-        self.assertEqual(self.registry['External Mono Regular (TrueType)'],str(path));self.assertFalse(path.is_symlink())
+        self.assertEqual(self.registry[name],str(path));self.assertFalse(path.is_symlink())
         local=next(iter(self.library('windows').families))
         self.action('install',local,platform='windows')
-        registered=Path(self.registry['External Mono Regular (TrueType)']);self.assertTrue(registered.is_file())
+        registered=Path(self.registry[name]);self.assertTrue(registered.is_file())
         self.assertNotEqual(registered,path);self.assertFalse(path.exists())
-        self.action('uninstall',local,platform='windows');self.assertEqual(self.registry,{})
+        removed=self.action('uninstall',local,platform='windows');self.assertEqual(self.registry,{})
+        self.action('undo',removed['transaction'],platform='windows')
+        self.assertEqual(self.registry,{name:str(registered)})
         self.assertTrue(result['transaction'])
+
+    def test_windows_set_uses_registered_family_styles_in_place(self):
+        library=self.library('windows')
+        base=ops.install_root(library)
+        base.mkdir(parents=True)
+        rows=[]
+        for style in ('Regular','Bold','Italic'):
+            path=base/(style+'.ttf')
+            font(path,'External Mono',style,version='Older' if style=='Italic' else 'Current')
+            rows.append(dict(path=str(path),name=style+' arbitrary registry label',source='user'))
+        registrations={r['name']:r['path'] for r in rows}
+        self.registry.update(registrations)
+        config=self.home/'settings.json'
+        config.write_text('{}')
+        with patch('fonts_cli.system_fonts',return_value=rows):
+            installed,_=snapshot(library)
+            selected=next(r for r in installed if r['path']==str(base/'Regular.ttf'))
+            self.action('set',selected['id'],'--target','vscode-editor','--config',str(config),platform='windows')
+            self.assertEqual(self.action('restore','vscode-editor',platform='windows')['status'],'unchanged')
+        archived=next(iter(self.library('windows','PROFILEFONTS').families.values()))
+        faces=next(iter(archived['versions'].values()))['fonts']
+        self.assertEqual({f['style'] for f in faces},{'Regular','Bold'})
+        self.assertEqual(set(base.iterdir()),{Path(r['path']) for r in rows})
+        self.assertEqual(self.registry,registrations)
 
     def test_menu_routes_and_machine_output(self):
         from fonts.menus import HOME_ACTIONS,home,set_menu
@@ -293,10 +320,15 @@ class Workflows(unittest.TestCase):
         with patch('fonts.menus.select',return_value=None),patch('fonts.menus.context_for',return_value=None):
             self.assertEqual(home(parser().parse_args([])),0)
             self.assertEqual(set_menu(parser().parse_args(['set'])),0)
-        for argv in [('defaults','--json'),('browse','--downloaded','--json'),('installed','--json')]:
+        commands=[('defaults','--json'),('browse','--downloaded','--json')]
+        # Native installed discovery reads HKCU/HKLM; the inventory cases above
+        # supply a registry substitute in-process.
+        if os.name!='nt':commands.append(('installed','--json'))
+        shell={'powershell':True} if os.name=='nt' else {'bash':True}
+        for argv in commands:
             first=json.loads(self.execute(*argv).stdout)
             self.assertEqual(first,json.loads(self.execute(*argv,native=True).stdout))
-            self.assertEqual(first,json.loads(self.execute(*argv,bash=True).stdout))
+            self.assertEqual(first,json.loads(self.execute(*argv,**shell).stdout))
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

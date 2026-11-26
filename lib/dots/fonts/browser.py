@@ -205,7 +205,7 @@ def family_actions(library,row,context):
                 if face is None:return
                 from fonts_cli import targets
                 targets_=targets(library)
-                target=select('Target',[(r['target'],r['target']) for r in targets_ if r['status']=='available'],context)
+                target=select('Target',[(r['target'],r.get('label',r['target'])) for r in targets_ if r['status']=='available'],context)
                 if target is None:return
                 argv+=['--face',face,'--target',target]
         if action=='export':

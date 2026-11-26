@@ -38,7 +38,7 @@ class InstallationTests(unittest.TestCase):
                         APPDATA=str(self.home/'Roaming'), DOTS_COLOR='never', DOTS_ICONS='never',
                         TERM='dumb', PYTHONDONTWRITEBYTECODE='1', GIT_CONFIG_GLOBAL=os.devnull,
                         GIT_CONFIG_NOSYSTEM='1', GIT_TERMINAL_PROMPT='0')
-        self.env.update(CODEX_HOME=str(self.home/'.codex'), PI_CODING_AGENT_DIR=str(self.home/'.pi/agent'),
+        self.env.update(CODEX_HOME=str(self.home/'.codex'), CLAUDE_CONFIG_DIR=str(self.home/'.claude'), PI_CODING_AGENT_DIR=str(self.home/'.pi/agent'),
                         XDG_CACHE_HOME=str(self.home/'.cache'), XDG_DATA_HOME=str(self.home/'.data'))
         for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'TELEVISION_CONFIG', 'DOTS_APP_TELEVISION_CONFIG', 'DOTS_APP_LEAF_CONFIG'):
             self.env.pop(key, None)
@@ -384,6 +384,55 @@ class InstallationTests(unittest.TestCase):
         live.parent.mkdir()
         live.symlink_to(config, target_is_directory=True)
         self.logical_flavor = live/'flavors/dots.yazi'
+
+    @unittest.skipUnless(os.name == 'nt', 'native Windows Clink connector')
+    def test_clink_themes_directory_to_file_link(self):
+        from managed_destination import points_to
+        clink = self.home / 'Local/clink'
+        self.env.update(CLINK_PROFILE=str(clink), DOTS_APP_CLINK_CONFIG=str(clink))
+        with mock.patch.dict(os.environ, self.env, clear=True):
+            self.write('.dots/files.json', dict(schema=3, resources=[], renames={}))
+            profile = self.repo / 'profiles/windows'
+            reference = profile / 'config/clink/themes'
+            reference.mkdir(parents=True)
+            (reference / 'Original.clinktheme').write_text('reference')
+            row = next(r for r in json.loads((ROOT/'profiles/windows/profile.json').read_text())['files']
+                       if r['source'] == '${THEME}/dots.clinktheme')
+            self.write('profiles/windows/profile.json', dict(schema=1, id='windows', files=[row]))
+            install = Installation(self.repo)
+            generation = install.state / 'themes/generations/g.fixture'
+            generation.mkdir(parents=True)
+            (generation/'status').write_text('committed\n')
+            (generation/'dots.clinktheme').write_text('[set]\ncolor.cmd=bold\n')
+            (install.state/'themes/current').write_text(generation.name + '\n')
+            active = install.state / 'current/theme'
+            active.parent.mkdir()
+            active.symlink_to(generation, target_is_directory=True)
+            directory = clink / 'themes'
+            target = directory / 'dots.clinktheme'
+            install.add('windows:clink-themes', directory, link=reference, directory=True)
+            install.apply('install')
+            with self.assertRaisesRegex(ValueError, 'old themes directory link'):
+                Installation(self.repo).plan_install({'files'}, {'theme:clink'})
+            self.assertFalse((reference/target.name).exists())
+            retire = Installation(self.repo)
+            retire.plan_uninstall({'files'}, {'windows:clink-themes'})
+            retire.apply('uninstall')
+            self.assertFalse(os.path.lexists(directory))
+            first = Installation(self.repo)
+            first.plan_install({'files'}, {'theme:clink'})
+            result = first.apply('install')
+            self.assertFalse(directory.is_symlink())
+            self.assertTrue(points_to(target, active/'dots.clinktheme'))
+            (directory/'Personal.clinktheme').write_text('personal')
+            repeat = Installation(self.repo)
+            repeat.plan_install({'files'}, {'theme:clink'})
+            self.assertFalse(repeat.operations)
+            ops, guards, catalogs = first.store.inverse(result['id'])
+            first.store.apply('undo', ops, guards, catalogs=catalogs, retain=True)
+            self.assertFalse(os.path.lexists(target))
+            self.assertEqual((directory/'Personal.clinktheme').read_text(), 'personal')
+            self.assertEqual((reference/'Original.clinktheme').read_text(), 'reference')
 
     def yazi_action(self, action):
         preview = Installation(self.repo)
@@ -1156,7 +1205,7 @@ p.apply('install')
             'PATH','TERMUX__PREFIX','LD_PRELOAD','LD_LIBRARY_PATH','TMPDIR','TMP','TEMP','HOME','USERPROFILE',
             'DOTS','XDG_CONFIG_HOME','XDG_STATE_HOME','XDG_DATA_HOME','XDG_CACHE_HOME',
             'XDG_RUNTIME_DIR','LANG','LC_ALL','LC_CTYPE','PYTHONNOUSERSITE','PYTHONUTF8','PYTHONIOENCODING',
-            'CODEX_HOME','PI_CODING_AGENT_DIR','GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM',
+            'CODEX_HOME','CLAUDE_CONFIG_DIR','PI_CODING_AGENT_DIR','GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM',
             'GIT_TERMINAL_PROMPT','GIT_EXEC_PATH','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
         # On Android, both fixtures need the shebang adapter. A private prefix
         # keeps it available without forcing platform detection to choose Termux.

@@ -10,6 +10,7 @@ import tempfile
 import tomllib
 
 from transactions import Store, digest, parents_safe
+from file_platform import native_link_text
 
 
 def sections(text):
@@ -113,7 +114,7 @@ def resolve_path(value, guards):
             if links > 40:
                 raise ValueError('too many app path symlinks')
             before = digest(current)
-            target = os.readlink(current)
+            target = native_link_text(os.readlink(current))
             if digest(current) != before:
                 raise ValueError('app path changed during resolution')
             guards[str(current)] = before

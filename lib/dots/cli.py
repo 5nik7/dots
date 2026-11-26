@@ -239,7 +239,7 @@ def complete(root, directories, words):
             if kind == 'theme-file':
                 names = [r['id'] for r in inspection.Inspection().inventory(connections=False)['artifacts']]
             else:
-                names = {r[0] for r in inspection.registry()} | {'codex', 'pi', 'termux', 'managed'}
+                names = {r[0] for r in inspection.registry()} | {'claude-code', 'codex', 'pi', 'termux', 'managed'}
                 names.update(a for values in inspection.CONSUMERS.values() for a, _, _ in values)
             for name in sorted(names):
                 if not any(ord(c) < 32 or ord(c) == 127 for c in name): add(name)

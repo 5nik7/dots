@@ -183,6 +183,23 @@ class LessStyle(MenuFixture):
     def test_inherited_mouse_options_scroll_through_tmux(self):
         self.mouse_reader(initialize=True)
 
+    def test_managed_lesskey_after_long_option(self):
+        less = shutil.which('less')
+        if not less:
+            self.skipTest('less unavailable')
+        env = dict(self.env, LESSKEYIN=str(ROOT/'config/less/lesskey'),
+                   LESSKEYIN_SYSTEM=os.devnull, LESSHISTFILE='-')
+        version = subprocess.check_output([less, '--version'], env=env, text=True)
+        if int(re.search(r'less (\d+)', version)[1]) < 702:
+            self.skipTest('less 702+ required for explicit mouse features')
+        for inherited in ('--mouse', '-R --MOUSE', '--quit-if-one-screen'):
+            with self.subTest(inherited=inherited):
+                result = subprocess.run([less, '--version'], env=dict(env, LESS=inherited),
+                                        stdin=subprocess.DEVNULL, capture_output=True, timeout=5)
+                # less can print an option error and still exit successfully.
+                self.assertEqual(result.stderr, b'')
+                self.assertEqual(result.returncode, 0)
+
     @unittest.skipIf(os.name == 'nt', 'POSIX PTY; Windows less requires native acceptance')
     def test_managed_mouse_default_without_shell_initialization(self):
         if not shutil.which('less'):

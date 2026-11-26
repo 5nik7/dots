@@ -46,7 +46,7 @@ class Adapters(unittest.TestCase):
                       XDG_CONFIG_HOME=str(self.home/'.config'),XDG_STATE_HOME=str(self.home/'.state'),
                       XDG_CACHE_HOME=str(self.home/'.cache'),XDG_DATA_HOME=str(self.home/'.data'),
                       APPDATA=str(self.home/'Roaming'),LOCALAPPDATA=str(self.home/'Local'),
-                      CODEX_HOME=str(self.home/'.codex'),PI_CODING_AGENT_DIR=str(self.home/'.pi'),
+                      CODEX_HOME=str(self.home/'.codex'),CLAUDE_CONFIG_DIR=str(self.home/'.claude'),PI_CODING_AGENT_DIR=str(self.home/'.pi'),
                       TEMP=str(self.runtime),TMP=str(self.runtime),TMPDIR=str(self.runtime),
                       PSModulePath=str(self.runtime/'modules'),
                       PSModuleAnalysisCachePath=str(self.runtime/'ModuleAnalysisCache'),

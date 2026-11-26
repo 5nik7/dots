@@ -129,10 +129,29 @@ if ($dots_options.DOTS_INIT_COMMANDS -eq '1') {
     Set-Alias -Name .ln -Value Invoke-DotsLink -Scope Global -Force
 }
 $profileEntries = @($env:DOTS_PROFILE_PATHS -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $_ })
-$entries = @($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $_ -ne $env:THEMESBIN -and $_ -ne (Join-Path $env:DOTS 'themes/bin') })
-$env:PATH = (@($ownedEntries + $profileEntries + $entries | Select-Object -Unique) -join [IO.Path]::PathSeparator)
+$entries = $env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator)
+$retiredThemeBin = Join-Path $env:DOTS 'themes/bin'
+$pathComparer = if ($dotsWindowsPaths) { [StringComparer]::OrdinalIgnoreCase } else { [StringComparer]::Ordinal }
+$seenPaths = [Collections.Generic.HashSet[string]]::new($pathComparer)
+$orderedPaths = foreach ($entry in ($ownedEntries + $profileEntries + $entries)) {
+    if ($entry -eq $retiredThemeBin -or ($entry -eq $env:THEMESBIN -and $dots_options.DOTS_INIT_COMMANDS -ne '1')) { continue }
+    $key = if ($dotsWindowsPaths) { $entry.Replace('\', '/') } else { $entry }
+    # A drive-relative C: and an absolute C:\ have different meanings.
+    if ($key -and $key -notmatch '^(/+|[A-Za-z]:/+)$') { $key = $key.TrimEnd('/') }
+    if ($seenPaths.Add($key)) { $entry }
+}
+$env:PATH = $orderedPaths -join [IO.Path]::PathSeparator
 $dotsArgs = [Environment]::GetCommandLineArgs()
 $dotsInteractive = $dotsArgs -notcontains '-NonInteractive' -and ($dotsArgs -contains '-NoExit' -or -not ($dotsArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
+if (-not $dotsInteractive -and $dots_options.DOTS_INIT_THEME -eq '1') {
+    $token = Join-Path $dot.state 'themes/current'
+    if ([IO.File]::Exists($token)) {
+        $generation = [IO.File]::ReadAllText($token).Trim()
+        if ($generation -cmatch '^g\.[a-zA-Z0-9]+$') {
+            & (Join-Path $env:DOTS 'lib/dots/shell/bat-cache.ps1') (Join-Path $dot.state "themes/generations/$generation")
+        }
+    }
+}
 if ($dotsInteractive) {
     if ($null -eq $env:FZF_DEFAULT_OPTS -and $null -eq $env:FZF_DEFAULT_OPTS_FILE) {
         $global:DotsVisualFzfBase = "--bind=ctrl-x:toggle-preview --preview-window=right:hidden:50% --preview='_dots-fzf-preview --selection {f}'"
@@ -174,14 +193,18 @@ if ($dotsInteractive) {
         }
         $global:dots_palette = $data['@palette']; $global:dots_roles = $data['@role']
         $env:DOTS_THEME_FAMILY = $data['@theme']['family']; $env:FLAVOR = $data['@theme']['flavor']; $env:DOTS_THEME_ID = $data['@theme']['id']
+        $familyDirectory = $data['@theme']['directory']
+        if (-not $familyDirectory -and $env:DOTS_THEME_FAMILY -cmatch '^[a-z][a-z0-9_-]*$') {
+            $familyDirectory = Join-Path $env:DOTHEMES $env:DOTS_THEME_FAMILY
+        }
+        if ($familyDirectory) {
+            $env:THEMEDIR = $familyDirectory
+            $env:THEMESRC = Join-Path $familyDirectory 'src'
+        }
         $global:dot.theme = $env:DOTS_THEME_ID
         $lsFile = Join-Path $dot.state "themes/generations/$generation/ls_colors"
         if (Test-Path -LiteralPath $lsFile -PathType Leaf) { $env:LS_COLORS = [IO.File]::ReadAllText($lsFile).TrimEnd("`r", "`n") }
-        $batCache = Join-Path $dot.state "themes/generations/$generation/bat-cache"
-        if (Test-Path -LiteralPath $batCache -PathType Container) {
-            $env:BAT_THEME = 'Dots'
-            $env:BAT_CACHE_PATH = $batCache
-        }
+        & (Join-Path $env:DOTS 'lib/dots/shell/bat-cache.ps1') (Join-Path $dot.state "themes/generations/$generation")
         $visualFile = Join-Path $dot.state "themes/generations/$generation/visual.tsv"
         if (Test-Path -LiteralPath $visualFile -PathType Leaf) {
             $visualIcons = @{}; $visualColors = @{}; $visualEnv = @{}

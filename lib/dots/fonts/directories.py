@@ -110,11 +110,11 @@ def activate(library, identity, args, temporary=None):
     elif not args.target or any(t!='termux' for t in args.target):
         ops.install(plan,identity,version,args.variant)
     if args.target:
-        from fonts.config import configure
+        from fonts.config import configure, selected_targets
         variant=args.variant or (plan.document['families'][identity].get('installed') or {}).get('variant')
         face=ops.face_for(record,args.face,variant)
-        for target in dict.fromkeys(args.target):
-            configure(plan,identity,version,face,target,explicit=args.config,app_profile=args.app_profile)
+        for target, config, found in selected_targets(plan, args.target, args.config, args.app_profile):
+            configure(plan,identity,version,face,target,explicit=config,app_profile=args.app_profile,found=found)
     installed=plan.document['families'][identity].get('installed')
     if installed and installed['version']==version:installed['directory']=library.directory_key
     for ref in plan.document['targets'].values():

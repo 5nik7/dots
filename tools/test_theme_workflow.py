@@ -383,7 +383,61 @@ printf '%s\n' "$FZF_DEFAULT_OPTS"
         self.engine('dt_restore "' + str(third) + '"', code=1)
         self.assertEqual(target.read_text(), "user changed after publication\n")
 
-    def test_pi_template_renders_all_palettes(self):
+    def test_clink_palette_and_template_overrides(self):
+        for identity in ('catppuccin-latte', 'nord'):
+            self.dots('theme', 'set', identity)
+            published = self.generation()
+            text = (published / 'dots.clinktheme').read_text()
+            colors = json.loads((published / 'palette.json').read_text())['colors']
+            self.assertIn('color.unexpected=' + colors['error'], text)
+            self.assertIn('color.popup_select=' + colors['selection_foreground'] +
+                          ' on ' + colors['selection_background'], text)
+            self.assertNotIn('{{', text)
+        template = self.home / 'config/dots/themed/dots.clinktheme.tpl'
+        template.parent.mkdir(parents=True, exist_ok=True)
+        template.write_text('[set]\ncolor.input={{ foreground }}\n')
+        self.dots('theme', 'refresh')
+        self.assertEqual((self.generation()/'dots.clinktheme').read_text(),
+                         '[set]\ncolor.input=' + colors['foreground'] + '\n')
+        override = self.repo / 'themes/nord/dots.clinktheme'
+        override.write_text('[set]\ncolor.input=bold\n')
+        self.dots('theme', 'refresh')
+        self.assertEqual((self.generation()/'dots.clinktheme').read_bytes(), override.read_bytes())
+
+    def test_claude_code_publication(self):
+        config = self.home / "-claude ü"
+        self.env["CLAUDE_CONFIG_DIR"] = str(config)
+        self.dots("theme", "set", "nord")
+        self.assertFalse(config.exists())
+        target = config / "themes/dots.json"
+        target.parent.mkdir(parents=True)
+        target.write_text("prior theme\n")
+        self.assertIn(str(target), self.dots("theme", "set", "nord", "--dry-run").stdout)
+        self.dots("theme", "refresh")
+        first = self.generation()
+        self.assertEqual(target.readlink(), self.home / "state/dots/current/theme/claude-code.json")
+        inode = target.lstat().st_ino
+        self.dots("theme", "refresh")
+        self.assertEqual(self.generation(), first)
+        self.assertEqual(target.lstat().st_ino, inode)
+
+        template = self.home / "config/dots/themed/claude-code.json.tpl"
+        template.parent.mkdir(parents=True)
+        template.write_text('{"name":"Personal","base":"{{ mode }}"}\n')
+        self.dots("theme", "refresh")
+        second = self.generation()
+        self.assertNotEqual(target.lstat().st_ino, inode)
+        self.assertEqual(json.loads(target.read_text()), {"name": "Personal", "base": "dark"})
+        override = self.repo / "themes/nord/claude-code.json"
+        override.write_text('{"name":"Bundled"}\n')
+        self.dots("theme", "refresh")
+        self.assertEqual(target.read_bytes(), override.read_bytes())
+        for generation in (self.generation(), second, first):
+            self.engine('dt_restore "' + str(generation) + '"')
+        self.assertFalse(target.is_symlink())
+        self.assertEqual(target.read_text(), "prior theme\n")
+
+    def test_agent_templates_render_all_palettes(self):
         self.wal_export()
         names = self.dots("theme", "list").stdout.splitlines()
         for name in names:
@@ -394,6 +448,12 @@ printf '%s\n' "$FZF_DEFAULT_OPTS"
                 self.env["RENDER_THEME"] = name
                 self.engine('dt_load "$RENDER_THEME" && dt_render "$RENDER_OUTPUT"')
                 data = json.loads((output / "pi.json").read_text())
+                claude = json.loads((output / "claude-code.json").read_text())
+                self.assertEqual(claude["name"], "Dots")
+                self.assertEqual(claude["base"], data["appearance"])
+                self.assertEqual(claude["overrides"]["claude"], data["vars"]["accent"])
+                for value in claude["overrides"].values():
+                    self.assertRegex(value, r"^#[0-9a-fA-F]{6}$")
                 self.assertIn(data["appearance"], ("light", "dark"))
                 for value in data["vars"].values():
                     self.assertRegex(value, r"^#[0-9a-fA-F]{6}$")

@@ -258,12 +258,13 @@ class FontDirectories(unittest.TestCase):
 
     def test_cli_completion_metadata_and_exact_scope_output(self):
         identity,version=self.seed();self.action('install',identity,'--version',version)
+        shell={'powershell':True} if os.name=='nt' else {'bash':True}
         for argv in (('directories','--json'),('list','--directory','DOTFONTS','--json'),
                      ('versions',identity,'--directory','DOTFONTS','--json')):
             first=self.execute(*argv).stdout
-            self.assertEqual(first,self.execute(*argv,bash=True).stdout)
+            self.assertEqual(first,self.execute(*argv,**shell).stdout)
             self.assertEqual(first,self.execute(*argv,native=True).stdout)
-        for frontend in ({},{'bash':True},{'native':True}):
+        for frontend in ({},shell,{'native':True}):
             for action in ('install','use','directories'):
                 self.assertIn('--directory',self.execute(action,'--help',**frontend).stdout)
         row=json.loads(self.execute('list','--installed','--directory','DOTFONTS','--json').stdout)['items'][0]
@@ -278,8 +279,10 @@ class FontDirectories(unittest.TestCase):
             result=subprocess.run([*command,*arguments],capture_output=True,text=True,timeout=15)
             self.assertEqual(result.returncode,0,result.stderr);self.assertIn(expected,result.stdout)
         self.assertEqual(digest(self.library().path),before)
-        for front in ([str(self.root/'bin/dots'),'__complete','bash','4','--','dots'],
-                      [sys.executable,'-B',str(self.root/'lib/dots/cli.py'),'__complete']):
+        fronts=[[sys.executable,'-B',str(self.root/'lib/dots/cli.py'),'__complete']]
+        if os.name!='nt':
+            fronts.append([str(self.root/'bin/dots'),'__complete','bash','4','--','dots'])
+        for front in fronts:
             result=subprocess.run([*front,'fonts','install','--directory','D'],capture_output=True,text=True,timeout=20)
             self.assertEqual(result.returncode,0,result.stderr);self.assertIn('DOTFONTS',result.stdout)
         self.execute('uninstall',identity,'--directory','DOTFONTS','--yes',code=1)

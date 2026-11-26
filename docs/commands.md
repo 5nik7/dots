@@ -46,6 +46,8 @@ The standalone `nf [QUERY] [OPTIONS]` shim invokes `dots fonts icons`. The [font
 version selection, application targets, compatibility wrappers and glyph actions.
 `fonts installed` browses installed fonts; `--json` and `--print` list them without interaction. `copy INSTALLED_ID... --directory NAME` and `migrate INSTALLED_ID... --directory NAME` transfer selections. `install FONT... --from SOURCE [--directory DESTINATION]` supports batches. Plain interactive `fonts` opens the action menu; `set` without operands opens its app-first selector. `browse --downloaded` selects retained fonts across stores. `defaults` reports active-profile preferences and `restore [TARGET...]` reapplies exact saved choices after review.
 
+`dots fonts set FONT --target all-terminals` applies one family to the detected Windows terminal hosts and reports each destination. Supply an installed face ID to reuse an existing font. The Set picker offers the same action. [Terminal targets and undo](fonts.md#set-an-application-font)
+
 Static route metadata comes from `fonts/commands.py`; run
 `python3 -B tools/generate_fonts_commands.py --check` to check generated adapters.
 
@@ -133,6 +135,8 @@ Bash/Zsh initialization also emits current-theme color arrays such as `${hint[he
 `theme set`/`refresh` also render the Pi theme and connect an existing agent themes
 directory through the same journal; dry-run previews include that target. See
 [Pi setup](themes.md#pi) for selection, custom paths and automatic reload.
+They also publish the [Claude Code theme](themes.md#claude-code) to an existing
+Claude themes directory for selection in `/theme`.
 The same commands connect the shared syntax theme to an existing Codex themes
 directory; dry runs include `dots.tmTheme`. Codex configuration remains unchanged
 by publication. See [Codex setup](themes.md#codex-and-codex-termux).

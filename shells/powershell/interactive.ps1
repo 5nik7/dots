@@ -31,8 +31,8 @@ if ($Host.Name -eq 'ConsoleHost' -and -not [Console]::IsInputRedirected) {
     Import-Module PSReadLine -Global -ErrorAction Stop
     Set-PSReadLineOption -EditMode Vi -BellStyle None -HistoryNoDuplicates `
       -HistorySearchCursorMovesToEnd -MaximumHistoryCount 50000
-    Set-PSReadLineKeyHandler -Key Tab -Function TabCompleteNext
-    Set-PSReadLineKeyHandler -Chord 'Alt+f' -ScriptBlock { Invoke-DotsFuzzyCompletion }
+    Set-PSReadLineKeyHandler -Chord 'Tab', 'Alt+f' -BriefDescription DotsFuzzyCompletion `
+      -ScriptBlock { Invoke-DotsFuzzyCompletion }
   } catch { Write-Warning ('Dots line editing: ' + $_.Exception.Message) }
 }
 $global:_DotsLeanPowerShellReady = $true

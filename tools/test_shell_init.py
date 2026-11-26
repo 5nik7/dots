@@ -193,20 +193,44 @@ class InitTests(unittest.TestCase):
         for directory in paths:
             directory.mkdir(parents=True, exist_ok=True)
         (self.home/'.fzf/bin').mkdir(parents=True)
-        self.env.update(GOBIN=str(gobin), CARGO_HOME=str(cargo), BUN_INSTALL=str(bun))
+        shims = self.home/'mise shims ü'
+        inherited = self.home/'inherited programs'
+        active = self.home/'active version'
+        for directory in (shims, inherited, active):
+            directory.mkdir()
+            command = directory/'dots-shim-probe'
+            command.write_text('#!/bin/sh\nexit 0\n')
+            command.chmod(0o700)
+        self.env.update(GOBIN=str(gobin), CARGO_HOME=str(cargo), BUN_INSTALL=str(bun),
+                        MISE_SHIMS_DIR=str(shims),
+                        PATH=os.pathsep.join((str(inherited), str(shims) + '/', self.env['PATH'])))
         for shell in SHELLS:
             if not executable('pwsh' if shell == 'powershell' else shell):
                 continue
             with self.subTest(shell=shell):
                 hook = self.generated(shell)
-                probe = """python3 -c 'import os, json; print(json.dumps(os.get_exec_path()))'"""
-                entries = json.loads(self.shell(shell, hook + hook + probe).stdout)
+                probe = """python3 -c 'import os, json, shutil; print(json.dumps([os.get_exec_path(), shutil.which("dots-shim-probe")]))'"""
+                entries, resolved = json.loads(self.shell(shell, hook + hook + probe).stdout)
+                self.assertEqual(resolved, str(shims/'dots-shim-probe'))
+                self.assertEqual([os.path.normpath(path) for path in entries].count(str(shims)), 1)
+                self.assertLess(entries.index(str(self.repo/'bin')), entries.index(str(shims)))
                 for directory in [*paths, self.home/'.fzf/bin']:
                     self.assertEqual(entries.count(str(directory)), 1)
                 indices = [entries.index(str(path)) for path in paths]
                 self.assertEqual(indices, sorted(indices))
                 self.assertLess(entries.index(str(self.repo/'bin')), indices[0])
                 self.assertLess(indices[-1], entries.index(str(self.home/'.fzf/bin')))
+                original = self.env['PATH']
+                try:
+                    self.env.update(MISE_SHELL=shell, __MISE_ORIG_PATH=original)
+                    for inherited_paths in ((active, shims, inherited), (active, inherited)):
+                        self.env['PATH'] = os.pathsep.join(map(str, (*inherited_paths, Path(shutil.which('bash')).parent)))
+                        entries, resolved = json.loads(self.shell(shell, hook + hook + probe).stdout)
+                        self.assertEqual(resolved, str(active/'dots-shim-probe'))
+                        self.assertLess(entries.index(str(shims)), entries.index(str(inherited)))
+                finally:
+                    self.env['PATH'] = original
+                    del self.env['MISE_SHELL'], self.env['__MISE_ORIG_PATH']
 
     @unittest.skipIf(os.name == 'nt', 'POSIX manual lookup')
     def test_user_local_manual_discovery(self):

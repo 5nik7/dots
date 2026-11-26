@@ -1,41 +1,10 @@
 {
-  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.32/schema.bar.json",
-  "monitor": {
-    "index": 0,
-    "work_area_offset": {
-      "left": 0,
-      "top": 40,
-      "right": 0,
-      "bottom": 40
-    }
-  },
-  "position": {
-    "start": {
-      "x": 7,
-      "y": 0
-    }
-  },
-  "frame": {
-    "inner_margin": {
-      "x": 2,
-      "y": 2
-    }
-  },
-  "widget_spacing": 8,
-  "font_family": "JetBrainsMono NFP",
-  "font_size": 12,
-  "icon_scale": 1.2,
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.41/schema.bar.json",
+  "font_family": "JetBrains Mono",
   "theme": {
     "palette": "Base16",
-    "name": "TokyoNightStorm",
-    "accent": "Base0F"
-  },
-  "transparency_alpha": 0,
-  "grouping": {
-    "kind": "Widget",
-    "transparency_alpha": 255,
-    "rounding": 0,
-    "style": "DefaultWithShadowB0O1S3"
+    "name": "Ashes",
+    "accent": "Base0D"
   },
   "left_widgets": [
     {
@@ -56,18 +25,17 @@
   ],
   "right_widgets": [
     {
+      "Update": {
+        "enable": true
+      }
+    },
+    {
       "Media": {
         "enable": false
       }
     },
     {
       "Storage": {
-        "enable": false,
-        "label_prefix": "IconAndText"
-      }
-    },
-    {
-      "Cpu": {
         "enable": false
       }
     },
@@ -79,30 +47,25 @@
     {
       "Network": {
         "enable": false,
-        "show_default_interface": true,
-        "label_prefix": "Icon",
-        "show_total_data_transmitted": false,
-        "show_network_activity": false
+        "show_activity": true,
+        "show_total_activity": true
       }
     },
     {
       "Date": {
-        "enable": false,
-        "format": "MonthDateYear",
-        "label_prefix": "Icon"
+        "enable": true,
+        "format": "DayDateMonthYear"
       }
     },
     {
       "Time": {
-        "enable": false,
-        "format": {
-          "Custom": "%l:%M %p "
-        }
+        "enable": true,
+        "format": "TwentyFourHour"
       }
     },
     {
       "Battery": {
-        "enable": false
+        "enable": true
       }
     }
   ]

@@ -8,6 +8,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[1]
 PWSH = shutil.which(os.environ.get('DOTS_TEST_POWERSHELL') or 'pwsh')
@@ -140,6 +142,12 @@ class PowerShellInitTests(unittest.TestCase):
         unsafe = theme('--dry-run')
         self.assertNotEqual(unsafe.returncode, 0)
         self.assertIn('cannot replace repository metadata or sources', unsafe.stderr)
+        # An older parent process can still export the checkout as Yazi's own
+        # config root. Select the installed catalog link for this publication.
+        self.env['DOTS_APP_YAZI_CONFIG'] = str(app)
+        recovered = theme('--dry-run')
+        self.assertEqual(recovered.returncode, 0, recovered.stderr)
+        self.assertTrue(app.is_symlink())
 
     def test_native_files_parse(self):
         files = ','.join(literal(file) for file in self.repo.rglob('*.ps1'))
@@ -150,6 +158,83 @@ class PowerShellInitTests(unittest.TestCase):
                 'if ($errors.Count) { Write-Error ($file + ": " + ($errors | Out-String)); exit 1 } }')
         p = self.run_ps('-Command', code)
         self.assertEqual(p.returncode, 0, p.stderr)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows delete sharing semantics')
+    def test_cache_publication_while_a_profile_reads_old_script(self):
+        with patch.object(sys, 'path', [str(REPO / 'lib/dots'), *sys.path]):
+            import native_startup
+        target = self.home / 'environment.ps1'
+        target.write_bytes(b'old')
+        metadata = target.with_suffix('.ps1.json')
+        metadata.write_bytes(b'old metadata')
+        readers = [target.open('rb'), metadata.open('rb')]
+        for stream in readers:
+            self.addCleanup(stream.close)
+        released = []
+
+        def release_reader(delay):
+            stream = readers[len(released)]
+            released.append(stream.read())
+            stream.close()
+
+        with patch.object(native_startup, 'generate', return_value='new'), patch.object(
+                native_startup.time, 'sleep', side_effect=release_reader):
+            native_startup.prepare(self.repo, 'powershell', target)
+        self.assertEqual(released, [b'old', b'old metadata'])
+        self.assertEqual(target.read_text(encoding='utf-8-sig'), 'new')
+        self.assertEqual(json.loads(metadata.read_bytes())['digest'], hashlib.sha256(target.read_bytes()).hexdigest())
+        self.assertEqual(list(self.home.glob('.environment-*')), [])
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows simultaneous native shell startup')
+    def test_concurrent_profiles_refresh_stale_environment_cache(self):
+        cache = self.prepare_environment()
+        profile = self.repo / 'profiles/windows/profile.json'
+        stat = profile.stat()
+        os.utime(profile, ns=(stat.st_atime_ns, stat.st_mtime_ns + 2_000_000_000))
+        self.env['PATH'] = os.pathsep.join([str(self.repo / 'bin'), str(Path(sys.executable).parent)])
+        entry = literal(self.repo / 'shells/powershell/profile.ps1')
+        engines = [name for name in ('powershell', 'pwsh') if shutil.which(name)]
+        def launch(engine):
+            return subprocess.run([shutil.which(engine), '-NoProfile', '-NonInteractive', '-Command',
+                                   f'. {entry}; $env:DOTS_PROFILE'], cwd=self.home, env=self.env,
+                                  capture_output=True, text=True, timeout=30)
+        with ThreadPoolExecutor(max_workers=4) as workers:
+            for result in workers.map(launch, engines * 2):
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stderr, '')
+                self.assertEqual(result.stdout.strip(), 'windows')
+        self.assertEqual(json.loads(cache.with_suffix('.ps1.json').read_bytes())['digest'],
+                         hashlib.sha256(cache.read_bytes()).hexdigest())
+
+    @unittest.skipUnless(os.name == 'nt' and shutil.which('bat'), 'requires native Windows Bat')
+    def test_bat_published_theme_and_gcode_in_fresh_shells(self):
+        for folder in ('default', 'themes/catppuccin', 'themes/catppuccin-mocha', 'config/bat'):
+            shutil.copytree(REPO / folder, self.repo / folder)
+        for name in ('dots-theme', 'dots-theme-set'):
+            shutil.copy2(REPO / 'bin' / name, self.repo / 'bin' / name)
+        (self.repo / '.dots').mkdir()
+        for name in ('sources.json', 'files.json'):
+            shutil.copy2(REPO / '.dots' / name, self.repo / '.dots' / name)
+        bat = Path(shutil.which('bat'))
+        shutil.copy2(bat, self.repo / 'bin/bat.exe')
+        if bat.with_suffix('.shim').is_file():
+            shutil.copy2(bat.with_suffix('.shim'), self.repo / 'bin/bat.shim')
+        self.env['PATH'] = os.pathsep.join([str(self.repo / 'bin'), str(Path(sys.executable).parent)])
+        dots = literal(self.repo / 'bin/dots.ps1')
+        publish = self.run_ps('-Command', f'& {dots} theme set catppuccin-mocha; exit $LASTEXITCODE')
+        self.assertEqual(publish.returncode, 0, publish.stdout + publish.stderr)
+        sample = self.home / 'sample.nc'
+        sample.write_text('G1 X10 Y20\n')
+        entry = literal(self.repo / 'shells/powershell/profile.ps1')
+        generated = literal(self.home / 'state/dots/current/theme/init.ps1')
+        for script, interactive in ((entry, False), (entry, True), (generated, False)):
+            code = (f'. {script}; if ($env:BAT_THEME -cne "Dots") {{throw "missing bat theme"}}; '
+                    'if ("Dots" -cnotin (bat --list-themes --color=never)) {throw "missing Dots cache"}; '
+                    'if (-not (bat --list-languages --color=never | Select-String "^gcode:")) {throw "missing gcode"}; '
+                    f'bat --style=plain --color=always --paging=never -- {literal(sample)}')
+            result = self.run_interactive(code) if interactive else self.run_ps('-Command', code)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn('\x1b[', result.stdout)
 
     def test_cold_environment_preparation_and_warm_cache(self):
         cache = self.home / 'cache/dots/startup/environment.ps1'
@@ -473,6 +558,46 @@ if (($forwarded -join '|') -ne '__complete|theme|fixturepalette-theme|bl') { exi
             self.assertTrue(result[key], key)
         self.assertEqual(result['alias'], 'Invoke-eza')
 
+    def test_mise_shim_precedence_and_reload(self):
+        shims = self.home / 'mise shims ü'
+        inherited = self.home / 'other executables'
+        for directory in (shims, inherited):
+            directory.mkdir()
+            (directory / 'dots-shim-probe.ps1').write_text("'fixture probe'")
+        duplicate = str(shims) + os.sep
+        if os.name == 'nt':
+            duplicate = duplicate.upper()
+        self.env.update(MISE_SHIMS_DIR=str(shims),
+                        PATH=os.pathsep.join((str(inherited), duplicate, self.env['PATH'])))
+        profile_bin = self.repo / 'profiles' / ('windows' if os.name == 'nt' else 'linux') / 'bin'
+        profile_bin.mkdir()
+        entry = literal(self.repo / 'shells/powershell/profile.ps1')
+        p = self.run_ps('-Command', f'. {entry}; $first = $env:PATH; . {entry}; '
+                        "@{path=$env:PATH; stable=($first -ceq $env:PATH); "
+                        "resolved=(Get-Command dots-shim-probe.ps1).Source} | ConvertTo-Json -Compress")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(p.stderr, '')
+        result = json.loads(p.stdout)
+        paths = result['path'].split(os.pathsep)
+        self.assertTrue(result['stable'])
+        self.assertEqual(Path(result['resolved']).parent, shims)
+        self.assertEqual([os.path.normcase(os.path.normpath(path)) for path in paths].count(
+            os.path.normcase(str(shims))), 1)
+        self.assertLess(paths.index(str(profile_bin)), paths.index(str(shims)))
+        self.assertLess(paths.index(str(shims)), paths.index(str(inherited)))
+        active = self.home / 'mise active tool'
+        active.mkdir()
+        (active / 'dots-shim-probe.ps1').write_text("'active tool'")
+        self.env.update(MISE_SHELL='pwsh', __MISE_ORIG_PATH=self.env['PATH'])
+        for inherited_paths in ((active, shims, inherited), (active, inherited)):
+            self.env['PATH'] = os.pathsep.join(map(str, inherited_paths))
+            p = self.run_ps('-Command', f'. {entry}; . {entry}; $env:PATH')
+            self.assertEqual(p.returncode, 0, p.stderr)
+            self.assertEqual(p.stderr, '')
+            paths = p.stdout.strip().split(os.pathsep)
+            self.assertLess(paths.index(str(active)), paths.index(str(shims)))
+            self.assertLess(paths.index(str(shims)), paths.index(str(inherited)))
+
     def test_noninteractive_profile_does_not_load_helpers(self):
         entry = literal(self.repo / 'shells/powershell/profile.ps1')
         p = self.run_ps('-Command', f'. {entry}; '
@@ -480,6 +605,95 @@ if (($forwarded -join '|') -ne '__complete|theme|fixturepalette-theme|bl') { exi
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(p.stderr, '')
         self.assertEqual(p.stdout.strip(), str(self.repo))
+
+    @unittest.skipUnless(sys.stdin.isatty() and sys.stdout.isatty(), 'requires an interactive console')
+    def test_console_tab_and_alt_f_use_lazy_fuzzy_completion(self):
+        self.prepare_environment()
+        module = self.home / 'modules/PSFzf'
+        if Path(PWSH).name.lower() == 'powershell.exe':
+            # Desktop ships PSReadLine under Program Files, outside PSHOME.
+            system_modules = Path(os.environ['ProgramFiles']) / 'WindowsPowerShell/Modules'
+            self.env['PSModulePath'] += os.pathsep + str(system_modules)
+        module.mkdir(parents=True)
+        (module / 'PSFzf.psm1').write_text(
+            "function Invoke-FzfTabCompletion { $global:DotsFuzzyCalled = $true }\n")
+        fzf = self.repo / 'bin' / ('fzf.cmd' if os.name == 'nt' else 'fzf')
+        fzf.touch()
+        fzf.chmod(0o755)
+        entry = literal(self.repo / 'shells/powershell/profile.ps1')
+        code = f"""
+            $ErrorActionPreference = 'Stop'
+            $PROFILE.CurrentUserAllHosts = {literal(self.home / 'Documents/profile.ps1')}
+            try {{
+                . {entry}
+                if (Get-Module PSFzf) {{ throw 'PSFzf loaded during startup' }}
+                $bindings = Get-PSReadLineKeyHandler -Bound |
+                    Where-Object Function -eq 'DotsFuzzyCompletion'
+                foreach ($key in 'Tab', 'Alt+f') {{
+                    if ($key -notin $bindings.Key) {{ throw "Missing fuzzy binding for $key" }}
+                }}
+                if ($PSVersionTable.PSEdition -ne 'Desktop') {{
+                    Invoke-DotsFuzzyCompletion
+                    if (-not $global:DotsFuzzyCalled) {{ throw 'Fuzzy completion was not invoked' }}
+                }}
+            }} catch {{ [Console]::Error.WriteLine($_); exit 1 }}
+            exit 0
+        """
+        result = subprocess.run([PWSH, '-NoProfile', '-NoLogo', '-NoExit', '-Command', code],
+                                cwd=self.home, env=self.env, stderr=subprocess.PIPE,
+                                text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_desktop_fuzzy_completion_selection_and_cancel(self):
+        if Path(PWSH).name.lower() != 'powershell.exe':
+            self.skipTest('Windows PowerShell uses the direct fzf picker')
+        for name in ('blue jay.txt', 'blue owl.txt'):
+            (self.home / name).touch()
+        (self.home / 'blue folder').mkdir()
+        helpers = literal(self.repo / 'shells/powershell/helpers.ps1')
+        code = r"""
+Add-Type @'
+namespace Microsoft.PowerShell {
+    public class PSConsoleReadLine {
+        public static string Line = "Get-Item 'blu' -Force";
+        public static int Cursor = 13;
+        public static void SetCursorPosition(int position) { Cursor = position; }
+        public static void GetBufferState(ref string line, ref int cursor) {
+            line = Line;
+            cursor = Cursor;
+        }
+        public static void Replace(int start, int count, string text) {
+            Line = Line.Remove(start, count).Insert(start, text);
+        }
+    }
+}
+'@
+function Get-Command { 'Invoke-FixtureFzf' }
+function Invoke-FixtureFzf {
+    $global:LASTEXITCODE = $global:PickerExit
+    if ($global:PickerExit -eq 0) {
+        'jay'
+        $input | Where-Object { $_ -like '*jay.txt' }
+    }
+}
+$global:LASTEXITCODE = 17
+$original = [Microsoft.PowerShell.PSConsoleReadLine]::Line
+$global:PickerExit = 130
+Invoke-DotsFuzzyCompletion
+if ([Microsoft.PowerShell.PSConsoleReadLine]::Line -ne $original -or $LASTEXITCODE -ne 17) { exit 1 }
+$global:PickerExit = 0
+Invoke-DotsFuzzyCompletion
+if ([Microsoft.PowerShell.PSConsoleReadLine]::Line -ne "Get-Item '.\blue jay.txt' -Force" -or
+    $LASTEXITCODE -ne 17) { exit 2 }
+[Microsoft.PowerShell.PSConsoleReadLine]::Line = "Get-Item 'blue f' -Force"
+[Microsoft.PowerShell.PSConsoleReadLine]::Cursor = 16
+Invoke-DotsFuzzyCompletion
+$line = [Microsoft.PowerShell.PSConsoleReadLine]::Line
+if ($line -ne "Get-Item '.\blue folder\' -Force" -or
+    $line[[Microsoft.PowerShell.PSConsoleReadLine]::Cursor] -ne "'") { exit 3 }
+"""
+        result = self.run_ps('-Command', f". {helpers}\n" + code, prepare=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_blastoff_path_default_and_explicit_override(self):
         entry = literal(self.repo / 'shells/powershell/profile.ps1')
@@ -607,18 +821,29 @@ __ShellInteg_Rearm
                 f'@theme\tflavor\tdark\nblue\thex\t{color}\n'
                 'foreground\thex\t#eeeeee\nbackground\thex\t#111111\n')
             (folder / 'ls_colors').write_text('di=34')
+            if generation == 'g.A':
+                cache = folder / 'bat-cache'
+                cache.mkdir()
+                for asset in ('themes.bin', 'syntaxes.bin'):
+                    (cache / asset).write_bytes(b'fixture')
         current = themes / 'current'
         current.write_text('g.A')
         entry = literal(self.repo / 'shells/powershell/profile.ps1')
-        p = self.run_interactive(f'. {entry}; $first=$env:DOTS_THEME_ID; '
+        self.env.update(BAT_THEME='custom', BAT_CACHE_PATH=str(self.home / 'custom cache'))
+        scripted = self.run_ps('-Command', f'. {entry}; $env:BAT_THEME; $env:BAT_CACHE_PATH')
+        self.assertEqual(scripted.stdout.splitlines(), ['Dots', str(cache)])
+        p = self.run_interactive(f'. {entry}; $first=$env:DOTS_THEME_ID; $firstBat=$env:BAT_THEME; '
             f"[IO.File]::WriteAllText({literal(current)}, 'invalid'); $null=prompt; "
             "$retained=$env:DOTS_THEME_ID; "
             f"[IO.File]::WriteAllText({literal(current)}, 'g.B'); $null=prompt; "
             "@{first=$first; retained=$retained; current=$env:DOTS_THEME_ID; "
-            "color=$global:dots_colors['blue']['hex']; ls=$env:LS_COLORS} | ConvertTo-Json -Compress")
+            "color=$global:dots_colors['blue']['hex']; ls=$env:LS_COLORS; bat=$firstBat; restored=$env:BAT_THEME; "
+            "cache=$env:BAT_CACHE_PATH; family=$env:THEMEDIR; src=$env:THEMESRC} | ConvertTo-Json -Compress")
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(json.loads(p.stdout), {'first': 'first', 'retained': 'first',
-                        'current': 'second', 'color': '#445566', 'ls': 'di=34'})
+                        'current': 'second', 'color': '#445566', 'ls': 'di=34', 'bat': 'Dots',
+                        'restored': 'custom', 'cache': str(self.home / 'custom cache'),
+                        'family': str(self.repo / 'themes/second'), 'src': str(self.repo / 'themes/second/src')})
 
     def test_published_fzf_and_caller_owned_options(self):
         root = self.home/'state/dots/themes'

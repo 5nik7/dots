@@ -23,7 +23,7 @@ def main(args):
     incomplete = ''
     if current:
         generation = themes.state / 'themes/generations' / current
-        if not generation_complete(themes, generation) or regular(generation / 'fingerprint').decode().strip() != fingerprint:
+        if not generation_complete(themes, generation, bat_inputs) or regular(generation / 'fingerprint').decode().strip() != fingerprint:
             incomplete = 'theme inputs changed'
     if args == ['inspect']:
         values = [identity, fingerprint, current, incomplete]
@@ -33,9 +33,10 @@ def main(args):
         private_directory(directory)
         palette = themes.render(identity, directory, build_cache=True, bat_inputs=bat_inputs)
         for shell, suffix in (('powershell', 'ps1'), ('zsh', 'zsh'), ('fish', 'fish')):
-            (directory / ('init.' + suffix)).write_text(shell_init(palette, shell), encoding='utf-8')
+            encoding = 'utf-8-sig' if shell == 'powershell' else 'utf-8'
+            (directory / ('init.' + suffix)).write_text(shell_init(palette, shell, directory), encoding=encoding)
         generated_commands(themes, directory)
-        (directory / 'status').write_text('committed\n')
+        (directory / 'status').write_bytes(b'committed\n')
         if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
         # Preparation never changes live pointers or invokes app reloads/plugins.
         for path in directory.rglob('*'):

@@ -244,7 +244,7 @@ RGB) are supported; unresolved variables refuse publication. Personal templates 
 A trusted bundled theme's explicit application file takes precedence over both.
 Downloaded themes contribute colors and backgrounds only. Templates never evaluate
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
-Yazi, Codex, Pi, Vivid, FSH, eza, Leaf and Television data; Zsh/Fish and Neovim data come from the palette generator.
+Yazi, Claude Code, Codex, Pi, Vivid, FSH, eza, Leaf and Television data; Zsh/Fish and Neovim data come from the palette generator.
 
 The [mdcat configuration](../config/mdcat/config.toml) uses `base = "auto"` for dark/light detection and ANSI color names for its overrides. Its colors follow the terminal palette, so the terminal must have the Dots theme applied; mdcat does not read the published Dots palette directly. Existing heading markers, alert labels and text styles are preserved. Code-block highlighting continues to use mdcat's `BAT_THEME` integration. Explicit `--theme` or `MDCAT_THEME` selections override the base, with config style overrides still applied on top.
 
@@ -326,10 +326,16 @@ precedence described above.
 
 When Bat is installed, theme publication and setup build a private cache containing
 the generated Dots theme, Bat's built-in languages and your custom
-`.sublime-syntax` files. Dots asks Bat for its `--config-dir` before staging the
-build, so `BAT_CONFIG_DIR` takes precedence and Bat's native platform default is
-used otherwise. `BAT_CONFIG_PATH` selects the configuration file independently;
-it does not select the syntax directory.
+`.sublime-syntax` files. `BAT_CONFIG_DIR` takes precedence. On Windows, when
+it is unset, Dots uses the managed bat directory or the checkout's `config/bat`
+when available. Bat's native `--config-dir` supplies the remaining fallback.
+`BAT_CONFIG_PATH` independently selects the configuration file.
+
+PowerShell profiles and the generated PowerShell theme initialization select
+`BAT_THEME=Dots` and the published `BAT_CACHE_PATH` when both cache files are
+present. Scripts that load the Dots profile inherit the same bat settings.
+Run `bat --list-themes` and `bat --list-languages` in a fresh shell to check
+the published theme and configured syntaxes.
 
 Put custom definitions beneath that directory's `syntaxes/` and run
 `dots theme refresh` after adding, editing or removing them. Nested directories
@@ -429,7 +435,7 @@ local connector. Btop selects `dots.theme`; Yazi selects the `dots` flavor. Bat 
 the generated `Dots` theme and per-generation cache through shell initialization.
 Existing app settings and Neovim transparency remain in their source configurations.
 
-On selection, the publisher reads enabled `${THEME}` links from the effective profile. Their targets cover configured applications such as Kitty, tmux, btop, Git, Bat, Yazi, Vivid, Termux, Pi, Codex, eza, Television, and Leaf. Custom rows use the same destination checks and rollback. The `theme:yazi` mapping preserves an existing correct flavor directory link. Setup and publication can convert a real `dots.yazi` directory when it contains exactly the two expected links from the earlier profile. Extra entries or changed children require manual review. Connector sources retain the stable `current/theme` path across theme changes. See [file mappings](files.md#ownership-and-formats).
+On selection, the publisher reads enabled `${THEME}` links from the effective profile. Their targets cover configured applications such as Kitty, tmux, btop, Git, Bat, Yazi, Vivid, Termux, Claude Code, Pi, Codex, eza, Television, and Leaf. Custom rows use the same destination checks and rollback. The `theme:yazi` mapping preserves an existing correct flavor directory link. Setup and publication can convert a real `dots.yazi` directory when it contains exactly the two expected links from the earlier profile. Extra entries or changed children require manual review. Connector sources retain the stable `current/theme` path across theme changes. See [file mappings](files.md#ownership-and-formats).
 
 Termux settings reload when available; an existing tmux server reloads the generated
 colors; Kitty remote control is used only when KITTY_LISTEN_ON is supplied. Reload
@@ -555,6 +561,46 @@ Neovim OSC foreground/background adapter remains responsible for terminal color
 queries. Custom `.tmTheme` files control code-block and diff syntax highlighting,
 not every TUI widget or desktop-app appearance. See the
 [official Codex theme documentation](https://learn.chatgpt.com/docs/cli-customization).
+
+### Clink on Windows
+
+Dots renders [dots.clinktheme.tpl](../default/themed/dots.clinktheme.tpl) into
+each generation. The Windows profile links `%LOCALAPPDATA%\clink\themes\dots.clinktheme`
+to `current/theme/dots.clinktheme`. The `themes` directory is an ordinary
+directory for other Clink themes. The destination follows the Clink profile
+when `CLINK_PROFILE` or the Dots app-directory override is set.
+
+Run `clink config theme show dots` to preview the colors. To apply them to
+the current Clink profile, run `clink config theme use dots`. Clink copies
+theme colors into its settings when you use a theme. After changing the Dots
+palette, run the same Clink command to apply the new colors.
+
+For a checkout that installed the old whole-directory link, preview
+`dots files uninstall --component files --resource windows:clink-themes --dry-run`.
+If it shows the expected Clink directory link, repeat with `--yes`. Then run
+`dots files install --component themes --resource theme:clink --dry-run` and
+apply with `--yes`. The original reference themes stay in the checkout.
+For custom colors, override `dots.clinktheme.tpl` in the personal `themed`
+directory and refresh the Dots theme.
+
+### Claude Code
+
+Dots renders `default/themed/claude-code.json.tpl` into each generation. The
+**Dots** theme uses the palette's light or dark base, prompt accent, text,
+status and mode colors. Line and word diff backgrounds use the resolved Git
+added and deleted colors blended with the palette background.
+
+For first-time setup, create `~/.claude/themes` (on Windows,
+`%USERPROFILE%\.claude\themes`) and run `dots theme refresh`. With a custom
+`CLAUDE_CONFIG_DIR`, create its `themes` directory and give both applications
+the same absolute config path. Publication connects an existing directory's
+`dots.json` to the active generation through the normal backup journal.
+
+In Claude Code, open `/theme` and select **Dots**. If the directory was
+created during an open session, restart Claude Code once. Changed publication
+renews the link for Claude's file watcher. To customize the colors, edit a
+personal `claude-code.json.tpl` and refresh. A bundled palette's
+`claude-code.json` takes precedence over both templates.
 
 ### Pi
 

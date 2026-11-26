@@ -16,18 +16,21 @@ class FzfOptions(ReleaseHarness):
             self.assertFalse(ui.safe_binding(value))
         self.assertEqual(ui.inherited_options({'FZF_DEFAULT_OPTS':'"bad'}),[])
     def test_basic_fancy_and_multiselect(self):
-        args=ui.fzf_args(120,30,True,'sh -c','fixed {1}')
+        args=ui.fzf_args(120,30,True,'fixed {1}')
         self.assertFalse(any(x.startswith('--color=') for x in args));self.assertFalse(any(x.startswith('--border=') for x in args))
         self.assertIn('--bind=ctrl-x:toggle-preview',args)
         self.assertTrue(any('<60(down' in x for x in args))
-        args=ui.fzf_args(40,12,False,'sh -c','fixed {1}',fancy='ascii',multi=True)
+        args=ui.fzf_args(40,12,False,'fixed {1}',fancy='ascii',multi=True)
         self.assertIn('--no-unicode',args);self.assertIn('--multi',args);self.assertIn('--bind=tab:toggle+down,shift-tab:toggle+up',args)
     def test_selection_uses_original_ids_not_display_commands(self):
         import subprocess
+        shell = r'C:\Program Files\PowerShell\pwsh.exe'
         def fake(argv,**kw):
+            self.assertFalse(any(arg.startswith('--with-shell') for arg in argv))
+            self.assertEqual(kw['env']['SHELL'], shell)
             self.assertNotIn('FZF_DEFAULT_COMMAND',kw['env']);self.assertNotIn('BASH_ENV',kw['env'])
             return subprocess.CompletedProcess(argv,0,'1\tb\n0\ta\n')
-        with patch.object(ui.subprocess,'run',fake):
+        with patch.object(ui, 'preview_command', return_value=(shell, 'fixed {1}')), patch.object(ui.subprocess,'run',fake):
             selected=ui.choose_fzf(['backup:one','backup:two'],self.home,False,{'FZF_DEFAULT_COMMAND':'evil','BASH_ENV':'evil'},multi=True,labels=['a','b'])
         self.assertEqual(selected,['backup:two','backup:one'])
 

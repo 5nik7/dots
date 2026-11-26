@@ -478,6 +478,21 @@
       ]
     },
     {
+      "id": "theme:claude-code",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "theme:clink",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
       "id": "theme:codex",
       "platforms": [
         "termux",
@@ -659,12 +674,6 @@
     },
     {
       "id": "windows:clink-starship",
-      "platforms": [
-        "windows"
-      ]
-    },
-    {
-      "id": "windows:clink-themes",
       "platforms": [
         "windows"
       ]

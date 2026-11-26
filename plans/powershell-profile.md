@@ -1,5 +1,22 @@
 # Lean PowerShell profile repair
 
+## Mise shims and PowerShell fuzzy completion, 2026-11-26
+
+Fresh sessions using the installed profiles on this PC resolved both `node.exe` and `ruby.exe` from `%LOCALAPPDATA%\mise\shims` in PowerShell 7.7.0-rc.1 and Windows PowerShell 5.1.26100.9818. Each contained one shim directory. The [shell environment guide](../docs/shell-environment.md#shared-tool-paths) describes the shared PATH behavior. This uses the existing installed profile destinations. The root README needs no change because setup and first commands stay the same.
+
+Both native consoles passed keyboard checks with fzf, including selecting a Dots subcommand, completing a quoted path in the middle of a line, preserving the remaining argument, cancelling with Escape, and falling back to ordinary completion with fzf missing. Windows PowerShell 5.1 uses fzf directly because the installed PSFzf 2.7.12 picker lost the selection on Enter in that engine. PowerShell 7 loads PSFzf on first use.
+
+Isolated PATH checks covered inherited command collisions, duplicate entries, global configuration and reload. Bash and Zsh ran under Ubuntu WSL. Fish, Nushell, Xonsh, native Linux and Termux remain separate native acceptance checks.
+
+Noninteractive startup timings below use a populated fixture shim directory. The PowerShell samples measure loading a copied profile inside each fresh process, alternating the previous and updated source. The WSL samples measure launching the shell and loading its generated integration. Cold is one empty-cache sample. Warm is the median of seven fresh processes on Windows and five on WSL.
+
+| Engine | Cold before / after (ms) | Warm before / after (ms) |
+| --- | ---: | ---: |
+| PowerShell 7 | 719 / 770 | 310 / 319 |
+| Windows PowerShell 5.1 | 1352 / 1351 | 327 / 329 |
+| WSL Bash | 105 / 106 | 5.89 / 6.12 |
+| WSL Zsh | 123 / 124 | 5.93 / 6.11 |
+
 **Implemented, 2026-10-21.** The initial lean profile was subsequently extended at the owner's request: both Core and Desktop use Starship and their own terminal integration; Blastoff stays Core-only. The original lean measurements below remain a historical baseline.
 
 ## Initial implementation

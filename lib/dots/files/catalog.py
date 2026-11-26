@@ -626,7 +626,7 @@ class Catalog(ProfileFiles):
         if application:
             from app_paths import config_directory
             suffix = relative(application[2]) if application[2] else Path('.')
-            if application[1] in ('eza', 'television', 'leaf', 'codex', 'pi', 'windows-terminal', 'yazi', 'wezterm'):
+            if application[1] in ('eza', 'television', 'leaf', 'claude-code', 'codex', 'pi', 'windows-terminal', 'yazi', 'wezterm'):
                 from app_paths import connector_directory
                 base = connector_directory(application[1], self.platform)
             elif self.platform == 'windows':

@@ -523,6 +523,14 @@
       "strategy": "link"
     },
     {
+      "id": "claude-code",
+      "source": "${THEME}/claude-code.json",
+      "target": "${APP_CONFIG:claude-code}/themes/dots.json",
+      "app": "claude-code",
+      "category": "theme",
+      "strategy": "link"
+    },
+    {
       "id": "pi",
       "source": "${THEME}/pi.json",
       "target": "${APP_CONFIG:pi}/themes/dots.json",

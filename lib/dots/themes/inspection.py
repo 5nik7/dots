@@ -29,7 +29,7 @@ DERIVED = {'yazi/flavor.toml': 'yazi.toml', 'yazi/tmtheme.xml': 'bat.tmTheme'}
 SHARED = {'palette.json', 'shell.tsv', 'init.zsh', 'init.fish', 'init.ps1',
           'colors.json', 'colors.lua', 'ls_colors', 'file-styles.tsv', 'git-styles.tsv'}
 OVERRIDES = set('kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml '
-                'fzf.sh gum_env.sh pi.json vivid.yml fsh.ini eza.yml television.toml leaf.toml'.split())
+                'fzf.sh gum_env.sh pi.json claude-code.json dots.clinktheme vivid.yml fsh.ini eza.yml television.toml leaf.toml'.split())
 # Non-link consumers describe integration mechanisms, not live process state.
 CONSUMERS = {
     'bat.tmTheme': [('bat', 'environment', 'BAT_THEME=Dots; generation-local BAT_CACHE_PATH')],

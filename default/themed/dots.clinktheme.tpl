@@ -1,0 +1,39 @@
+# Name: Dots
+
+[set]
+color.arg={{ magenta }}
+color.arginfo=italic {{ magenta }}
+color.argmatcher={{ green }}
+color.cmd={{ accent }}
+color.cmdredir={{ foreground }}
+color.cmdsep={{ warning }}
+color.comment_row={{ muted }}
+color.common_match_prefix={{ cyan }}
+color.description={{ muted }}
+color.doskey={{ cyan }}
+color.envvars={{ green }}
+color.escapetilde={{ green }}
+color.executable={{ cyan }}
+color.filtered={{ foreground }}
+color.flag={{ warning }}
+color.hidden={{ muted }}
+color.histexpand={{ green }}
+color.horizscroll=reverse
+color.input={{ foreground }}
+color.interact=bold
+color.message={{ info }}
+color.modmark={{ magenta }}
+color.popup={{ foreground }} on {{ lighter_background }}
+color.popup_border={{ muted }} on {{ lighter_background }}
+color.popup_desc={{ foreground }} on {{ lighter_background }}
+color.popup_footer={{ foreground }} on {{ lighter_background }}
+color.popup_header=bold {{ accent }} on {{ lighter_background }}
+color.popup_select={{ selection_foreground }} on {{ selection_background }}
+color.popup_selectdesc={{ selection_foreground }} on {{ selection_background }}
+color.prompt={{ foreground }}
+color.readonly={{ magenta }}
+color.selected_completion={{ selection_foreground }} on {{ selection_background }}
+color.selection={{ selection_foreground }} on {{ selection_background }}
+color.suggestion={{ muted }}
+color.unexpected={{ error }}
+color.unrecognized={{ error }}

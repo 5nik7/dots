@@ -78,6 +78,21 @@ class Inputs(unittest.TestCase):
         self.assertFalse((self.home / 'normal-cache').exists())
         self.assertFalse((out / 'bat-source/syntaxes/nested/fixture.sublime-syntax').is_symlink())
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows Bat config discovery')
+    def test_windows_managed_assets_without_shell_environment(self):
+        roaming = self.home / 'roaming'
+        managed = roaming / 'bat'
+        checkout = self.home / 'checkout'
+        (checkout / 'config').mkdir(parents=True)
+        shutil.copytree(self.source, checkout / 'config/bat')
+        del os.environ['BAT_CONFIG_DIR']
+        with patch.dict(os.environ, APPDATA=str(roaming), DOTS=str(checkout)):
+            self.assertEqual(Path(bat_cache.inputs().source), checkout / 'config/bat')
+            shutil.copytree(self.source, managed)
+            self.assertEqual(Path(bat_cache.inputs().source), managed)
+            with patch.dict(os.environ, BAT_CONFIG_DIR=str(self.source)):
+                self.assertEqual(Path(bat_cache.inputs().source), self.source)
+
     def test_gcode_and_dots_render_together(self):
         shutil.copy2(ROOT / 'config/bat/syntaxes/gcode.sublime-syntax', self.source / 'syntaxes/gcode.sublime-syntax')
         out = self.render(); bat_cache.build(out)

@@ -70,6 +70,13 @@ dt_apps_plan() {
     [[ ! -e $path || -f $path || -L $path ]] || return 1
     DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/termux.properties")
   fi
+  local claude_config
+  claude_config=$(python3 -B "$DT_LIB/../files/app_paths.py" claude-code) || return
+  if [[ -d $claude_config/themes ]]; then
+    path=$claude_config/themes/dots.json
+    [[ ! -e $path || -f $path || -L $path ]] || { dt_error "cannot connect theme target: $path"; return 1; }
+    DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/claude-code.json")
+  fi
   if [[ -d $pi_agent/themes ]]; then
     path=$pi_agent/themes/dots.json
     [[ ! -e $path || -f $path || -L $path ]] || { dt_error "cannot connect theme target: $path"; return 1; }
@@ -98,9 +105,8 @@ dt_apps_connect() {
   mkdir "$dir/connectors" || return
   for ((index=0;index<${#DT_CONNECT_TARGETS[@]};index++)); do
     target=${DT_CONNECT_TARGETS[index]} source=${DT_CONNECT_SOURCES[index]}
-    # Pi watches its themes directory, not the active generation link. Renew its
-    # connector on publication to notify that watcher, using the same journal.
-    if [[ $source != "$DT_ACTIVE/pi.json" && -L $target && $(readlink -- "$target") == "$source" ]]; then
+    # Renew watched theme files on publication so Pi and Claude Code see the change.
+    if [[ $source != "$DT_ACTIVE/pi.json" && $source != "$DT_ACTIVE/claude-code.json" && -L $target && $(readlink -- "$target") == "$source" ]]; then
       dots::operation Unchanged "$target" '' 'Already linked'
       continue
     fi

@@ -62,8 +62,55 @@ _dots_manual_path() {
     export MANPATH="$manuals:${MANPATH-}"
   fi
 }
+# If mise already activated a toolchain, its new bins precede the original
+# PATH. Put a missing shim back immediately before the first inherited entry.
+_dots_insert_active_mise_shims() {
+  local rest=$PATH prefix='' entry
+  while [[ -n $rest ]]; do
+    entry=${rest%%:*}
+    if [[ -n $entry && :${__MISE_ORIG_PATH}: == *":$entry:"* &&
+          $entry != "$DOTBIN" && $entry != "$DOTSCRIPTS" && $entry != "$THEMESBIN" ]]; then break; fi
+    prefix+=$entry:
+    if [[ $rest == *:* ]]; then rest=${rest#*:}; else rest=''; fi
+  done
+  PATH=$prefix$_dots_mise_shims${rest:+:$rest}
+}
+# An early Zsh may inherit profile bins from its parent. Keep those ahead of
+# the shim without activating profile directories that the parent never added.
+_dots_early_mise_path_setup() {
+  local part normalized rest=${PATH:-} inherited='' other='' separator='' active=0 kept_shim=0
+  if [[ -n ${MISE_SHELL:-} && -n ${__MISE_ORIG_PATH:-} ]]; then active=1; fi
+  while :; do
+    part=${rest%%:*}; normalized=$part
+    while [[ $normalized == */ && $normalized != / ]]; do normalized=${normalized%/}; done
+    if [[ -n $normalized && $normalized == "${_dots_mise_shims:-}" ]]; then
+      if (( active && ! kept_shim )) && [[ -d $normalized ]]; then
+        other+=$separator$normalized; separator=:; kept_shim=1
+      fi
+    elif [[ -n $normalized && $normalized == "${_dots_early_mise_path:-}" ]]; then :
+    elif [[ -n $normalized && :${DOTS_PROFILE_PATHS:-}: == *":$normalized:"* ]]; then
+      inherited+=${inherited:+:}$part
+    else
+      other+=$separator$part; separator=:
+    fi
+    [[ $rest == *:* ]] || break
+    rest=${rest#*:}
+  done
+  _dots_early_mise_path=''
+  if [[ -d ${_dots_mise_shims:-} ]]; then
+    _dots_early_mise_path=$_dots_mise_shims
+    if (( ! active )); then inherited+=${inherited:+:}$_dots_early_mise_path; fi
+  fi
+  PATH=$other
+  if (( active && ! kept_shim )) && [[ -n $_dots_early_mise_path ]]; then _dots_insert_active_mise_shims; fi
+  [[ -z $inherited ]] || PATH=$inherited${PATH:+:$PATH}
+}
 _dots_shell_paths() {
-  local directory part rest=${PATH:-} result='' separator=''
+  local directory part rest result='' separator=''
+  if [[ ${1:-} == early && ( -d ${_dots_mise_shims:-} || -n ${_dots_early_mise_path:-} ) ]]; then
+    _dots_early_mise_path_setup
+  fi
+  rest=${PATH:-}
   # Remove only retired paths and our optional generated-command path.
   while :; do
     part=${rest%%:*}

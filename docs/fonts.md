@@ -5,7 +5,9 @@ management on Termux, Linux, WSL and native Windows. Both commands read TTF and
 OTF metadata using the Python 3.11+ standard library. Updating an existing
 checkout supplies the reader on the next invocation. Core setup includes the
 standalone command. Select the optional Fonts setup component to restore saved
-application choices.
+application choices. Native Windows checks cover font imports, glyph previews
+and setting the same font across multiple terminal hosts. See the
+[Windows terminal selection results](../plans/fonts.md#windows-terminal-font-selection).
 
 ## FIGlet lettering
 
@@ -203,6 +205,7 @@ Downloaded browsing includes all backend stores unless `--directory` limits the 
 fonts targets
 fonts set nerd:JetBrainsMono --variant mono --face JetBrainsMonoNerdFontMono-Regular.ttf --target termux
 fonts set nerd:JetBrainsMono --target vscode-editor --target vscode-terminal
+fonts set nerd:JetBrainsMono --target all-terminals --dry-run
 fonts current
 fonts set --file /absolute/path/MyFont.ttf --target termux --no-reload
 ```
@@ -220,6 +223,31 @@ for a single desktop target. Dots never searches for an arbitrary file to edit.
 | `windows-terminal` | JSONC `profiles.defaults.font.face`, or one exact GUID selected by `--app-profile`; native Windows only. |
 | `vscode-editor` | JSONC `editor.fontFamily`. |
 | `vscode-terminal` | JSONC `terminal.integrated.fontFamily`. |
+| `all-terminals` | On Windows, select the family across detected terminal hosts in one reviewed transaction. Also available as **All terminals** in the font picker. |
+
+To use a font already on your PC, run `dots fonts installed --json`, find its
+regular face, and pass its complete `installed:` ID to `dots fonts set` with
+`--target all-terminals`. Preview with `--dry-run`. Set retains the matching
+styles and reuses an existing registration when the entire selected variant
+matches the retained files.
+
+The group covers Windows Terminal Stable, Preview and unpackaged settings,
+WezTerm, VS Code's integrated terminal, MSYS2 mintty and Git Bash mintty.
+Each Windows Terminal edition gets a default face for inheriting profiles and
+the same primary face in profiles with explicit overrides. Font sizes and fallback
+families are preserved. Each mintty uses its effective user settings. Restart a
+terminal to pick up settings it reads at launch.
+
+Mintty and classic Console use the Win32 family name embedded in the selected
+face. For example, JetBrainsMono Nerd Font reports `JetBrainsMono NF` to these
+applications. Classic Console is checked in a separate hidden console. Dots sets the current
+user's Console default and existing per-program face overrides only when Windows
+returns the requested family. If Windows substitutes another family, the report
+names it. Missing editions and unavailable hosts are listed in the review.
+Saved choices identify individual destinations so Restore can replay the same
+selection. Use `dots fonts undo TRANSACTION --dry-run` to preview restoration of a Set.
+Saved classic Console choices use `dots fonts restore classic-console` separately
+from the checkout installer's file-backed font targets.
 
 Default desktop destinations come from the active Dots catalog. Managed sources
 are edited so linked configurations follow. Managed file copies also require a

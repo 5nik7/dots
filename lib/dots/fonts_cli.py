@@ -91,6 +91,8 @@ def approve(plan, args, *, context=None):
 
 def targets(library):
     rows = []
+    if library.platform == 'windows':
+        rows.append(dict(target='all-terminals', label='All terminals', status='available', source='group'))
     for target in TARGETS:
         try:
             result = destination(library, target)

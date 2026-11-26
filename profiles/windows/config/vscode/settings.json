@@ -22,7 +22,7 @@
   "editor.lineHeight": 1.7,
   "editor.fontLigatures": true,
   "editor.tabSize": 2,
-  "terminal.integrated.fontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
+  "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font, 'JetBrains Mono', monospace",
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.letterSpacing": 0,
   "terminal.integrated.lineHeight": 1.5,
@@ -602,5 +602,7 @@
   "markdown-preview-enhanced.imageMagickPath": "\"C:\\Program Files\\ImageMagick-7.1.2-Q16-HDRI\\magick.exe\"",
   "markdown-preview-enhanced.mermaidTheme": "dark",
   "markdown-preview-enhanced.revealjsTheme": "night.css",
-  "markdown-preview-enhanced.usePandocParser": true
+  "markdown-preview-enhanced.usePandocParser": true,
+  "claudeCode.preferredLocation": "panel",
+  "claudeCode.hideOnboarding": true
 }

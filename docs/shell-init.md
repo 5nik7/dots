@@ -85,9 +85,18 @@ shell integration usable.
 
 ## PowerShell profile
 
+When theme integration is enabled, a profile-loaded PowerShell script also
+selects the published bat cache if both binary assets are present. Startup
+reads the generation marker and checks those assets locally. Cache compilation
+runs during theme publication.
+
+Concurrent cold starts serialize the two writes that publish the generated
+environment script and its digest. Windows retries short-lived file sharing
+conflicts. A shell reading a valid warm cache takes no writer lock.
+
 The personal PowerShell entry is `shells/powershell/profile.ps1`; `Microsoft.PowerShell_profile.ps1` remains a compatibility entry for existing installer links. Both discover the linked checkout. The installer copies a standalone rc to each supported engine’s `$PROFILE.CurrentUserAllHosts`. A manual installation can link that path to the shared entry. Dots settings, published colors and completion load once; only interactive sessions load personal helpers. Re-sourcing preserves the prompt chain and avoids duplicate personal setup.
 
-Interactive Core and Desktop sessions preserve a profile-supplied prompt. With the default prompt, they initialize Starship using the existing `STARSHIP_CONFIG` or Starship default. Missing or failed Starship initialization leaves a plain directory prompt. After Starship and Dots refresh setup, startup sources `shell-integration_v7.ps1` beside that engine's `$PROFILE.CurrentUserAllHosts` when present. Existing host-specific integration hooks remain safe because the vendor wrapper is idempotent; the vendor files are not rewritten. Console sessions use PSReadLine Vi mode, native Tab completion and **Alt+F** for fuzzy completion. Alt+F imports PSFzf on demand; absent FZF or PSFzf falls back to native completion. Redirected input skips line-editor setup. The `ls` helper uses eza without Git-status scans when available, otherwise `Get-ChildItem`. Editor selection is deferred until `edit`/`e`/`ep` is used and respects an existing `EDITOR`; otherwise it prefers nvim, code, vim, vi, then notepad. `ep` edits the repository profile source.
+Interactive Core and Desktop sessions preserve a profile-supplied prompt. With the default prompt, they initialize Starship using the existing `STARSHIP_CONFIG` or Starship default. Missing or failed Starship initialization leaves a plain directory prompt. After Starship and Dots refresh setup, startup sources `shell-integration_v7.ps1` beside that engine's `$PROFILE.CurrentUserAllHosts` when present. Existing host-specific integration hooks remain safe because the vendor wrapper is idempotent; the vendor files are not rewritten. In console sessions, press **Tab** or **Alt+F** in Vi insert mode to complete the current input. PowerShell supplies the candidates. A single match completes immediately. With multiple matches, type to narrow the fzf list, press Enter to insert a match, or press Escape to keep editing the original line. PowerShell 7 loads PSFzf on first use. Windows PowerShell 5.1 sends its completion list directly to fzf. Both engines fall back to native Tab completion when fzf is missing. PowerShell 7 also uses native completion if PSFzf cannot load. Redirected input skips line-editor setup. The `ls` helper uses eza without Git-status scans when available, otherwise `Get-ChildItem`. Editor selection is deferred until `edit`/`e`/`ep` is used and respects an existing `EDITOR`; otherwise it prefers nvim, code, vim, vi, then notepad. `ep` edits the repository profile source.
 
 PowerShell keeps optional runtime managers, history tools and editor bindings under explicit profile control. Dot-source the loader from the current session or your profile’s `shells/local.ps1`.
 

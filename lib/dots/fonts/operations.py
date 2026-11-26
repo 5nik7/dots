@@ -100,11 +100,12 @@ def link_digest(source):
     return hashlib.sha256(b'.\0' + b'511\0L' + os.fsencode(str(source)) + b'\0').hexdigest()
 
 
-def registration(plan, font, path, previous=None):
+def registration(plan, font, path, previous=None, name=None):
     import font_registry
-    name = font['full_name'] + (' (TrueType)' if Path(font['file']).suffix.lower() == '.ttf' else ' (OpenType)')
+    name = name or font['full_name'] + (' (TrueType)' if Path(font['file']).suffix.lower() == '.ttf' else ' (OpenType)')
     before = font_registry.read(name)
-    if before is not None and before != previous: raise ValueError('Windows font name is already registered outside this selection')
+    if before != previous and not (before and previous and Path(before)==Path(previous)):
+        raise ValueError('Windows font registration is missing or owned outside this selection')
     spec = dict(name=name, before=before, after=str(path) if path else None)
     font_registry.validate(spec)
     receipt = plan.library.state / 'fonts/registrations' / (token(name) + '.json')
@@ -156,27 +157,29 @@ def install(plan, identity, version=None, variant=None):
             other_record = other['versions'][other['installed']['version']]
             if any(f['full_name'] == font['full_name'] for f in other_record['fonts'] if f['variant'] == other['installed']['variant']):
                 raise ValueError('another managed family has the same registered face name')
+        item=dict(path=str(target),font=font)
         if plan.library.platform == 'windows':
             plan.put(target, source=source)
             prior = next((f for f in (old or {}).get('files', []) if f['font']['full_name'] == font['full_name']), None)
             alias=next((r for r in adopted.values() if row['versions'][r['version']]['fonts'] and
                 any(f['file']==r['face'] and f['full_name']==font['full_name'] for f in row['versions'][r['version']]['fonts'])),None)
-            registration(plan, font, target, prior['path'] if prior else alias['path'] if alias else None)
+            previous=prior or alias or {}
+            item['registration_name']=registration(plan,font,target,previous.get('path'),previous.get('registration_name'))
             after = digest(source)
         else:
             plan.put(target, link=str(persistent))
             after = link_digest(persistent)
-        files.append(dict(path=str(target), after=after, font=font))
+        files.append(dict(item,after=after))
     for item in (old or {}).get('files', []):
         if item['path'] not in {f['path'] for f in files}:
             if plan.library.platform == 'windows' and item['font']['full_name'] not in {f['full_name'] for f in fonts}:
-                registration(plan, item['font'], None, item['path'])
+                registration(plan, item['font'], None, item['path'],item.get('registration_name'))
             plan.put(item['path'], delete=True)
     row['installed'] = dict(version=version, variant=variant, files=files)
     for key,ref in adopted.items():
         if plan.library.platform=='windows':
             font=next(f for f in row['versions'][ref['version']]['fonts'] if f['file']==ref['face'])
-            if font['full_name'] not in {f['full_name'] for f in fonts}:registration(plan,font,None,ref['path'])
+            if font['full_name'] not in {f['full_name'] for f in fonts}:registration(plan,font,None,ref['path'],ref.get('registration_name'))
         plan.put(ref['path'],delete=True)
         del plan.document['adoptions'][key]
     row['preferred'] = version
@@ -207,14 +210,14 @@ def uninstall(plan, identity):
         validate_adoption(plan,ref)
         if plan.library.platform=='windows':
             font=next(f for f in row['versions'][ref['version']]['fonts'] if f['file']==ref['face'])
-            registration(plan,font,None,ref['path'])
+            registration(plan,font,None,ref['path'],ref.get('registration_name'))
         plan.put(ref['path'],delete=True);del plan.document['adoptions'][key]
     if not old:
         if adopted:plan.refresh.add('fonts')
         return
     owned_install(plan.library, old)
     for item in old['files']:
-        if plan.library.platform == 'windows': registration(plan, item['font'], None, item['path'])
+        if plan.library.platform == 'windows': registration(plan, item['font'], None, item['path'],item.get('registration_name'))
         plan.put(item['path'], delete=True)
     row['installed'] = None
     plan.refresh.add('fonts')

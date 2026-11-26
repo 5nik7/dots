@@ -47,17 +47,18 @@ def legacy_rows(selected, *, inspect=False):
     home = Path(os.environ.get('HOME') or Path.home())
     config = Path(os.environ.get('XDG_CONFIG_HOME') or home / '.config')
     rows = [line.split('\t') for line in (HERE / 'connectors.tsv').read_text().splitlines()]
-    rows.extend([('codex', 'themes/dots.tmTheme', 'bat.tmTheme'), ('pi', 'themes/dots.json', 'pi.json')])
+    rows.extend([('codex', 'themes/dots.tmTheme', 'bat.tmTheme'), ('pi', 'themes/dots.json', 'pi.json'),
+                 ('claude-code', 'themes/dots.json', 'claude-code.json')])
     if not windows:
         rows.append(('termux', 'colors.properties', 'termux.properties'))
     for app, suffix, artifact in rows:
         supported = windows if app == 'windows-terminal' else not windows or app in {
-            'yazi', 'git', 'vivid', 'eza', 'television', 'leaf', 'wezterm', 'codex', 'pi'}
+            'yazi', 'git', 'vivid', 'eza', 'television', 'leaf', 'wezterm', 'claude-code', 'codex', 'pi'}
         error = None
         try:
             if app == 'termux':
                 base = home / '.termux'
-            elif app in ('eza', 'leaf', 'television', 'windows-terminal', 'pi', 'codex') or windows and app in ('yazi', 'wezterm'):
+            elif app in ('eza', 'leaf', 'television', 'windows-terminal', 'claude-code', 'pi', 'codex') or windows and app in ('yazi', 'wezterm'):
                 base = connector_directory(app, selected)
             else:
                 base = config / app
@@ -67,7 +68,7 @@ def legacy_rows(selected, *, inspect=False):
             base, error = None, 'Invalid or unreadable application directory.'
         yield dict(id='theme:' + app + (':' + artifact if app == 'leaf' else ''), app=app,
                    target=str(base/suffix) if base else None, artifact=artifact, supported=supported, error=error,
-                   required=app not in ('pi', 'codex', 'termux'))
+                   required=app not in ('claude-code', 'pi', 'codex', 'termux'))
 
 
 
@@ -87,7 +88,7 @@ def app_names(root, selected):
     if uses_profile(catalog):
         source = next(s for s in catalog.sources if s['id'] == 'theme')
         return {row['app'] for row in catalog.manifest(source)['resources'] if row.get('enabled', True)}
-    return {line.split('\t')[0] for line in (HERE/'connectors.tsv').read_text().splitlines()} | {'codex','pi','termux'}
+    return {line.split('\t')[0] for line in (HERE/'connectors.tsv').read_text().splitlines()} | {'claude-code','codex','pi','termux'}
 
 
 def installation_receipt(path, guards):
@@ -148,6 +149,10 @@ def plan(root, selected, *, catalog=None, records=None, planned=(), planned_targ
         # only an exact directory owned by the selected catalog.
         target = logical
         if not inspect and row['supported']:
+            if (app == 'clink' and artifact == 'dots.clinktheme'
+                    and points_to(logical.parent, root / 'profiles/windows/config/clink/themes')):
+                raise ValueError('Clink still uses the old themes directory link; review '
+                                 'dots files uninstall --component files --resource windows:clink-themes --dry-run')
             endpoint = logical.parent if yazi_child else logical
             endpoint = physical(endpoint, records, guards, planned=planned)
             target = endpoint / logical.name if yazi_child else endpoint
@@ -175,7 +180,7 @@ def plan(root, selected, *, catalog=None, records=None, planned=(), planned_targ
         create = (not parent.exists() and not parent.is_symlink() and (
             yazi_child and (present(parent.parent) or parent.parent.name == 'flavors' and present(parent.parent.parent))
             or yazi_directory and present(parent.parent)
-            or app in ('leaf', 'television', 'bat') and parent.name == 'themes' and present(parent.parent)))
+            or app in ('leaf', 'television', 'bat', 'clink') and parent.name == 'themes' and present(parent.parent)))
         eligible = row['supported'] and (present(parent) or create or convert)
         split = False
         if eligible and not inspect and not convert:
@@ -311,7 +316,7 @@ def operations(links, active, staging, guards, checkout):
                 populate_yazi(payload, active)
                 replacements[parent] = (row.logical.parent, payload)
                 changes.append(dict(path=str(parent), source=str(payload)))
-        elif not points_to(row.target, active / row.artifact) or row.artifact == 'pi.json':
+        elif not points_to(row.target, active / row.artifact) or row.artifact in ('pi.json', 'claude-code.json'):
             changes.append(dict(path=str(row.target), link=str(active / row.artifact), directory=row.directory))
     split = [row for row in links if row.eligible and row.split_directory]
     if replacements or split:

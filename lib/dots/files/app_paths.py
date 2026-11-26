@@ -63,6 +63,13 @@ def leaf_config_directory(*, windows=None):
     return path
 
 
+WT_EDITIONS = {
+    'windows-terminal-stable': 'Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState',
+    'windows-terminal-preview': 'Packages/Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe/LocalState',
+    'windows-terminal-unpackaged': 'Microsoft/Windows Terminal',
+}
+
+
 def terminal_fragment_directory(*, windows=None):
     """Shared Stable/Preview fragment location; never select settings.json."""
     windows = os.name == 'nt' if windows is None else windows
@@ -115,26 +122,30 @@ def config_directory(app):
         if not path.is_absolute() or any(ord(c) < 32 for c in value):
             raise ValueError('app configuration override must be an absolute directory: ' + app)
         return path
-    variants = {
-        'wt': [local / 'Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState',
-               local / 'Packages/Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe/LocalState',
-               local / 'Microsoft/Windows Terminal'],
-        'winget': [local / 'Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState',
-                   local / 'Microsoft/WinGet/Settings'],
-    }
-    if app in variants:
-        present = [p for p in variants[app] if p.is_dir()]
-        # Never guess which installation the user wants to manage.
-        return present[0] if len(present) == 1 else None
-    return default
+    if app == 'wt':
+        # The unpackaged directory also houses shared Terminal fragments. Its
+        # existence alone cannot establish an unpackaged settings destination.
+        variants = [local / suffix for edition, suffix in WT_EDITIONS.items()
+                    if edition != 'windows-terminal-unpackaged' or (local / suffix / 'settings.json').is_file()]
+    elif app == 'winget':
+        variants = [local / 'Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState',
+                    local / 'Microsoft/WinGet/Settings']
+    else:
+        return default
+    present = [p for p in variants if p.is_dir()]
+    # Never guess which installation the user wants to manage.
+    return present[0] if len(present) == 1 else None
 
 
 def connector_directory(app, platform):
     """Resolve application destinations shared by profiles and theme publication."""
     windows = platform == 'windows'
-    if app in ('codex', 'pi'):
+    if app in ('claude-code', 'codex', 'pi'):
         home = Path(os.environ.get('HOME') or Path.home())
-        if app == 'codex':
+        if app == 'claude-code':
+            default_home = Path(os.environ.get('USERPROFILE') or home) if windows else home
+            value = os.environ.get('CLAUDE_CONFIG_DIR') or str(default_home / '.claude')
+        elif app == 'codex':
             value = os.environ.get('CODEX_HOME') or str(home / '.codex')
         else:
             value = os.environ.get('PI_CODING_AGENT_DIR') or str(home / '.pi/agent')
@@ -157,11 +168,9 @@ def connector_directory(app, platform):
 if __name__ == '__main__':
     import sys
     try:
-        resolvers = {'eza': eza_config_directory, 'television': television_config_directory,
-                     'leaf': leaf_config_directory}
-        if len(sys.argv) != 2 or sys.argv[1] not in resolvers:
-            raise ValueError('expected application: eza, television or leaf')
-        result = resolvers[sys.argv[1]]()
+        if len(sys.argv) != 2 or sys.argv[1] not in ('eza', 'television', 'leaf', 'claude-code'):
+            raise ValueError('expected application: eza, television, leaf or claude-code')
+        result = connector_directory(sys.argv[1], 'windows' if os.name == 'nt' else 'linux')
         print(result if result is not None else '')
     except ValueError as exc:
         print('dots theme: ' + str(exc), file=sys.stderr)

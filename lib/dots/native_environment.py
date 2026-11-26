@@ -8,6 +8,7 @@ from environment import declarations, TOKEN, retired_paths, clean_metadata, appl
 from platform_info import detect
 from profiles import resolve, SENSITIVE
 from profile_environment import Model, RESERVED, IDENTIFIER
+import mise_shims
 
 
 def exports(root, env=None, generated=None, profile=None):
@@ -31,9 +32,28 @@ def exports(root, env=None, generated=None, profile=None):
                 DOTS_PROFILE=profile['current'], DOTS_PROFILE_LAYERS=' '.join(row['id'] for row in profile['layers']))
     paths = [str(Path(row['root']) / relative) for row in reversed(profile['layers']) for relative in row.get('path', ['bin','scripts'])
              if (Path(row['root']) / relative).is_dir()]
-    previous = env.get('DOTS_PROFILE_PATHS','').split(os.pathsep)
-    retired = retired_paths(root, env)
-    existing = [entry for entry in env.get('PATH','').split(os.pathsep) if entry not in previous and os.path.normcase(os.path.normpath(entry)) not in retired]
+    shim = mise_shims.resolve(context, facts['platform'] == 'windows')
+    shim = str(shim) if shim and shim.is_dir() else None
+    active = shim and env.get('MISE_SHELL') and env.get('__MISE_ORIG_PATH')
+    if shim and not active:
+        paths.append(shim)
+    def normalize(path):
+        return os.path.normcase(os.path.normpath(path))
+    previous = {normalize(path) for path in env.get('DOTS_PROFILE_PATHS','').split(os.pathsep) if path}
+    if active:
+        previous.discard(normalize(shim))
+    previous.update(normalize(path) for path in paths)
+    excluded = previous | retired_paths(root, env)
+    existing = [entry for entry in env.get('PATH','').split(os.pathsep) if normalize(entry) not in excluded]
+    if active:
+        current = next((i for i, entry in enumerate(existing) if normalize(entry) == normalize(shim)), None)
+        if current is None:
+            original = {normalize(entry) for entry in env['__MISE_ORIG_PATH'].split(os.pathsep) if entry}
+            original.difference_update(normalize(str(path)) for path in (root/'bin',root/'scripts',
+                                       root/'themes/bin',env.get('THEMESBIN')) if path)
+            current = next((i for i, entry in enumerate(existing) if normalize(entry) in original), len(existing))
+        existing = [entry for entry in existing if normalize(entry) != normalize(shim)]
+        existing.insert(current, shim)
     for placement, path, _ in tool_paths(context):
         if path in existing:
             continue

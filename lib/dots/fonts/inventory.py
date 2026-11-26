@@ -4,7 +4,7 @@ import os
 import shutil
 import tempfile
 
-from fonts.model import Library,token,exists,metadata_with_revision,license_file,digest,parents_safe
+from fonts.model import Library,token,exists,metadata_with_revision,license_file,digest,parents_safe,sha
 from fonts import operations as ops
 
 
@@ -61,7 +61,14 @@ def snapshot(library, *, external=True):
                 path=Path(os.path.expandvars(row['path']))
                 if user.platform=='windows' and not path.is_absolute():
                     path=(Path(os.environ.get('WINDIR',os.environ.get('SystemRoot','C:/Windows')))/'Fonts'/path)
-                add(path,row.get('name',''),row.get('face',''),row.get('source','external'))
+                source=row.get('source','external')
+                add(path,row.get('name',''),row.get('face',''),source)
+                if user.platform=='windows' and path.is_absolute():
+                    item=rows[path_key(path)]
+                    if source=='user':
+                        item.setdefault('registration_names',[]).append(row['name'])
+                    if source=='system' or len(item.get('registration_names',[]))>1:
+                        item['migratable']=False
         except (ValueError,OSError) as error:notices.append(str(error))
     termux=user.home/'.termux/font.ttf'
     if user.platform=='termux' and exists(termux):
@@ -91,7 +98,6 @@ def import_row(workspace,row,rows, *, family=False):
         identity,version=row['managed_id'],row['version']
         record=plan.document['families'][identity]['versions'][version]
         face=next(f for f in record['fonts'] if f['file']==row['face'])
-        from fonts.model import sha
         if sha(resolved)!=face['sha256']:raise ValueError('installed font changed; preserve and review it')
         plan.file(identity,version,face)
         return identity,version,face['file']
@@ -101,8 +107,8 @@ def import_row(workspace,row,rows, *, family=False):
         for candidate in rows:
             candidate_path=Path(candidate['path'])
             if candidate_path==path or not candidate['supported'] or candidate.get('managed_id'):continue
-            # Native inventories give the family without parsing every font.
-            if meta['family'] not in candidate['name'].split(','):continue
+            # Fontconfig reports families; Windows registry labels may be arbitrary.
+            if plan.library.platform!='windows' and meta['family'] not in candidate['name'].split(','):continue
             try:
                 real=candidate_path.resolve(strict=True);parents_safe(real)
                 item,candidate_version=metadata_with_revision(real)
@@ -128,6 +134,28 @@ def import_row(workspace,row,rows, *, family=False):
     return identity,version,meta['file']
 
 
+def registered_variant(plan, record, variant, inventory=None):
+    """Use existing Windows fonts in place, without assuming ownership of them."""
+    originals = record.get('provenance', {}).get('sources', [])
+    if plan.library.platform != 'windows' or not originals:
+        return False
+    if inventory is None:
+        inventory, _ = snapshot(plan.library)
+    installed = {path_key(row['path']) for row in inventory
+                 if row['supported'] and row['source'] in ('user', 'system')}
+    candidates = {Path(p).name.casefold(): Path(p) for p in originals if path_key(p) in installed}
+    for font in record['fonts']:
+        if font['variant'] != variant:
+            continue
+        path = candidates.get(Path(font['file']).name.casefold())
+        if path is None:
+            return False
+        plan.guard(path)
+        if sha(path) != font['sha256']:
+            return False
+    return True
+
+
 def migrate(workspace,row,identity,version,face):
     plan=workspace.user;path=Path(row['path']);key=row['id']
     previous=plan.document.get('adoptions',{}).get(key)
@@ -144,7 +172,9 @@ def migrate(workspace,row,identity,version,face):
     if plan.library.platform=='windows':
         # Preserve the registered lookup path; adopt only a matching HKCU value.
         import font_registry
-        name=font['full_name']+(' (TrueType)' if path.suffix.lower()=='.ttf' else ' (OpenType)')
+        names=row.get('registration_names',[])
+        if len(names)!=1:raise ValueError('Windows migration requires one matching current-user registration')
+        name=names[0]
         current=font_registry.read(name)
         if current is None or path_key(current)!=path_key(path):raise ValueError('Windows migration requires a matching current-user registration')
         receipt=plan.library.state/'fonts/registrations'/(token(name)+'.json')
@@ -158,5 +188,6 @@ def migrate(workspace,row,identity,version,face):
     else:
         plan.put(path,link=str(persistent));after=ops.link_digest(persistent)
     plan.document.setdefault('adoptions',{})[key]=dict(id=identity,version=version,face=face,path=str(path),after=after)
+    if plan.library.platform=='windows':plan.document['adoptions'][key]['registration_name']=name
     plan.items.append(dict(id=key,version=version,action='migrate with original lookup path preserved',path=str(path)))
     plan.refresh.add('fonts')

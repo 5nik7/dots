@@ -468,17 +468,65 @@ function y {
 }
 
 function Invoke-DotsFuzzyCompletion {
-  if (-not (Get-Command fzf -CommandType Application -ErrorAction Ignore)) {
+  $fzf = Get-Command fzf -CommandType Application -TotalCount 1 -ErrorAction Ignore
+  if (-not $fzf) {
     [Microsoft.PowerShell.PSConsoleReadLine]::TabCompleteNext()
     return
   }
+  # PSFzf 2.7.12 loses the selected text on Desktop's native output pipeline.
+  if ($PSVersionTable.PSEdition -eq 'Desktop') {
+    $line = ''
+    $cursor = 0
+    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
+    if ([string]::IsNullOrWhiteSpace($line)) { return }
+    $completion = TabExpansion2 -inputScript $line -cursorColumn $cursor
+    $candidates = $completion.CompletionMatches
+    if (-not $candidates.Count) { return }
+    $index = 0
+    if ($candidates.Count -gt 1) {
+      $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+      $rows = for ($i = 0; $i -lt $candidates.Count; $i++) {
+        $label = $candidates[$i].ListItemText -replace '[\r\n\t]', ' '
+        "$i`t$label"
+      }
+      $previousExit = $global:LASTEXITCODE
+      try {
+        $selected = @($rows | & $fzf --no-multi --delimiter '\t' --with-nth '2..')
+        if ($LASTEXITCODE -ne 0 -or $selected.Count -eq 0) { return }
+      } finally { $global:LASTEXITCODE = $previousExit }
+      # --print-query and --expect can prepend extra records to the selection.
+      if ($selected[-1] -notmatch '^(\d+)\t' -or
+          -not [int]::TryParse($Matches[1], [ref]$index) -or
+          $index -ge $candidates.Count) { return }
+    }
+    $candidate = $candidates[$index]
+    $text = $candidate.CompletionText
+    $quotedDirectory = $false
+    if ($candidate.ResultType -eq 'ProviderContainer') {
+      $quotedDirectory = $text.EndsWith("'") -or $text.EndsWith('"')
+      $end = $text.Length - [int]$quotedDirectory
+      if ($end -gt 0 -and $text[$end - 1] -notin '/', '\') {
+        $text = $text.Insert($end, [IO.Path]::DirectorySeparatorChar)
+      }
+    }
+    [Microsoft.PowerShell.PSConsoleReadLine]::Replace(
+      $completion.ReplacementIndex, $completion.ReplacementLength, $text)
+    if ($quotedDirectory) {
+      [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition(
+        $completion.ReplacementIndex + $text.Length - 1)
+    }
+    return
+  }
+  $previousExit = $global:LASTEXITCODE
   try {
-    if (-not (Get-Module PSFzf)) { Import-Module PSFzf -Global -ErrorAction Stop }
-  } catch {
-    [Microsoft.PowerShell.PSConsoleReadLine]::TabCompleteNext()
-    return
-  }
-  Invoke-FzfTabCompletion
+    try {
+      if (-not (Get-Module PSFzf)) { Import-Module PSFzf -Global -ErrorAction Stop }
+    } catch {
+      [Microsoft.PowerShell.PSConsoleReadLine]::TabCompleteNext()
+      return
+    }
+    Invoke-FzfTabCompletion
+  } finally { $global:LASTEXITCODE = $previousExit }
 }
 
 

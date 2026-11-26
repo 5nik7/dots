@@ -39,6 +39,11 @@ The standalone [clipboard commands](shell-utils.md#system-clipboard-commands) se
 
 Installed discovery uses optional fontconfig on Termux/Linux/WSL and HKCU/HKLM font registrations on Windows. Migration is limited to supported user-owned roots; system fonts are copy-only. App choices retain files in the active profile and save `fonts.json`, with explicit Restore on every shared frontend. Mocked Windows migration/registration fixtures do not establish native font visibility or file-lock behavior.
 
+The Windows `all-terminals` target groups the installed terminal hosts documented
+in [Fonts](fonts.md#set-an-application-font). Each Windows Terminal edition has
+its own settings and profile overrides. Classic Console requires a successful
+native face-selection probe in the current session.
+
 Termux/Linux/WSL user-font links use `${XDG_DATA_HOME:-~/.local/share}/fonts/dots`
 with optional fontconfig refresh. Termux Set copies a TTF to that home's
 `.termux/font.ttf`, never Android fonts. Windows copies to
@@ -50,7 +55,7 @@ config files. WSL never translates host paths. Literal insertion needs verified
 POSIX tmux context; Windows offers copy/print and terminal FZF. See
 [fonts](fonts.md) and [native evidence limits](../plans/fonts.md#evidence).
 
-Directory mode stores versioned payloads under `DOTFONTS` or a backend profile `*FONTS` path without OS registration. The same shared controller resolves literal directory names on every platform; choosing another platform's profile directory does not change the execution platform. Explicit Use/Set copies into the current platform's personal library before activating through its existing adapter. Native Windows and WSL inventories remain separate. Directory, registration and application fixtures run in owned roots; actual native Windows/PowerShell and visible desktop activation remain pending.
+Directory mode stores versioned payloads under `DOTFONTS` or a backend profile `*FONTS` path without OS registration. The shared controller resolves directory names on every platform. Explicit Use/Set copies into the current platform's personal library before activating through its native adapter. Windows and WSL have separate inventories. Native Windows Set with an existing registered family was verified against both Windows Terminal editions, both mintty installations, VS Code and WezTerm settings. Desktop rendering, native file-lock recovery and registration of a previously absent family remain separate acceptance checks.
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 

@@ -27,6 +27,16 @@ class DestinationOccupied(ValueError):
     """A create-only transaction lost its destination name."""
 
 
+def registry_changes(operation):
+    """Pair a journaled registry value with its bounded native adapter."""
+    if 'font_registry' in operation:
+        import font_registry
+        yield 'font_registry', operation['font_registry'], font_registry
+    if 'console_face' in operation:
+        import console_font_registry
+        yield 'console_face', operation['console_face'], console_font_registry
+
+
 def exists(path):
     return os.path.lexists(path)
 
@@ -254,12 +264,11 @@ class Store:
                     return None
                 return digest(path)
 
-            registrations = [op['font_registry'] for op in operations if 'font_registry' in op]
-            if registrations:
-                import font_registry
-                for spec in registrations: font_registry.verify(spec)
-                if len({spec['name'].casefold() for spec in registrations}) != len(registrations):
-                    raise ValueError('duplicate font registration targets')
+            registrations = [change for op in operations for change in registry_changes(op)]
+            for _, spec, adapter in registrations:
+                adapter.verify(spec)
+            if len({(kind, spec['name'].casefold()) for kind, spec, _ in registrations}) != len(registrations):
+                raise ValueError('duplicate registry operation targets')
             with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs, blocking=bool(new_files)):
                 self._require_finished()
                 for path, expected in guards.items():
@@ -292,8 +301,8 @@ class Store:
                                 entry['create_only'] = True
                             if native_staging_suffix(path):
                                 entry['payload_suffix'] = native_staging_suffix(path)
-                            if 'font_registry' in op:
-                                entry['font_registry'] = op['font_registry']
+                            for kind, spec, _ in registry_changes(op):
+                                entry[kind] = spec
                             if exists(entry['old']) or exists(entry['temp']):
                                 raise ValueError('transaction sibling already exists')
                             if before is not None:
@@ -333,7 +342,8 @@ class Store:
                             if before_digest(path) != expected:
                                 raise ValueError(f'changed during preflight: {path}')
                         doc['status'] = 'applying'
-                        for spec in registrations: font_registry.verify(spec)
+                        for _, spec, adapter in registrations:
+                            adapter.verify(spec)
                         self.save(doc)
                     with stages.step('Apply files') as application:
                         application.update('Applying files', 0, len(doc['operations']))
@@ -372,8 +382,8 @@ class Store:
                                 if entry['after'] is not None:
                                     os.rename(entry['temp'], path)
                                     sync_dir(path.parent)
-                            if 'font_registry' in entry:
-                                font_registry.apply(entry['font_registry'])
+                            for _, spec, adapter in registry_changes(entry):
+                                adapter.apply(spec)
                             entry['phase'] = 'done'
                             self.save(doc)
                             op = operations[i]
@@ -458,9 +468,8 @@ class Store:
                         if not exists(path) or not os.path.samestat(os.lstat(entry['temp']), os.lstat(path)):
                             continue
                     current = digest(path)
-                    if 'font_registry' in entry:
-                        import font_registry
-                        font_registry.rollback(entry['font_registry'])
+                    for _, spec, adapter in registry_changes(entry):
+                        adapter.rollback(spec)
                     if current == entry['before']:
                         entry['phase'] = 'rolled-back'
                         self.save(doc)
@@ -520,12 +529,10 @@ class Store:
             if digest(entry['path']) != entry['after']:
                 raise ValueError('drift blocks undo: ' + entry['path'])
             op = {'path': entry['path']}
-            if 'font_registry' in entry:
-                import font_registry
-                spec = entry['font_registry']
+            for kind, spec, adapter in registry_changes(entry):
                 inverse = dict(name=spec['name'], before=spec['after'], after=spec['before'])
-                font_registry.verify(inverse)
-                op['font_registry'] = inverse
+                adapter.verify(inverse)
+                op[kind] = inverse
             if entry['before'] is not None:
                 source = self.payload(identity, i, 'before', entry)
                 if 'before_link' in entry:
