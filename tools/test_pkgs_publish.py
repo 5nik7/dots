@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import tempfile
 from contextlib import redirect_stdout
 import unittest
 from unittest.mock import patch
@@ -16,7 +17,56 @@ sys.path.insert(0, str(ROOT/'lib/dots'))
 sys.path.insert(0, str(ROOT/'plugins/pkgs'))
 
 
-@unittest.skipIf(os.name == 'nt', 'POSIX inventory and local SSH fixtures; native Windows refuses this option')
+class WinGetPublishPackages(unittest.TestCase):
+    def test_bulk_inventory_prepares_manifest_and_failed_inventory_preserves_it(self):
+        from package_publish import Stage
+        from pkgs_lib import manifests, winget
+
+        def package(name, matches):
+            return dict(id=name, name=name, source='winget', installed_version='1.0', version='2.0',
+                        update_available=True, scope_matches=matches)
+
+        rows = [package(f'Example.Tool{i}', ['user']) for i in range(150)]
+        rows += [package('Other.Scope', ['machine']), package('Both.Scopes', ['machine', 'user']),
+                 package('Missing.Scope', []), package('Duplicate.Scope', ['user', 'user'])]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            profile = root/'profiles/windows'
+            profile.mkdir(parents=True)
+            (profile/'profile.json').write_text('{"schema":1,"id":"windows"}')
+            path = profile/'packages.json'
+            original = json.dumps(dict(schema=1, groups=[dict(manager='winget', scope='user',
+                packages=[dict(name='Example.Tool0', enabled=False, pin='0.9')])]))
+            path.write_text(original)
+            with patch.dict(os.environ, dict(HOME=temporary, USERPROFILE=temporary, XDG_CONFIG_HOME=temporary)), \
+                 patch('profiles.detect', return_value=dict(platform='windows')), \
+                 patch.object(manifests, 'platform', return_value='windows'), \
+                 patch.object(manifests.scopes, 'bulk', return_value=[('winget', None)]), \
+                 patch.object(manifests, 'available', return_value=True), patch.object(winget, 'which', return_value=None), \
+                 patch.object(winget, 'query', side_effect=AssertionError('unexpected per-package scope probe')), \
+                 patch.object(winget, 'bridge', return_value={'packages': rows}) as bridge:
+                stage = Stage(root, quiet=True)
+                bridge.assert_called_once_with('installed')
+                self.assertEqual(stage.path, path)
+                group, = json.loads(stage.content)['groups']
+                packages = {p['name']: p for p in group['packages']}
+                self.assertEqual(group['scope'], 'user')
+                self.assertEqual(len(packages), 153)
+                self.assertTrue(packages['Example.Tool149']['enabled'])
+                self.assertFalse(packages['Example.Tool0']['enabled'])
+                self.assertEqual(packages['Example.Tool0']['pin'], '0.9')
+                self.assertEqual(packages['Example.Tool0']['observed_version'], '1.0')
+                self.assertNotIn('Other.Scope', packages)
+                for name in ('Both.Scopes', 'Missing.Scope', 'Duplicate.Scope'):
+                    self.assertFalse(packages[name]['enabled'])
+                    self.assertIn('ambiguous', packages[name]['reason'])
+                bridge.side_effect = winget.Error('incomplete machine catalog')
+                with self.assertRaisesRegex(ValueError, 'manifest update is incomplete.*incomplete machine catalog'):
+                    Stage(root, quiet=True)
+                self.assertEqual(path.read_text(), original)
+
+
+@unittest.skipIf(os.name == 'nt', 'requires POSIX inventory and local SSH fixtures')
 class PublishPackages(unittest.TestCase):
     setUp = fixture.GitOperations.setUp
     run_cmd = fixture.GitOperations.run_cmd
@@ -148,11 +198,7 @@ print(json.dumps({'dependencies':{'hello':{'version':'2'},'new':{'version':'3'}}
             self.assertEqual(path.read_bytes(),json.dumps({'schema':1,'groups':[]}).encode() if change else before)
             self.assertFalse((repo/'.git/git-it.lock').exists())
 
-    def test_windows_refusal_and_invalid_scopes_do_not_query_packages(self):
-        from package_publish import Stage
-        from pkgs_lib import manifests
-        with patch.object(manifests,'platform',return_value='windows'),patch.object(manifests,'export',side_effect=AssertionError('inventory forbidden')):
-            with self.assertRaisesRegex(ValueError,'native Windows'):Stage(self.base)
+    def test_invalid_publish_scopes(self):
         for command in ('sync','submodules-publish'):
             result=self.run_cmd([sys.executable,'-B',str(ROOT/'lib/dots/git/cli.py'),command,'--update-packages'],ok=False)
             self.assertEqual(result.returncode,2);self.assertIn('requires root git publish',result.stderr)

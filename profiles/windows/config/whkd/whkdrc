@@ -31,8 +31,8 @@ alt + shift + l         : komorebic move right
 alt + shift + return    : komorebic promote
 
 # Stack windows
-alt + down              : komorebic focus down
 alt + left              : komorebic focus left
+alt + down              : komorebic focus down
 alt + up                : komorebic focus up
 alt + right             : komorebic focus right
 alt + oem_1             : komorebic unstack # oem_1 is ;
@@ -46,8 +46,7 @@ alt + shift + oem_plus  : komorebic resize-axis vertical increase
 alt + shift + oem_minus : komorebic resize-axis vertical decrease
 
 # Manipulate windows
-alt + t                 : komorebic toggle-float
-alt + shift + f         : komorebic toggle-monocle
+alt + shift + f         : komorebic toggle-float
 
 # Window manager options
 alt + shift + r         : komorebic retile

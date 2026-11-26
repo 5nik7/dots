@@ -1,5 +1,13 @@
 # Package workflows
 
+## WinGet inventory during Git publication (2026-11-26)
+
+WinGet export previously launched two exact-ID processes per eligible package under one 45-second manager deadline. The Windows adapter now queries the verified community catalog for each installed scope and joins the results to the installed records by ID. A failed or truncated scope query stops the update. The existing per-ID checks remain available for modules without the catalog factory.
+
+Native PowerShell 5.1 and 7 each read 206 installed records with WinGet 1.29.380. The bulk result agreed with all 166 scoped CLI queries for the 83 unique community IDs on this host. The PowerShell 7 bridge took about five seconds. The native `dots git publish --all --update-packages --dry-run` selected the Windows profile manifest. Isolated fixtures cover the same publication stage with 150 user packages, manual pins, missing and conflicting scope evidence, and catalog failure.
+
+The package and Git maintenance owners retain the existing routes. No configuration integration change needed because the read budget and scope selection already apply. The existing menus, completion, presentation, bootstrap assets and Windows destinations use the same adapter. No README change needed because setup and first commands are unaffected. Bash publication uses the shared manifest stage with its platform's existing managers.
+
 ## Distribution-managed RubyGems self-updates (2026-11-26)
 
 For automatic gem upgrades, use the selected RubyGems runtime's `Gem.disable_system_update_message` policy when planning the built-in self-update. A positive restriction skips the `RubyGems` target. Eligible gems still run in their requested scope. If the probe is inconclusive, run the native self-update under its existing protections and report its exit status. Named targets, manager replacements, upgrade listings and the existing configuration opt-out bypass the probe.

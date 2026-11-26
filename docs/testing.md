@@ -1260,7 +1260,7 @@ Run `python3 -B tools/test_bundled_app_cores.py pkgs` for the package core, incl
 
 `plugins/pkgs/tests/test_termux_upgrades.py` covers forced mirror checks once per native plan, APT/pacman routing and mismatch refusal, missing-download flags, policy/explicit-target boundaries, native failure/opt-out, changed-version summaries and intermediate overall percentages during single- and multi-manager upgrades in private 40/80/120-column terminals. Integration fixtures exercise both command forms and aliases with fake pkg; they never select live mirrors or upgrade host packages. The direct APT fallback, Linux/WSL argument behavior and raw output are fixture evidence, not native desktop acceptance.
 `python3 -B tools/test_pkgs_publish.py` exercises manifest updates in both Git
-frontends with fake managers and temporary local remotes. Wiki integration also
+frontends with fake managers and temporary local remotes. Its portable WinGet fixture checks that a large inventory prepares the Windows manifest with one bridge request, preserves manual choices and blocks on a failed scope query. Wiki integration also
 covers manifest-before-source-before-wiki publication. Test profile defaults,
 Escape returning to the same menu/query, preserved pins/disabled/absent entries,
 repeat-safe updates without a controlling terminal or `--yes`, retained update

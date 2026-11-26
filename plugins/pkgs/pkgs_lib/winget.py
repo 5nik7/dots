@@ -81,7 +81,12 @@ class WinGetBackend:
                 reason = 'multiple installed records; scope/version is ambiguous'
             else:
                 exact_id(name)
-                matches = [s for s in ('user', 'machine') if self.probe_scope(name, s)]
+                if 'scope_matches' in row:
+                    matches = row['scope_matches']
+                    if not isinstance(matches, list) or any(s not in ('user', 'machine') for s in matches):
+                        raise Error('invalid WinGet scope inventory for '+name)
+                else:
+                    matches = [s for s in ('user', 'machine') if self.probe_scope(name, s)]
                 if len(matches) == 1: scope = matches[0]
                 else: reason = 'installation scope is ambiguous or unavailable'
             if scope not in ('unknown', self.install_scope): continue

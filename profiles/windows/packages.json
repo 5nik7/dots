@@ -1,0 +1,1497 @@
+{
+  "schema": 1,
+  "groups": [
+    {
+      "manager": "winget",
+      "scope": "user",
+      "platforms": [
+        "windows"
+      ],
+      "packages": [
+        {
+          "name": "8LWXpg.ProcessKillerforCommandPalette",
+          "observed_version": "1.2.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "8LWXpg.SSHforCommandPalette",
+          "observed_version": "1.0.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Anthropic.Claude",
+          "observed_version": "6.28899.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ARP\\Machine\\X64\\AMD Catalyst Install Manager",
+          "observed_version": "26.11.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\EA3C9FCE0A5BFC25608F734A38246929903AE901",
+          "observed_version": "11/21/2017 1.2.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\GBT_Dynamic_Lighting_Lib_UC",
+          "observed_version": "25.07.21.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\GBT_MB_Update",
+          "observed_version": "25.12.03.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\GBT_RGB_Sync_Control",
+          "observed_version": "25.12.24.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\GBT_rgbMonitor_UC",
+          "observed_version": "25.10.15.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\GBT_rgbMotherboard_UC",
+          "observed_version": "25.12.23.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\GIGABYTE Control Center",
+          "observed_version": "25.12.10.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\MBEasyTune",
+          "observed_version": "25.12.16.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\MBStorage",
+          "observed_version": "25.12.16.01",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\MozillaMaintenanceService",
+          "observed_version": "1.24.3b",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\O365HomePremRetail - en-us",
+          "observed_version": "16.0.20625.20108",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\ODPhotosOneDriveSetup.exe",
+          "observed_version": "26.212.1029.0006",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\Steam App 1030300",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\Steam App 1091500",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\Steam App 1145350",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\Steam App 238960",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\Steam App 2694490",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\Steam App 367520",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\Steam App 730",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\{22221111-1111-1111-1111-111111111111}.sdb",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\{386F8A1E-3539-429F-B13C-806AE16493ED}",
+          "observed_version": "26.20.26320.1318",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\{6F320B93-EE3C-4826-85E0-ADF79F8D4C61}",
+          "observed_version": "4.0.2168.39045",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\{950d026e-be12-4dc6-988a-b15dcbc1e536}.sdb",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X64\\{D8E24EA6-807B-48D0-86D6-A9C5E74B8F2C}",
+          "observed_version": "1.02.0001",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\Afterburner",
+          "observed_version": "4.6.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\AMD_Chipset_IODrivers",
+          "observed_version": "8.09.28.1124",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\ASRock RGB LED_is1",
+          "observed_version": "2.0.209",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\Diablo II Resurrected",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\Diablo III",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\Diablo IV",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\L-Connect_3",
+          "observed_version": "2.1.28.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\Microsoft Copilot",
+          "observed_version": "158.0.4370.33",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\NpcapInst",
+          "observed_version": "0.9982",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\{0A46A65D-89AC-464C-8026-3CD44960BD04}",
+          "observed_version": "6.4.0.2422",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\{1851460E-0E63-4117-B5BA-25A2F045801B}",
+          "observed_version": "17.7.40001",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\{3CBD3203-B36A-42C3-BE84-D4DB4B318959}_is1",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\{45e335f3-c807-43b8-9ed1-43666cfcf939}",
+          "observed_version": "10.1.26100.9457",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\{AFEDE556-1D76-4165-A1E8-34FF80126836}",
+          "observed_version": "10.1.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\Machine\\X86\\{d04eddd3-9909-49af-aa59-b30e1b161f18}",
+          "observed_version": "1.7.27",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\User\\X64\\87b86bfa6ce88f477367757fb18c32cd",
+          "observed_version": "1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\User\\X64\\Bun",
+          "observed_version": "Unknown",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\User\\X64\\Discord",
+          "observed_version": "1.0.9270",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "ARP\\User\\X64\\{93783331-131b-4ef4-a2c3-391c9f5cf868}",
+          "observed_version": "20251213",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "BaldBeardedBuilder.WeatherforCommandPalette",
+          "observed_version": "1.3.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "charmbracelet.glow",
+          "observed_version": "3.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Devolutions.UniGetUI",
+          "observed_version": "2026.3.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "equalsraf.win32yank",
+          "observed_version": "0.1.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ipinfo.ipinfo",
+          "observed_version": "3.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "JiriPolasek.ColorsforCommandPalette",
+          "observed_version": "0.10.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "MicaForEveryone.MicaForEveryone",
+          "observed_version": "2.0.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.365Copilot",
+          "observed_version": "158.0.4370.33",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.AppInstaller",
+          "observed_version": "1.29.380.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.DotNet.Native.Runtime",
+          "observed_version": "2.2.28604.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.IntelligentTerminal",
+          "observed_version": "0.3.3213.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.NuGet",
+          "observed_version": "8.0.0.137",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.Outlook",
+          "observed_version": "1.2026.1026.100",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.PowerShell",
+          "observed_version": "7.7.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.PowerShell.Preview",
+          "observed_version": "7.7.101.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.PowerToys",
+          "observed_version": "0.102.3101.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "installation scope is ambiguous or unavailable"
+        },
+        {
+          "name": "Microsoft.Teams",
+          "observed_version": "26304.1207.5384.858",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.UI.Xaml.2.7",
+          "observed_version": "7.2409.9001.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.UI.Xaml.2.8",
+          "observed_version": "8.2511.26001.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.VCLibs.14",
+          "observed_version": "14.0.33519.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.VCLibs.Desktop.14",
+          "observed_version": "14.0.33728.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.VisualStudioCode",
+          "observed_version": "1.148.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WindowsAppRuntime.1.5",
+          "observed_version": "1.5.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WindowsAppRuntime.1.6",
+          "observed_version": "1.6.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WindowsAppRuntime.1.7",
+          "observed_version": "1.7.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WindowsAppRuntime.1.8",
+          "observed_version": "1.8.12",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WindowsAppRuntime.2",
+          "observed_version": "2.7.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WindowsTerminal",
+          "observed_version": "1.25.3131.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WindowsTerminal.Preview",
+          "observed_version": "1.26.3133.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Microsoft.WSL",
+          "observed_version": "3.0.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "MSIX\\65d483df-b37e-4fcf-94de-8b795233db63_25.1.23.0_x64__1mmjbktjj1mkp",
+          "observed_version": "25.1.23.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\AdvancedMicroDevicesInc-RSXCM_22.10.0.0_x64__v2es6h43hjn86",
+          "observed_version": "22.10.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\aimgr_0.20.65.0_x64__8wekyb3d8bbwe",
+          "observed_version": "0.20.65.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Clipchamp.Clipchamp_4.7.10220.0_x64__yxz26nhyzhsrt",
+          "observed_version": "4.7.10220.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.ApplicationCompatibilityEnhancements_1.2511.9.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.2511.9.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.AV1VideoExtension_2.0.35.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2.0.35.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.AVCEncoderVideoExtension_1.1.57.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.1.57.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.BingNews_4.56.21872.0_x64__8wekyb3d8bbwe",
+          "observed_version": "4.56.21872.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.BingSearch_1.2.162.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.2.162.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.BingWeather_4.54.63045.0_x64__8wekyb3d8bbwe",
+          "observed_version": "4.54.63045.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.CommandPalette_0.13.13096.0_x64__8wekyb3d8bbwe",
+          "observed_version": "0.13.13096.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.GetHelp_10.2409.42652.0_x64__8wekyb3d8bbwe",
+          "observed_version": "10.2409.42652.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.HEIFImageExtension_1.2.65.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.2.65.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.HEVCVideoExtension_2.5.48.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2.5.48.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.MicrosoftEdge.Stable_152.0.4191.53_neutral__8wekyb3d8bbwe",
+          "observed_version": "152.0.4191.53",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe",
+          "observed_version": "4.27.9181.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.MicrosoftStickyNotes_4.0.6105.0_x64__8wekyb3d8bbwe",
+          "observed_version": "4.0.6105.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.MPEG2VideoExtension_1.2.32.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.2.32.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.NET.Native.Framework.2.2_2.2.29512.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2.2.29512.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.NET.Native.Framework.2.2_2.2.29512.0_x86__8wekyb3d8bbwe",
+          "observed_version": "2.2.29512.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Office.ActionsServer_16.0.20625.20108_neutral__8wekyb3d8bbwe",
+          "observed_version": "16.0.20625.20108",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.OfficePushNotificationUtility_16.0.20625.20108_neutral__8wekyb3d8bbwe",
+          "observed_version": "16.0.20625.20108",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.OneDrive.Photos_26.212.1029.6_neutral__8wekyb3d8bbwe",
+          "observed_version": "26.212.1029.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.OneDriveSync_26212.1029.6.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "26212.1029.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Paint_11.2609.441.0_x64__8wekyb3d8bbwe",
+          "observed_version": "11.2609.441.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.PowerAutomateDesktop_1.0.2164.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.0.2164.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.PowerToys.FileLocksmithContextMenu_0.102.3101.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "0.102.3101.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.PowerToys.ImageResizerContextMenu_0.102.3101.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "0.102.3101.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.PowerToys.NewPlusContextMenu_0.102.3101.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "0.102.3101.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.PowerToys.PowerRenameContextMenu_0.102.3101.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "0.102.3101.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.PowerToys.SparseApp_0.102.3101.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "0.102.3101.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.RawImageExtension_2.5.42.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2.5.42.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.ScreenSketch_11.2609.15.0_x64__8wekyb3d8bbwe",
+          "observed_version": "11.2609.15.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.SecHealthUI_1000.29680.1000.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1000.29680.1000.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Services.Store.Engagement_10.0.23012.0_x64__8wekyb3d8bbwe",
+          "observed_version": "10.0.23012.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Services.Store.Engagement_10.0.23012.0_x86__8wekyb3d8bbwe",
+          "observed_version": "10.0.23012.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.StartExperiencesApp_1.398.9.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.398.9.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.StorePurchaseApp_22609.1401.1.0_x64__8wekyb3d8bbwe",
+          "observed_version": "22609.1401.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Todos_0.179.8901.0_x64__8wekyb3d8bbwe",
+          "observed_version": "0.179.8901.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.VisualStudioCode_1.0.148.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "1.0.148.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.VP9VideoExtensions_1.2.20.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.2.20.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WebMediaExtensions_2.1.51.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2.1.51.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WebpImageExtension_1.2.47.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.2.47.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WidgetsPlatformRuntime_1.6.19.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.6.19.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WinAppRuntime.DDLM.7000.522.1444.0-x6_7000.522.1444.0_x64__8wekyb3d8bbwe",
+          "observed_version": "7000.522.1444.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WinAppRuntime.DDLM.7000.522.1444.0-x8_7000.522.1444.0_x86__8wekyb3d8bbwe",
+          "observed_version": "7000.522.1444.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WinAppRuntime.DDLM.8000.675.1142.0-x6_8000.675.1142.0_x64__8wekyb3d8bbwe",
+          "observed_version": "8000.675.1142.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WinAppRuntime.DDLM.8000.675.1142.0-x8_8000.675.1142.0_x86__8wekyb3d8bbwe",
+          "observed_version": "8000.675.1142.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WinAppRuntime.DDLM.8000.770.947.0-x6_8000.770.947.0_x64__8wekyb3d8bbwe",
+          "observed_version": "8000.770.947.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WinAppRuntime.DDLM.8000.770.947.0-x8_8000.770.947.0_x86__8wekyb3d8bbwe",
+          "observed_version": "8000.770.947.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Windows.DevHome_0.1700.597.0_x64__8wekyb3d8bbwe",
+          "observed_version": "0.1700.597.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Windows.Photos_2026.11090.22001.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2026.11090.22001.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WindowsAlarms_1.1.192.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.1.192.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WindowsCalculator_11.2607.0.0_x64__8wekyb3d8bbwe",
+          "observed_version": "11.2607.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WindowsCamera_2026.2608.1.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2026.2608.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WindowsFeedbackHub_2.2609.102.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2.2609.102.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WindowsNotepad_11.2609.11.0_x64__8wekyb3d8bbwe",
+          "observed_version": "11.2609.11.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WindowsSoundRecorder_1.1.127.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.1.127.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.WindowsStore_22610.1401.10.0_x64__8wekyb3d8bbwe",
+          "observed_version": "22610.1401.10.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Winget.Fonts.Source_2025.1016.311.49_neutral__8wekyb3d8bbwe",
+          "observed_version": "2025.1016.311.49",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.Winget.Source_2026.1126.1856.0_neutral__8wekyb3d8bbwe",
+          "observed_version": "2026.1126.1856.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.XboxGamingOverlay_7.326.11042.0_x64__8wekyb3d8bbwe",
+          "observed_version": "7.326.11042.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.XboxIdentityProvider_12.130.16001.0_x64__8wekyb3d8bbwe",
+          "observed_version": "12.130.16001.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.XboxSpeechToTextOverlay_1.111.30001.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.111.30001.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.YourPhone_1.26101.119.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.26101.119.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\Microsoft.ZuneMusic_11.2609.11.0_x64__8wekyb3d8bbwe",
+          "observed_version": "11.2609.11.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\MicrosoftCorporationII.QuickAssist_2.0.35.0_x64__8wekyb3d8bbwe",
+          "observed_version": "2.0.35.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\MicrosoftCorporationII.WinAppRuntime.Main.1.7_7000.785.2325.0_x64__8wekyb3d8bbwe",
+          "observed_version": "7000.785.2325.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\MicrosoftCorporationII.WinAppRuntime.Main.1.8_8000.994.2142.0_x64__8wekyb3d8bbwe",
+          "observed_version": "8000.994.2142.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\MicrosoftCorporationII.WinAppRuntime.Singleton_8002.6.5.0_x64__8wekyb3d8bbwe",
+          "observed_version": "8002.6.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\MicrosoftCorporationII.WindowsHDRCalibration_1.1.2.0_x64__8wekyb3d8bbwe",
+          "observed_version": "1.1.2.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\MicrosoftWindows.Client.WebExperience_526.28801.60.0_x64__cw5n1h2txyewy",
+          "observed_version": "526.28801.60.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\MicrosoftWindows.CrossDevice_1.26101.77.0_x64__cw5n1h2txyewy",
+          "observed_version": "1.26101.77.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt",
+          "observed_version": "26.1104.2876.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\OpenAI.CodexPrimaryRuntime.v26-1110-778-0_26.1110.778.0_x64__3k8sg7r9htsxt",
+          "observed_version": "26.1110.778.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\OpenAI.CodexPrimaryRuntime.v26-1112-611-0_26.1112.611.0_x64__3k8sg7r9htsxt",
+          "observed_version": "26.1112.611.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\OpenAI.CodexPrimaryRuntime.v26-1119-907-0_26.1119.907.0_x64__3k8sg7r9htsxt",
+          "observed_version": "26.1119.907.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\RealtekSemiconductorCorp.RealtekAudioControl_1.53.374.0_x64__dt26b99r8h8gj",
+          "observed_version": "1.53.374.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "MSIX\\SignalRGB_1.0.2.6_x64__4n6rtbnm9e9y2",
+          "observed_version": "1.0.2.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "not correlated to the WinGet community source"
+        },
+        {
+          "name": "OpenAI.ChatGPT",
+          "observed_version": "26.1117.3838.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Overwolf.CurseForge",
+          "observed_version": "1.328.0-43478",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Python.Python.3.14",
+          "observed_version": "3.14.10",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Python.Python.3.15",
+          "observed_version": "3.15.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Rufus.Rufus",
+          "observed_version": "4.16",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Rustlang.Rustup",
+          "observed_version": "1.29.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sharkdp.bat",
+          "observed_version": "0.26.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sharkdp.pastel",
+          "observed_version": "0.12.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sharkdp.vivid",
+          "observed_version": "0.11.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "Sidekick-Poe.Sidekick",
+          "observed_version": "2026.10.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "WhirlwindFX.SignalRgb",
+          "observed_version": "2.5.86",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zig.zig",
+          "observed_version": "0.17.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "manager": "npm",
+      "scope": "global",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "@github/copilot",
+          "observed_version": "1.0.116",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "@google/gemini-cli",
+          "observed_version": "0.71.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "neovim",
+          "observed_version": "5.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "npm",
+          "observed_version": "11.20.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "manager": "uv-tool",
+      "scope": "tools",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "colorz",
+          "observed_version": "1.0.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fonttools",
+          "observed_version": "4.69.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "httpie",
+          "observed_version": "3.2.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "modern-colorthief",
+          "observed_version": "0.3.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pynvim",
+          "observed_version": "0.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pywal16",
+          "observed_version": "3.8.15",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rich-cli",
+          "observed_version": "1.8.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ruff",
+          "observed_version": "0.17.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "manager": "pip",
+      "scope": "base",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "fonttools",
+          "observed_version": "4.69.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "system ownership could not be checked"
+        },
+        {
+          "name": "pip",
+          "observed_version": "26.2.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "system ownership could not be checked"
+        }
+      ]
+    },
+    {
+      "manager": "gem",
+      "scope": "user",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": []
+    },
+    {
+      "manager": "go",
+      "scope": "tools",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "github.com/drogers0/aistat/v2/cmd/aistat",
+          "observed_version": "v2.6.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/mikesmithgh/git-prompt-string",
+          "observed_version": "v1.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/thefryscorer/schemer2",
+          "observed_version": "v0.0.0-20190406042248-89a66cbf4044",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mvdan.cc/sh/v3/cmd/shfmt",
+          "observed_version": "v3.14.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    }
+  ],
+  "notices": []
+}

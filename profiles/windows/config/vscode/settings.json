@@ -7,12 +7,10 @@
   "security.workspace.trust.untrustedFiles": "open",
   "window.zoomLevel": 1.0,
   "workbench.activityBar.iconClickBehavior": "toggle",
-  "editor.fontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
-  "editor.codeLensFontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
+  "editor.fontFamily": "JetBrainsMono NF, 'JetBrains Mono', monospace",
+  "editor.codeLensFontFamily": "JetBrainsMono NF, 'JetBrains Mono', monospace",
   "editor.inlayHints.fontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace, 'Segoe UI Variable'",
-  "debug.console.fontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
-  "editor.fontSize": 14,
-  "debug.console.fontSize": 14,
+  "debug.console.fontFamily": "JetBrainsMono NF, 'JetBrains Mono', monospace",
   "editor.codeLensFontSize": 14,
   "editor.minimap.sectionHeaderFontSize": 14,
   "chat.editor.fontSize": 16,
@@ -81,7 +79,9 @@
     "clink",
     "Snacks"
   ],
-  "Lua.diagnostics.globalsRegex": ["vim"],
+  "Lua.diagnostics.globalsRegex": [
+    "vim"
+  ],
   "[lua]": {
     // "editor.defaultFormatter": "sumneko.lua",
     "editor.formatOnSave": true
@@ -138,10 +138,9 @@
     "plaintext": "html"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "vscode.json-language-features",
     "editor.formatOnSave": true
   },
-
   "go.toolsManagement.autoUpdate": true,
   "[go]": {
     "editor.formatOnSave": true,
@@ -224,7 +223,8 @@
     "editor.formatOnSave": true
   },
   "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
   },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -319,7 +319,6 @@
   "editor.overviewRulerBorder": false,
   "accessibility.signalOptions.volume": 0,
   "editor.minimap.enabled": false,
-
   "errorLens.fontSize": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
   "errorLens.fontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
   "workbench.tree.enableStickyScroll": false,
@@ -332,7 +331,6 @@
   "path-intellisense.autoTriggerNextSuggestion": true,
   "path-intellisense.showHiddenFiles": true,
   "path-intellisense.absolutePathToWorkspace": true,
-
   "explorer.confirmDragAndDrop": false,
   "editor.linkedEditing": true,
   "liveServer.settings.donotVerifyTags": true,
@@ -340,12 +338,14 @@
   "git.openRepositoryInParentFolders": "never",
   "workbench.layoutControl.enabled": false,
   "window.title": " ",
-  "window.menuBarVisibility": "compact",
   "window.commandCenter": false,
   "window.titleBarStyle": "custom",
   "editor.cursorBlinking": "smooth",
   "editor.cursorSmoothCaretAnimation": "on",
-  "security.allowedUNCHosts": ["wsl.localhost", "wsl$"],
+  "security.allowedUNCHosts": [
+    "wsl.localhost",
+    "wsl$"
+  ],
   "errorLens.gutterIconsEnabled": true,
   "ShortcutMenuBar.undo": true,
   "ShortcutMenuBar.toggleWordWrap": true,
@@ -477,7 +477,6 @@
   "github.copilot.advanced": {
     "authProvider": "github"
   },
-
   // "workbench.colorCustomizations": {
   //   "editorBracketHighlight.foreground1": "#cba6f7",
   //   "editorBracketHighlight.foreground2": "#89b4fa",
@@ -534,12 +533,12 @@
   "Lua.codeLens.enable": true,
   "Lua.hint.enable": true,
   "json.validate.enable": false,
-  "chat.editor.fontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
+  "chat.editor.fontFamily": "JetBrainsMono NF, 'JetBrains Mono', monospace",
   "chat.editor.fontSize": 14,
   "editor.suggestFontSize": 14,
   "scm.inputFontSize": 14,
   "chat.edits2.enabled": true,
-  "chat.fontFamily": "JetBrainsMono NFP, 'JetBrains Mono', monospace",
+  "chat.fontFamily": "JetBrainsMono NF, 'JetBrains Mono', monospace",
   "chat.fontSize": 14,
   "chat.renderRelatedFiles": true,
   "inlineChat.enableV2": true,
@@ -604,5 +603,8 @@
   "markdown-preview-enhanced.revealjsTheme": "night.css",
   "markdown-preview-enhanced.usePandocParser": true,
   "claudeCode.preferredLocation": "panel",
-  "claudeCode.hideOnboarding": true
+  "claudeCode.hideOnboarding": true,
+  "workbench.activityBar.compact": true,
+  "window.menuBarVisibility": "compact",
+  "debug.toolBarLocation": "commandCenter"
 }

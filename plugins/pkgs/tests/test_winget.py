@@ -75,6 +75,22 @@ class WinGetTests(unittest.TestCase):
         with patch('pkgs_lib.winget.query', return_value=SimpleNamespace(returncode=1,stderr='source failure',stdout='')), self.assertRaisesRegex(Error, 'scope query failed'):
             b.probe_scope('Vendor.App','user')
 
+    def test_bulk_scope_data_filters_machine_scope_and_rejects_invalid_evidence(self):
+        backend = self.backend('machine')
+        data = [row('Machine.App', scope_matches=['machine']), row('User.App', scope_matches=['user']),
+                row('Duplicate.App', scope_matches=['machine']), row('duplicate.app', scope_matches=['machine']),
+                dict(row('Other.Source', scope_matches=['machine']), source='other')]
+        with patch('pkgs_lib.winget.bridge', return_value={'packages': data}), \
+             patch.object(backend, 'probe_scope', side_effect=AssertionError('unexpected scope probe')):
+            packages = backend.installed()
+        self.assertEqual([p.name for p in packages], ['Machine.App', 'Duplicate.App', 'duplicate.app', 'Other.Source'])
+        self.assertEqual([p.details['scope'] for p in packages], ['machine', 'unknown', 'unknown', 'unknown'])
+        self.assertTrue(all(p.details['disabled_reason'] for p in packages[1:]))
+        for malformed in (None, 'user', ['unexpected']):
+            with self.subTest(malformed=malformed), patch('pkgs_lib.winget.bridge',
+                    return_value={'packages': [row(scope_matches=malformed)]}), self.assertRaisesRegex(Error, 'invalid WinGet scope'):
+                self.backend().installed()
+
     def test_no_shell_interpolation_and_native_detection(self):
         import base64
         with patch('pkgs_lib.winget.powershell', return_value='powershell.exe'):
