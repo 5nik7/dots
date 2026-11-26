@@ -211,6 +211,15 @@ class ShellEnvironment(unittest.TestCase):
         self.assertEqual(raw, env['XDG_STATE_HOME'] + '/dots\n')
         self.assertEqual(json.loads(self.env_command('env','--json',env=env))['values']['DOTS_STATE_DIR']['value'], raw[:-1])
 
+    @unittest.skipIf(os.name == 'nt', 'requires native POSIX Bash')
+    def test_bash_yazi_default_and_override(self):
+        for override in (None, str(self.home / 'custom yazi')):
+            if override:
+                self.env['YAZI_CONFIG_HOME'] = override
+            result = self.run_shell('bash', 'source "$DOTS/lib/dots/shell/init.bash" && printf %s "$YAZI_CONFIG_HOME"')
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, override or str(REPO / 'config/yazi'))
+
     def test_native_config_and_integration_only(self):
         scripts = {
             'bash': 'source "$DOTS/lib/dots/shell/init.bash"; printf "%s|%s|%s" "${dot[root]}" "${dots_options[DOTS_INIT_THEME]}" "${dots_option_sources[DOTS_INIT_THEME]}"; ! alias q 2>/dev/null',

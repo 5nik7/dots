@@ -7,6 +7,7 @@ Status: Implemented, including owner-approved legacy cleanup.
 
 ## Delivered
 
+- Native Windows startup leaves Yazi's config directory to the application by default. PowerShell 5.1 and 7 fixture publication covers the managed AppData link, an explicit override, repeat publication, and refusal of a checkout destination. WSL Bash retains its checkout default. The existing environment override covers configuration. This startup repair needs no menu, command, installer or README change.
 - `dots init` emits integration-only hooks for Bash, Zsh, Fish, Nushell, Xonsh
   and PowerShell. Personal configuration stays in `shells/`.
 - `lib/dots/shell/settings.tsv` and `paths.tsv` define settings and derived paths

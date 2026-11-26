@@ -126,6 +126,8 @@ def declarations(root, profile=None):
     profile = resolve(root) if profile is None else profile
     rows = {key: (value, 'default') for key, value in json.loads((LIB / 'shell/environment.json').read_text())['defaults'].items()}
     if profile['facts']['platform'] == 'windows':
+        # Let Yazi and the file catalog use the managed AppData directory link.
+        del rows['YAZI_CONFIG_HOME']
         rows['XDG_CONFIG_HOME'] = ('${APPDATA}', 'platform:windows')
         rows['XDG_CACHE_HOME'] = ('${LOCALAPPDATA}/cache', 'platform:windows')
         rows['XDG_DATA_HOME'] = ('${LOCALAPPDATA}', 'platform:windows')

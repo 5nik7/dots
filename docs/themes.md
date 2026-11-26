@@ -315,7 +315,9 @@ does not establish that every application renders it. Bat disables italic output
 default; `bat --italic-text=always` enables it when supported by the terminal.
 Its rendered `bat.tmTheme`
 is also copied to `yazi/tmtheme.xml` in the same generation; `yazi.toml` becomes
-`yazi/flavor.toml`. Yazi reads both files through one directory link from `flavors/dots.yazi` to `${THEME}/yazi`. Termux, Linux and WSL place the link under `${CONFIG}/yazi`. Windows uses `${APP_CONFIG:yazi}`, which defaults to `%APPDATA%/yazi/config` and honors Yazi’s configured directory. Edit the template
+`yazi/flavor.toml`. Yazi reads both files through one directory link from `flavors/dots.yazi` to `${THEME}/yazi`. Termux, Linux and WSL place the link under `${CONFIG}/yazi`. On native Windows, Dots leaves `YAZI_CONFIG_HOME` unset by default so Yazi and the theme connector use `%APPDATA%\yazi\config`. An explicit `YAZI_CONFIG_HOME` selects another directory. If an existing PowerShell session still has the old Dots default pointing to the checkout’s `config\yazi`, run `Remove-Item Env:YAZI_CONFIG_HOME` in that session and retry the theme command.
+
+Edit the template
 and run `dots theme refresh` to publish changes; generated files are replaced on
 publication. Personal templates and bundled application overrides retain the
 precedence described above.

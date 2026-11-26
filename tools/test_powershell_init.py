@@ -87,6 +87,60 @@ class PowerShellInitTests(unittest.TestCase):
                               cwd=self.home, env=self.env, text=True,
                               capture_output=True, timeout=30)
 
+    @unittest.skipUnless(os.name == 'nt', 'requires the native Windows application paths')
+    def test_yazi_theme_uses_managed_appdata_link(self):
+        profile_path = self.repo / 'profiles/windows/profile.json'
+        profile = json.loads(profile_path.read_text())
+        shipped = json.loads((REPO / 'profiles/windows/profile.json').read_text())
+        profile['files'] = [row for row in shipped['files'] if row.get('app') == 'yazi']
+        profile_path.write_text(json.dumps(profile))
+        (self.repo / '.dots').mkdir()
+        for name in ('sources.json', 'files.json'):
+            shutil.copy2(REPO / '.dots' / name, self.repo / '.dots' / name)
+        for directory in ('default', 'themes/catppuccin', 'themes/catppuccin-mocha'):
+            shutil.copytree(REPO / directory, self.repo / directory)
+        for name in ('dots-theme', 'dots-theme-set'):
+            shutil.copy2(REPO / 'bin' / name, self.repo / 'bin' / name)
+        source = self.repo / 'config/yazi'
+        source.mkdir(parents=True)
+        app = Path(self.env['APPDATA']) / 'yazi/config'
+        app.parent.mkdir()
+        app.symlink_to(source, target_is_directory=True)
+        self.env['PATH'] = str(Path(sys.executable).parent)
+        entry = literal(self.repo / 'shells/powershell/profile.ps1')
+        dots = literal(self.repo / 'bin/dots.ps1')
+        select = f'& {dots} theme set catppuccin-mocha'
+
+        def theme(arguments=''):
+            return self.run_ps('-Command', f'. {entry}; if ($env:DOTS_PROFILE -ne "windows") '
+                               f'{{ throw "Windows profile failed to load" }}; {select} {arguments}; exit $LASTEXITCODE')
+
+        preview = theme('--dry-run')
+        self.assertEqual(preview.returncode, 0, preview.stderr)
+        self.assertFalse((source / 'flavors').exists())
+        first = theme()
+        self.assertEqual(first.returncode, 0, first.stderr)
+        flavor = app / 'flavors/dots.yazi'
+        self.assertTrue(flavor.is_symlink())
+        self.assertTrue((flavor / 'flavor.toml').is_file())
+        self.assertTrue((flavor / 'tmtheme.xml').is_file())
+        generation = flavor.resolve()
+        again = theme('--verbose')
+        self.assertEqual(again.returncode, 0, again.stderr)
+        self.assertIn('theme and connectors match', again.stdout + again.stderr)
+        self.assertEqual(flavor.resolve(), generation)
+
+        external = self.home / 'custom yazi'
+        external.mkdir()
+        self.env['YAZI_CONFIG_HOME'] = str(external)
+        custom = theme()
+        self.assertEqual(custom.returncode, 0, custom.stderr)
+        self.assertTrue((external / 'flavors/dots.yazi').is_symlink())
+        self.env['YAZI_CONFIG_HOME'] = str(source)
+        unsafe = theme('--dry-run')
+        self.assertNotEqual(unsafe.returncode, 0)
+        self.assertIn('cannot replace repository metadata or sources', unsafe.stderr)
+
     def test_native_files_parse(self):
         files = ','.join(literal(file) for file in self.repo.rglob('*.ps1'))
         code = ('foreach ($file in @(' + files + ')) { '

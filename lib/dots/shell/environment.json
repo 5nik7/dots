@@ -19,6 +19,7 @@
     "EDITOR_TERM": "${TERMINAL} -e ${EDITOR}"
   },
   "observed": {
+    "YAZI_CONFIG_HOME": "yazi",
     "UTIL": "shells/shared/session.sh",
     "FZF_DEFAULT_COMMAND": "shells/shared/fzf.sh",
     "FZF_DEFAULT_OPTS": "shells/shared/fzf.sh",

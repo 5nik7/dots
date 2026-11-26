@@ -286,6 +286,8 @@ claimable nested catalog target. See [managed Git selection](files.md#consolidat
 
 ## Implemented Windows catalog destination token
 
+For Yazi on Windows, the connector uses the first configured value of `DOTS_APP_YAZI_CONFIG` and `YAZI_CONFIG_HOME`, then falls back to `%APPDATA%\yazi\config`. Windows shell startup supplies `YAZI_CONFIG_HOME` only when a profile declares it and preserves an inherited override.
+
 The existing bounded file catalog accepts `${APP_CONFIG:app}` with an optional relative suffix. On Windows, `files/app_paths.py` resolves the named application's directory and explicit `DOTS_APP_<APP>_CONFIG` override; unsupported or ambiguous locations yield an unmapped target. On other platforms the token is inapplicable. The Windows profile supplies its native destination independently of POSIX profiles. App-specific destinations do not redefine `${CONFIG}` globally. See [Windows app destinations](powershell.md#windows-app-destinations).
 
 The implemented eza theme connector resolves `DOTS_APP_EZA_CONFIG` before `EZA_CONFIG_DIR` and the platform default; the authoritative [destination and template contract](themes.md#eza) defines validation and override precedence.
