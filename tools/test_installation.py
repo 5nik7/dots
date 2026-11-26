@@ -68,6 +68,217 @@ class InstallationTests(unittest.TestCase):
     def receipt(self):
         return json.loads((self.home/'.state/dots/installation.json').read_text())
 
+    def legacy_git_receipts(self):
+        """Recreate the two connector syncs separated by a directory-link repair."""
+        from catalog import platform
+        scope = mock.patch.dict(os.environ, self.env, clear=True)
+        scope.start()
+        self.addCleanup(scope.stop)
+        profile = platform()
+        self.write('.dots/files.json', dict(schema=3, resources=[], renames={}))
+        (self.repo/'profiles'/profile).mkdir(parents=True)
+        self.write(f'profiles/{profile}/profile.json', dict(schema=1, id=profile, files=[
+            dict(id='git', app='git', category='config', strategy='directory-link',
+                 source='${DOTS}/config/git', target='${CONFIG}/git'),
+            dict(id='git', app='git', category='theme', strategy='link',
+                 source='${THEME}/gitconfig', target='${CONFIG}/git/dots-theme.gitconfig')]))
+        self.live_git = self.home/'.config/git'
+        self.source_git = self.repo/'config/git'
+        self.live_git.mkdir(parents=True)
+        self.source_git.mkdir()
+        (self.live_git/'personal').write_text('preserve this')
+        legacy = Installation(self.repo)
+        artifact = legacy.state/'current/theme/gitconfig'
+        artifact.parent.mkdir(parents=True)
+        artifact.write_text('theme')
+        self.logical_child = self.live_git/'dots-theme.gitconfig'
+        self.physical_child = self.source_git/self.logical_child.name
+        legacy.add('theme:git', self.logical_child, link=artifact)
+        legacy.apply('sync')
+        parent = Installation(self.repo)
+        parent.add('dots:git', self.live_git, link=self.source_git, directory=True)
+        parent.apply('repair')
+        physical = Installation(self.repo)
+        physical.add('theme:git', self.physical_child, link=artifact)
+        physical.apply('sync')
+
+    def reconcile_git(self):
+        preview = Installation(self.repo)
+        preview.plan_install({'files'}, {'dots:git'})
+        return preview
+
+    def git_directory_baseline(self):
+        from backup_catalog import original_payload
+        install = Installation(self.repo)
+        entry = install.entries[str(self.live_git)]
+        return Path(original_payload(entry, self.live_git, install.state, {}))
+
+    def test_git_duplicate_preview_apply_undo_and_uninstall(self):
+        self.legacy_git_receipts()
+        legacy = self.receipt()
+        baseline = self.git_directory_baseline()
+        original = digest(baseline)
+        plan = json.loads(self.cli('install', '--component', 'files', '--resource', 'dots:git',
+                                   '--dry-run', '--json').stdout)
+        self.assertEqual(plan['status'], 'preview')
+        rows = [item for item in plan['items'] if item['status'] == 'reconcile']
+        self.assertEqual([(row['id'], row['target'], row['source']) for row in rows],
+                         [('theme:git', str(self.logical_child), str(self.physical_child))])
+        self.assertEqual(self.receipt(), legacy)
+        preview = self.reconcile_git()
+        self.assertEqual(self.receipt(), legacy)
+        self.assertTrue(self.logical_child.is_symlink())
+        result = preview.apply('install')
+        entries = self.receipt()['entries']
+        self.assertNotIn(str(self.logical_child), entries)
+        self.assertIn(str(self.physical_child), entries)
+        self.assertEqual(self.reconcile_git().apply('install')['status'], 'unchanged')
+        store = Store(preview.state)
+        operations, guards, catalogs = store.inverse(result['id'])
+        store.apply('undo', operations, guards, catalogs=catalogs, retain=True)
+        self.assertEqual(self.receipt(), legacy)
+        full = Installation(self.repo)
+        full.plan_uninstall()
+        full.apply('uninstall')
+        self.assert_git_restored()
+        self.assertEqual(digest(baseline), original)
+
+    def assert_git_restored(self):
+        self.assertFalse(self.live_git.is_symlink())
+        self.assertEqual((self.live_git/'personal').read_text(), 'preserve this')
+        self.assertFalse(os.path.lexists(self.logical_child))
+        self.assertFalse(os.path.lexists(self.physical_child))
+        self.assertFalse(self.receipt()['entries'])
+
+    def remove_git_resources(self, first, second):
+        self.legacy_git_receipts()
+        self.remove_git_resource(first)
+        if first == 'dots:git':
+            self.assertFalse(self.live_git.is_symlink())
+            self.assertTrue(self.logical_child.is_symlink())
+            self.assertTrue(self.physical_child.is_symlink())
+        else:
+            self.assertTrue(self.live_git.is_symlink())
+            self.assertFalse(os.path.lexists(self.physical_child))
+        self.remove_git_resource(second)
+        self.assert_git_restored()
+
+    def remove_git_resource(self, resource):
+        removal = Installation(self.repo)
+        removal.plan_uninstall({'files'}, {resource})
+        removal.apply('uninstall')
+
+    def test_git_duplicate_remove_connector_first(self):
+        self.remove_git_resources('theme:git', 'dots:git')
+
+    def test_git_duplicate_remove_directory_first(self):
+        self.remove_git_resources('dots:git', 'theme:git')
+
+    def test_git_duplicate_remove_then_reinstall_directory(self):
+        self.legacy_git_receipts()
+        self.remove_git_resource('dots:git')
+        self.assertFalse(self.live_git.is_symlink())
+        self.assertTrue(self.logical_child.is_symlink())
+        self.reconcile_git().apply('install')
+        self.assertTrue(self.live_git.is_symlink())
+        full = Installation(self.repo)
+        full.plan_uninstall()
+        full.apply('uninstall')
+        self.assert_git_restored()
+
+    def test_git_duplicate_rejects_mismatched_identity_and_drift(self):
+        self.legacy_git_receipts()
+        path = Installation(self.repo).receipt_path
+        saved = path.read_bytes()
+        invalid = self.receipt()
+        invalid['entries'][str(self.logical_child)]['id'] = 'theme:other'
+        path.write_text(json.dumps(invalid))
+        with self.assertRaises(ValueError):
+            self.reconcile_git()
+        self.assertEqual(self.receipt(), invalid)
+        invalid = json.loads(saved)
+        invalid['entries'][str(self.logical_child)]['index'] += 1
+        path.write_text(json.dumps(invalid))
+        with self.assertRaises(ValueError):
+            self.reconcile_git()
+        self.assertEqual(self.receipt(), invalid)
+        path.write_bytes(saved)
+        self.physical_child.unlink()
+        self.physical_child.write_text('user change')
+        with self.assertRaises(ValueError):
+            self.reconcile_git()
+        self.assertEqual(path.read_bytes(), saved)
+        self.assertEqual(self.logical_child.read_text(), 'user change')
+
+    def test_git_duplicate_live_drift_after_preview_blocks_apply(self):
+        self.legacy_git_receipts()
+        preview = self.reconcile_git()
+        saved = preview.receipt_path.read_bytes()
+        self.physical_child.unlink()
+        self.physical_child.write_text('edited between preview and apply')
+        with self.assertRaisesRegex(ValueError, 'changed after preview'):
+            preview.apply('install')
+        self.assertEqual(preview.receipt_path.read_bytes(), saved)
+        self.assertEqual(self.logical_child.read_text(), 'edited between preview and apply')
+
+    def test_git_duplicate_uninstall_preserves_later_checkout_edit(self):
+        self.legacy_git_receipts()
+        self.reconcile_git().apply('install')
+        self.physical_child.unlink()
+        self.physical_child.write_text('personal checkout edit')
+        full = Installation(self.repo)
+        full.plan_uninstall()
+        full.apply('uninstall')
+        self.assertFalse(self.live_git.is_symlink())
+        self.assertFalse(os.path.lexists(self.logical_child))
+        self.assertEqual(self.physical_child.read_text(), 'personal checkout edit')
+        self.assertEqual(set(self.receipt()['entries']), {str(self.physical_child)})
+
+    def test_git_duplicate_refuses_tampered_backup_and_redirected_parent(self):
+        self.legacy_git_receipts()
+        path = Installation(self.repo).receipt_path
+        receipt = path.read_bytes()
+        baseline = self.git_directory_baseline()
+        elsewhere = self.home/'unrelated'
+        elsewhere.mkdir()
+        self.live_git.unlink()
+        self.live_git.symlink_to(elsewhere, target_is_directory=True)
+        with self.assertRaises(ValueError):
+            self.reconcile_git()
+        self.assertEqual(self.live_git.resolve(), elsewhere)
+        self.assertEqual(list(elsewhere.iterdir()), [])
+        self.live_git.unlink()
+        self.live_git.symlink_to(self.source_git, target_is_directory=True)
+        (baseline/self.logical_child.name).unlink()
+        with self.assertRaises(ValueError):
+            self.reconcile_git()
+        self.assertEqual(path.read_bytes(), receipt)
+        self.assertTrue(self.logical_child.is_symlink())
+
+    def test_git_duplicate_full_uninstall_rollback(self):
+        self.legacy_git_receipts()
+        full = Installation(self.repo)
+        saved = full.receipt_path.read_bytes()
+        baseline = self.git_directory_baseline()
+        original = digest(baseline)
+        full.plan_uninstall()
+        save = full.store.save
+
+        def fail_after_directory_restore(doc):
+            save(doc)
+            if doc['status'] == 'applying' and any(
+                op['path'] == str(self.live_git) and op['phase'] == 'done' for op in doc['operations']
+            ):
+                raise OSError('injected directory restore failure')
+
+        with mock.patch.object(full.store, 'save', side_effect=fail_after_directory_restore):
+            with self.assertRaisesRegex(OSError, 'injected directory restore failure'):
+                full.apply('uninstall')
+        self.assertTrue(self.live_git.is_symlink())
+        self.assertTrue(self.physical_child.is_symlink())
+        self.assertEqual(full.receipt_path.read_bytes(), saved)
+        self.assertEqual(digest(baseline), original)
+
     def starship_profile(self, *, unrelated=False):
         from catalog import platform
         self.env['STARSHIP_CONFIG'] = str(self.home/'.config/starship.toml')

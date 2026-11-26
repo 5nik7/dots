@@ -574,6 +574,8 @@ Setup schema-1 results retain existing fields and add `components`, `preparation
 
 Installer entries retain their first `before`/`backup`/`index` and current `after`. Component identity is derived from stable IDs; migrated lexical children can include `logical_path`. Optional `font_targets` saves each app's pre-installer collection reference (or null), `font_after` guards the installer-selected metadata, and `font_copies` retains the canonical source and pre-font backup for selective copy restoration without losing the original file-install baseline. Build identity/verified records bind the pinned commit, patch SHA-256, platform, architecture, toolchain and consumer check to the executable SHA-256. Setup run records are schema-1 documents with root, platform and ordered stage outcomes. All records use Store writes; they are machine-local and never committed.
 
+A directory-link receipt can carry `mapped_children`. Each key is the filename of a direct child in the original directory backup. Its value is the original installation entry for a theme connector that setup created at an absent destination (`before` is null). The connector installed later at the physical checkout path retains its own receipt and baseline. See [restore and recovery](installation.md#restore-and-recovery).
+
 `apps.setup` inherits through normal Config layers: booleans `logo`, `clear_screen`, `dependencies`; unique supported string-array `components`; qualified-ID array `resources` (empty means all applicable). Defaults select core/files/themes/anodize/blastoff/pkgs and no dependency installation. Saving is always an explicit per-run choice. These behavioral controls require no publication or app refresh.
 
 ## Wiki topic and command documentation contracts

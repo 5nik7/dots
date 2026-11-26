@@ -28,7 +28,7 @@ from progress import Progress, configure, sequence, permanent_output
 from identities import canonical, current_source
 from setup_components import DEFAULTS, component
 from managed_destination import physical, points_to, yazi_flavor_directory
-from backup_catalog import created_setup_parent, original_payload
+from backup_catalog import created_setup_parent, original_payload, setup_journal
 from plugin_paths import git_environment, recorded_submodule, submodule_initialized, submodule_worktree
 
 PUBLIC_SOURCES = ('termux', 'windows', 'nvim', 'git-it')
@@ -413,6 +413,74 @@ class Installation:
             raise ValueError('theme preparation failed: ' + result.stderr.decode(errors='replace').strip())
         return result.stdout.decode().split('\0')[:-1]
 
+    def verify_receipt_operation(self, path, entry):
+        """Bind a historical ownership claim to its completed Store operation."""
+        journal = setup_journal(self.store, entry.get('backup'), self.guards)
+        index = entry.get('index')
+        if type(index) is int and 0 <= index < len(journal['operations']):
+            operation = journal['operations'][index]
+            if (operation['path'] == str(path) and operation['phase'] == 'done'
+                    and all(operation[field] == entry[field] for field in ('before', 'after'))):
+                return
+        raise ValueError('installation receipt does not match original transaction: ' + str(path))
+
+    def reconcile_mapped_connector(self, old, path, records, planned, pending):
+        """Retain the child captured in the old directory independently of the live link."""
+        logical, physical_entry = self.entries[str(old)], self.entries[str(path)]
+        parent = old.parent
+        parent_entry = self.entries.get(str(parent))
+        conflict = 'duplicate logical/physical installation ownership: ' + str(old)
+        active = [r for r in records if r['enabled'] and r['applicable'] and
+                  r['status'] not in ('replaced', 'conflict', 'source-missing', 'source-broken-link')]
+        connectors = [r for r in active if r['target'] == str(old) and r['repository'] == 'theme'
+                      and r['strategy'] == 'link' and r['id'] == logical['id']]
+        directories = [r for r in active if r['target'] == str(parent) and r['strategy'] == 'directory-link'
+                       and r['source'] == str(path.parent)]
+        if len(connectors) != 1 or len(directories) != 1 or old.name != path.name:
+            raise ValueError(conflict)
+        identity = connectors[0]['id']
+        for entry in (logical, physical_entry):
+            if (entry['id'] != identity or entry['before'] is not None or entry.get('discarded_original')
+                    or entry.get('backup_id') or entry.get('catalog_ids', [identity]) != [identity]
+                    or entry.get('component', 'themes') != 'themes'):
+                raise ValueError(conflict)
+        self.guard(path)
+        if (not logical['after'] or self.guards[str(path)] != logical['after']
+                or physical_entry['after'] != logical['after'] or not points_to(path, connectors[0]['source'])):
+            raise ValueError(conflict)
+        history = self.receipt['transactions']
+        lineage = [logical['backup'], physical_entry['backup']]
+        if parent.is_symlink():
+            if (not parent_entry or parent_entry['id'] != directories[0]['id']
+                    or self.guards[str(parent)] != parent_entry['after'] or not parent_entry['before']):
+                raise ValueError(conflict)
+            self.verify_receipt_operation(parent, parent_entry)
+            saved = Path(original_payload(parent_entry, parent, self.state, self.guards))
+            if saved.is_symlink() or not saved.is_dir():
+                raise ValueError(conflict)
+            child = saved / old.name
+            lineage.insert(1, parent_entry['backup'])
+            children = parent_entry.setdefault('mapped_children', {})
+        elif str(parent) in planned and not parent_entry and not self.no_backup:
+            # Reinstalling a directory after parent-only uninstall captures the
+            # independently owned logical child in a fresh directory backup.
+            child = old
+            children = pending.setdefault(str(parent), {})
+        else:
+            raise ValueError(conflict)
+        if [t for t in history if t in lineage] != lineage or len(set(lineage)) != len(lineage):
+            raise ValueError(conflict)
+        self.guard(child)
+        if self.guards[str(child)] != logical['after'] or old.name in children:
+            raise ValueError(conflict)
+        self.verify_receipt_operation(old, logical)
+        self.verify_receipt_operation(path, physical_entry)
+        logical['catalog_ids'] = [identity]
+        physical_entry['catalog_ids'] = [identity]
+        children[old.name] = self.entries.pop(str(old))
+        self.receipt_changed = True
+        self.item(identity, 'reconcile', old, path, reason='retain original connector ownership with the directory backup')
+
     def reconcile_destinations(self, records, planned=()):
         """Retain original recovery pointers when a directory mapping moved a child."""
         flavors = {Path(r['target']) for r in records if yazi_flavor_directory(r)}
@@ -422,6 +490,7 @@ class Installation:
             for logical in flavors:
                 actual = physical(logical, records, self.guards, planned=planned)
                 flavor_paths.update({logical: actual, actual: actual})
+        pending = {}
         for key, entry in list(self.entries.items()):
             old = Path(key)
             if old.parent in flavor_paths:
@@ -437,12 +506,14 @@ class Installation:
             if str(path) == key:
                 continue
             if str(path) in self.entries:
-                raise ValueError('duplicate logical/physical installation ownership: ' + key)
+                self.reconcile_mapped_connector(old, path, records, planned, pending)
+                continue
             if digest(path) != entry['after']:
                 raise ValueError('mapped installer-owned target changed; preserve and review: ' + key)
             entry['logical_path'] = key
             self.entries[str(path)] = self.entries.pop(key)
             self.receipt_changed = True
+        return pending
 
     def plan_install(self, components=None, resources=None, *, defer_theme=False):
         self.review_replacements = True
@@ -490,7 +561,7 @@ class Installation:
             if missing:
                 raise ValueError('setup resource is not enabled/applicable: ' + ', '.join(sorted(missing)))
         planned = {r['target'] for r in selected if r['strategy'] == 'directory-link'}
-        self.reconcile_destinations(observed, planned)
+        mapped_children = self.reconcile_destinations(observed, planned)
         # Render against the selected source even before its destination link
         # exists. This keeps compiled syntax inputs stable across first/repeat
         # setup and includes the real custom syntaxes on the first build.
@@ -498,9 +569,6 @@ class Installation:
                     and r['target'] and (r in selected or Path(r['target']).resolve() == Path(r['source']))), None)
         if bat and not os.environ.get('BAT_CONFIG_DIR'):
             self.theme_environment['BAT_CONFIG_DIR'] = bat['source']
-        from themes import connector_paths
-        from managed_destination import theme_artifact
-
         if not defer_theme and 'themes' in self.components and (self.root / 'lib/dots/themes' / ('setup.py' if self.platform == 'windows' else 'setup.bash')).is_file():
             with Progress('Inspecting theme inputs'):
                 identity, fingerprint, current, incomplete = self.theme_bridge('inspect')
@@ -516,6 +584,8 @@ class Installation:
                             raise ValueError('unfinished theme publication; recover with dots theme refresh first')
         requested_theme = (self.resources or set()) & {r['id'] for r in records if r.get('repository') == 'theme'}
         if self.theme or requested_theme and not defer_theme:
+            from themes import connector_paths
+            from managed_destination import theme_artifact
             planned_targets = [Path(r['target']) for r in selected if r['target'] and r['status'] not in
                                ('unmapped', 'unsupported-platform', 'source-missing', 'source-broken-link', 'conflict')]
             links, guards = connector_paths.plan(self.root, self.platform, catalog=catalog, records=observed,
@@ -567,6 +637,10 @@ class Installation:
             # Link identity is the installed object; later source edits remain
             # editable. During this apply, sources are bound to the preview.
             self.add(row['id'], target, link=source, directory=source.is_dir())
+            if str(target) in mapped_children:
+                self.entries[str(target)]['mapped_children'] = mapped_children.pop(str(target))
+        if mapped_children:
+            raise ValueError('cannot retain connector ownership without installing its directory')
         home = Path(os.environ.get('HOME') or Path.home())
         launcher = 'dots.ps1' if self.platform == 'windows' else 'dots'
         if 'core' not in self.components:
@@ -718,6 +792,8 @@ class Installation:
                              for e in self.entries.values())
         if self.components is not None and 'themes' in self.components and retained_files:
             raise ValueError('theme removal would break retained managed files; include those files or retain themes')
+        mapped_restores = []
+        drifted = set()
         for path, entry in list(self.entries.items())[::-1]:
             owner = entry.get('component', component(entry['id']))
             catalog_ids = entry.get('catalog_ids', (entry['id'],) if entry['id'] in retired else ())
@@ -734,6 +810,7 @@ class Installation:
                 continue
             self.guard(path)
             if self.guards[path] != entry['after']:
+                drifted.add(path)
                 self.item(entry['id'], 'preserved', path, reason='target changed after installation')
                 continue
             op = dict(path=path)
@@ -743,10 +820,42 @@ class Installation:
                 op['delete'] = True
             else:
                 op['source'] = original_payload(entry, path, self.state, self.guards)
+            if 'mapped_children' in entry:
+                mapped_restores.append((op, entry['mapped_children']))
             self.operations.append(op)
             del self.entries[path]
             self.item(entry['id'], 'remove' if op.get('delete') else 'restore', path,
                       reason='original was deliberately discarded with --no-backup' if entry.get('discarded_original') else None)
+        for op, children in mapped_restores:
+            self.restore_mapped_children(op, children, drifted)
+
+    def restore_mapped_children(self, op, children, drifted):
+        parent = Path(op['path'])
+        source = Path(op['source']) if 'source' in op else None
+        if (not isinstance(children, dict) or not children or not parent.is_symlink()
+                or source is None or source.is_symlink() or not source.is_dir()):
+            raise ValueError('invalid retained directory mapping baseline: ' + str(parent))
+        checkout_directory = parent.resolve()
+        for name, child in children.items():
+            relative = Path(name)
+            if (relative.anchor or len(relative.parts) != 1 or relative.name != name or name == '..'
+                    or not isinstance(child, dict) or child.get('before', False) is not None):
+                raise ValueError('invalid retained mapped child: ' + str(name))
+            saved = source / relative
+            parents_safe(saved)
+            if not saved.is_symlink() or not child.get('after') or digest(saved) != child['after']:
+                raise ValueError('original directory contains a different mapped child: ' + str(saved))
+            logical = str(parent / relative)
+            self.verify_receipt_operation(logical, child)
+            target = str(checkout_directory / relative)
+            physical_entry = self.entries.get(target)
+            if physical_entry is not None and target not in drifted:
+                if logical in self.entries or physical_entry['id'] != child['id']:
+                    raise ValueError('ambiguous restored child ownership: ' + logical)
+                # The directory backup already contains this managed object.
+                self.entries[logical] = child
+            else:
+                op.setdefault('omit_mapped_children', []).append(name)
 
     def prepare_theme(self):
         if self.theme_prepared or not self.theme or not self.theme['refresh']:
@@ -819,7 +928,18 @@ class Installation:
             import tempfile
             tmp = stack.enter_context(tempfile.TemporaryDirectory(dir=self.state / 'setup-staging'))
             for index, op in enumerate(self.operations):
-                if op.pop('yazi_pair', False):
+                if 'omit_mapped_children' in op:
+                    directory = Path(tmp) / ('mapped-original-' + str(index))
+                    copy_object(op['source'], directory)
+                    if directory.is_symlink() or digest(directory) != self.guards[op['source']]:
+                        raise ValueError('original directory changed during restoration: ' + op['source'])
+                    mode = directory.stat().st_mode & 0o7777
+                    directory.chmod(mode | 0o700)
+                    for name in op.pop('omit_mapped_children'):
+                        (directory / name).unlink()
+                    directory.chmod(mode)
+                    op['source'] = str(directory)
+                elif op.pop('yazi_pair', False):
                     from themes.connector_paths import populate_yazi
                     pair = Path(tmp) / ('yazi-' + str(index))
                     populate_yazi(pair, self.state / 'current/theme')
@@ -1221,7 +1341,8 @@ def process_selection(root, installation, args, cleanup):
             if args.action == 'uninstall':
                 installation.prune_empty_parents()
             incomplete = any(x['status'] == 'preserved' for x in installation.items)
-            completed = {'create':'linked', 'replace-with-backup':'linked', 'restore':'restored', 'remove':'removed', 'prepare':'published'}
+            completed = {'create':'linked', 'replace-with-backup':'linked', 'restore':'restored', 'remove':'removed',
+                         'prepare':'published', 'reconcile':'reconciled'}
             final_items = [dict(row, status=completed.get(row['status'], row['status'])) for row in installation.items]
             display(dict(doc, status='incomplete' if incomplete else result['status'],
                          transaction=result.get('id'), items=final_items,

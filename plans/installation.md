@@ -15,6 +15,14 @@ This initial slice mapped the current PowerShell profile, Neovim and VS Code set
 
 ## Verification evidence
 
+### Recovery of overlapping Git connector receipts
+
+The shared installation controller previews the verified receipt repair and journals it on apply. Nine isolated installation regressions cover the original Git directory backup, both connector receipts, repeat setup, removal in either order, parent reinstallation, drift protection and rollback. Native Windows PowerShell 5.1/7 verification of the mapped Git configuration directory remains pending.
+
+Dots Files maintenance owns the repair. No configuration integration change needed. Recovery depends on receipt evidence and needs no user preference. The existing setup and uninstall menu actions, bootstrap adapters, command metadata and completions already cover both routes. No README change needed because the setup invocation and installation navigation stay current.
+
+### Original installation verification
+
 - Installation lifecycle: 16 cases passed, including real theme generation, original backups across local Git updates, ignored-file preservation, source drift, interrupted recovery and explicit optional-source initialization. A focused follow-up also proves normal theme switching followed by setup reconciliation preserves the selected theme and original baseline.
 - Adapter/presentation suite: five checks passed; native PowerShell and Windows execution checks skipped because those runtimes are unavailable here. Owned PTYs cover 40/80/120 columns and delayed progress; forced-color JSON and ordinary shell-code output stay undecorated.
 - Existing regressions: file operations 21 passed, catalog 9 passed, Bash dispatcher 24 passed, progress 11 passed. Focused shell initialization had six passes, one unavailable-PowerShell skip and one baseline fixture failure.

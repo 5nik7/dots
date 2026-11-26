@@ -77,6 +77,8 @@ The sourceable [shell utility functions](shell-utils.md) have their own document
 
 `dots init --setup [OPTIONS]` explicitly delegates to `dots files install`; `dots files uninstall` restores installer-owned targets. Install/uninstall accept `--dry-run`, `--yes`, `--json` and shared color/icon controls; install also accepts `--update` and repeatable `--with-source termux|windows|nvim`. Root shell/PowerShell scripts use the same controller. Setup options are invalid on shell-code generation paths. See [checkout installation](installation.md) for ownership, updater stages, JSON results and recovery.
 
+Install and uninstall previews can report a receipt repair when an earlier setup installed the Git theme connector both before and after linking its parent directory. See [restore and recovery](installation.md#restore-and-recovery).
+
 POSIX setup and `dots theme refresh` check required generated outputs before
 reporting an unchanged theme. Setup previews identify an incomplete artifact or
 publication pointer in the existing item's target/reason fields. Repair prepares
