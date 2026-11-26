@@ -20,6 +20,8 @@ The Termux upper row has battery and a daylight-colored clock; Wi-Fi/data and al
 
 ## Keybinding reference
 
+The shared config enables extended keys. On tmux 3.5 and newer it selects CSI-u encoding. On tmux 3.4, including WSL installations with that version, it uses tmux’s built-in encoding.
+
 `dots menu tmux keys` and `dots-menu-tmux-keys` remain compatibility entries for `dots keys tmux`. Prefix → ? invokes `dots keys --browse` through `run-shell -b`, opening the compact category menu before the binding browser. FZF owns each popup. Escape/Ctrl-C closes the shortcut quietly; genuine failures remain visible. Direct CLI cancellation still returns 130. `--print` bypasses the picker. No binding is executed and no tmux server is started or reloaded. Existing shared tmux popup styling remains available to other popups; this picker uses the published FZF theme. See [tmux compatibility](keys.md#tmux-compatibility).
 
 Key pickers show match counts inline on the right. The main/All prompt is

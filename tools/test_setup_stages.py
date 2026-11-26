@@ -34,6 +34,15 @@ class SetupStages(unittest.TestCase):
         self.assertFalse((self.home/'.state').exists())
         self.assertFalse((self.home/'.cache').exists())
 
+    def test_fonts_preflight_reports_unsupported_python(self):
+        with patch.dict(os.environ, self.env):
+            installation = Installation(self.repo)
+            args = SimpleNamespace(component=['fonts'], package_document=None)
+            with patch('setup_stages.sys.version_info', (3, 10)):
+                with self.assertRaisesRegex(ValueError, 'font setup requires Python 3.11'):
+                    Preparation(installation, args)
+            self.assertFalse(installation.state.exists())
+
     def test_first_failure_retains_record_and_stops_later_preparation(self):
         with patch.dict(os.environ,self.env):
             installation=Installation(self.repo);stage=Preparation(installation,self.args())

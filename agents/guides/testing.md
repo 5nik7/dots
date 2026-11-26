@@ -12,10 +12,12 @@ from synthetic accounting and controller fixtures; see the
 
 For standalone clipboard adapters, run `python3 -B tools/test_clipboard.py -v` and affected Todo/Fonts clipboard consumers. Use only owned fake providers; keep Termux interpreter support in isolated shell environments. Native PowerShell adapter fixtures and real desktop clipboard acceptance are separate; see [clipboard checks](../../docs/testing.md#system-clipboard-commands).
 
-For fonts, run `tools/test_fonts.py` with `tools/requirements-fonts.txt` available,
-plus `tools/test_fonts_presentation.py` for output/configuration changes (including
-exact data, static completion, inherited controls and preview rendering),
-then `tools/test_font_directories.py`, `tools/test_fonts_browser.py` and the command generator's `--check`. Directory fixtures must set DOTS to a test-owned checkout before any storage mutation. Keep font,
+For fonts, run `tools/test_fonts_portable.py` with stock Python to exercise both
+launchers. Run `tools/test_fonts.py` with the test-only `tools/requirements-fonts.txt`
+for generated fixtures and metadata comparisons. Use `tools/test_fonts_presentation.py`
+for output and configuration changes, including exact data, static completion,
+inherited controls and preview rendering. Run `tools/test_font_directories.py`,
+`tools/test_fonts_browser.py` and the command generator's `--check`. Directory fixtures must set DOTS to a test-owned checkout before any storage mutation. Keep font,
 registry, clipboard and tmux effects in owned fixtures. Run file-platform checks
 before affected file/installation suites; follow [font testing](../../docs/testing.md#personal-fonts)
 for remaining command and native acceptance checks.

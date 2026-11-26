@@ -104,6 +104,9 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False, 
                 else:
                     names = [p.name for p, _, reason in rows if not reason]
                     skipped += [dict(package=p.name, reason=reason) for p, _, reason in rows if reason]
+                if backend.update_system and backend.gem_system_update_disabled():
+                    backend.update_system = False
+                    skipped.append(dict(package='RubyGems', reason='This RubyGems installation disables self-updates.'))
                 if not names and not backend.update_system: return Plan(backend, action, skipped=skipped)
         if action in ('install','upgrade'):
             names, blocked = policies.selected(cfg, backend.name, names, override=override, explicit=explicit)

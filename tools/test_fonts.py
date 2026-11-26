@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Font lifecycle/provider/config/CLI checks, exclusively in owned roots."""
 from copy import deepcopy
+import hashlib
 import io
 import json
 import os
 from pathlib import Path
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -27,19 +29,179 @@ from transactions import Store
 
 def font(path,family='Fixture Mono',style='Regular',version='Version 1.0'):
     from fontTools.fontBuilder import FontBuilder
-    from fontTools.pens.ttGlyphPen import TTGlyphPen
-    builder=FontBuilder(1000,isTTF=True)
+    is_ttf = path.suffix.lower() != '.otf'
+    ps_name = (family + '-' + style).replace(' ', '')
+    builder=FontBuilder(1000,isTTF=is_ttf)
     builder.setupGlyphOrder(['.notdef','space','A'])
     builder.setupCharacterMap({32:'space',65:'A',0xE000:'A'})
-    pen=TTGlyphPen(None);pen.moveTo((100,0));pen.lineTo((500,0));pen.lineTo((300,700));pen.closePath()
-    empty=TTGlyphPen(None).glyph()
-    builder.setupGlyf({'.notdef':empty,'space':empty,'A':pen.glyph()})
+    if is_ttf:
+        from fontTools.pens.ttGlyphPen import TTGlyphPen
+        pen=TTGlyphPen(None);pen.moveTo((100,0));pen.lineTo((500,0));pen.lineTo((300,700));pen.closePath()
+        empty=TTGlyphPen(None).glyph()
+        builder.setupGlyf({'.notdef':empty,'space':empty,'A':pen.glyph()})
+    else:
+        from fontTools.pens.t2CharStringPen import T2CharStringPen
+        pen = T2CharStringPen(600, None)
+        pen.moveTo((100, 0))
+        pen.lineTo((500, 0))
+        pen.lineTo((300, 700))
+        pen.closePath()
+        empty = T2CharStringPen(600, None).getCharString()
+        builder.setupCFF(ps_name, {}, {'.notdef': empty, 'space': empty, 'A': pen.getCharString()}, {})
     builder.setupHorizontalMetrics({name:(600,0) for name in ('.notdef','space','A')})
     builder.setupHorizontalHeader(ascent=800,descent=-200)
     builder.setupNameTable(dict(familyName=family,styleName=style,uniqueFontIdentifier=family+style+version,
-        fullName=family+' '+style,psName=(family+'-'+style).replace(' ',''),version=version))
+        fullName=family+' '+style,psName=ps_name,version=version))
     builder.setupOS2(sTypoAscender=800,sTypoDescender=-200,usWinAscent=800,usWinDescent=200)
     builder.setupPost(isFixedPitch=1);builder.setupMaxp();builder.save(path)
+
+
+class FontMetadata(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='dots-font-metadata-')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+
+    def test_reference_metadata_for_truetype_and_cff(self):
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.ttLib import TTFont
+
+        for suffix in ('.ttf', '.otf'):
+            with self.subTest(suffix=suffix):
+                path = self.root / ('-Misleading file ü' + suffix)
+                font(path, 'Legacy family', 'Legacy style')
+                with TTFont(path) as face:
+                    names = face['name']
+                    names.setName('Typographic family', 16, 3, 1, 0x409)
+                    names.setName('Typographic style', 17, 3, 1, 0x409)
+                    names.setName('Étoile Nerd Font Mono', 21, 3, 1, 0x409)
+                    names.setName('家族', 21, 3, 1, 0x411)
+                    names.setName('Demi-gras', 22, 1, 0, 0)
+                    face['post'].isFixedPitch = int(suffix == '.ttf')
+                    if suffix == '.ttf':
+                        builder = FontBuilder(font=face)
+                        builder.setupFvar([('slnt', -15.5, -2.25, 0, 'Slant'),
+                                           ('wght', 100, 400, 900, 'Weight')], [])
+                        builder.setupGvar({glyph: [] for glyph in face.getGlyphOrder()})
+                    output = io.BytesIO()
+                    face.save(output)
+                path.write_bytes(output.getvalue())
+                with TTFont(path) as reference:
+                    names = reference['name']
+                    axes = [dict(tag=axis.axisTag, minimum=axis.minValue, default=axis.defaultValue,
+                                 maximum=axis.maxValue) for axis in reference['fvar'].axes] if 'fvar' in reference else []
+                    expected = dict(file=path.name, family=names.getBestFamilyName(), style=names.getBestSubFamilyName(),
+                                    full_name=names.getDebugName(4), variant='mono',
+                                    monospace=bool(reference['post'].isFixedPitch), variable=bool(axes),
+                                    axes=axes, sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+                with patch.dict(sys.modules, {'fontTools.ttLib': None}):
+                    self.assertEqual(metadata(path), expected)
+
+    def test_mac_roman_and_missing_optional_fields(self):
+        from fontTools.ttLib import TTFont
+
+        original = self.root / 'original.ttf'
+        path = self.root / 'renamed.ttf'
+        font(original)
+        with TTFont(original) as face:
+            del face['post']
+            face['name'].names = []
+            face['name'].setName('Café', 1, 1, 0, 0)
+            face.save(path)
+        item = metadata(path)
+        self.assertEqual((item['family'], item['style'], item['full_name']), ('Café', 'Regular', 'Café Regular'))
+        self.assertEqual((item['monospace'], item['variable'], item['axes']), (False, False, []))
+
+    def test_legacy_mac_family_names_with_vendor_characters(self):
+        from fontTools.ttLib import TTFont
+        from fontTools.ttLib.tables.DefaultTable import DefaultTable
+
+        original = self.root / 'original.ttf'
+        font(original)
+        # Each contains a Mac-specific byte outside the base East Asian codec.
+        for encoding, raw, expected in ((1, b'\x8f\x91\xfe', '書™'), (2, b'Face\xfd', 'Face©'),
+                                        (3, b'Face\x81', 'Face₩'), (25, b'Face\x80', 'Faceü')):
+            with self.subTest(encoding=encoding):
+                path = self.root / f'mac-{encoding}.ttf'
+                table = DefaultTable('name')
+                table.data = struct.pack('>3H6H', 0, 1, 18, 1, encoding, 0, 1, len(raw), 0) + raw
+                with TTFont(original) as face:
+                    face['name'] = table
+                    face.save(path)
+                self.assertEqual(metadata(path)['family'], expected)
+
+    def test_version_one_name_table_with_localized_family(self):
+        from fontTools.ttLib import TTFont
+        from fontTools.ttLib.tables.DefaultTable import DefaultTable
+
+        original, localized = self.root / 'original.ttf', self.root / 'localized.ttf'
+        font(original)
+        family = '書体'.encode('utf-16-be')
+        language = 'ja'.encode('utf-16-be')
+        # One Unicode family record and one BCP-47 language tag share string storage.
+        table = DefaultTable('name')
+        table.data = (struct.pack('>3H', 1, 1, 24) +
+                      struct.pack('>6H', 0, 4, 0x8000, 16, len(family), 0) +
+                      struct.pack('>3H', 1, len(language), len(family)) + family + language)
+        with TTFont(original) as face:
+            face['name'] = table
+            face.save(localized)
+        self.assertEqual(metadata(localized)['family'], '書体')
+
+    def test_malformed_payloads_and_containers_are_rejected(self):
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.ttLib import TTFont
+
+        original = self.root / 'source.ttf'
+        path = self.root / 'invalid.ttf'
+        font(original)
+        with TTFont(original) as face:
+            FontBuilder(font=face).setupFvar([('wght', 100, 400, 900, 'Weight')], [])
+            face.save(path)
+        raw = path.read_bytes()
+        with TTFont(path) as face:
+            name = face.reader.tables['name'].offset
+            fvar = face.reader.tables['fvar'].offset
+            directory_end = 12 + 16 * len(face.reader.tables)
+        post_entry = next(offset for offset in range(12, directory_end, 16) if raw[offset:offset + 4] == b'post')
+
+        # Each edit changes a single boundary of an otherwise parseable payload.
+        for reason, offset, replacement in (
+            ('collection', 0, b'ttcf'), ('web font', 0, b'wOFF'), ('web font 2', 0, b'wOF2'),
+            ('table past EOF', 12 + 8, struct.pack('>I', len(raw) + 4)),
+            ('name storage past table', name + 4, b'\xff\xff'),
+            ('name record past storage', name + 6 + 10, b'\xff\xff'),
+            ('truncated post table', post_entry + 12, struct.pack('>I', 15)),
+            ('axis record too short', fvar + 10, b'\0\x01'),
+            ('inverted axis limits', fvar + 16 + 4, struct.pack('>i', 950 << 16)),
+        ):
+            with self.subTest(reason=reason):
+                path.write_bytes(raw[:offset] + replacement + raw[offset + len(replacement):])
+                with self.assertRaises(ValueError):
+                    metadata(path)
+        with path.open('wb') as stream:
+            stream.truncate(64 * 1024 * 1024 + 1)
+        with self.assertRaisesRegex(ValueError, '64 MiB'):
+            metadata(path)
+        with TTFont(original) as face:
+            face['name'].names = []
+            face['name'].setName('Invalid\nfamily', 1, 3, 1, 0x409)
+            face.save(path)
+        with self.assertRaises(ValueError):
+            metadata(path)
+
+    def test_regular_font_path_required(self):
+        path = self.root / 'source.ttf'
+        font(path)
+        renamed = self.root / 'source.bin'
+        shutil.copyfile(path, renamed)
+        with self.assertRaises(ValueError):
+            metadata(renamed)
+        if os.name != 'nt':
+            alias = self.root / 'alias.ttf'
+            alias.symlink_to(path)
+            with self.assertRaises(ValueError):
+                metadata(alias)
 
 
 class Fonts(unittest.TestCase):
@@ -391,9 +553,13 @@ class Fonts(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'changed'):plan.apply('export')
         self.assertFalse((self.home/'result').exists())
 
-    def test_missing_parser_preview_and_corrupt_metadata_are_bounded(self):
-        with patch.dict(sys.modules,{'fontTools.ttLib':None}):
-            with self.assertRaisesRegex(ValueError,'fontTools'):metadata(self.source/'-Fixture Regular.ttf')
+    def test_invalid_import_preview_and_corrupt_metadata_are_bounded(self):
+        (self.source/'Broken.ttf').write_bytes(b'truncated')
+        plan = Plan(self.library())
+        with tempfile.TemporaryDirectory(dir=self.home/'tmp') as staging, self.assertRaises(ValueError):
+            ops.import_files(plan, self.source, staging)
+        self.assertFalse(plan.operations)
+        self.assertFalse(plan.library.path.exists())
         from fonts.preview import render_sample
         with patch('fonts.preview.shutil.which',return_value=None),patch('fonts.preview.subprocess.run') as child:
             self.assertIn('unavailable',render_sample(self.source/'-Fixture Regular.ttf'));child.assert_not_called()

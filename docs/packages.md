@@ -88,13 +88,9 @@ which may be newer than the compatible version selected during installation.
 
 Automatic unnamed Termux uv tool upgrades similarly add `--no-build`. uv can retain a compatible installed dependency set when newer native dependencies have no usable wheel, while still accepting compatible newer releases. This covers bare `up` and unnamed `up --manager uv-tool`. Named targets, replacement recipes, explicit build/binary recipe flags and `UV_NO_BUILD`/`UV_NO_BUILD_PACKAGE`/`UV_NO_BINARY`/`UV_NO_BINARY_PACKAGE` override this default. uv retains native tool settings, including local wheel locations and build policy, in each tool receipt; a named pkgs operation does not erase settings already saved by uv. Cached built wheels remain usable. Impossible resolutions and network failures remain nonzero; pkgs does not retry a failed source build or pretend it upgraded. Linux, WSL and native Windows arguments are unchanged. See [uv build policy](https://docs.astral.sh/uv/reference/settings/#no-build) and [saved tool settings](https://docs.astral.sh/uv/concepts/tools/#upgrading-tools).
 
-Automatic gem upgrades also run `gem update --system --no-document`, including
-when there are no ordinary user gems. RubyGems version changes appear as `RubyGems`
-in the same Updated field. Native distribution/permission protections still apply;
-pkgs adds no force or privilege bypass. Set `apps.pkgs.upgrade.gem_system` to false
-to disable this step. Named gem upgrades and manager replacement recipes retain
-their original scope. The self-update follows ordinary gem updates and precedes
-manager after-hooks; a failed step retains the native error/status.
+For an unnamed gem upgrade, pkgs checks whether the selected RubyGems installation disables self-updates. An APT-packaged RubyGems can declare that restriction. In that case pkgs leaves RubyGems upgrades to APT and continues with eligible gems. With an empty gem inventory, the gem row reads `unchanged · 1 skipped`. Use `pkgs up --manager gem --dry-run` to see the reason, “This RubyGems installation disables self-updates.” A run with `--raw` also prints the reason.
+
+Otherwise pkgs runs `gem update --system --no-document` after ordinary gem updates and before manager after-hooks, even with an empty inventory. An inconclusive check leaves the decision to the native command. A failed command retains its exit status. A verified version change appears as `RubyGems` in the Updated field. Set `apps.pkgs.upgrade.gem_system` to false to turn off the built-in step. Named gem upgrades and manager replacement recipes keep their own scope.
 
 On Termux, RubyGems may warn that bundled source files are “not world-readable”
 when the installation uses owner-private permissions. A successful built-in

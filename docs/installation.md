@@ -35,7 +35,7 @@ PowerShell provides native parameters and a native adapter:
 ./uninstall.ps1
 ```
 
-The file controllers require Python 3.9+; complete setup with theme preparation requires Python 3.11+. POSIX setup additionally requires Bash 4.4+ and the existing publisher utilities. Updating or acquiring external sources requires Git; selecting bundled Termux/Windows resources does not. Native Windows invokes Python directly and prepares themes without Bash. Universal and bundled Windows catalogs map app-specific Windows paths; ambiguous and unsupported destinations remain unmapped. See [native PowerShell](powershell.md) for the app inventory, requirements and pending native acceptance.
+The file controllers require Python 3.9+. Setup with theme or font preparation requires Python 3.11+. POSIX setup additionally requires Bash 4.4+ and the existing publisher utilities. Updating or acquiring external sources requires Git; selecting bundled Termux/Windows resources does not. Native Windows invokes Python directly and prepares themes without Bash. Universal and bundled Windows catalogs map app-specific Windows paths; ambiguous and unsupported destinations remain unmapped. See [native PowerShell](powershell.md) for the app inventory, requirements and pending native acceptance.
 
 ## Options and output
 
@@ -65,7 +65,7 @@ Native PowerShell exposes `-Interactive`, `-NonInteractive`, `-Component NAME,..
 
 ## Preparation and final publication
 
-Read-only preflight checks destination ownership and selected inputs first. `--with-dependencies` offers mapped missing prerequisites through an already installed manager. The standalone bootstrap can prepare Python and Git explicitly before this shared phase. Unmapped prerequisites, missing managers, native Rust toolchain/Clippy setup and Python fontTools environment selection require explicit installation outside the shared phase. No provider bootstrap, repository registration, trust change or elevation is implicit.
+Read-only preflight checks destination ownership and selected inputs first. `--with-dependencies` offers mapped missing prerequisites through an already installed manager. The standalone bootstrap can prepare Python and Git explicitly before this shared phase. The Fonts component reads TTF and OTF metadata with the Python 3.11+ standard library. Unmapped prerequisites, missing managers and native Rust toolchain/Clippy setup require explicit installation outside the shared phase. No provider bootstrap, repository registration, trust change or elevation is implicit.
 
 After preparation approval, setup processes prerequisites, packages, the optional pinned Leaf build, inactive theme generation and staged font payloads. It stops at the first failure. Completed package/module/build effects remain; they are never undone by file rollback. Stage records live in `state/dots/setup-runs/` and their writes have Store journals. The final review shows the exact combined file/theme/Leaf/font/preference writes. `--yes` approves the declared preparation and publication stages in batch mode. Changed input guards or conflicting writes stop publication.
 

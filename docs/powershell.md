@@ -37,10 +37,11 @@ isolated root/install help and literal-argument checks cover this dispatch bound
 Setup creates the standalone adapter without Bash. Per-user font files and HKCU
 values are journaled; Windows Terminal defaults/GUIDs, WezTerm and separate VS Code
 fields use managed mappings or explicit files. Termux activation and tmux insertion
-are unavailable here; copy/print and optional FZF remain available. Parsing requires
-Python 3.11+ and fontTools. Native 5.1/7 execution, registration/recovery, clipboard
-and visible desktop-font acceptance remain pending; POSIX controller/registry
-fixtures do not establish them. See [fonts](fonts.md).
+are unavailable here; copy/print and optional FZF remain available. Parsing uses
+the Python 3.11+ standard library. Import, show and repeat import passed through
+both launchers on Windows PowerShell 5.1 and PowerShell 7.7 RC. Native desktop
+registration, recovery, clipboard and visible app-font acceptance are tracked in
+the [fonts plan](../plans/fonts.md).
 
 `fonts install FONT --directory DOTFONTS --version VERSION` only stores that version in the checkout; `fonts use FONT --directory DOTFONTS --version VERSION` explicitly registers it for the current user. Backend profile aliases and `$env:DOTFONTS` paths work through the shared resolver. Directory uninstall keeps history and other copies, and the Fonts picker exposes the same directory chooser on native FZF. Installed, Copy/Migrate, batch Install with `--from`, Set and explicit Restore use the same controller and active-profile preferences as Bash. Windows migration requires the existing matching HKCU user-font registration and keeps its lookup path; system fonts are copy-only. These routes need no Bash; native execution/desktop acceptance is still pending.
 

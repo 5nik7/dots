@@ -46,8 +46,10 @@ dependency repair is performed. Failure status and independent updates remain.
 Automatic Termux pip upgrades resolve compatible wheels and can retain an installed
 version when newer dependencies require source builds. Named targets, native
 format controls and replacement recipes retain native behavior. Automatic gem
-upgrades include gem update --system --no-document; upgrade.gem_system=false
-disables that step. Native permissions and distribution protections remain.
+upgrades skip the RubyGems self-update when the selected installation disables it.
+Eligible gems still upgrade. Use \-\-dry-run to see the skip reason.
+Otherwise pkgs runs gem update \-\-system \-\-no-document.
+Set upgrade.gem_system=false to turn off the built-in step.
 Successful Termux self-updates omit Bundler's private-file readability warnings
 from the compact summary. Use \-\-raw to see the native warnings.
 Pip progress shows the package, download bytes with pip 25.1 or newer, build

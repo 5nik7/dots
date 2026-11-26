@@ -261,24 +261,26 @@ class Plan:
 
 
 def metadata(path):
-    try: from fontTools.ttLib import TTFont
-    except ImportError:
-        raise ValueError('font parsing requires fontTools; install tools/requirements-fonts.txt in your Python environment') from None
+    face, _ = metadata_with_revision(path)
+    return face
+
+
+def metadata_with_revision(path):
+    """Return the stored face record and the internal revision used to match installed styles."""
+    from fonts.sfnt import face_fields
+
     path = Path(path)
-    if path.is_symlink() or not path.is_file() or path.suffix.lower() not in ('.ttf', '.otf') or path.stat().st_size > 64 * 1024 * 1024:
+    if path.is_symlink() or not path.is_file() or path.suffix.lower() not in ('.ttf', '.otf'):
         raise ValueError('expected a regular TTF/OTF font of at most 64 MiB')
+    size = path.stat().st_size
+    if size > 64 * 1024 * 1024:
+        raise ValueError('expected a regular TTF/OTF font of at most 64 MiB')
+    with path.open('rb') as stream:
+        data = stream.read(size + 1)
+    if len(data) != size:
+        raise ValueError('font file changed while reading')
     try:
-        with TTFont(path, lazy=False) as font:
-            names = font['name']
-            family = names.getBestFamilyName()
-            style = names.getBestSubFamilyName() or 'Regular'
-            full = names.getDebugName(4) or (family + ' ' + style)
-            if not family or any(ord(c) < 32 for c in family + style + full): raise ValueError('invalid font names')
-            mono = bool(getattr(font.get('post'), 'isFixedPitch', 0))
-            variant = 'mono' if re.search(r'(Nerd Font Mono|NFM)\b', family) else 'propo' if re.search(r'(Nerd Font Propo|NFP)\b', family) else 'nerd' if re.search(r'(Nerd Font|NF)\b', family) else 'original'
-            axes = [dict(tag=a.axisTag, minimum=a.minValue, default=a.defaultValue, maximum=a.maxValue)
-                    for a in font['fvar'].axes] if 'fvar' in font else []
-            return dict(file=path.name, family=family, style=style, full_name=full, variant=variant,
-                        monospace=mono, variable=bool(axes), axes=axes, sha256=sha(path))
-    except (OSError, ValueError): raise
-    except Exception as error: raise ValueError('invalid font file: ' + path.name) from error
+        fields, revision = face_fields(data)
+    except ValueError as error:
+        raise ValueError(f'invalid font file: {path.name} ({error})') from error
+    return dict(file=path.name, **fields, sha256=hashlib.sha256(data).hexdigest()), revision

@@ -1,12 +1,11 @@
 # Personal fonts
 
 `dots fonts` and standalone `fonts` share a Python controller for per-user font
-management. They work from the Bash and native PowerShell frontends. Font parsing
-requires Python 3.11+ and `fontTools`; install the dependencies in your chosen
-Python environment with `python -m pip install -r tools/requirements-fonts.txt`.
-Help, inventory, completion and metadata browsing do not require fontTools.
-Dots setup includes the standalone command adapter; it does not install fonts or
-Python packages. Native Windows runtime and application acceptance remain pending.
+management on Termux, Linux, WSL and native Windows. Both commands read TTF and
+OTF metadata using the Python 3.11+ standard library. Updating an existing
+checkout supplies the reader on the next invocation. Core setup includes the
+standalone command. Select the optional Fonts setup component to restore saved
+application choices.
 
 ## FIGlet lettering
 

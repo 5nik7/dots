@@ -4,7 +4,7 @@ import os
 import shutil
 import tempfile
 
-from fonts.model import Library,token,exists,metadata,license_file,digest,parents_safe
+from fonts.model import Library,token,exists,metadata_with_revision,license_file,digest,parents_safe
 from fonts import operations as ops
 
 
@@ -95,13 +95,9 @@ def import_row(workspace,row,rows, *, family=False):
         if sha(resolved)!=face['sha256']:raise ValueError('installed font changed; preserve and review it')
         plan.file(identity,version,face)
         return identity,version,face['file']
-    meta=metadata(resolved)
+    meta,version_name=metadata_with_revision(resolved)
     selected=[(path,resolved,meta)]
     if family:
-        from fontTools.ttLib import TTFont
-        def revision(file):
-            with TTFont(file,lazy=True) as font:return font['name'].getDebugName(5)
-        version_name=revision(resolved)
         for candidate in rows:
             candidate_path=Path(candidate['path'])
             if candidate_path==path or not candidate['supported'] or candidate.get('managed_id'):continue
@@ -109,8 +105,8 @@ def import_row(workspace,row,rows, *, family=False):
             if meta['family'] not in candidate['name'].split(','):continue
             try:
                 real=candidate_path.resolve(strict=True);parents_safe(real)
-                item=metadata(real)
-                if item['family']!=meta['family'] or item['variant']!=meta['variant'] or revision(real)!=version_name:continue
+                item,candidate_version=metadata_with_revision(real)
+                if item['family']!=meta['family'] or item['variant']!=meta['variant'] or candidate_version!=version_name:continue
             except (OSError,ValueError):continue
             plan.guard(candidate_path);plan.guard(real);selected.append((candidate_path,real,item))
     source=Path(tempfile.mkdtemp(prefix='installed-',dir=workspace.temporary))

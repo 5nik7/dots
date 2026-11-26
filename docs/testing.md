@@ -101,7 +101,13 @@ The workflow suite covers installed ownership, Copy/Migrate and undo, batch pref
 
 `python3 -B tools/test_font_directories.py` covers storage-only install/update, independent directory inventories, import/export, retained uninstall history, explicit activation, pins, scoped undo, stale manifests/collections/payloads, rollback after failed writes, frontend/completion parity and popup handoff. Its checkout, HOME/XDG roots and registry substitutes are test-owned. Windows lifecycle fixtures use POSIX-owned destinations on POSIX hosts; they do not establish native registration or visibility. `tools/test_profile_backend.py` additionally verifies DOTFONTS generation, namespace collisions, exports, checkout switching and reload.
 
-With `tools/requirements-fonts.txt` available in the test Python environment, run
+`python3 -B tools/test_fonts_portable.py` creates a temporary Python environment
+without pip and imports the checkout's Termux TTF through both public launchers.
+Run it on Windows with `python` and set `DOTS_TEST_POWERSHELL` to the engine to
+exercise. It checks the family, payload hash and repeated import in an owned library.
+
+For generated TTF, CFF OpenType and variable-font fixtures and reference
+comparisons, install `tools/requirements-fonts.txt` in the test environment. Run
 `python3 -B tools/test_fonts.py` and `python3 -B tools/test_font_workflows.py` for owned font fixtures, provider responses,
 archive/digest refusal, lifecycle drift, pins, retained versions, configuration
 preservation, managed link/copy ownership and registry rollback.
@@ -1314,8 +1320,7 @@ profile saves/reset, next-invocation activation, inheritance, fallback roles and
 actual report/preview/stream/progress consumers at 40/80/120 columns. Package core
 compatibility tests use an isolated Python environment and local wheel/source
 fixtures to prove compatible-version retention without executing the source build
-backend. RubyGems tests cover empty user inventory, native failure boundaries,
-configuration opt-out and truthful version summaries. Npm receipt tests cover
+backend. RubyGems fixtures exercise a runtime that disables self-updates with empty and populated inventories. They check the compact skip count, the reason in dry-run and raw output, and a verified ordinary gem update. A runtime that permits self-updates exercises native failure boundaries, configuration opt-out and truthful version summaries. Npm receipt tests cover
 verified repeats, reinstalls, missing artifacts, content drift during approval,
 corrupt receipts and noninteractive behavior.
 They also cover parent/dependency rebuild ordering, final metadata/fingerprint/storage failures and failed/interrupted batches. `test_npm_updates.py` covers automatic global candidate filtering, current-only plans, explicit/project/custom-recipe boundaries, policy/source exclusions and malformed/failed native queries. The integration suite exercises repeated automatic upgrades and dry-run on standalone/Dots/shared-controller aliases at 40/80/120 columns, retaining raw/redirected results and query failures.

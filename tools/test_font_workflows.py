@@ -4,6 +4,7 @@ from copy import deepcopy
 import json
 import os
 import shutil
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -176,13 +177,23 @@ class Workflows(unittest.TestCase):
             _,notices=snapshot(self.library('termux'));self.assertIn('fc-list',notices[0])
 
     def test_set_installed_copies_family_styles_without_deleting_source(self):
-        path,identity=self.external();bold=path.with_name('Bold.ttf');font(bold,'External Mono','Bold')
-        patch('fonts_cli.system_fonts',return_value=[dict(path=str(p),name='External Mono',source='fontconfig') for p in (path,bold)]).start()
-        config=self.home/'kitty.conf';config.write_text('font_family Old\nfont_size 12\n')
-        self.action('set',identity,'--target','kitty','--config',str(config))
-        record=next(iter(self.library('termux','PROFILEFONTS').families.values()))
-        self.assertEqual(len(next(iter(record['versions'].values()))['fonts']),2)
-        self.assertFalse(path.is_symlink());self.assertTrue(bold.exists())
+        path, identity = self.external()
+        bold = path.with_name('Bold.ttf')
+        newer = path.with_name('Italic.ttf')
+        font(bold, 'External Mono', 'Bold')
+        font(newer, 'External Mono', 'Italic', version='Version 2.0')
+        originals = {file: file.read_bytes() for file in (path, bold, newer)}
+        rows = [dict(path=str(file), name='External Mono', source='fontconfig') for file in originals]
+        config = self.home/'kitty.conf'
+        config.write_text('font_family Old\nfont_size 12\n')
+        with patch('fonts_cli.system_fonts', return_value=rows), patch.dict(sys.modules, {'fontTools.ttLib': None}):
+            self.action('set', identity, '--target', 'kitty', '--config', str(config))
+        family = next(iter(self.library('termux','PROFILEFONTS').families.values()))
+        record = next(iter(family['versions'].values()))
+        self.assertEqual({f['file'] for f in record['fonts']}, {path.name, bold.name})
+        for file, payload in originals.items():
+            self.assertFalse(file.is_symlink())
+            self.assertEqual(file.read_bytes(), payload)
 
     def test_failed_app_preflight_leaves_all_scopes_unchanged(self):
         identity,_=self.family();before=digest(self.library('termux').path)

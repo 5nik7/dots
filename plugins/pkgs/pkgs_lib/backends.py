@@ -6,7 +6,7 @@ import re
 import sys
 import urllib.parse
 import urllib.request
-from .common import Package, Error, run, which, clean, query, remaining, diagnostic
+from .common import Package, Error, run, which, clean, query, remaining, diagnostic, budget
 from .detect import termux, default_manager, SYSTEM
 
 
@@ -63,6 +63,33 @@ class Backend:
             'Termux' if self.termux else 'system')
         self.cache_key = '|'.join([name, self.scope, os.environ.get('PREFIX', ''), os.environ.get('PATH', ''), os.environ.get('GEM_PATH', ''), os.environ.get('UV_TOOL_DIR', '')])
         self.remote_inventory = name in ('npm', 'pip', 'uv-tool', 'gem', 'paru', 'yay')
+
+    def gem_system_update_disabled(self):
+        """Ask the interpreter selected by gem whether its native guard is active."""
+        env = getattr(self, 'operation_env', None)
+        try:
+            with budget(5):
+                # The report can contain private configuration. Read only the
+                # interpreter field and keep native output out of diagnostics.
+                report = query(['gem', 'environment'], env=env)
+                if report.returncode:
+                    return False
+                prefix = '  - RUBY EXECUTABLE: '
+                paths = [line[len(prefix):] for line in report.stdout.splitlines() if line.startswith(prefix)]
+                if len(paths) != 1:
+                    return False
+                interpreter = paths[0]
+                if interpreter.startswith('"') and interpreter.endswith('"'):
+                    interpreter = interpreter[1:-1]
+                if not Path(interpreter).is_absolute() or clean(interpreter) != interpreter:
+                    return False
+                guard = ("print(Gem.respond_to?(:disable_system_update_message) && "
+                         "Gem.disable_system_update_message ? 'blocked' : 'allowed')")
+                result = query([interpreter, '-rrubygems', '-e', guard], env=env)
+                return result.returncode == 0 and result.stdout.splitlines() == ['blocked']
+        except (Error, OSError, ValueError):
+            # With no positive evidence, let gem enforce its own protections.
+            return False
 
     def installed(self):
         n = self.name

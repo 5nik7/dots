@@ -1,5 +1,43 @@
 # Personal font management
 
+## Portable font parsing
+
+**Implemented.** Imports, provider downloads, installed-family selection and setup
+read standalone TTF and OTF metadata with the Python 3.11+ standard library.
+Stored face records keep their content-derived identities, field order and
+variable axes. The internal font revision still determines which installed
+desktop styles belong together. Invalid table offsets, lengths and names fail
+during staging before installation or activation.
+
+The Fonts maintenance owner covers the shared reader on both frontends. The
+existing CLI routes, completions, menus, settings, Windows destinations and
+renderers already serve these workflows. No configuration integration change
+needed because the parser follows the font format. Core ships the reader
+with the checkout, so setup requires only Python 3.11+ for font parsing. The root README
+needs no change because the documented bootstrap steps stay the same.
+
+The clean-interpreter regression reproduced the original error on WSL2 and native
+Windows before the repair. With the repair, Bash, Windows PowerShell 5.1 and
+PowerShell 7.7.0-rc.1 imported the shipped Termux TTF, reported its family and
+SHA-256, and returned `unchanged` on repeat through the two launchers. Serialized
+face data and revision strings matched fontTools for 86 real TTF and 22 real OTF
+files in the available checkout. Generated fixtures cover localized names, CFF
+outlines, fractional variable axes and invalid files. On WSL2 the shared
+installer also restored exact saved bytes in an isolated Termux-profile fixture
+with third-party packages disabled.
+
+For the shipped 2,571,596-byte TTF, nine warm read/parse/hash calls on WSL2 with
+Python 3.12.3 took a median 1.09 ms with the shared reader and 5.39 ms with the
+previous implementation using fontTools 4.69.1.
+
+The Fonts lifecycle, provider, workflow, setup and presentation checks passed on
+WSL2. The directory suite used umask `077` for its export-mode assertion and
+the browser suite used a UTF-8 locale in its private tmux server. Their failures
+under the host defaults also reproduced on the original source. A separate setup
+wizard assertion about empty settings likewise fails on the original source.
+Native Termux, native Linux, stable PowerShell 7 and visible desktop activation
+remain separate acceptance checks.
+
 ## Icon picker and standalone nf
 
 **Implemented.** The core installer supplies the `nf` forwarding shim with

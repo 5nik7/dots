@@ -1,6 +1,5 @@
 """Explicit preparation effects, kept separate from managed publication."""
 from copy import deepcopy
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -45,9 +44,6 @@ class Preparation:
             if sys.version_info < (3, 11): raise ValueError('theme setup needs preinstalled Python 3.11 or newer')
             if self.platform != 'windows': required += list(THEME_TOOLS)
         if 'leaf' in args.component: required += ['git', 'cargo', 'rustc']
-        if 'fonts' in args.component and importlib.util.find_spec('fontTools') is None:
-            self.missing.append(dict(tool='fontTools', package=None,
-                                     reason='install tools/requirements-fonts.txt in the active Python environment explicitly'))
         manager = None
         if any(not shutil.which(t) for t in required):
             from pkgs_lib.detect import default_manager
@@ -84,6 +80,8 @@ class Preparation:
         self.fonts = None
         self.temporary = None
         if 'fonts' in args.component:
+            if sys.version_info < (3, 11):
+                raise ValueError('font setup requires Python 3.11 or newer')
             from setup_fonts import Fonts
             self.fonts = Fonts(installation,args)
         self.outcomes = []

@@ -1,2 +1,2 @@
-# Feature-only font parsing; help, discovery and completion do not import this.
+# Test-only fixture generation and reference comparisons for the Fonts suites.
 fonttools>=4.50,<5

@@ -1,5 +1,15 @@
 # Package workflows
 
+## Distribution-managed RubyGems self-updates (2026-11-26)
+
+For automatic gem upgrades, use the selected RubyGems runtime's `Gem.disable_system_update_message` policy when planning the built-in self-update. A positive restriction skips the `RubyGems` target. Eligible gems still run in their requested scope. If the probe is inconclusive, run the native self-update under its existing protections and report its exit status. Named targets, manager replacements, upgrade listings and the existing configuration opt-out bypass the probe.
+
+**Presentation and integration.** Show the existing compact skip count and the reason in dry-run and raw plans. The maintenance owner is `dots-pkgs-maintenance`. No configuration integration change needed because `apps.pkgs.upgrade.gem_system` already controls the native step. The existing upgrade menu uses the shared planner. The same routes, flags and aliases serve all completion adapters. Both shell entry points load the bundled core from the existing installation, including the Windows app destination. No README change needed because this affects package upgrades after setup. See [upgrade scope](../docs/packages.md#upgrade-and-scope).
+
+**Verification.** On Ubuntu 24.04 under WSL, both `pkgs up --dry-run` and `dots pkgs up --dry-run` read the restriction from the selected `/usr/bin/ruby3.2` and showed the skip reason with an isolated Gem user directory. Seven focused RubyGems tests and both command integration cases passed. They cover empty and populated inventories, verified updates, raw output, recipe boundaries, and a native failure following an inconclusive probe. The package report, bundled launcher, adapter generation and documentation checks passed. The regenerated local wiki also picked up an earlier change to the theme plugins guide. Native Linux, Termux, and Windows PowerShell 5.1/7 end-to-end checks remain pending.
+
+Six failures in the broader package core and integration suites also reproduced on unchanged `HEAD`. They concern Bash completion registration, two legacy installer cases, a uv receipt, missing-prerequisite reporting and the Windows menu fixture discovering WinGet on the WSL PATH. The menu fixture passed with Windows executables excluded from its PATH.
+
 ## Finer overall upgrade progress (2026-11-25)
 
 Count work reported by the running upgrade. APT supplies a transaction summary, archive requests and package operations. Pacman supplies the current package index and total. Go tool version comparisons and installed-version snapshots provide preparation and verification checkpoints. Keep equal manager shares, plan each manager on demand, and reserve command completion for its return. Display tenths of a percent during compact upgrades.

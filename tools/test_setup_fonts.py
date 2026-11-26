@@ -167,12 +167,22 @@ class SetupFonts(unittest.TestCase):
             return json.loads(output.getvalue())
         words=['install','--fonts',str(preferences),'--packages',str(packages),'--save-choices']
         for name in ('core','files','fonts','leaf','packages'):words+=['--component',name]
-        with patch('install.platform',return_value='termux'),patch('package_setup.Stage',return_value=stage), \
-             patch('setup_leaf.execute',side_effect=lambda argv,**kw:SetupLeaf.execute(self,argv,**kw)):
+        # Only fixture generation uses fontTools. Setup also parses the previous
+        # Termux face while retaining it for restoration.
+        with (
+            patch.dict(sys.modules, {'fontTools': None, 'fontTools.ttLib': None}),
+            patch('profiles.detect', return_value={'platform': 'termux', 'distro': 'termux'}),
+            patch('install.platform', return_value='termux'),
+            patch('package_setup.Stage', return_value=stage),
+            patch('setup_leaf.execute', side_effect=lambda argv, **kw: SetupLeaf.execute(self, argv, **kw)),
+        ):
+            preview = invoke('install', '--component', 'fonts', '--fonts', str(preferences), '--dry-run')
+            self.assertEqual([row['stage'] for row in preview['preparation']], ['fonts'])
+            self.assertEqual((source/'font.ttf').read_bytes(), original_font)
             installed=invoke(*words)
             self.assertEqual(installed['status'],'complete')
             self.assertEqual(leaf.read_bytes(),b'verified fixture binary')
-            self.assertNotEqual((source/'font.ttf').read_bytes(),original_font)
+            self.assertEqual((source/'font.ttf').read_bytes(), (self.source/face['file']).read_bytes())
             saved_profile=self.fixture_root/'profiles/termux/fonts.json'
             self.assertEqual(json.loads(saved_profile.read_text())['applications']['termux']['files'],saved['files'])
             self.assertEqual(invoke(*words)['status'],'unchanged')

@@ -175,8 +175,8 @@ installed dependencies are not repaired automatically. Automatic Termux pip and 
 use compatible wheels (`--only-binary=:all:` and `--no-build` respectively), while
 explicit native build/binary controls, targets and recipes retain native behavior.
 uv keeps its saved tool settings; unavailable compatible resolutions remain failures.
-See [upgrade scope and overrides](../../docs/packages.md#upgrade-and-scope). Automatic gem upgrades include RubyGems self-update unless
-`apps.pkgs.upgrade.gem_system` is false. On Termux, successful self-updates omit
+Automatic gem upgrades skip the RubyGems self-update when the selected installation disables it, as APT-packaged RubyGems can. Eligible gems still upgrade. Use `--dry-run` to see the reason, or set `apps.pkgs.upgrade.gem_system` to false to turn off the built-in self-update. See [upgrade scope and overrides](../../docs/packages.md#upgrade-and-scope).
+On Termux, successful self-updates omit
 Bundler's private-file readability notices from the compact summary. Use
 `--raw` to see the native warnings.
 Compact global npm installs/upgrades offer default-no approval for blocked scripts,

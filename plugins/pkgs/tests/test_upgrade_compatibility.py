@@ -14,11 +14,12 @@ from unittest.mock import patch
 import zipfile
 
 import test_workflows as fixtures
-from pkgs_lib import workflows, policies, scopes, streams
+from pkgs_lib import backends, common, workflows, policies, scopes, streams
 from pkgs_lib.backends import Backend
-from pkgs_lib.common import Package
+from pkgs_lib.common import Error, Package
 
 UV = shutil.which('uv')
+RUBY = shutil.which('ruby')
 
 
 class Compatibility(unittest.TestCase):
@@ -119,7 +120,7 @@ class Compatibility(unittest.TestCase):
 
     def test_rubygems_runs_with_empty_inventory_and_has_truthful_updated_identity(self):
         backend=Backend('gem')
-        with patch.object(scopes,'inventory',return_value=[]):
+        with patch.object(scopes,'inventory',return_value=[]), patch.object(backend,'gem_system_update_disabled',return_value=False):
             item=workflows.plan(backend,'upgrade',[],self.cfg)
         self.assertEqual(item.commands,[['gem','update','--system','--no-document']])
         with patch.object(backend,'installed',return_value=[]),patch('pkgs_lib.common.run',side_effect=['4.0.1','4.0.2']), \
@@ -135,7 +136,8 @@ class Compatibility(unittest.TestCase):
     def test_gem_recipe_boundaries_native_protections_and_version_selection(self):
         backend=Backend('gem'); rows=[(Package('rake','1'),'all','')]
         cfg=dict(self.cfg,policies={'gem':{'upgrade':{'before':[['before']], 'after':[['after']]}}})
-        with patch.object(scopes,'inventory',return_value=rows):item=workflows.plan(backend,'upgrade',[],cfg)
+        with patch.object(scopes,'inventory',return_value=rows), patch.object(backend,'gem_system_update_disabled',return_value=False):
+            item=workflows.plan(backend,'upgrade',[],cfg)
         self.assertEqual(item.commands,[['before'],['gem','update','rake'],['gem','update','--system','--no-document'],['after']])
         calls=[]
         with patch.object(streams,'run',side_effect=lambda cmd,*a,**k:calls.append(cmd) or (1 if '--system' in cmd else 0)):
@@ -146,11 +148,101 @@ class Compatibility(unittest.TestCase):
         self.assertEqual(changed,['rake','RubyGems'])
         policies.validate({'upgrade':{'gem_system':False}})
 
+    def test_disabled_self_update_skips_only_rubygems(self):
+        backend = Backend('gem')
+        cfg = dict(self.cfg, policies={'gem': {'upgrade': {'before': [['before']], 'after': [['after']]}}})
+        rows = [(Package('rake', '1'), 'all', '')]
+        with patch.object(backend, 'gem_system_update_disabled', return_value=True), patch.object(scopes, 'inventory', return_value=rows):
+            item = workflows.plan(backend, 'upgrade', [], cfg)
+            self.assertEqual(item.commands, [['before'], ['gem', 'update', 'rake'], ['after']])
+            self.assertEqual(item.skipped, [{'package': 'RubyGems', 'reason': 'This RubyGems installation disables self-updates.'}])
+            with patch.object(backend, 'installed', side_effect=[[Package('rake', '1')], [Package('rake', '2')]]), \
+                 patch('pkgs_lib.common.run', side_effect=AssertionError('unexpected RubyGems version query')), \
+                 patch.object(streams, 'run', return_value=0), contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(workflows.apply_compact(item, cfg), 0)
+            self.assertIn('Updated: rake', out.getvalue())
+            rows.clear()
+            empty = workflows.plan(backend, 'upgrade', [], cfg)
+        self.assertEqual(empty.commands, [])
+        self.assertEqual(empty.skipped, item.skipped)
+
+    def test_rubygems_probe_is_limited_to_automatic_native_self_update(self):
+        backend = Backend('gem')
+        rows = [(Package('rake', '1'), 'all', '')]
+        self_update = ['gem', 'update', '--system', '--no-document']
+        replacement = dict(self.cfg, policies={'gem': {'upgrade': {'replace': [self_update]}}})
+        disabled = dict(self.cfg, upgrade={'gem_system': False})
+        cases = [
+            ('upgrade', [], disabled, [['gem', 'update', 'rake']]),
+            ('upgrade', ['rake'], self.cfg, [['gem', 'update', 'rake']]),
+            ('upgrade', [], replacement, [self_update]),
+            ('install', ['rake'], self.cfg, [['gem', 'install', 'rake']]),
+        ]
+        with patch.object(scopes, 'inventory', return_value=rows), \
+             patch.object(backend, 'gem_system_update_disabled', side_effect=AssertionError('unexpected policy probe')):
+            for action, names, cfg, expected in cases:
+                with self.subTest(action=action, names=names, cfg=cfg):
+                    self.assertEqual(workflows.plan(backend, action, names, cfg).commands, expected)
+
+    def test_self_update_guard_requires_positive_evidence_from_selected_ruby(self):
+        backend = Backend('gem')
+        backend.operation_env = {'GEM_HOME': str(self.home/'user gems'), 'GEM_PATH': str(self.home/'user gems')}
+        ruby = self.bin/'Ruby Installer ü'/'ruby.exe'
+        ruby.parent.mkdir()
+        ruby.touch()
+        ruby.chmod(0o755)
+        environment = 'RubyGems Environment:\n  - RUBY EXECUTABLE: "' + str(ruby) + '"\n'
+        def result(stdout, status=0):
+            return subprocess.CompletedProcess([], status, stdout, '')
+
+        for policy, disabled in [(result('blocked\n'), True), (result('allowed\n'), False),
+                                 (result('blocked\nextra\n'), False), (result('blocked', 1), False),
+                                 (Error('query timed out'), False)]:
+            with self.subTest(policy=policy), patch.object(backends, 'query', side_effect=[result(environment), policy]) as probe:
+                self.assertEqual(backend.gem_system_update_disabled(), disabled)
+                first, second = probe.call_args_list
+                self.assertEqual(first.args[0], ['gem', 'environment'])
+                self.assertEqual(second.args[0][:-1], [str(ruby), '-rrubygems', '-e'])
+                self.assertIn('Gem.disable_system_update_message', second.args[0][-1])
+                self.assertEqual(first.kwargs['env'], backend.operation_env)
+                self.assertEqual(second.kwargs['env'], backend.operation_env)
+        invalid = [result(environment, 1), result(''), result('  - RUBY EXECUTABLE: ruby\n'),
+                   result(environment + environment), Error('gem unavailable')]
+        for response in invalid:
+            with self.subTest(response=response), patch.object(backends, 'query', side_effect=[response]) as probe:
+                self.assertFalse(backend.gem_system_update_disabled())
+                probe.assert_called_once()
+
+    @unittest.skipUnless(RUBY, 'native Ruby unavailable')
+    def test_native_ruby_guard_handles_missing_accessor_and_message_values(self):
+        backend = Backend('gem')
+        def fixture_query(command, *, env):
+            if command == ['gem', 'environment']:
+                report = '  - RUBY EXECUTABLE: ' + RUBY
+                return subprocess.CompletedProcess(command, 0, report, '')
+            self.assertEqual(command[0], RUBY)
+            # Load our RubyGems stub before any host RubyGems library.
+            return common.query([RUBY, '--disable-gems', '-I', str(self.home), *command[1:]],
+                                env={'RUBYLIB': '', 'RUBYOPT': ''})
+
+        with patch.object(backends, 'query', side_effect=fixture_query):
+            for value, disabled in [(None, False), ('nil', False), ('false', False),
+                                    ('""', True), ('"Updated by APT"', True)]:
+                method = '' if value is None else f'def self.disable_system_update_message\n{value}\nend'
+                (self.home/'rubygems.rb').write_text('module Gem\n' + method + '\nend\n')
+                with self.subTest(value=value):
+                    self.assertEqual(backend.gem_system_update_disabled(), disabled)
+
     @unittest.skipIf(os.name == 'nt', 'fake Termux gem uses a POSIX executable')
     def test_compact_bundler_permission_diagnostics_follow_native_step_and_status(self):
+        ruby = self.bin/'fixture ruby'
+        ruby.write_text('#!'+sys.executable+'\nimport sys\nassert "disable_system_update_message" in sys.argv[-1]\nprint("allowed")\n')
+        ruby.chmod(0o755)
         gem = self.bin/'gem'
         gem.write_text('#!'+sys.executable+'\n'+'''import os, sys
+from pathlib import Path
 args = sys.argv[1:]
+if args == ['environment']: print('  - RUBY EXECUTABLE: ' + str(Path(__file__).with_name('fixture ruby'))); sys.exit(0)
 if args == ['list', '--local']: sys.exit(0)
 if args == ['--version']: print('4.1.1'); sys.exit(0)
 if args == ['hook']: print('error: after-hook failed', file=sys.stderr); sys.exit(29)

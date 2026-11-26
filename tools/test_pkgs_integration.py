@@ -313,26 +313,42 @@ else:sys.exit(99)
         again=self.cli('install','--packages',str(path),'--yes','--json')
         self.assertEqual(again['packages']['groups'][0]['status'],'unchanged')
 
-    @unittest.skipIf(os.name=='nt','native Windows pkgs supports WinGet only')
-    def test_empty_user_gems_still_update_rubygems_on_all_surfaces(self):
+    def fake_gem(self, policy):
         state=self.home/'rubygems-version';calls=self.home/'gem-calls'
         config=Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json';config.parent.mkdir(parents=True,exist_ok=True)
         config.write_text('{"upgrade":{"managers":["gem"]}}')
         self.env.update(TEST_GEM_STATE=str(state),TEST_GEM_CALLS=str(calls),TEST_GEM_HOME=str(self.home/'gems'),DOTS_MENU_CAPTURE='1')
-        self.env.update(TERMUX_VERSION='fixture', TEST_GEM_WARNINGS=str(self.home/'gem-warnings'))
+        self.env.update(TEST_GEM_POLICY=policy, TEST_GEM_WARNINGS=str(self.home/'gem-warnings'),
+                        TEST_GEM_RAKE=str(self.home/'rake-version'))
         self.env.pop('BUNDLE_GEMFILE', None)
-        files = ['MIT.txt', 'bundler.gemspec', *(f'lib/bundler/file_{i}.rb' for i in range(343))]
-        warnings = ''.join(f'WARNING:  {name} is not world-readable\n' for name in files)
-        warnings += 'WARNING:  See https://guides.rubygems.org/specification-reference/ for help\n'
-        Path(self.env['TEST_GEM_WARNINGS']).write_bytes(warnings.encode())
         ruby=self.repo/'bin/ruby'
-        ruby.write_text('#!'+sys.executable+'\nimport os,sys\nprint(os.environ["TEST_GEM_HOME"] if "Gem.user_dir" in sys.argv[-1] else "[]")\n');ruby.chmod(0o755)
+        ruby.write_text('#!'+sys.executable+'\n'+'''import json, os, sys
+from pathlib import Path
+code = sys.argv[-1]
+if 'disable_system_update_message' in code:
+    print(os.environ['TEST_GEM_POLICY'])
+elif 'Gem.user_dir' in code:
+    print(os.environ['TEST_GEM_HOME'])
+elif 'Gem::Specification' in code:
+    rake = Path(os.environ['TEST_GEM_RAKE'])
+    print(json.dumps([{'name':'rake','version':rake.read_text(),'versions':[rake.read_text()]}] if rake.exists() else []))
+else: sys.exit(99)
+''');ruby.chmod(0o755)
         gem=self.repo/'bin/gem'
         gem.write_text('#!'+sys.executable+'\n'+'''import os,sys,json
 from pathlib import Path
 state=Path(os.environ['TEST_GEM_STATE']);args=sys.argv[1:]
+rake=Path(os.environ['TEST_GEM_RAKE'])
 with open(os.environ['TEST_GEM_CALLS'],'a') as f:f.write(json.dumps(args)+'\\n')
-if args==['--version']:print(state.read_text())
+if args==['environment']:
+    print('RubyGems Environment:')
+    print('  - RUBY EXECUTABLE: "'+str(Path(__file__).with_name('ruby'))+'"')
+    print('  - GEM CONFIGURATION: private-fixture-value')
+elif args==['list','--local']:
+    if rake.exists():print('rake ('+rake.read_text()+')')
+elif args==['outdated']:pass
+elif args==['update','rake']:rake.write_text('2')
+elif args==['--version']:print(state.read_text())
 elif args==['update','--system','--no-document']:
     sys.stderr.buffer.write(Path(os.environ['TEST_GEM_WARNINGS']).read_bytes())
     sys.stderr.buffer.flush()
@@ -340,6 +356,16 @@ elif args==['update','--system','--no-document']:
     state.write_text('4.0.2');print('RubyGems system software updated')
 else:sys.exit(99)
 ''');gem.chmod(0o755)
+        return state, calls
+
+    @unittest.skipIf(os.name=='nt','POSIX Gem fixture; native RubyInstaller has separate adapter tests')
+    def test_empty_user_gems_still_update_rubygems_on_all_surfaces(self):
+        state, calls = self.fake_gem('allowed')
+        self.env['TERMUX_VERSION'] = 'fixture'
+        files = ['MIT.txt', 'bundler.gemspec', *(f'lib/bundler/file_{i}.rb' for i in range(343))]
+        warnings = ''.join(f'WARNING:  {name} is not world-readable\n' for name in files)
+        warnings += 'WARNING:  See https://guides.rubygems.org/specification-reference/ for help\n'
+        Path(self.env['TEST_GEM_WARNINGS']).write_bytes(warnings.encode())
         for width in (40, 80, 120):
             self.env['COLUMNS'] = str(width)
             outputs = []
@@ -362,12 +388,52 @@ else:sys.exit(99)
                 _, err, _ = self.call(argv)
                 self.assertEqual(err, warnings.encode())
         self.env['DOTS_MENU_CAPTURE'] = '1'
+        self.env['TEST_GEM_POLICY'] = 'unknown'
         self.env['TEST_GEM_FAIL']='1'
         out,err,_=self.call(next(self.surfaces('pkgs',['up'])),code=1)
         self.assertIn(b'failed (exit 23)',out);self.assertIn(b'distribution protection',err)
+        config=Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json'
         config.write_text('{"upgrade":{"managers":["gem"],"gem_system":false}}');calls.write_text('')
         self.call(next(self.surfaces('pkgs',['up'])))
         self.assertNotIn('update',calls.read_text())
+
+    @unittest.skipIf(os.name=='nt','POSIX Gem fixture; native RubyInstaller has separate adapter tests')
+    def test_disabled_rubygems_skips_only_its_self_update_on_all_surfaces(self):
+        _, calls = self.fake_gem('blocked')
+        reason = b'This RubyGems installation disables self-updates.'
+        rake = Path(self.env['TEST_GEM_RAKE'])
+        for selection in ([], ['--manager', 'gem']):
+            for extra in (['--dry-run'], ['--raw'], []):
+                for argv in self.surfaces('pkgs', ['up', *selection, *extra]):
+                    calls.write_text('')
+                    out, err, _ = self.call(argv)
+                    self.assertEqual(err, b'')
+                    self.assertNotIn(b'private-fixture-value', out)
+                    if extra:
+                        self.assertIn(b'RubyGems: '+reason, out)
+                    else:
+                        self.assertRegex(out, rb'gem\s+unchanged .*1 skipped')
+                        self.assertNotIn(reason, out)
+                    native = [json.loads(line) for line in calls.read_text().splitlines()]
+                    self.assertFalse(any(args[0] in ('update', '--version') for args in native), native)
+
+            for argv in self.surfaces('pkgs', ['up', *selection]):
+                rake.write_text('1')
+                calls.write_text('')
+                out, err, _ = self.call(argv)
+                self.assertEqual(err, b'')
+                self.assertRegex(out, rb'gem\s+complete .*1 skipped')
+                self.assertRegex(out, rb'Updated\s+rake\s*$')
+                native = [json.loads(line) for line in calls.read_text().splitlines()]
+                self.assertEqual([args for args in native if args[0]=='update'], [['update','rake']])
+                self.assertNotIn(['--version'], native)
+            rake.unlink()
+
+        rake.write_text('1')
+        calls.write_text('')
+        self.call(next(self.surfaces('pkgs', ['up', '--manager', 'gem', '--list'])))
+        self.assertEqual([json.loads(line) for line in calls.read_text().splitlines()],
+                         [['list', '--local'], ['outdated']])
 
     @unittest.skipIf(os.name=='nt','POSIX npm executable fixture; native WinGet has separate fixtures')
     def test_missing_prerequisite_does_not_apply_configuration(self):

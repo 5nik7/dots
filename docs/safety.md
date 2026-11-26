@@ -754,10 +754,9 @@ Automatic Termux pip and uv-tool upgrades restrict native resolution to wheels; 
 newer source builds can leave a compatible installed version unchanged. uv uses
 `--no-build`, permits cached built wheels and retains native tool settings. Explicit
 build/binary controls, named targets and replacement recipes preserve native behavior.
-Impossible resolutions remain failures; there is no automatic source-build retry. Automatic
-gem self-update uses native `gem update --system --no-document` with no force or
-privilege bypass; distribution protections remain authoritative. It is configurable
-through `apps.pkgs.upgrade.gem_system`, and appears in dry-run commands.
+Impossible resolutions remain failures; there is no automatic source-build retry.
+
+Automatic gem upgrades honor a self-update restriction declared by the selected RubyGems runtime. The dry run shows the skip reason. Otherwise the plan includes the native `gem update --system --no-document` command, which enforces its own permission and distribution checks. Set `apps.pkgs.upgrade.gem_system` to false to disable this step.
 
 Default Go upgrades compare installed build versions with native latest-module
 queries and install only newer eligible tools through `go install PACKAGE@latest`.
