@@ -431,6 +431,55 @@ class NativeCLI(unittest.TestCase):
             self.assertFalse((commands/'bin/catppuccin.ps1').exists())
             self.assertEqual((themes.state/'current/theme').resolve().name, first)
 
+    @unittest.skipUnless(os.name == 'nt', 'requires native Windows symlink targets')
+    def test_powershell_refresh_runs_plugin_on_unchanged_generation(self):
+        shutil.copytree(ROOT / 'themes/nord', self.repo / 'themes/nord')
+        shutil.copytree(ROOT / 'default', self.repo / 'default')
+        env = dict(self.env, PATH=str(Path(sys.executable).parent))
+        config = self.home / 'config/dots'
+        hook = config / 'hooks/theme-set.d/10-probe.ps1'
+        hook.parent.mkdir(parents=True)
+        marker = self.home / 'plugin-generation'
+        hook.write_text("[IO.File]::WriteAllText((Join-Path $env:HOME 'plugin-generation'), $env:DOTS_THEME_DIR)")
+        state = self.home / 'state/dots'
+        active = state / 'current/theme'
+        requested = os.environ.get('DOTS_TEST_POWERSHELL')
+        engines = {name: shutil.which(name) for name in ([requested] if requested else ('powershell', 'pwsh'))}
+        if requested:
+            self.assertTrue(engines[requested], 'requested PowerShell engine unavailable: ' + requested)
+        primary = next((engine for engine in engines.values() if engine), None)
+        if not primary:
+            self.skipTest('PowerShell unavailable')
+
+        def invoke(engine, *args, expected=0):
+            result = subprocess.run([engine, '-NoProfile', '-NonInteractive', '-ExecutionPolicy',
+                                     'Bypass', '-File', str(self.repo / 'bin/dots.ps1'), *args],
+                                    cwd=self.repo, env=env, capture_output=True, text=True,
+                                    encoding='utf-8', timeout=60)
+            self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+            return result
+
+        invoke(primary, 'theme', 'set', 'nord')
+        generation = active.resolve(strict=True)
+        invoke(primary, 'theme', 'plugins', 'enable', 'probe')
+        for name, engine in engines.items():
+            with self.subTest(engine=name):
+                if not engine:
+                    self.skipTest(name + ' unavailable')
+                result = invoke(engine, 'theme', 'refresh', '--verbose')
+                self.assertIn('Theme unchanged: nord', result.stdout)
+                self.assertEqual(active.resolve(strict=True), generation)
+                self.assertEqual(Path(marker.read_text(encoding='utf-8')), generation)
+                marker.unlink()
+
+        foreign = self.home / 'foreign' / generation.name
+        shutil.copytree(generation, foreign)
+        active.unlink()
+        active.symlink_to(foreign, target_is_directory=True)
+        result = invoke(primary, 'theme', 'plugins', 'run', expected=1)
+        self.assertIn('invalid published theme pointer', result.stderr)
+        self.assertFalse(marker.exists())
+
     def test_native_empty_legacy_commands_upgrade_even_with_same_fingerprint(self):
         import hashlib
         from types import SimpleNamespace

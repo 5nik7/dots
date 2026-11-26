@@ -48,9 +48,10 @@ Selection/hook readers retain legacy user-config fallback until [configuration m
 Those commands serialize updates and atomically publish the file. Scripts are
 never renamed, copied, or deleted by selection changes.
 
-Hook filenames match `NUMBER-name.sh`, where name begins with a lowercase letter
-and continues with lowercase letters, digits or hyphens. The CLI name excludes
-the number and `.sh`. Order is numeric prefix, then filename (so `2-early.sh`
+Name custom hooks `NUMBER-name.sh` on Termux, Linux and WSL, or `NUMBER-name.ps1`
+on native Windows. The name begins with a lowercase letter and continues with
+lowercase letters, digits or hyphens. Use just the name in CLI commands.
+Order is numeric prefix, then filename (so `2-early.sh`
 precedes `10-later.sh`). Files need read permission, not executable permission.
 Hooks and their parent directories must not be symlinks; special files are refused.
 Roots may contain spaces or Unicode, but must be absolute and exclude controls.
@@ -75,15 +76,19 @@ No hook runs during a failed publication, preview, dry-run, listing, doctor,
 help, completion, or Anodize create/edit/save/export. Existing Fish/FZF, tmux,
 Kitty, Termux, btop, bat and Yazi paths retain their existing owners.
 
-Manual runs use the current committed generation at
-`${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme`. The publisher's
-nonblocking lock pins it throughout execution. Manual runs acquire that lock
-before the plugin lock; automatic runs retain the publisher lock after commit.
+Refresh and manual runs read the committed generation through the `current/theme`
+link in the Dots state directory. On Termux, Linux and WSL, the path is
+`${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme`. On native Windows
+the default is `%LOCALAPPDATA%\dots\current\theme`. The runner accepts the Windows extended-length
+spelling of the link target and verifies that it names a generation directly under
+`themes/generations` before running hooks. The publisher's nonblocking lock pins
+the generation during execution. Manual runs acquire it before the plugin lock.
+On Termux, Linux and WSL, automatic hook runs retain the publisher lock after commit.
 Enable/disable acquire only the plugin lock. Conflicting mutations fail with
 retry guidance rather than waiting. Read-only Dots commands remain lock-free.
 
-Each hook runs in a separate noninteractive Bash process, with stdin closed,
-working directory `$HOME`, and no inherited lock descriptors. `BASH_ENV`, `ENV`
+Each custom hook runs in a separate noninteractive Bash or PowerShell process
+with stdin closed, the user's home as its working directory, and no inherited lock descriptors. `BASH_ENV`, `ENV`
 and exported Bash functions are removed. Exit 0 means success, 77 means skipped,
 and other statuses mean failure. Later hooks still run after an individual
 failure. At most 16 KiB of each hook's combined output is retained in memory for
@@ -204,9 +209,9 @@ substantial source copying. See [provenance](../lib/dots/themes/plugins/SOURCE.m
 
 Bundled updates arrive with normal Dots source updates. Remote plugin installation,
 self-update, upstream uninstall behavior and automatic restoration on disable
-are not implemented. Runtime execution targets the existing POSIX Linux/WSL/Termux
-architecture; native Windows execution is deferred. Desktop appearance requires
-separate live acceptance; fixture tests do not establish it.
+are not implemented. The bundled GTK and Qt6ct integrations run on Termux, Linux
+and WSL. On native Windows the runner supports PowerShell hooks and the bundled
+Starship adapter. Desktop appearance requires separate live acceptance.
 
 ### Starship and Blastoff: `starship`
 
@@ -222,4 +227,4 @@ Configured symlinks are preserved: their physical targets and every traversed li
 
 The saved personal theme preserves layout and module enablement. Git branch/status symbols come from shared `icons.git.*` preferences, with optional `icons.apps.starship.git.*` overrides; symbols are escaped for native Starship format strings. Unusual multiline symbol definitions are refused before mutation. Language/build styles use blue, cloud/container styles cyan, infrastructure/VCS styles magenta, secondary information muted, and success/warning/error green/yellow/red. Git status components use individual shared roles. All style-bearing built-ins supported by installed Starship 1.26.0 are covered; modules without style controls need no extra settings. The battery preset is commented because this Termux build lacks the battery module. `git_repo_owned` is available in the palette, but no custom ownership-detection command is added to Starship.
 
-Use Blastoff normally to activate the saved theme; its backups/provenance remain authoritative. Later Dots palette writes are external edits and may produce Blastoff's modified/source-changed indicators. The adapter does not forge provenance hashes or overwrite the previous `blastoff` theme. No shell restart is needed; colors appear at the next prompt. Native validation covers Termux; Windows execution remains unavailable under the existing plugin-manager platform boundary.
+Use Blastoff normally to activate the saved theme; its backups/provenance remain authoritative. Later Dots palette writes are external edits and may produce Blastoff's modified/source-changed indicators. The adapter does not forge provenance hashes or overwrite the previous `blastoff` theme. No shell restart is needed; colors appear at the next prompt.

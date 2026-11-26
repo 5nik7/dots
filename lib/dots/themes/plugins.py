@@ -19,7 +19,7 @@ sys.path.insert(0, str(LIB.parent))
 sys.path.insert(0, str(LIB.parent / 'files'))
 from catalog import Presentation, atomic_json, read_json
 from transactions import exists, parents_safe, private_directory
-from file_platform import config_root, state_root, open_nofollow, lock as file_lock
+from file_platform import config_root, state_root, native_link_text, open_nofollow, lock as file_lock
 from progress import Progress, configure, sequence, permanent_output
 
 PATTERN = re.compile(r'([0-9]+)-([a-z][a-z0-9-]*)\.(?:sh|ps1)\Z')
@@ -148,7 +148,7 @@ def published(state):
     parents_safe(active)
     if not active.is_symlink():
         raise ValueError('no published theme; apply a theme first')
-    generation = Path(os.readlink(active))
+    generation = Path(native_link_text(os.readlink(active)))
     if (generation.parent != state / 'themes/generations'
             or not re.fullmatch(r'g\.[a-zA-Z0-9]+', generation.name)):
         raise ValueError('invalid published theme pointer')
