@@ -449,7 +449,8 @@ dots_complete() {
           if [[ $expected ]]; then dots_value_candidates "$expected"
           elif (( options )) && [[ $DOTS_CURRENT == --*=* ]]; then
             if dots_find_option "${DOTS_CURRENT%%=*}"; then dots_value_candidates "$DOTS_OPTION_TYPE" "${DOTS_CURRENT%%=*}="; fi
-          elif (( options )) && [[ $DOTS_CURRENT == -* ]]; then
+          elif (( options )) && { [[ $DOTS_CURRENT == -* ]] ||
+            { [[ -z $DOTS_CURRENT ]] && (( ${#DOTS_SUGGESTIONS[@]} == 0 && ${#DOTS_META_ARGUMENTS[@]} == 0 && ${#DOTS_META_OPTIONS[@]} )); }; }; then
             dots_candidate --help 'Show command help'
             for row in "${DOTS_META_OPTIONS[@]}"; do
               IFS='|' read -r long short type description <<< "$row"

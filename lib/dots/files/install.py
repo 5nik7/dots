@@ -126,6 +126,7 @@ class Installation:
         self.theme = None
         self.theme_environment = {}
         self.theme_prepared = False
+        self.wt_inputs = None
         self.connector_rows = []
         self.components = None
         self.resources = None
@@ -570,8 +571,17 @@ class Installation:
         if bat and not os.environ.get('BAT_CONFIG_DIR'):
             self.theme_environment['BAT_CONFIG_DIR'] = bat['source']
         if not defer_theme and 'themes' in self.components and (self.root / 'lib/dots/themes' / ('setup.py' if self.platform == 'windows' else 'setup.bash')).is_file():
+            wt_paths = []
+            if self.platform == 'windows' and (self.resources is None or 'theme:windows-terminal' in self.resources):
+                from themes.wt_settings import discover_settings
+                if not any(r['id'] == 'theme:windows-terminal' and not r['enabled'] for r in observed):
+                    wt_paths = discover_settings()
             with Progress('Inspecting theme inputs'):
-                identity, fingerprint, current, incomplete = self.theme_bridge('inspect')
+                inspection = self.theme_bridge('inspect-wt' if wt_paths else 'inspect')
+                identity, fingerprint, current, incomplete = inspection[:4]
+            if wt_paths:
+                scheme, theme = self.wt_inputs = (json.loads(inspection[4]), json.loads(inspection[5]))
+                self.plan_wt_settings(wt_paths, scheme, selected, theme=theme)
             self.theme = dict(id=identity, fingerprint=fingerprint, generation=current,
                               incomplete=incomplete)
             themes = self.state / 'themes'
@@ -857,6 +867,26 @@ class Installation:
             else:
                 op.setdefault('omit_mapped_children', []).append(name)
 
+    def plan_wt_settings(self, paths, scheme, selected, *, theme=None):
+        from themes.wt_settings import plan_settings_file
+        label = 'theme:windows-terminal'
+        for path in paths:
+            whole_file = next((row for row in selected if row['app'] == 'wt' and row['target']
+                               and Path(row['target']) == path), None)
+            if str(path) in self.entries or (whole_file and self.resources is not None):
+                self.item(label, 'skipped', path, reason='setup manages this complete settings file')
+                continue
+            if whole_file:
+                selected.remove(whole_file)
+            try:
+                before, operation = plan_settings_file(path, scheme, theme)
+            except (OSError, ValueError) as error:
+                self.item(label, 'skipped', path, reason=str(error))
+                continue
+            self.merge_plan([operation] if operation else [], {str(path): before}, label=label)
+            if operation is None:
+                self.item(label, 'unchanged', path)
+
     def prepare_theme(self):
         if self.theme_prepared or not self.theme or not self.theme['refresh']:
             return
@@ -918,6 +948,16 @@ class Installation:
                 from themes.connector_paths import validate_artifacts
                 generation = getattr(self, 'theme_payload', self.state/'themes/generations'/self.theme['generation'])
                 validate_artifacts(self.connector_rows, generation)
+                if self.wt_inputs is not None:
+                    from themes.wt_settings import SCHEME_ARTIFACT, THEME_ARTIFACT, terminal_inputs
+                    scheme_path, theme_path = generation / SCHEME_ARTIFACT, generation / THEME_ARTIFACT
+                    for artifact in (scheme_path, theme_path):
+                        self.guard(artifact)
+                        if artifact.is_symlink() or not artifact.is_file():
+                            raise ValueError('invalid Windows Terminal theme artifact: ' + str(artifact))
+                    if terminal_inputs(scheme_path.read_text(encoding='utf-8'),
+                                       theme_path.read_text(encoding='utf-8')) != self.wt_inputs:
+                        raise ValueError('Windows Terminal theme changed after preview')
             if self.blocked:
                 raise ValueError('installation plan contains conflicts')
             if not self.operations and not self.receipt_changed:

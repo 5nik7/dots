@@ -46,7 +46,9 @@ def downloaded_rows(library):
 
 
 def destination(context):
-    return select('Destination',[('personal','Native user installation')]+[(r['path'],r['name'],r['path']) for r in Destinations().rows()],context)
+    choices = [('personal','Native user installation')]
+    if Library().platform == 'windows': choices.append(('system','Install for all Windows users'))
+    return select('Destination',choices+[(r['path'],r['name'],r['path']) for r in Destinations().rows()],context)
 
 
 def select_row(rows,args,context,title):
@@ -101,11 +103,12 @@ def downloaded(args,*,context=None):
             target=destination(context)
             if target is None:continue
             argv=['install',row['id'],'--from',row['source'],'--version',version]
-            if target!='personal':argv+=['--directory',target]
+            if target not in ('personal', 'system'):argv+=['--directory',target]
             else:
                 variant=select('Variant',[(v,v) for v in sorted({f['variant'] for f in row['versions'][version]['fonts']})],context)
                 if variant is None:continue
                 argv+=['--variant',variant]
+                if target == 'system': argv.append('--system')
             # Destination is explicit above; source scope must not be appended.
             invoke(argv,context,Library())
 

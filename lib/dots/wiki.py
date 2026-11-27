@@ -31,6 +31,10 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def lf_bytes(data):
+    return data.replace(b'\r\n', b'\n')
+
+
 def encoded(data):
     return (json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True)+'\n').encode()
 
@@ -79,6 +83,19 @@ class Reader:
         data.decode('utf-8')
         self.inputs[name]=sha(data)
         return data
+
+
+class SourceReader(Reader):
+    """Render and fingerprint LF text, retaining exact input hashes for build guards."""
+    def __init__(self, root, revision=None):
+        super().__init__(root, revision)
+        self.text_hashes = {}
+
+    def read(self, name):
+        raw = super().read(name)
+        text = lf_bytes(raw)
+        self.text_hashes[name] = self.inputs[name] if raw == text else sha(text)
+        return text
 
 
 def manifest(reader):
@@ -142,7 +159,7 @@ def anchors(text):
 
 
 def generate(root, revision=None):
-    reader=Reader(root,revision); spec=manifest(reader)
+    reader=SourceReader(root,revision); spec=manifest(reader)
     pages=spec['pages']; by_source={row['source']:row['id'] for row in pages if row.get('source')}
     docs=set(n for n in reader.names('docs/') if n.endswith('.md') and '/' not in n[5:])
     excluded=set(spec.get('exclude_docs',[]))
@@ -153,7 +170,8 @@ def generate(root, revision=None):
     for name in ('lib/dots/wiki.py','lib/dots/command_metadata.py','lib/dots/wiki_commands.py','lib/dots/wiki_topics.py'):
         if (reader.modes is not None and name in reader.modes) or (Path(root)/name).is_file():
             data=reader.read(name)
-            if data != (LIB/Path(name).name).read_bytes(): raise ValueError('selected generator differs from running generator; use the matching Dots checkout before building or publishing the wiki')
+            if data != lf_bytes((LIB/Path(name).name).read_bytes()):
+                raise ValueError(f'selected generator differs from running generator ({name}). Use the matching Dots checkout before building or publishing the wiki')
     from wiki_commands import markdown
     reference = markdown(reader)
     for row in pages:
@@ -215,7 +233,7 @@ This checkout contains generated Dots documentation. Edit canonical documents in
 
 Run `dots wiki build --dry-run`, build, then `dots wiki check`. Preserve unrecognized files and edits; reconcile generated-file drift in the source rather than overwriting it. Keep the sidebar generated from the page manifest. Commit/push only when explicitly requested. `dots git wiki publish` checks the selected content against published source inputs.
 ''').encode()
-    inventory=dict(schema=1,inputs=reader.inputs,outputs={name:sha(data) for name,data in outputs.items()})
+    inventory=dict(schema=1,inputs=reader.text_hashes,outputs={name:sha(data) for name,data in outputs.items()})
     outputs[INVENTORY]=encoded(inventory)
     return spec,outputs,reader
 
@@ -227,7 +245,7 @@ def compare(root, path, revision=None, source_revision=None):
     for name,data in outputs.items():
         try: actual=reader.read(name)
         except (ValueError,OSError): findings.append(dict(page=name,status='missing'));continue
-        if actual!=data: findings.append(dict(page=name,status='stale'))
+        if lf_bytes(actual)!=data: findings.append(dict(page=name,status='stale'))
     try:
         old=json.loads(reader.read(INVENTORY))
         for name in old.get('outputs',{}):
@@ -254,7 +272,7 @@ def build_plan(root,path):
     for name in sorted(set(outputs)|set(old.get('outputs',{}))):
         if name!=INVENTORY and name!='AGENTS.md' and name!='_Sidebar.md' and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]*\.md',name): raise ValueError('unsafe generated inventory path')
         target=path/name; parents_safe(target);before=digest(target);guards[str(target)]=before
-        current=Reader(path).read(name) if before is not None else None
+        current=lf_bytes(Reader(path).read(name)) if before is not None else None
         desired=outputs.get(name)
         if current==desired: continue
         known=old.get('outputs',{}).get(name)

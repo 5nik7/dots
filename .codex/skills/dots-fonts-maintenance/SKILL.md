@@ -1,6 +1,6 @@
 ---
 name: dots-fonts-maintenance
-description: Maintain dots fonts catalogs, retained versions, installed inventory, application targets and pickers. Use for font-management implementation; ordinary theme publication and system-wide font administration are separate workflows.
+description: Maintain dots fonts catalogs, retained versions, Windows user and machine installations, installed inventory, application targets and pickers.
 ---
 
 # Dots Fonts Maintenance
@@ -9,7 +9,7 @@ Read [fonts](../../../docs/fonts.md), [font transaction safety](../../../docs/sa
 
 Directory install/update is storage-only. Explicit Set/use targets activate from the personal library, retain exact payloads in the active profile and save `fonts.json` preferences in the same guarded transaction. Termux retains the chosen TTF; desktop targets retain the selected variant's styles. An unchanged legacy target may still require retention/preference backfill without rewriting active bytes. Restore uses exact saved versions/hashes, not implicit upgrades.
 
-Copy preserves originals; Migrate requires proven user ownership and keeps registration/lookup paths usable. System/package/uncertain fonts are copy-only. Stage and validate downloads before review/apply; reject unsafe archives, links, collisions and drift. Keep partial-family accumulation, pins, prior selections and recovery history. Native Windows uses its user-font/HKCU adapter; never translate WSL paths or adopt missing app configs automatically. No inventory/provider scans during help, completion or startup.
+Copy preserves originals; Migrate requires proven user ownership and keeps registration/lookup paths usable. System/package/uncertain fonts are copy-only. Stage and validate downloads before review/apply; reject unsafe archives, links, collisions and drift. Keep partial-family accumulation, pins, prior selections and recovery history. Native Windows defaults to user fonts and HKCU. Explicit `--system` installation uses the native Fonts folder, HKLM, and a separate administrator-controlled journal. Exercise it with isolated file and registry fixtures. Never translate WSL paths or adopt missing app configs automatically. No inventory/provider scans during help, completion or startup.
 
 Follow [command maintenance](../dots-command-maintenance/SKILL.md) for config/menu assessments, [dots-config](../dots-config/SKILL.md) for configuration exposure and [menu authoring](../dots-menu-authoring/SKILL.md) for picker changes. Fonts' native settings and retained preferences keep their existing owners.
 

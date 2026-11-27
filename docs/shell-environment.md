@@ -64,6 +64,8 @@ may still require a new shell.
 
 ## Completion appearance
 
+The PowerShell **Tab** and **Alt+F** picker uses the configured command, option, value, candidate, separator and description styles. File and directory matches read the active `LS_COLORS`. Typing filters on candidate names while descriptions remain visible. Open a fresh PowerShell session to pick up changed completion style settings. [PowerShell profile](shell-init.md#powershell-profile)
+
 Repository Zsh startup colors Dots completion labels by type: commands, options
 and values. Descriptions and separators have separate styles; unknown types use
 neutral text. File candidates retain `LS_COLORS`. FZF-tab keeps these colors on

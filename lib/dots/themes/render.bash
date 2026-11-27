@@ -168,6 +168,9 @@ dt_render() {
           file_icons_yazi) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _preference_icons "$DT_THEME_DIR") || return ;;
           git_colors_starship) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _starship_git "$DT_THEME_DIR") || return ;;
           file_styles_vivid) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _vivid "$DT_THEME_DIR") || return ;;
+          theme_id) value=$DT_ID ;;
+          theme_family) value=${DT_THEME:-$DT_ID} ;;
+          theme_flavor) value=${DT_FLAVOR:-default} ;;
           *_strip) key=${key%_strip}; value=${DT_SEMANTIC[$key]:-}; value=${value#\#} ;;
           *_rgb) key=${key%_rgb}; [[ ${DT_SEMANTIC[$key]:-} ]] || return 1; dt_rgb "${DT_SEMANTIC[$key]}"; value="$DT_R,$DT_G,$DT_B" ;;
           *) value=${template_colors[$key]:-${DT_SEMANTIC[$key]:-}} ;;

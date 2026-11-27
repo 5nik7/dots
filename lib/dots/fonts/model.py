@@ -55,10 +55,20 @@ def license_file(name):
 
 
 class Library:
-    def __init__(self, *, platform=None, directory=None):
+    def __init__(self, *, platform=None, directory=None, system=False):
         self.platform = platform or detect()['platform']
         self.home = Path(os.environ.get('HOME') or Path.home())
-        self.state = state_root()
+        self.system = system
+        if system and (self.platform != 'windows' or directory):
+            raise ValueError('--system requires native Windows and cannot be combined with --directory')
+        if system:
+            from font_registry import machine_state
+            from fonts.machine_state import check_directory
+            self.state = machine_state()
+            parents_safe(self.state / 'collection.json')
+            check_directory(self.state.parent)
+        else:
+            self.state = state_root()
         self.data = Path(os.environ.get('XDG_DATA_HOME') or
             (os.environ.get('LOCALAPPDATA', self.home / 'AppData/Local') if self.platform == 'windows'
              else self.home / '.local/share')) / 'dots/fonts'
@@ -67,7 +77,7 @@ class Library:
              else self.home / '.cache')) / 'dots/fonts'
         if not all(p.is_absolute() for p in (self.home, self.state, self.data, self.cache)):
             raise ValueError('font roots must be absolute')
-        self.path = self.state / 'fonts/collection.json'
+        self.path = self.state / ('collection.json' if system else 'fonts/collection.json')
         self.directory=None
         self.directory_key=None
         self.input_guards={}
@@ -78,7 +88,7 @@ class Library:
             self.directory_key=key(self.directory)
             self.input_guards=destinations.guards
             self.data=self.directory/'.dots-fonts'
-        self.catalog_path = self.cache / 'catalog.json'
+        self.catalog_path = (self.state if system else self.cache) / 'catalog.json'
         self.guard = digest(self.path)
         self.catalog_guard = digest(self.catalog_path)
         self.collection = read(self.path, dict(schema=1, families={}, targets={}))
@@ -180,6 +190,7 @@ class Library:
         return rows
 
     def transaction_action(self, action):
+        if self.system: return 'fonts-system-' + action
         return 'fonts-'+('directory-'+token(self.directory_key)+'-' if self.directory else '')+action
 
     def rows(self, *, available=False):
@@ -251,15 +262,39 @@ class Plan:
             self.put(self.library.path, data=collection)
         return self
 
+    def scope_fields(self):
+        if not self.library.system:
+            return {}
+        import font_registry
+        from fonts.operations import install_root
+        return dict(scope='system', font_directory=str(install_root(self.library)),
+                    registry_key='HKLM\\' + font_registry.KEY, elevated=font_registry.elevated())
+
     def report(self):
         return dict(schema=1, status='preview', items=self.items,
+                    **self.scope_fields(),
                     operations=[dict(path=op['path'], kind='console-face' if 'console_face' in op else
                         'registration' if 'font_registry' in op else
                         'delete' if op.get('delete') else 'link' if 'link' in op else 'write') for op in self.operations])
 
+    def commit(self, action, *, owner=None, observer=None):
+        library = owner or self.library
+        if library.system and self.operations:
+            import font_registry
+            from fonts.machine_state import check_directory
+            if not font_registry.elevated():
+                raise ValueError('system font changes require an Administrator PowerShell')
+            parents_safe(library.state / 'collection.json')
+            check_directory(library.state.parent, create=True)
+            library.state.mkdir(exist_ok=True)
+        # Shared journals inherit the administrator DACL so another account
+        # can preview undo. Personal journals keep their private permissions.
+        store = Store(library.state, observer=observer, directory_mode=0o777 if library.system else 0o700)
+        return store.apply(library.transaction_action(action), self.operations, self.guards, retain=True)
+
     def apply(self, action):
-        result = Store(self.library.state).apply(self.library.transaction_action(action), self.operations, self.guards, retain=True)
-        return dict(schema=1, status=result['status'], transaction=result.get('id'), items=self.items)
+        result = self.commit(action)
+        return dict(schema=1, status=result['status'], transaction=result.get('id'), items=self.items, **self.scope_fields())
 
 
 def windows_family(path):

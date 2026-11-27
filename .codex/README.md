@@ -31,7 +31,7 @@ This is the authoritative family-to-primary-skill mapping. Select the family own
 | `theme` | [dots-theme-maintenance](skills/dots-theme-maintenance/SKILL.md) |
 | `todo` | [dots-todo-maintenance](skills/dots-todo-maintenance/SKILL.md) |
 | `wiki` | [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) |
-| `wttr` | [dots-wttr-maintenance](skills/dots-wttr-maintenance/SKILL.md) |
+| `wttr`, Windows `location` | [dots-wttr-maintenance](skills/dots-wttr-maintenance/SKILL.md) |
 
 ## Shared and task workflows
 

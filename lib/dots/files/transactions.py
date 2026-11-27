@@ -27,11 +27,14 @@ class DestinationOccupied(ValueError):
     """A create-only transaction lost its destination name."""
 
 
-def registry_changes(operation):
+def registry_changes(operation, state):
     """Pair a journaled registry value with its bounded native adapter."""
     if 'font_registry' in operation:
         import font_registry
-        yield 'font_registry', operation['font_registry'], font_registry
+        spec = operation['font_registry']
+        if isinstance(spec,dict) and spec.get('scope') == 'system' and Path(state) != font_registry.machine_state():
+            raise ValueError('machine font registrations require the machine transaction store')
+        yield 'font_registry', spec, font_registry
     if 'console_face' in operation:
         import console_font_registry
         yield 'console_face', operation['console_face'], console_font_registry
@@ -41,7 +44,7 @@ def exists(path):
     return os.path.lexists(path)
 
 
-def private_directory(path):
+def private_directory(path, mode=0o700):
     """Create state directories durably without widening existing permissions."""
     path = Path(path)
     parents_safe(path / 'placeholder')
@@ -52,7 +55,7 @@ def private_directory(path):
         missing.append(parent)
     for parent in reversed(missing):
         try:
-            parent.mkdir(mode=0o700)
+            parent.mkdir(mode=mode)
         except FileExistsError:
             parents_safe(parent / 'placeholder')
         sync_dir(parent.parent)
@@ -149,8 +152,9 @@ def discard(path):
 
 
 class Store:
-    def __init__(self, state, observer=None):
+    def __init__(self, state, observer=None, *, directory_mode=0o700):
         self.state = Path(state)
+        self.directory_mode = directory_mode
         self.root = self.state / 'files' / 'transactions'
         self.backups = self.state / 'backups'
         self.observer = observer
@@ -183,11 +187,16 @@ class Store:
             record = self._read_journal(path)
             identity = record['id']
             if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
-                pending.append((record.get('created', identity), identity))
+                pending.append((record.get('created', identity), identity, record.get('action','')))
             # Release large operation lists before decoding the next journal.
             del record
         if pending:
-            raise ValueError('unfinished transaction: run dots files recover ' + min(pending)[1])
+            _, identity, action = min(pending)
+            command = 'dots files recover ' + identity
+            if action.startswith('fonts-system-'):
+                raise ValueError(f'unfinished machine font transaction: in an Administrator PowerShell with '
+                                 f'XDG_STATE_HOME set to {self.state.parent}, run {command}')
+            raise ValueError('unfinished transaction: run ' + command)
 
     def load(self, identity):
         if not identity or any(c not in '0123456789abcdef' for c in identity) or len(identity) != 32:
@@ -210,7 +219,7 @@ class Store:
     @contextlib.contextmanager
     def locked(self, catalogs=(), *, blocking=False):
         parents_safe(self.root / 'placeholder')
-        private_directory(self.root)
+        private_directory(self.root, self.directory_mode)
         handles = []
         try:
             paths = [self.root.parent / '.lock'] + sorted(set(Path(p).with_suffix('.lock') for p in catalogs))
@@ -264,7 +273,7 @@ class Store:
                     return None
                 return digest(path)
 
-            registrations = [change for op in operations for change in registry_changes(op)]
+            registrations = [change for op in operations for change in registry_changes(op, self.state)]
             for _, spec, adapter in registrations:
                 adapter.verify(spec)
             if len({(kind, spec['name'].casefold()) for kind, spec, _ in registrations}) != len(registrations):
@@ -279,7 +288,7 @@ class Store:
                 if len(identity) != 32 or any(c not in '0123456789abcdef' for c in identity):
                     raise ValueError('invalid transaction identity')
                 directory = self.root / identity
-                directory.mkdir(mode=0o700)
+                directory.mkdir(mode=self.directory_mode)
                 sync_dir(self.root)
                 doc = {'schema': 1, 'id': identity, 'action': action, 'status': 'preparing',
                        'created': datetime.now(timezone.utc).isoformat(), 'guards': guards,
@@ -301,7 +310,7 @@ class Store:
                                 entry['create_only'] = True
                             if native_staging_suffix(path):
                                 entry['payload_suffix'] = native_staging_suffix(path)
-                            for kind, spec, _ in registry_changes(op):
+                            for kind, spec, _ in registry_changes(op, self.state):
                                 entry[kind] = spec
                             if exists(entry['old']) or exists(entry['temp']):
                                 raise ValueError('transaction sibling already exists')
@@ -382,7 +391,7 @@ class Store:
                                 if entry['after'] is not None:
                                     os.rename(entry['temp'], path)
                                     sync_dir(path.parent)
-                            for _, spec, adapter in registry_changes(entry):
+                            for _, spec, adapter in registry_changes(entry, self.state):
                                 adapter.apply(spec)
                             entry['phase'] = 'done'
                             self.save(doc)
@@ -401,7 +410,7 @@ class Store:
                     report('Finalizing file transaction')
                     if retain:
                         parents_safe(self.backups / identity)
-                        private_directory(self.backups)
+                        private_directory(self.backups, self.directory_mode)
                         atomic_json(self.backups / (identity + '.json'), {'schema': 1, 'id': identity,
                                     'transaction': identity, 'created': doc['created'], 'action': action, 'objects': [e for e in doc['operations'] if e['before'] is not None]})
                     doc['status'] = 'complete'
@@ -468,7 +477,7 @@ class Store:
                         if not exists(path) or not os.path.samestat(os.lstat(entry['temp']), os.lstat(path)):
                             continue
                     current = digest(path)
-                    for _, spec, adapter in registry_changes(entry):
+                    for _, spec, adapter in registry_changes(entry, self.state):
                         adapter.rollback(spec)
                     if current == entry['before']:
                         entry['phase'] = 'rolled-back'
@@ -529,8 +538,8 @@ class Store:
             if digest(entry['path']) != entry['after']:
                 raise ValueError('drift blocks undo: ' + entry['path'])
             op = {'path': entry['path']}
-            for kind, spec, adapter in registry_changes(entry):
-                inverse = dict(name=spec['name'], before=spec['after'], after=spec['before'])
+            for kind, spec, adapter in registry_changes(entry, self.state):
+                inverse = dict(spec, before=spec['after'], after=spec['before'])
                 adapter.verify(inverse)
                 op[kind] = inverse
             if entry['before'] is not None:

@@ -28,6 +28,11 @@ def render(data, stream=None, *, human=None, width=None, action=None, wrap=True)
     ui.heading('Fonts')
     if data.get('status'): ui.detail('Result', data['status'])
     if data.get('transaction'): ui.detail('Transaction', data['transaction'])
+    if data.get('scope') == 'system':
+        ui.detail('Scope', 'All Windows users')
+        ui.resource_detail('Font directory', data['font_directory'])
+        ui.detail('Registry', data['registry_key'])
+        ui.detail('Administrator', 'Elevated' if data['elevated'] else 'Required to apply')
     if data.get('directory'): ui.resource_detail('Directory', data['directory'])
     if data.get('path'): ui.resource_detail('Preferences', data['path'])
     rows = data.get('items', [])
@@ -40,12 +45,14 @@ def render(data, stream=None, *, human=None, width=None, action=None, wrap=True)
         if ui.human:ui.emit()
         for key in ('id','name','target','action'):
             if row.get(key):ui.detail(key.upper() if key=='id' else key.title(),row[key])
-        for key in ('version','latest','variant','status','ownership','reason','face','source','provider','codepoint','glyph','pinned','selection'):
+        for key in ('version','latest','variant','status','scope','ownership','reason','face','source','provider','codepoint','glyph','pinned','selection'):
             if row.get(key) is not None: ui.detail(key.title(), row[key])
         if ui.human and row.get('collection'):ui.detail('Collection',row['collection'])
         if row.get('installed'): ui.detail('Installed', row['installed']['version'] + ' / ' + row['installed']['variant'])
         if row.get('pin'): ui.detail('Pinned', row['pin'])
         if row.get('path'): ui.resource_detail('Path', row['path'])
+        if 'before' in row and 'after' in row: ui.detail('Value', (row['before'] or '(absent)') + ' -> ' + (row['after'] or '(absent)'))
+        if row.get('user_registration'): ui.detail('Also registered for current user', row['user_registration'])
         if row.get('aliases'): ui.detail('Aliases', ', '.join(row['aliases']))
         if 'stored_versions' in row: ui.detail('Stored', ', '.join(row['stored_versions']) or 'none; history retained')
         for active in row.get('active',[]): ui.detail('Active',active['version']+' / '+active['selection'])
@@ -109,10 +116,11 @@ def system_fonts(library):
         rows = []
         for hive, label in ((winreg.HKEY_CURRENT_USER,'user'), (winreg.HKEY_LOCAL_MACHINE,'system')):
             try:
-                with winreg.OpenKey(hive, font_registry.KEY) as key:
+                access = winreg.KEY_READ | (winreg.KEY_WOW64_64KEY if label == 'system' else 0)
+                with winreg.OpenKey(hive, font_registry.KEY, 0, access) as key:
                     for index in range(min(winreg.QueryInfoKey(key)[1], 20000)):
                         name, path, kind = winreg.EnumValue(key,index)
-                        if kind == winreg.REG_SZ: rows.append(dict(name=name,path=path,source=label,provider='external'))
+                        if kind == winreg.REG_SZ: rows.append(dict(name=name,path=path,source=label,scope=label,provider='external'))
             except FileNotFoundError: pass
         return rows
     if not shutil.which('fc-list'): raise ValueError('system inventory requires optional fontconfig (fc-list)')
@@ -145,6 +153,9 @@ def plan_action(library, args, temporary):
     with sequence('Prepare font changes', 2) as preparation:
         with preparation.step('Prepare selected font changes'):
             action = args.action
+            if library.system and action == 'install':
+                from fonts.machine import install
+                return install(library, args, temporary)
             if action=='set' or action=='use' and args.target:
                 from fonts.defaults import set_font
                 return set_font(library,args,temporary)
@@ -187,7 +198,9 @@ def plan_action(library, args, temporary):
                 if action=='rollback' and not plan.document['families'][identity].get('installed'):
                     ops.replace_active(plan,identity,args.version)
                 else:ops.install(plan,identity,args.version,args.variant)
-            elif action == 'uninstall': ops.uninstall(plan,identity)
+            elif action == 'uninstall':
+                ops.uninstall(plan,identity)
+                if library.system: del plan.document['families'][identity]
             elif action in ('pin','unpin'):
                 row = plan.document['families'][identity]
                 value = ops.version_for(plan,identity,args.version)[0] if action=='pin' else None
@@ -229,10 +242,15 @@ def plan_action(library, args, temporary):
                 from transactions import Store
                 store=Store(library.state); record=store.load(args.operand)
                 prefix=library.transaction_action('')
-                if not record['action'].startswith(prefix) or (not library.directory and record['action'].startswith('fonts-directory-')):
-                    raise ValueError('transaction belongs to another font scope; select its --directory or use dots files undo')
+                if (not record['action'].startswith(prefix)
+                        or not library.system and record['action'].startswith('fonts-system-')
+                        or not library.directory and record['action'].startswith('fonts-directory-')):
+                    raise ValueError('transaction belongs to another font scope; select its --system or --directory scope')
                 if library.directory: plan=Plan(Library(platform=library.platform))
                 plan.operations,plan.guards,_=store.inverse(args.operand)
+                if library.system:
+                    plan.items.extend(ops.machine_registration_item(library,op['font_registry'])
+                                      for op in plan.operations if 'font_registry' in op)
                 from fonts.inventory import user_roots
                 if any('font_registry' in op or any(Path(op['path']).is_relative_to(root) for root in user_roots(plan.library)) for op in plan.operations): plan.refresh.add('fonts')
                 if any(op['path']==str(library.home/'.termux/font.ttf') for op in plan.operations): plan.refresh.add('termux')
@@ -258,14 +276,13 @@ def mutate(library,args,*,context=None):
         with permanent_output():
             approve(plan,args,context=context)
         from files.events import OperationOutput
-        from transactions import Store
         with stages.step('Apply font changes'):
-            result=Store(library.state,observer=OperationOutput.for_args(args)).apply(library.transaction_action(args.action),plan.operations,plan.guards,retain=True)
-        data=dict(schema=1,status=result['status'],transaction=result.get('id'),items=plan.items)
+            result=plan.commit(args.action, owner=library, observer=OperationOutput.for_args(args))
+        data=dict(schema=1,status=result['status'],transaction=result.get('id'),items=plan.items,**plan.scope_fields())
         if library.directory:data['directory']=str(library.directory)
         with stages.step('Refresh font consumers'):
             if result['status']=='complete':
-                if args.action=='undo': plan.document=Library(platform=library.platform).document
+                if args.action=='undo': plan.document=Library(platform=library.platform,system=library.system).document
                 data['notices']=ops.refresh(plan,no_reload=args.no_reload)
         return data
 
@@ -278,7 +295,17 @@ def run(argv=None):
     from progress import configure as progress_configure
     progress_configure(not (args.json or args.dry_run or args.action == 'path'))
     action=args.action
-    library=Library(directory=args.directory)
+    system = args.system and action in ('install','uninstall','undo')
+    if system:
+        import font_registry
+        if os.name != 'nt': raise ValueError('--system installation requires native Windows')
+        if args.directory: raise ValueError('--system and --directory select different destinations')
+        if not args.dry_run and not font_registry.elevated():
+            words = argv if argv is not None else sys.argv[1:]
+            import re
+            rerun = ' '.join(word if re.fullmatch(r'[-\w./:]+', word) else "'" + word.replace("'", "''") + "'" for word in words)
+            raise ValueError('Run in an Administrator PowerShell: dots fonts ' + rerun)
+    library=Library(directory=args.directory, system=system)
     args._directory=str(library.directory) if library.directory else None
     interactive=not args.json and not args.print and (terminal() or bool(os.environ.get('DOTS_MENU_CONTEXT')))
     if action in (None,'browse','installed') and not args.json and not args.print and (interactive or action=='browse'):
@@ -308,10 +335,13 @@ def run(argv=None):
         emit(dict(schema=1,items=downloaded_rows(library)),args)
     elif action in ('list','search','browse'):
         rows=system_fonts(library) if args.system else library.rows(available=action in ('search','browse'))
+        if action == 'list' and args.installed and not args.system and not library.directory and library.platform == 'windows':
+            rows = [dict(row, scope='user') for row in rows]
+            rows.extend(dict(row, scope='system') for row in Library(system=True).rows())
         terms=(args.query or args.operand or '').casefold().split()
         rows=[row for row in rows if all(term.replace(' ','') in json.dumps(row,ensure_ascii=False).casefold().replace(' ','') for term in terms)
               and (not args.source or args.source=='all' or row.get('provider')==args.source)
-              and (not args.installed or (row.get('stored_versions') if library.directory else row.get('installed')))
+              and (not args.installed or args.system or (row.get('stored_versions') if library.directory else row.get('installed')))
               and (not args.downloaded or not library.directory or row.get('stored_versions'))
               and (not args.monospace or any(font['monospace'] for v in row.get('versions',{}).values() for font in v.get('fonts',[])))]
         emit(dict(schema=1,items=rows),args)

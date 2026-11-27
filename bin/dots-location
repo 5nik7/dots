@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# dots:summary=Find the current city using Windows Location Services
+# dots:usage=[--refresh | --cached] [--json]
+# dots:option=--refresh||flag|Request a fresh Windows location
+# dots:option=--cached||flag|Read the last saved city without contacting a provider
+# dots:option=--json||flag|Print the city and cache details as JSON
+# dots:option=--help|-h|flag|Show usage without looking up a location
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/windows_location.py" "$@"

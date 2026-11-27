@@ -29,7 +29,9 @@ $dotsCompleter = {
     $words = @()
     foreach ($element in @($commandAst.CommandElements | Select-Object -Skip 1)) {
         if ($element.Extent.StartOffset -ge $cursorPosition) { break }
-        if ($element -is [System.Management.Automation.Language.StringConstantExpressionAst]) {
+        if ($cursorPosition -lt $element.Extent.EndOffset) {
+            $words += $wordToComplete
+        } elseif ($element -is [System.Management.Automation.Language.StringConstantExpressionAst]) {
             $words += $element.Value
         } else {
             # Completion must never evaluate arbitrary AST expressions.
@@ -64,6 +66,10 @@ $dotsCompleter = {
             . (Join-Path $env:DOTS 'lib/dots/files/entry.ps1')
             $json = Invoke-DotsFiles $env:DOTS 'native-completion' (@('--complete', 'powershell', $commandName) + $words)
             $candidates = $json | ConvertFrom-Json
+            if (-not $candidates) {
+                if ($global:_DotsTabRequest) { $global:_DotsTabRequest.Empty = $true }
+                return
+            }
             foreach ($row in $candidates) {
                 if (-not $row.value) { continue }
                 $insert = if ($row.value -match '[\s\x27"`$;&|()]') { "'" + $row.value.Replace("'", "''") + "'" } else { $row.value }
@@ -72,32 +78,43 @@ $dotsCompleter = {
             }
             return
         }
-        $rows = & (Join-Path $env:DOTS 'bin/dots.ps1') __complete @words 2>$null
+        $rows = & (Join-Path $env:DOTS 'bin/dots.ps1') __complete --display-types @words 2>$null
+        if (-not $rows) {
+            if ($global:_DotsTabRequest) { $global:_DotsTabRequest.Empty = $true }
+            return
+        }
         foreach ($row in $rows) {
-            $fields = $row -split "`t", 3
+            $fields = $row -split "`t", 4
             if ($fields.Count -lt 2) { continue }
             if ($fields[0] -in @('file', 'directory')) {
                 $lead = $fields[1]
-                $prefix = if ($wordToComplete) { $wordToComplete.Trim("'", '"') } else { '.' }
+                $prefix = if ($wordToComplete) { $wordToComplete.Trim("'", '"') } else { '' }
                 if ($lead -and $prefix.StartsWith($lead, [StringComparison]::Ordinal)) {
                     $prefix = $prefix.Substring($lead.Length)
-                    if (-not $prefix) { $prefix = '.' }
                 }
-                $parent = Split-Path -Parent $prefix
+                $parent = if ($prefix -match '[/\\]$') { $prefix }
+                          elseif ($prefix) { [IO.Path]::GetDirectoryName($prefix) }
                 if (-not $parent) { $parent = '.' }
-                $leaf = if ($wordToComplete) { Split-Path -Leaf $prefix } else { '' }
+                $leaf = [IO.Path]::GetFileName($prefix)
                 Get-ChildItem -LiteralPath $parent -ErrorAction SilentlyContinue | Where-Object {
                     $_.Name.StartsWith($leaf, [StringComparison]::OrdinalIgnoreCase) -and
                     ($fields[0] -eq 'file' -or $_.PSIsContainer)
                 } | ForEach-Object {
                     $value = $lead + $_.FullName
-                    [System.Management.Automation.CompletionResult]::new("'" + $value.Replace("'", "''") + "'", $_.Name, 'ParameterValue', $value)
+                    $kind = if ($_.PSIsContainer) { 'ProviderContainer' } else { 'ProviderItem' }
+                    [System.Management.Automation.CompletionResult]::new("'" + $value.Replace("'", "''") + "'", $_.Name, $kind, $value)
                 }
             } elseif ($fields[0] -eq 'candidate') {
                 $value = $fields[1]
                 $insert = if ($value -match '[\s\x27"`$;&|()]') { "'" + $value.Replace("'", "''") + "'" } else { $value }
-                $description = if ($fields.Count -eq 3 -and $fields[2]) { $fields[2] } else { $value }
-                $kind = if ($value.EndsWith('.') -or $value.EndsWith('[')) { 'ProviderContainer' } else { 'ParameterValue' }
+                $description = if ($fields.Count -ge 3 -and $fields[2]) { $fields[2] } else { $value }
+                if ($global:_DotsTabRequest -and $fields.Count -gt 3 -and $fields[3] -in 'branch', 'tag', 'remote') {
+                    $global:_DotsTabRequest.Roles[$insert] = $fields[3]
+                }
+                $kind = if ($value.EndsWith('.') -or $value.EndsWith('[')) { 'Namespace' }
+                        elseif ($fields.Count -gt 3 -and $fields[3] -eq 'command') { 'Command' }
+                        elseif ($fields.Count -gt 3 -and $fields[3] -eq 'option') { 'ParameterName' }
+                        else { 'ParameterValue' }
                 [System.Management.Automation.CompletionResult]::new($insert, $value, $kind, $description)
             }
         }

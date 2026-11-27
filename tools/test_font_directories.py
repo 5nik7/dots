@@ -64,6 +64,50 @@ class FontDirectories(unittest.TestCase):
             versions={v:dict(fingerprint=v,provider='nerd',revision=v) for v in versions})
         plan=Plan(library);plan.put(library.catalog_path,data=catalog);plan.apply('fixture-catalog')
 
+    def test_machine_install_from_directory_and_downloaded_picker(self):
+        from contextlib import redirect_stdout
+        from fonts import menus
+        from fonts.completion import complete
+        windows,machine,command = fixtures.Fonts.machine_fixture(self)
+        identity,version = self.seed(directory='DOTFONTS',platform='windows')
+        personal = self.library('windows')
+        source = self.library('windows','DOTFONTS')
+        scope = str(source.directory)
+        args = parser().parse_args(['browse','--downloaded'])
+        row = dict(id=identity,source=scope,versions=source.families[identity]['versions'])
+        choices = []
+        def choose(title,options,context):
+            if title=='Destination':
+                self.assertIn(('system','Install for all Windows users'),options)
+            return {'Downloaded font actions':'install','Version':version,'Destination':'system','Variant':'mono'}[title]
+        with patch('fonts.model.detect',return_value={'platform':'windows'}), \
+             patch.object(menus,'select_row',side_effect=[row,None]), patch.object(menus,'select',side_effect=choose), \
+             patch.object(menus,'invoke',side_effect=lambda argv,*_:choices.append(argv)):
+            menus.downloaded(args,context=object())
+        self.assertEqual(choices,[['install',identity,'--from',scope,'--version',version,'--variant','mono','--system']])
+        self.assertEqual(command('install',*choices[0][1:-1])['status'],'complete')
+        self.assertEqual(personal.guard,self.library('windows').guard)
+        self.assertTrue(machine)
+        result = io.StringIO()
+        with patch('fonts.model.detect',return_value={'platform':'windows'}), redirect_stdout(result):
+            complete(['uninstall','--system','nerd:'])
+        self.assertIn(identity,result.getvalue())
+        from fonts_cli import run
+        result = io.StringIO()
+        with patch('fonts.model.detect',return_value={'platform':'windows'}), redirect_stdout(result):
+            run(['list','--installed','--json'])
+        self.assertEqual([(r['id'],r['scope']) for r in json.loads(result.getvalue())['items']],[(identity,'system')])
+
+    def test_machine_catalog_preview_defers_missing_faces(self):
+        windows,_,command = fixtures.Fonts.machine_fixture(self)
+        self.catalog(['v1.0.0'])
+        with patch('fonts.providers.download',side_effect=AssertionError('unexpected download')):
+            preview = command('install','nerd:Fixture',preview=True)
+        self.assertEqual(preview['operations'],[])
+        self.assertEqual(preview['items'][0]['version'],'v1.0.0')
+        self.assertTrue(preview['registry_key'].startswith('HKLM'))
+        self.assertFalse((windows/'DotsFontState').exists())
+
     def test_directories_resolve_backend_aliases_without_creating_paths(self):
         destinations=Destinations()
         self.assertNotIn('SDOTSFONTS',destinations.names)

@@ -2,6 +2,15 @@
 if ($global:_DotsLeanPowerShellReady) { return }
 . (Join-Path $env:PWSH 'helpers.ps1')
 
+if ($env:LOCALAPPDATA) {
+  $dotsMiseCompletion = Join-Path $env:LOCALAPPDATA 'PowerShell/completions/mise.ps1'
+  if ([IO.File]::Exists($dotsMiseCompletion)) {
+    try { . (& (Join-Path $env:PWSH 'mise-completion-source.ps1') -Path $dotsMiseCompletion) }
+    catch { Write-Warning ('Dots mise completion: ' + $_.Exception.Message) }
+  }
+  Remove-Variable dotsMiseCompletion
+}
+
 $global:DOTS = $env:DOTS
 $global:DOTFILES = $env:DOTFILES
 $global:DOTSBIN = $env:DOTBIN
@@ -33,6 +42,16 @@ if ($Host.Name -eq 'ConsoleHost' -and -not [Console]::IsInputRedirected) {
       -HistorySearchCursorMovesToEnd -MaximumHistoryCount 50000
     Set-PSReadLineKeyHandler -Chord 'Tab', 'Alt+f' -BriefDescription DotsFuzzyCompletion `
       -ScriptBlock { Invoke-DotsFuzzyCompletion }
+    if ($Host.UI.SupportsVirtualTerminal -and -not [Console]::IsOutputRedirected) {
+      $global:_DotsViCursor = {
+        param($Mode)
+        # PSReadLine may redraw the prompt while editing in command mode.
+        if (-not $Mode -and [Microsoft.PowerShell.PSConsoleReadLine]::InViCommandMode()) { $Mode = 'Command' }
+        if ($Mode -eq 'Command') { [Console]::Write(([char]27 + '[2 q')) }
+        else { [Console]::Write(([char]27 + '[6 q')) }
+      }
+      Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $global:_DotsViCursor
+    }
   } catch { Write-Warning ('Dots line editing: ' + $_.Exception.Message) }
 }
 $global:_DotsLeanPowerShellReady = $true

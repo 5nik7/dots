@@ -1,7 +1,8 @@
 # Personal fonts
 
 `dots fonts` and standalone `fonts` share a Python controller for per-user font
-management on Termux, Linux, WSL and native Windows. Both commands read TTF and
+management on Termux, Linux, WSL and native Windows. On Windows, [install
+for all users](#install-for-all-windows-users) with `--system`. Both commands read TTF and
 OTF metadata using the Python 3.11+ standard library. Updating an existing
 checkout supplies the reader on the next invocation. Core setup includes the
 standalone command. Select the optional Fonts setup component to restore saved
@@ -148,6 +149,58 @@ adding desktop font registration.
 Uninstall refuses active families. Removal refuses installed, migrated, active or pinned
 versions, changed payloads and unowned paths. Select another font or undo the Set
 transaction before removing an active selection.
+
+## Install for all Windows users
+
+On native Windows, add `--system` to install every style of the selected variant
+for all accounts. Start with a preview in an ordinary PowerShell window.
+
+```powershell
+dots fonts install nerd:JetBrainsMono --variant mono --system --dry-run
+```
+
+The preview shows the Windows Fonts directory, the HKLM registry key, each
+retained face and any matching registration for the current user. For a release
+that still needs downloading, the offline preview names the version. The actual
+command stages and validates its faces before prompting.
+
+Open **PowerShell as Administrator** and run the install. You can select an
+exact release with `--version`, a retained source with `--from`, or multiple
+families in one transaction. In the Downloaded fonts picker, choose **Install
+into a destination** and then **Install for all Windows users**.
+
+```powershell
+dots fonts install nerd:JetBrainsMono --variant mono --system
+dots fonts list --installed
+dots fonts uninstall nerd:JetBrainsMono --system
+```
+
+`list --installed` labels Dots registrations by scope. A personal registration
+can coexist with a machine registration. Each scope has its own uninstall and
+history. Application font choices still use `dots fonts set`.
+To reverse a machine install or uninstall, use its reported transaction ID
+with `dots fonts undo TRANSACTION --system --dry-run`, then apply from an
+Administrator PowerShell. If another account or application already uses the
+font, reopen the application or sign in again to pick up the change.
+
+Machine receipts and recovery journals live under
+`%SystemRoot%\DotsFontState\dots`. To inspect or recover an interrupted
+transaction, open an Administrator PowerShell and select that history for the
+duration of the command.
+
+```powershell
+$previousState = $env:XDG_STATE_HOME
+try {
+    $env:XDG_STATE_HOME = Join-Path ([Environment]::GetFolderPath('Windows')) 'DotsFontState'
+    dots files history
+    dots files recover TRANSACTION --dry-run
+} finally {
+    $env:XDG_STATE_HOME = $previousState
+}
+```
+
+Replace `TRANSACTION` with the reported ID and remove `--dry-run` to apply
+recovery. Termux, Linux and WSL support their existing per-user destinations.
 
 ## Store versions in a Dots directory
 

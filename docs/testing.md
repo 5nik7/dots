@@ -89,6 +89,13 @@ Run `python3 -B tools/test_clipboard_history.py` and `python3 -B tools/test_clip
 
 ## Personal fonts
 
+For Windows all-users installation, run `python -B tools/test_fonts.py -k system_font`
+and `python -B tools/test_font_directories.py -k machine`. Fixtures substitute
+the Windows directory and both registry hives. On Windows a separate case
+exercises native security descriptors on a temporary directory. These checks
+cover scope selection, collisions, rollback and independent user and machine receipts.
+Live font visibility in another signed-in account is a separate acceptance check.
+
 `python3 -B tools/test_fonts_presentation.py` covers Fonts human/redirected/JSON
 boundaries, configured 40/80/120-column wrapping, styles/icons, all route help,
 typed Config discovery/reset/activation, fresh four-shell completion, inert preview
@@ -1001,6 +1008,8 @@ Run sequentially with owned roots; native Termux evidence is not Windows evidenc
 
 ## Native PowerShell parity
 
+Set `DOTS_TEST_POWERSHELL` to `powershell` or `pwsh` and run `python -B tools/test_powershell_init.py` and `python -B tools/test_powershell_tab.py` once per engine. The console-only profile cases need a terminal. The picker fixtures check the editor replacement range, quoted paths, cancellation, semantic and file colors, and the native fallback. For keyboard acceptance, press Tab then Escape twice after `dots files list `, choose a flag, and inspect the complete line. Check the beam and block after `Esc`, `i`, a prompt redraw and exiting Neovim.
+
 `python3 -B tools/test_native_cli.py` covers static route coverage, encoded literal arguments, file preview/completion, Windows path validation and app variants, palette comparison with Bash, native publication idempotence/drift/undo, setup inspection and available PowerShell engines. Set `DOTS_TEST_POWERSHELL=powershell` or `pwsh` to require an engine; absence becomes a failure. Otherwise unavailable engines are explicitly skipped. Use `python` on Windows. All roots and mutation targets are disposable fixtures.
 
 `python3 -B tools/test_native_git.py` runs the existing portable Git safety cases against `lib/dots/git/cli.py`. It excludes three tests that explicitly launch Bash/PTYS; it does not claim native terminal cancellation coverage. The existing Bash Git runner remains unchanged by default. Run these suites sequentially on Termux.
@@ -1032,6 +1041,8 @@ Acquisition regressions check the inherited file-size resource limit, the 64 KiB
 
 ## wttr and daylight clock
 
+Run `python -B tools/test_windows_location.py` for the Windows device, address and city-cache contracts. Use synthetic coordinates, responses and temporary cache roots. Verify `dots location`, `wttr`, and `dots wttr` via both Windows PowerShell 5.1 and PowerShell 7.
+
 Run `python3 -B tools/test_wttr.py`, `python3 -B tools/test_wttr_browser.py`, and `python3 -B tools/generate_wttr_commands.py --check`, then `python3 -B tools/test_tmux_status.py` and `python3 -B tools/test_android_status.py` sequentially. Browser fixtures cover both dispatcher paths, static completion, literal session controls, cache-only previews, stale/expired failures, one-fetch reports, fallback, cancellation and private two-client popup sizing. Generated adapter/completion checks compare source artifacts without installation. Weather fixtures own home/config/cache/state and mock geo/HTTP/curl; they check city/config precedence, city-versus-neighborhood labels, cache-version recovery, exact stock URLs/bytes, parser conflicts and provider-free service routes; they cover cache expiry, bad data, deadlines, cooldown/recovery, undecorated data, completion backup/undo, native shell completion and terminal presentation. Help tests assert exact artwork, gradient endpoints/interpolation/fallbacks, title icon controls and provider/config independence. Alias tests compare every short/long form, attached/grouped parsing, stock conflicts, native bridge data bytes and case-sensitive completion contexts. Styling tests use explicit fixture temperature scales, named detail glyphs/styles and label gaps independent of owner config edits. Solar-field tests cover padded/unpadded hours, noon/midnight, preserved provider/cache data and unchanged daylight boundaries; terminal assertions check trailing detail icons. They cover variable band counts, boundaries/conversion, combined attributes and bright variants, widget directive preflight/manual mode/accumulation/reset, published palette changes and bounded malformed-snapshot fallbacks, named/hex/index overrides, forecast icons, attribution, ANSI/plain/tmux widgets, configurable aligned label gaps and single-space icon gaps, named detail glyphs/colors/directives, independent location-heading styling, shared-span wrapping and actual FZF-tab descriptions/insertion. Plain and data paths bypass palette reads. Tmux widget tests check escaped literals and restoration of incoming colors and text attributes. Tmux tests attach clients on private sockets at 40/80/120 columns, check day/night/unknown colors and repeated reloads, and assert no Android network module calls. Run the Androidots geo/status/session/bar regressions and affected theme/file/native-adapter suites. Never use live weather, real coordinates, permissions or the live tmux server as fixtures. Native Windows PowerShell 5.1/7 cases must be recorded as pending/skipped when unavailable. See [the focused plan](../plans/wttr.md).
 
 ## eza theme
@@ -1048,6 +1059,9 @@ The native consumer case targets Television 0.15.9. Native Windows PowerShell 5.
 
 `tools/test_git_submodules.py` also covers named and repeated navigation, ambiguous basenames, collection-info counts, contextual help/completion, identity glyph/data separation and named-publication parent protection through both front ends. These use disposable repositories; native Windows terminal acceptance is separate.
 
+## Rainmeter theme
+
+Run `python3 -B tools/test_rainmeter_theme.py -v` for all-palette Bash/Python equivalence of `rainmeter.inc`: every `Dots_<role>` variable is bare `RRGGBB` and matches the published semantic color. Pywal uses a synthetic export. The suite needs POSIX Bash and skips on native Windows; run it under Linux, WSL (from a clone with LF line endings) or Termux. Rainmeter skin behavior is a manual native Windows check: load the 5ui7e clock and settings window, switch color sources, and check `%APPDATA%\Rainmeter\Rainmeter.log` for include errors.
 
 ## Leaf theme
 

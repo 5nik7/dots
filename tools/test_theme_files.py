@@ -312,6 +312,24 @@ class ThemeFiles(unittest.TestCase):
                         self.assertEqual(len(data['colors']['ansi']), 8)
                         self.assertEqual(len(data['colors']['brights']), 8)
 
+    def test_windows_terminal_ui_theme_across_palettes(self):
+        from palette_native import Themes
+        background = 'terminalBackground'
+        theme = {
+            'name': 'dots',
+            'tab': {'background': background, 'iconStyle': 'default', 'showCloseButton': 'always',
+                    'unfocusedBackground': None},
+            'tabRow': {'background': background, 'unfocusedBackground': background},
+            'window': {'applicationTheme': 'dark', 'experimental.rainbowFrame': False,
+                       'frame': None, 'showWorkspacesButton': True, 'unfocusedFrame': None, 'useMica': False},
+        }
+        bundled = ROOT / 'default/themed'
+        shutil.copyfile(bundled/'windows-terminal.json.tpl', self.templates/'windows-terminal.json.tpl')
+        for identity, templates in (('catppuccin-mocha', bundled), ('catppuccin-latte', self.templates)):
+            with self.subTest(identity=identity), patch.dict(os.environ, DOTS=str(ROOT), DOTS_THEME_TEMPLATES=str(templates)):
+                rendered = Themes().render_template(identity, 'windows-terminal-theme.json')
+                self.assertEqual(json.loads(rendered), {'theme': 'dots', 'themes': [theme]})
+
     @unittest.skipIf(os.name == 'nt', 'POSIX terminal acceptance')
     def test_terminal_widths_and_sanitized_previews(self):
         import fcntl

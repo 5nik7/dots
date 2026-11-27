@@ -1,5 +1,32 @@
 # Personal font management
 
+## All-users installation on native Windows
+
+**Implemented.** Install accepts `--system` with retained personal, directory
+or catalog sources, exact versions, variant selection and family batches.
+Uninstall and Undo take the same scope. Machine font bytes live in the Windows
+Fonts directory, registrations use HKLM, and the machine collection and journal
+are shared across accounts. Shared read access allows preview before elevation.
+Applying requires an Administrator PowerShell. The default destination remains
+the current user's font library on both frontends.
+
+- **Menu update.** Downloaded fonts offers **Install for all Windows users**
+  in its destination picker. The reviewed command carries the selected source,
+  version and variant. Uninstall and Undo use explicit commands.
+- **No configuration integration change needed.** Installation scope is an
+  explicit choice for each operation. The existing Fonts renderer and controls
+  cover the scope, registry and elevation details.
+- **Delivery.** The Fonts owner maintains shared parsing, native dispatch,
+  static help and contextual completion. The root README and bootstrap need
+  no changes because installation remains an optional action after setup.
+- **Acceptance.** Isolated tests exercise a personal and a machine installation
+  of the same family, previews without elevation, repeated installs, mixed-style
+  batches, directory sources, ownership conflicts, injected failures, undo and
+  drift. The Windows ACL fixture uses the actual Windows security APIs in a
+  temporary directory. Bash on WSL tests the unsupported-platform diagnostic.
+  Live installation from an elevated shell, font visibility in a second account
+  and removal while a native application holds the file remain pending.
+
 ## Portable font parsing
 
 **Implemented.** Imports, provider downloads, installed-family selection and setup

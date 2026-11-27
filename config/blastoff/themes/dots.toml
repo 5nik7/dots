@@ -70,6 +70,7 @@ truncation_length = 0
 truncate_to_repo = false
 fish_style_pwd_dir_length = 0
 use_logical_path = true
+use_os_path_sep = false
 
 # Custom formats cannot expand built-in modules; render this group once via vcs.
 [vcs]

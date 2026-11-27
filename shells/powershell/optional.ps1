@@ -32,25 +32,7 @@ try {
         }
       }
       completions {
-        foreach ($spec in @(
-          @('starship', 'completions', 'powershell'),
-          @('gh', 'completion', '-s', 'powershell'),
-          @('bat', '--completion', 'ps1'),
-          @('uv', 'generate-shell-completion', 'powershell'),
-          @('uvx', '--generate-shell-completion', 'powershell')
-        )) {
-          $tool = Get-Command $spec[0] -CommandType Application -TotalCount 1 -ErrorAction Ignore
-          if (-not $tool) { continue }
-          $toolArgs = $spec[1..($spec.Count - 1)]
-          $generated = & $tool @toolArgs | Out-String
-          if ($LASTEXITCODE -ne 0) { throw "Completion generation failed: $($spec[0])" }
-          if ($generated.Trim()) { Invoke-Expression $generated -ErrorAction Stop }
-        }
-        Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
-          param($wordToComplete, $commandAst, $cursorPosition)
-          winget complete --word="$wordToComplete" --commandline "$commandAst" --position $cursorPosition |
-            ForEach-Object { [Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) }
-        }
+        & (Join-Path $PSScriptRoot 'host-completion.ps1') -All
       }
       { $_ -in 'starship', 'zoxide', 'mise', 'vfox', 'atuin', 'direnv', 'tv' } {
         . (Join-Path $env:DOTS 'lib/dots/shell/tools.ps1') $Feature

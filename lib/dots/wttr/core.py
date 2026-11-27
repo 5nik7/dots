@@ -132,9 +132,21 @@ def resolve_location(explicit, cfg, background, timeout):
         return explicit, 'manual', ''
     if cfg['default_location']:
         return cfg['default_location'], 'default', ''
+    geo_timeout = min(timeout, 1) if background else timeout / 2
+    if sys.platform == 'win32':
+        from windows_location import LocationUnavailable, resolve_city
+        try:
+            fix = resolve_city(cached=background, max_age=cfg['location_max_age'] if background else None,
+                               timeout=geo_timeout)
+            city = validate_location(fix.get('city'))
+        except (LocationUnavailable, ValueError, OSError) as error:
+            raise Unavailable(f'{error}; run dots location, set default_location or pass --location') from error
+        if fix['stale'] and not background:
+            print('wttr: Windows location unavailable. Using the last saved city.', file=sys.stderr)
+        source = 'cached city' if background or fix['stale'] else 'city'
+        return city, source, clean(fix.get('attribution') or '')
     helper = geo_helper()
     if helper:
-        geo_timeout = min(timeout, 1) if background else timeout / 2
         args = [helper, '--json']
         args += ['--max-age', str(cfg['location_max_age']), '--cached'] if background else ['--timeout', str(max(1, int(geo_timeout)))]
         try:

@@ -56,6 +56,27 @@ def font(path,family='Fixture Mono',style='Regular',version='Version 1.0'):
     builder.setupPost(isFixedPitch=1);builder.setupMaxp();builder.save(path)
 
 
+@unittest.skipUnless(os.name == 'nt','requires native Windows registry constants')
+class WindowsFontRegistry(unittest.TestCase):
+    def test_system_font_registry_selects_native_machine_view(self):
+        import winreg
+        import font_registry
+        for system,hive,view in ((True,winreg.HKEY_LOCAL_MACHINE,winreg.KEY_WOW64_64KEY),
+                                 (False,winreg.HKEY_CURRENT_USER,0)):
+            with self.subTest(system=system), patch.object(winreg,'OpenKey') as opened, \
+                 patch.object(winreg,'QueryValueEx',return_value=('fixture.ttf',winreg.REG_SZ)):
+                self.assertEqual(font_registry.read('Fixture',system=system),'fixture.ttf')
+                opened.assert_called_once_with(hive,font_registry.KEY,0,winreg.KEY_READ | view)
+            with patch.object(winreg,'CreateKeyEx') as opened, patch.object(winreg,'SetValueEx') as assign, \
+                 patch.object(winreg,'DeleteValue') as delete, patch.object(winreg,'FlushKey'):
+                font_registry.write('Fixture','fixture.ttf',system=system)
+                opened.assert_called_once_with(hive,font_registry.KEY,0,winreg.KEY_SET_VALUE | view)
+                key = opened.return_value.__enter__.return_value
+                assign.assert_called_once_with(key,'Fixture',0,winreg.REG_SZ,'fixture.ttf')
+                font_registry.write('Fixture',None,system=system)
+                delete.assert_called_once_with(key,'Fixture')
+
+
 class FontMetadata(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix='dots-font-metadata-')
@@ -261,6 +282,146 @@ class Fonts(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=self.home/'tmp') as tmp:
             identity,version=ops.import_files(plan,self.source,tmp);plan.finish();result=plan.apply('import')
         return identity,version,result
+
+    def machine_fixture(self):
+        from fonts_cli import mutate
+        windows = self.home/'Native Windows'
+        (windows/'Fonts').mkdir(parents=True)
+        patch('font_registry.windows_root', return_value=windows).start()
+        patch('font_registry.elevated', return_value=False).start()
+        def state_directory(path, *, create=False):
+            if create: path.mkdir(exist_ok=True)
+        patch('fonts.machine_state.check_directory', side_effect=state_directory).start()
+        machine = {}
+        patch('font_registry.machine_values', side_effect=lambda: list(machine.items())).start()
+        patch('font_registry.read', side_effect=lambda name,system=False: (machine if system else self.registry).get(name)).start()
+        def write(name,value,system=False):
+            hive = machine if system else self.registry
+            if value is None:
+                hive.pop(name,None)
+            else:
+                hive[name] = value
+        patch('font_registry.write', side_effect=write).start()
+        patch('fonts.operations.refresh', return_value=[]).start()
+        def command(action,*words,preview=False):
+            args = parser().parse_args([action,*words,'--system','--dry-run' if preview else '--yes'])
+            with patch('font_registry.elevated',return_value=not preview):
+                return mutate(Library(platform='windows',system=True),args)
+        return windows, machine, command
+
+    def test_system_font_lifecycle_and_scope(self):
+        windows, machine, command = self.machine_fixture()
+        font(self.source/'Fixture Bold.otf',style='Bold')
+        identity,version,_ = self.imported('windows')
+        personal = self.library('windows')
+        user_plan = Plan(personal)
+        # The simulated personal Fonts directory uses this test host's paths.
+        with patch('font_registry.PureWindowsPath',Path):
+            ops.install(user_plan,identity)
+            user_plan.finish().apply('install')
+        user_values = dict(self.registry)
+        personal = self.library('windows')
+        preview = command('install',identity,'--from','personal','--version',version,preview=True)
+        self.assertEqual((preview['scope'],preview['font_directory'],preview['elevated']),('system',str(windows/'Fonts'),False))
+        self.assertEqual({row['user_registration'] for row in preview['items'] if 'face' in row},set(user_values.values()))
+        self.assertFalse((windows/'DotsFontState').exists())
+        self.assertFalse(machine)
+        with tempfile.TemporaryDirectory(dir=self.home/'tmp') as staging:
+            args = parser().parse_args(['install',identity,'--system','--dry-run'])
+            plan = plan_action(Library(platform='windows',system=True),args,staging)
+            with self.assertRaisesRegex(ValueError,'machine transaction store'):
+                Store(personal.state).apply('fonts-install',plan.operations,plan.guards)
+        result = command('install',identity)
+        self.assertEqual(result['status'],'complete')
+        self.assertEqual(set(machine),set(user_values))
+        for filename in machine.values():
+            self.assertEqual(Path(filename).name,filename)
+            self.assertTrue((windows/'Fonts'/filename).is_file())
+        self.assertEqual(command('install',identity)['status'],'unchanged')
+        machine_values = dict(machine)
+        removed = command('uninstall',identity)
+        self.assertEqual(machine,{})
+        self.assertEqual(list((windows/'Fonts').iterdir()),[])
+        command('undo',removed['transaction'])
+        self.assertEqual(machine,machine_values)
+        self.assertEqual(personal.guard,self.library('windows').guard)
+        self.assertEqual(self.registry,user_values)
+        name = next(iter(machine))
+        machine['Unmanaged alias'] = machine[name]
+        with self.assertRaisesRegex(ValueError,'another machine'):
+            command('uninstall',identity)
+        machine.pop('Unmanaged alias')
+        machine[name] = 'foreign.ttf'
+        with self.assertRaisesRegex(ValueError,'registration'):
+            command('undo',result['transaction'],preview=True)
+        self.assertEqual(machine[name],'foreign.ttf')
+        machine[name] = machine_values[name]
+        (windows/'Fonts'/machine[name]).write_bytes(b'edited')
+        with self.assertRaisesRegex(ValueError,'changed'):
+            command('uninstall',identity)
+
+    def test_system_font_batch_conflict_and_rollback(self):
+        windows, machine, command = self.machine_fixture()
+        first,_,_ = self.imported('windows')
+        (self.source/'-Fixture Regular.ttf').unlink()
+        font(self.source/'Other.ttf',family='Other')
+        second,_,_ = self.imported('windows')
+        machine['Other Regular (TrueType)'] = 'existing.ttf'
+        with self.assertRaisesRegex(ValueError,'owned outside'):
+            command('install',first,second)
+        self.assertFalse((windows/'DotsFontState').exists())
+        machine.clear()
+        import font_registry
+        write = font_registry.write.side_effect
+        def fail(name,value,system=False):
+            if value and name.startswith('Other '):
+                raise OSError('injected registration failure')
+            write(name,value,system)
+        with patch('font_registry.write',side_effect=fail), self.assertRaisesRegex(OSError,'injected'):
+            command('install',first,second)
+        self.assertEqual(machine,{})
+        self.assertEqual(list((windows/'Fonts').iterdir()),[])
+        library = Library(platform='windows',system=True)
+        self.assertEqual(library.families,{})
+        self.assertEqual(Store(library.state).records()[-1]['status'],'rolled-back')
+
+    def test_system_font_command_boundaries(self):
+        from fonts_cli import run
+        if os.name == 'nt':
+            with patch('font_registry.elevated',return_value=False):
+                with self.assertRaisesRegex(ValueError,'Administrator PowerShell: dots fonts install'):
+                    run(['install',"Font's Name",'--yes','--system'])
+            with self.assertRaisesRegex(ValueError,'different destinations'):
+                run(['install','SomeFont','--directory','DOTFONTS','--system','--dry-run'])
+            for engine in ('powershell','pwsh'):
+                if shutil.which(engine):
+                    with patch.dict(os.environ,DOTS_TEST_POWERSHELL=engine):
+                        self.assertIn('--system', self.execute('install','--help',powershell=True).stdout)
+                        result = self.execute('install','SomeFont','--directory','DOTFONTS','--system','--dry-run',powershell=True,code=1)
+                        self.assertIn('different destinations',result.stderr)
+        else:
+            with self.assertRaisesRegex(ValueError,'requires native Windows'):
+                run(['install','SomeFont','--system','--dry-run'])
+            self.assertIn('requires native Windows',self.execute('install','SomeFont','--system','--dry-run',bash=True,code=1).stderr)
+
+    @unittest.skipUnless(os.name == 'nt','requires native Windows ACLs')
+    def test_system_font_state_directory_acl(self):
+        from codex_attention_native import Windows
+        from fonts import machine_state
+        native = Windows()
+        sid = native.sid_text(native.sid)
+        # Exercise the real ACL API under the test user's token. Production
+        # assigns ownership to Administrators in the protected Windows folder.
+        descriptor = machine_state.DESCRIPTOR.replace('O:BA', 'O:'+sid) + '(A;OICI;FA;;;'+sid+')'
+        path = self.home/'state access'
+        with patch.object(machine_state,'DESCRIPTOR',descriptor):
+            machine_state.check_directory(path)
+            self.assertFalse(path.exists())
+            machine_state.check_directory(path,create=True)
+            machine_state.check_directory(path,create=True)
+            machine_state.check_directory(path)
+            with self.assertRaisesRegex(ValueError,'administrator-owned'):
+                machine_state.check_directory(self.source)
 
     def test_nf_shim_forwards_exact_icons_contract(self):
         cache=self.library().catalog_path;cache.parent.mkdir(parents=True)

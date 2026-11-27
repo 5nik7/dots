@@ -59,8 +59,13 @@ App Set and Restore include automatic active-profile retention and `fonts.json` 
 Native Windows also journals fixed HKCU font values constrained to the current
 user's Windows Fonts directory. Registration is checked before apply, before each
 write, during rollback and during undo. Foreign changes block destructive recovery.
-No elevation, HKLM writes, Android system-font changes or Windows/WSL translation
-occurs. Native consumers may lock a font file; close the app and retry after a
+The explicit Windows `--system` option requires an already-elevated process
+to write Dots-owned font basenames under the machine Fonts key. Preflight
+checks for foreign registrations, conflicting aliases, changed receipts and
+occupied files. Machine ownership and undo journals use an administrator-owned
+directory with an inheritable DACL. Administrators and SYSTEM can write there,
+and ordinary users can read it for previews. User-scope state and application
+settings belong to their separate workflows. Native consumers may lock a font file; close the app and retry after a
 guarded failure. App connectors change supported literal fields only, with managed
 source/copy/receipt updates in one transaction. Post-commit cache refresh and app
 notification failures are reported separately; recovery cannot establish that a

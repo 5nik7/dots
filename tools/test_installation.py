@@ -40,7 +40,9 @@ class InstallationTests(unittest.TestCase):
                         GIT_CONFIG_NOSYSTEM='1', GIT_TERMINAL_PROMPT='0')
         self.env.update(CODEX_HOME=str(self.home/'.codex'), CLAUDE_CONFIG_DIR=str(self.home/'.claude'), PI_CODING_AGENT_DIR=str(self.home/'.pi/agent'),
                         XDG_CACHE_HOME=str(self.home/'.cache'), XDG_DATA_HOME=str(self.home/'.data'))
-        for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'TELEVISION_CONFIG', 'DOTS_APP_TELEVISION_CONFIG', 'DOTS_APP_LEAF_CONFIG'):
+        self.env['SCOOP'] = str(self.home/'scoop')
+        for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'TELEVISION_CONFIG', 'DOTS_APP_TELEVISION_CONFIG', 'DOTS_APP_LEAF_CONFIG',
+                    'WT_SETTINGS_DIR', 'DOTS_APP_WT_CONFIG'):
             self.env.pop(key, None)
         self.write('.dots/sources.json', {'schema':1,'sources':[dict(id='dots',path='.',roots=['config','bin'],platforms=['termux','linux','wsl','windows'])]})
         self.write('.dots/files.json', {'schema':1,'repository':'dots','resources':[dict(id='example',source='config/example/settings',target='${CONFIG}/example/settings',strategy='link',app='example',category='config',platforms=['termux','linux','wsl','windows'])]})
@@ -67,6 +69,43 @@ class InstallationTests(unittest.TestCase):
 
     def receipt(self):
         return json.loads((self.home/'.state/dots/installation.json').read_text())
+
+    def test_windows_terminal_setup_merges_user_files_in_the_setup_journal(self):
+        settings = self.home/'wt/settings.json'
+        settings.parent.mkdir()
+        original = b'\xef\xbb\xbf{\r\n  // keep\r\n  "schemes": [],\r\n}'
+        settings.write_bytes(original)
+        invalid = self.home/'preview/settings.json'
+        invalid.parent.mkdir()
+        invalid.write_bytes(b'{"schemes":null}')
+        scheme = {'name': 'Dots', 'red': '#abcdef'}
+        theme = json.loads((ROOT/'default/themed/windows-terminal-theme.json.tpl').read_text())['themes'][0]
+        whole_file = {'app': 'wt', 'target': str(settings)}
+        with mock.patch.dict(os.environ, self.env, clear=True):
+            installation = Installation(self.repo)
+            selected = [whole_file]
+            installation.plan_wt_settings([invalid, settings], scheme, selected, theme=theme)
+            self.assertEqual(selected, [])
+            self.assertEqual(settings.read_bytes(), original)
+            self.assertEqual(installation.items[0]['status'], 'skipped')
+            result = installation.apply('install')
+            self.assertIn(b'// keep\r\n', settings.read_bytes())
+            self.assertIn(b'#abcdef', settings.read_bytes())
+            from fonts.config import json_tree
+            document = json_tree(settings.read_bytes().decode('utf-8-sig')).value
+            self.assertEqual(document['theme'], 'dots')
+            self.assertEqual(document['themes'], [theme])
+            self.assertNotIn(str(settings), self.receipt()['entries'])
+            self.assertEqual(invalid.read_bytes(), b'{"schemes":null}')
+            self.assertEqual(installation.store.load(result['id'])['operations'][0]['path'], str(settings))
+            repeated = Installation(self.repo)
+            repeated.plan_wt_settings([settings], scheme, [], theme=theme)
+            self.assertEqual(repeated.items[0]['status'], 'unchanged')
+            repeated.resources = {'windows:wt', 'theme:windows-terminal'}
+            selected = [whole_file]
+            repeated.plan_wt_settings([settings], scheme, selected)
+            self.assertEqual(selected, [whole_file])
+            self.assertEqual(repeated.items[-1]['status'], 'skipped')
 
     def legacy_git_receipts(self):
         """Recreate the two connector syncs separated by a directory-link repair."""

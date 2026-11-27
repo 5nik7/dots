@@ -93,6 +93,9 @@ def connectors(themes):
     selected = platform()
     catalog = connector_paths.profile_catalog(themes.checkout, selected)
     rows, guards = connector_paths.plan(themes.checkout, selected, catalog=catalog)
+    # A missing fragment directory still permits direct settings sync. An
+    # explicitly disabled Windows Terminal connector does not.
+    themes.wt_configured = any(row.app == 'windows-terminal' and row.supported for row in rows)
     themes.connector_catalogs = catalog.lock_paths() if connector_paths.uses_profile(catalog) else []
     themes.connector_guards = guards
     themes.connector_rows = [r for r in rows if r.eligible]
@@ -133,8 +136,7 @@ def generation_complete(themes, directory, bat_inputs=None):
     required = {'id','selection','fingerprint','palette.json','shell.tsv','init.ps1','init.zsh','init.fish',
                 'colors.json','colors.lua','ls_colors','file-styles.tsv','git-styles.tsv',
                 'yazi/flavor.toml','yazi/tmtheme.xml'}
-    for base in (themes.config / 'themed', themes.templates):
-        required.update(path.stem for path in base.glob('*.tpl'))
+    required.update(themes.template_paths())
     if bat_inputs and bat_inputs.executable:
         for name in ('syntaxes.bin', 'themes.bin'):
             asset = directory / 'bat-cache' / name
@@ -201,6 +203,48 @@ def commands_refresh(themes, verbose=False, *, announce=True):
     if announce: Presentation().emit('  Theme commands refreshed')
 
 
+def sync_windows_terminal(themes, identity, *, dry=False, generation=None):
+    if os.name != 'nt' or not getattr(themes, 'wt_configured', True):
+        return
+    from themes.wt_settings import SCHEME_ARTIFACT, THEME_ARTIFACT, discover_settings, sync_settings, terminal_inputs
+    paths = discover_settings()
+    if not paths:
+        return
+    guards = {}
+    if generation is None:
+        if not dry:
+            raise ValueError('an active generation is required to sync Windows Terminal')
+        scheme_text = themes.render_template(identity, SCHEME_ARTIFACT)
+        theme_text = themes.render_template(identity, THEME_ARTIFACT)
+    else:
+        from managed_destination import points_to
+        active = themes.state / 'current/theme'
+        artifact = generation / SCHEME_ARTIFACT
+        companion = generation / THEME_ARTIFACT
+        guards = {str(path): digest(path) for path in (active, artifact, companion)}
+        if not points_to(active, generation):
+            raise ValueError('active theme changed before syncing Windows Terminal')
+        scheme_text = regular(artifact).decode('utf-8')
+        theme_text = (regular(companion).decode('utf-8') if guards[str(companion)] is not None
+                      else themes.render_template(identity, THEME_ARTIFACT))
+    scheme, theme = terminal_inputs(scheme_text, theme_text)
+    results = sync_settings(scheme, theme=theme, paths=paths, dry_run=dry,
+                            state=themes.state, guards=guards)
+    with permanent_output():
+        ui = Presentation()
+        for result in results:
+            status = result['status']
+            if status == 'error':
+                continue
+            label = {'would-update': 'Would update', 'updated': 'Updated', 'unchanged': 'Unchanged'}[status]
+            ui.resource_detail(label, result['path'])
+            if 'transaction' in result:
+                ui.detail('Transaction', result['transaction'])
+    errors = [row['path'] + ': ' + row['error'] for row in results if row['status'] == 'error']
+    if errors:
+        raise ValueError('Windows Terminal settings sync failed:\n' + '\n'.join(errors))
+
+
 def publication(themes, identity, dry=False, verbose=False, refresh=False):
     with sequence('Theme publication', 4) as stages:
         with stages.step('Prepare theme publication'):
@@ -236,7 +280,10 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
                         if not dry: commands_refresh(themes, verbose, announce=False)
                         events('Unchanged', prior, reason='theme and connectors match')
                         with permanent_output(): ui.emit('  Theme unchanged: ' + identity)
-                        if refresh and not dry: reload_apps(themes, events)
+                        try:
+                            sync_windows_terminal(themes, identity, dry=dry, generation=prior)
+                        finally:
+                            if refresh and not dry: reload_apps(themes, events)
                         return current
             if dry:
                 themes.load(identity)
@@ -246,6 +293,7 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
                 for target, artifact in links:
                     ui.resource_detail('Connect', target)
                     events('Would link', active / artifact, target)
+                sync_windows_terminal(themes, identity, dry=True)
                 ui.emit('  Preview only; no changes made')
                 return None
         name = 'g.' + uuid.uuid4().hex
@@ -277,7 +325,10 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
                 ui.heading('Theme selected: ' + identity)
                 ui.detail('Transaction', result['id'])
         with stages.step('Refresh theme consumers'):
-            reload_apps(themes, events)
+            try:
+                sync_windows_terminal(themes, identity, generation=destination)
+            finally:
+                reload_apps(themes, events)
         return name
 
 

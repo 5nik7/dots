@@ -21,7 +21,7 @@ OPTIONS = {
     'file': ('file', 'Import this local font file before setting it'),
     'installed': ('flag', 'Show installed families'),
     'downloaded': ('flag', 'Show downloaded families'),
-    'system': ('flag', 'Inspect external system font inventory'),
+    'system': ('flag', 'List operating-system fonts, or select installation for all Windows users'),
     'monospace': ('flag', 'Filter known monospaced fonts'),
     'keep-archive': ('flag', 'Keep a newly downloaded Nerd Fonts archive'),
     'no-reload': ('flag', 'Do not reload Termux after committing'),
@@ -55,8 +55,8 @@ COMMANDS = {
     'download': ('Save an upstream family and its license', 'font', ('version','keep-archive',*MUTATE)),
     'import': ('Copy selected existing fonts into the library', 'path', MUTATE),
     'export': ('Export a saved family and its licenses', 'font', ('version','output',*MUTATE)),
-    'install': ('Install for this user, or store versions with --directory', 'fonts', ('from','version','variant','no-reload',*MUTATE)),
-    'uninstall': ('Unregister a family, or remove one directory version', 'font', ('version','no-reload',*MUTATE)),
+    'install': ('Install for this user, for all Windows users with --system, or into a Dots directory', 'fonts', ('from','version','variant','system','no-reload',*MUTATE)),
+    'uninstall': ('Unregister a family, or remove one directory version', 'font', ('version','system','no-reload',*MUTATE)),
     'upgrade': ('Upgrade active fonts, or store newer directory versions', 'optional-font', ('no-reload',*MUTATE)),
     'rollback': ('Switch to an exact retained version', 'font', ('version','no-reload',*MUTATE)),
     'pin': ('Pin an exact downloaded version', 'font', ('version',*MUTATE)),
@@ -64,7 +64,7 @@ COMMANDS = {
     'set': ('Set and retain fonts for selected applications', 'optional-font', ('file','version','variant','face','target','config','app-profile','no-reload','client',*MUTATE)),
     'use': ('Activate a stored --directory version for this user', 'font', ('version','variant','face','target','config','app-profile','no-reload',*MUTATE)),
     'remove': ('Remove an unused retained version', 'font', ('version',*MUTATE)),
-    'undo': ('Undo a fonts transaction with drift checks', 'transaction', ('no-reload',*MUTATE)),
+    'undo': ('Undo a fonts transaction with drift checks', 'transaction', ('system','no-reload',*MUTATE)),
     'icons': ('Search, copy or insert Nerd Fonts glyphs', 'query', ('query','version','client','print','format','copy','insert')),
 }
 

@@ -113,11 +113,13 @@ class NativeCompletion(unittest.TestCase):
         self.assertIn("if $nu.os-info.name == 'windows' { $basename | str lowercase } else { $basename }", nu_guard)
         self.assertIn("$identity | str replace --regex '\\.ps1$' ''", nu_guard)
         self.assertIn('--complete nu ...$spans', nu)
-        xonsh = (self.repo/'lib/dots/shell/init.xsh').read_text(encoding='utf-8')
-        self.assertIn('_dots_sys.executable', xonsh)
+        entry = (self.repo/'lib/dots/shell/init.xsh').read_text(encoding='utf-8')
+        self.assertIn('from shell.xonsh_integration import initialize', entry)
+        xonsh = (self.repo/'lib/dots/shell/xonsh_integration.py').read_text(encoding='utf-8')
+        self.assertIn("subprocess.run([sys.executable, '-B', str(root/'lib/dots/native_completion.py')", xonsh)
         self.assertNotIn("which('python", xonsh)
-        xonsh_guard = xonsh.split('command = _DotsPath(context.command).name', 1)[1].split('if command not in', 1)[0]
-        self.assertIn("if __import__('os').name == 'nt':", xonsh_guard)
+        xonsh_guard = xonsh.split('command = Path(context.command).name', 1)[1].split('if command not in', 1)[0]
+        self.assertIn("if os.name == 'nt':", xonsh_guard)
         self.assertLess(xonsh_guard.index('command.casefold()'), xonsh_guard.index("command.removesuffix('.ps1')"))
         self.assertIn('words = [arg.value for arg in context.args[:context.arg_index]] + [context.prefix]', xonsh)
 

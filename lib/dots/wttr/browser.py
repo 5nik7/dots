@@ -47,7 +47,7 @@ HELP = ('Enter: open   Esc: back / close   Ctrl-C: cancel\n'
         'Refresh explicitly retries, overriding freshness and cooldown.\n'
         'Failed refreshes retain marked stale weather up to configured max_stale.\n'
         'Location and units apply only until this browser closes.\n'
-        'Automatic location uses the configured default, then termux-geo on Termux.\n'
+        'Automatic location uses the configured default, then the device city on Windows or Termux.\n'
         'There is no IP-location fallback. Plain wttr and dots wttr print reports.')
 
 

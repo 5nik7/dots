@@ -169,12 +169,19 @@ class WikiGitTests(WikiFixture):
         self.assertNotEqual(self.git(self.root,'rev-parse','HEAD'),self.git(self.source_remote,'rev-parse','main'))
 
     def test_all_mode_and_dry_run_are_explicit(self):
-        (self.root/'docs/guide.md').write_text('# Guide\n## Hello world\nAll mode\n');self.build()
+        self.git(self.root, 'config', 'core.autocrlf', 'true')
+        generator = self.root/'lib/dots/wiki.py'
+        generator.parent.mkdir(parents=True)
+        generator.write_bytes((ROOT/'lib/dots/wiki.py').read_bytes().replace(b'\r\n', b'\n').replace(b'\n', b'\r\n'))
+        (self.root/'docs/guide.md').write_bytes(b'# Guide\r\n## Hello world\r\nAll mode\r\n')
+        self.build()
         before=(self.git(self.root,'status','--porcelain'),self.git(self.target,'status','--porcelain'))
         data=self.run_git('publish','--all','--dry-run','--json')
         self.assertTrue(data['complete'])
         self.assertEqual(before,(self.git(self.root,'status','--porcelain'),self.git(self.target,'status','--porcelain')))
-        self.run_git('publish','--all','--yes','--json',bash=True)
+        data = self.run_git('publish','--all','--yes','--json',bash=True)
+        self.assertEqual([e['path'] for e in data['events'] if e['status']=='published'], [str(self.root), str(self.target)])
+        self.assertEqual(self.git(self.target,'rev-parse','HEAD'), self.git(self.wiki_remote,'rev-parse','master'))
         self.assertEqual(self.git(self.target,'status','--porcelain'),'')
 
     def test_source_failure_blocks_wiki_but_exclusion_works(self):

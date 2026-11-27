@@ -9,6 +9,7 @@
 # dots:option=--verbose||flag|Show transaction operation details
 # dots:option=--directory||string|Backend *FONTS name or path; store versions without activating them
 # dots:option=--version||string|Exact release tag or saved revision
+# dots:option=--system||flag|List operating-system fonts, or select installation for all Windows users
 # dots:option=--no-reload||flag|Do not reload Termux after committing
 # dots:option=--dry-run||flag|Preview without persistent writes or network requests
 # dots:option=--yes||flag|Approve the reviewed mutation without prompting

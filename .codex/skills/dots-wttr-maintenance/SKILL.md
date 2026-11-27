@@ -1,13 +1,15 @@
 ---
 name: dots-wttr-maintenance
-description: Maintain Dots wttr weather reports, cache/provider behavior, widgets and browser. Use for dots wttr and standalone wttr implementation; Android location providers and terminal notification behavior retain their own owners.
+description: Maintain Dots wttr weather reports, cache/provider behavior, widgets, browser and the native Windows dots location route. Android location providers and terminal notification behavior retain their own owners.
 ---
 
 # Dots Weather Maintenance
 
 Read [weather behavior](../../../docs/wttr.md) and the [weather plan](../../../plans/wttr.md). `lib/dots/wttr/commands.py` owns grammar, `core.py` owns custom JSON/provider/cache behavior, `stock.py` owns curl passthrough, and styling/browser/completion remain separate. Standalone and Dots forms share the controller; keep stock bytes, upstream JSON and scalar fields undecorated.
 
-Preserve explicit location, configured default and existing Termux city-helper precedence; no implicit IP fallback or direct Android-provider access. Config selection remains explicit file, platform user configuration, then checkout default. Normal foreground refresh may acquire location through the helper; widget/format/daylight paths use its cached-location surface even during refresh. The explicitly enabled tmux solar worker is a scoped exception: while attached it may quietly acquire through `termux-geo --json`, retaining schedules independently of weather freshness; ordinary CLI/cache-only paths keep the preceding boundary. Keep deadlines, cooldowns, stale-data bounds and unavailable states honest; do not leak provider stderr or coordinates into diagnostics.
+Preserve explicit location, configured default, and then the platform city provider on Termux or Windows; no implicit IP fallback or direct Android-provider access. Config selection remains explicit file, platform user configuration, then checkout default. Normal foreground refresh may acquire location through the helper; widget/format/daylight paths use its cached-location surface even during refresh. The explicitly enabled tmux solar worker is a scoped exception: while attached it may quietly acquire through `termux-geo --json`, retaining schedules independently of weather freshness; ordinary CLI/cache-only paths keep the preceding boundary. Keep deadlines, cooldowns, stale-data bounds and unavailable states honest; do not leak provider stderr or coordinates into diagnostics.
+
+On native Windows, `dots location` owns the on-demand city lookup and its per-user cache. Keep discovery, shell startup and cache-only consumers provider-free. Verify dispatch through both native PowerShell engines and fixture weather requests through both wttr entry points.
 
 Opening/filtering/previewing the browser reads caches without provider calls, locks or refresh workers. Reports and explicit Refresh use the documented refresh policy. Session location/units changes do not save configuration. Fallback to an ordinary report can refresh data and must retain that report's status. Preserve exact-client popup ownership, single report capture, cancellation and query/session state.
 

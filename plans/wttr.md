@@ -234,6 +234,12 @@ Prior work and concurrent Yazi edits were preserved. No live weather/location re
 - No live provider requests, completion installation, shell reload, theme publication, commit or push occurred. Concurrent unrelated checkout edits remain preserved. Actual font rasterization and native Windows PowerShell 5.1/7 remain pending acceptance.
 
 
+## Windows current city
+
+**Implemented.** Native Windows exposes the on-demand `dots location` command and uses its city in foreground weather refreshes. Cache successful fixes, share the cache between shells, and retain the last successful city if acquisition fails. Background weather reads only a sufficiently recent cached location. Keep the existing wttr menu and configuration: this command prints a scalar, and `default_location` already provides a persistent override. The root README needs no change because installation and first commands are the same. See [usage and data flow](../docs/wttr.md#current-city-on-windows).
+
+A live Windows fix, city lookup, and wttr.in weather refresh succeeded. Windows PowerShell 5.1 and PowerShell 7.7 RC each read the matching location from `dots location`, `wttr`, and `dots wttr`. All 12 isolated Windows provider tests passed. On WSL, 49 of 51 weather tests passed with two optional checks skipped. The installed FZF-tab interaction timed out on both the baseline and the updated checkout. The Termux helper's normalized JSON and warm-cache checks passed under WSL with Bash 5.3. Across the helper and shell suites, five scalar/template checks and three completion checks failed on this host.
+
 ## Unpadded solar hours and trailing detail icons
 
 **Status: Implemented and verified with isolated fixtures and native Termux terminals.** Owner approved removing leading solar-hour zeros everywhere in display fields and moving the five detail icons after human row values.

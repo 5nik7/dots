@@ -38,7 +38,8 @@ def generate(root,shell, metadata=None):
     shim = mise_shims.resolve(context, profile['facts']['platform'] == 'windows', shim_inputs)
     paths=[LIB/'native_startup.py',LIB/'profile_config.py',LIB/'shell/settings.tsv',LIB/'profiles.py',LIB/'platform_info.py',LIB/'environment.py',LIB/'shell/environment.json']
     from style_config import Styles
-    paths.extend(Styles(root, profile).startup_inputs())
+    styles = Styles(root, profile)
+    paths.extend(styles.startup_inputs())
     paths.extend(Path(row['root'])/'profile.json' for row in profile['layers'])
     for p in (root/'profiles', *[root/'profiles'/p for p in ('termux','linux','wsl','windows')]):
         if p.exists():paths.append(p)
@@ -49,6 +50,13 @@ def generate(root,shell, metadata=None):
     paths.extend((LIB/'mise_shims.py', shim_adapter))
     paths.extend(path for path in shim_inputs if path.exists())
     missing = [path for path in shim_inputs if not path.exists()]
+    if shell == 'powershell':
+        from files.file_platform import state_root
+        palette = state_root()/'current/theme/palette.json'
+        if not palette.exists():
+            missing.append(palette)
+        # startup_inputs already watches existing preference files and directories.
+        missing.extend(sorted({p.parent for p in styles.preference_inputs() if not p.parent.exists()}))
     paths = list(dict.fromkeys(paths))
     if Path('/etc/os-release').exists():paths.append(Path('/etc/os-release'))
     if metadata is not None:
@@ -75,6 +83,11 @@ def generate(root,shell, metadata=None):
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append("if ([string]$env:"+key+" -cne "+q(os.environ.get(key,''))+") { return $false }")
         lines += ["$global:DotsProfileSettings = @{}", "$global:DotsProfileSettingOrigins = @{}", "$global:DotsProfileConfigPath = "+q(config_path)]
+        from completion_preferences import rows as completion_rows
+        lines.append('$global:DotsCompletionStyles = @{}')
+        for key, value, kind in completion_rows(styles=styles):
+            if key == '__completion.enabled' or kind == 'style':
+                lines.append('$global:DotsCompletionStyles['+q(key.rsplit('.', 1)[1])+'] = '+q(value))
         lines.append('$global:DotsProfileShellDirs = @(' + ','.join(q(Path(row['root'])/'shells') for row in profile['layers']) + ')')
         for key, row in options.items():
             if key == 'files.backup': continue

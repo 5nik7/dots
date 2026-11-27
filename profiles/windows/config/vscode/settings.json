@@ -585,7 +585,7 @@
   "chat.todoListTool.writeOnly": true,
   "chat.tools.terminal.autoReplyToPrompts": true,
   "markdown-preview-enhanced.previewColorScheme": "editorColorScheme",
-  "markdown-preview-enhanced.previewTheme": "atom-dark.css",
+  "markdown-preview-enhanced.previewTheme": "vscode.css",
   "markdown-preview-enhanced.printBackground": true,
   "markdown-preview-enhanced.useGitHubStylePipedLink": true,
   "markdown-preview-enhanced.previewMode": "Multiple Previews",
@@ -600,11 +600,14 @@
   "markdown-preview-enhanced.HTML5EmbedUseLinkSyntax": true,
   "markdown-preview-enhanced.imageMagickPath": "\"C:\\Program Files\\ImageMagick-7.1.2-Q16-HDRI\\magick.exe\"",
   "markdown-preview-enhanced.mermaidTheme": "dark",
-  "markdown-preview-enhanced.revealjsTheme": "night.css",
+  "markdown-preview-enhanced.revealjsTheme": "vscode.css",
   "markdown-preview-enhanced.usePandocParser": true,
   "claudeCode.preferredLocation": "panel",
   "claudeCode.hideOnboarding": true,
   "workbench.activityBar.compact": true,
   "window.menuBarVisibility": "compact",
-  "debug.toolBarLocation": "commandCenter"
+  "debug.toolBarLocation": "commandCenter",
+  "markdown-preview-github-styles.colorTheme": "dark",
+  "markdown-preview-github-styles.darkTheme": "dark_tritanopia",
+  "markdown-preview-enhanced.codeBlockTheme": "vscode.css"
 }

@@ -32,7 +32,9 @@ class NativeCLI(unittest.TestCase):
                                             if '/dots/themes/commands/' not in p.replace('\\', '/').lower())
         for key in list(self.env):
             if key.startswith(('DOTS_', 'GIT_', 'BAT_')) or key in ('TMUX','KITTY_LISTEN_ON','WAYLAND_DISPLAY','DISPLAY','DOTHEMES','THEMES','TERMUX_VERSION','EZA_CONFIG_DIR','TELEVISION_CONFIG','TELEVISION_DATA','YAZI_CONFIG_HOME'): self.env.pop(key)
+        self.env.pop('WT_SETTINGS_DIR', None)
         self.env.update(DOTS=str(self.repo), HOME=str(self.home), USERPROFILE=str(self.home),
+                        SCOOP=str(self.home/'scoop'),
                         XDG_CONFIG_HOME=str(self.home/'config'), XDG_STATE_HOME=str(self.home/'state'),
                         XDG_CACHE_HOME=str(self.home/'cache'), XDG_DATA_HOME=str(self.home/'data'),
                         APPDATA=str(self.home/'Roaming'), LOCALAPPDATA=str(self.home/'Local'),
@@ -60,6 +62,18 @@ class NativeCLI(unittest.TestCase):
                                 text=True, encoding='utf-8', capture_output=True, timeout=60)
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         return result
+
+    def test_windows_location_route(self):
+        self.assertIn('location', self.command('commands').stdout)
+        help_text = self.command('help', 'location').stdout
+        for flag in ('--cached', '--refresh', '--json'):
+            self.assertIn(flag, help_text)
+            self.assertIn(flag, self.command('__complete', 'location', flag[:-1]).stdout)
+        # Exercise dispatch and argument forwarding without reading a real location.
+        (self.repo/'lib/dots/windows_location.py').write_text(
+            'import json, sys\nprint(json.dumps(sys.argv[1:]))\n', encoding='utf-8')
+        self.assertEqual(json.loads(self.command('location', '--cached', '--json').stdout),
+                         ['--cached', '--json'])
 
     def root_help_fixture(self):
         headers = {
@@ -279,6 +293,24 @@ class NativeCLI(unittest.TestCase):
         self.assertEqual(json.loads(self.command('files','repair','--dry-run','--json').stdout)['action'], 'repair')
         self.assertFalse(list(self.home.iterdir()))
 
+    def test_repeated_tab_stays_in_files_list_context(self):
+        for words, value, role in (([''], 'files', 'command'),
+                                   (['files', ''], 'backups', 'command'),
+                                   (['files', 'list', ''], '--json', 'option'),
+                                   (['fonts', ''], 'list', 'command'),
+                                   (['todo', ''], 'list', 'command')):
+            with self.subTest(words=words):
+                plain = self.command('__complete', *words).stdout.splitlines()
+                typed = [line.split('\t') for line in
+                         self.command('__complete', '--display-types', *words).stdout.splitlines()]
+                self.assertEqual(plain, ['\t'.join(row[:3]) for row in typed])
+                candidates = [row for row in typed if row[0] == 'candidate']
+                self.assertEqual(len(candidates), len({row[1] for row in candidates}))
+                self.assertEqual([row[-1] for row in candidates if row[1] == value], [role])
+                if 'list' in words:
+                    self.assertTrue(all(row[1].startswith('-') for row in candidates))
+        self.assertEqual(self.command('__complete', 'files', 'list', '--', '').stdout, '')
+
     def test_singular_families_metadata_and_completion(self):
         rows=catalog(roots(self.repo))
         self.assertFalse(any(name=='themes' or name.startswith('themes-') or name=='profiles' or name.startswith('profiles-') for name in rows))
@@ -433,6 +465,40 @@ class NativeCLI(unittest.TestCase):
             self.assertIn('catppuccin-theme\tcatppuccin\n', (commands/'map.tsv').read_text())
             self.assertFalse((commands/'bin/catppuccin.ps1').exists())
             self.assertEqual((themes.state/'current/theme').resolve().name, first)
+
+    @unittest.skipUnless(os.name == 'nt', 'native Windows Terminal publication')
+    def test_theme_set_and_refresh_sync_terminal_settings(self):
+        sys.path.insert(0, str(LIB / 'themes'))
+        from palette_native import Themes
+        import theme_cli
+        target = self.home / 'Local/Microsoft/Windows Terminal/settings.json'
+        target.parent.mkdir(parents=True)
+        original = '{"profiles":{"defaults":{"colorScheme":"wal"}}}'
+        target.write_text(original)
+        with patch.dict(os.environ, dict(self.env, DOTS=str(ROOT)), clear=True), patch.object(theme_cli, 'reload_apps'):
+            themes = Themes()
+            identity = 'catppuccin-mocha'
+            theme_cli.publication(themes, identity, dry=True)
+            self.assertEqual(target.read_text(), original)
+            theme_cli.publication(themes, identity)
+            applied = target.read_bytes()
+            generation = (themes.state/'current/theme').resolve()
+            expected_palette = json.loads((generation/'windows-terminal.json').read_text())
+            companion = generation/'windows-terminal-theme.json'
+            expected_theme = json.loads(companion.read_text())
+            self.assertEqual(json.loads(applied), {**json.loads(original), **expected_palette, **expected_theme})
+            self.assertEqual(expected_theme['theme'], 'dots')
+            target.write_text(original)
+            theme_cli.publication(themes, identity, dry=True, refresh=True)
+            self.assertEqual(target.read_text(), original)
+            theme_cli.publication(themes, identity, refresh=True)
+            self.assertEqual(target.read_bytes(), applied)
+            # A bounded sync can target the active generation from before UI themes.
+            companion.unlink()
+            target.write_text(original)
+            theme_cli.sync_windows_terminal(themes, identity, generation=generation)
+            self.assertEqual(target.read_bytes(), applied)
+            self.assertFalse(companion.exists())
 
     @unittest.skipUnless(os.name == 'nt', 'requires native Windows symlink targets')
     def test_powershell_refresh_runs_plugin_on_unchanged_generation(self):
@@ -595,6 +661,15 @@ class NativeCLI(unittest.TestCase):
                                 env=env, capture_output=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr.decode())
         self.assertEqual(len(result.stdout.split(b'\0')), 5)
+        result = subprocess.run([sys.executable, '-B', str(LIB / 'themes/setup.py'), 'inspect-wt'],
+                                env=env, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        scheme = json.loads(result.stdout.split(b'\0')[4])
+        self.assertEqual(scheme['name'], 'Dots')
+        self.assertRegex(scheme['background'], '^#[0-9a-fA-F]{6}$')
+        theme = json.loads(result.stdout.split(b'\0')[5])
+        self.assertEqual(theme['name'], 'dots')
+        self.assertEqual(theme['tab']['background'], 'terminalBackground')
         self.assertFalse(list(self.home.iterdir()))
 
     def test_native_setup_preparation_flushes_without_publication(self):

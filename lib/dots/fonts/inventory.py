@@ -53,16 +53,18 @@ def snapshot(library, *, external=True):
         rows[key].update(known)
     for path,known in managed.items():
         family=user.families.get(known['managed_id'],{})
-        add(path,family.get('name',''),known['face'])
+        add(path,family.get('name',''),known['face'],**({'scope':'user'} if user.platform=='windows' else {}))
     if external:
         try:
             from fonts_cli import system_fonts
             for row in system_fonts(user):
                 path=Path(os.path.expandvars(row['path']))
                 if user.platform=='windows' and not path.is_absolute():
-                    path=(Path(os.environ.get('WINDIR',os.environ.get('SystemRoot','C:/Windows')))/'Fonts'/path)
+                    from font_registry import windows_root
+                    path=windows_root()/'Fonts'/path
                 source=row.get('source','external')
-                add(path,row.get('name',''),row.get('face',''),source)
+                scope = {'scope': source} if user.platform=='windows' and source in ('system','user') else {}
+                add(path,row.get('name',''),row.get('face',''),source,**scope)
                 if user.platform=='windows' and path.is_absolute():
                     item=rows[path_key(path)]
                     if source=='user':

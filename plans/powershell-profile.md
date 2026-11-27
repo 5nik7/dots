@@ -1,10 +1,24 @@
 # Lean PowerShell profile repair
 
+## Native completion and Vi cursor
+
+The Windows profile uses a single fzf picker on PowerShell 5.1 and 7. Use the active PSReadLine replacement span, keep the display separate from insertion, and offer options when a completed leaf accepts only flags. Shared route completion projects each immediate child once. Host providers load per program on first Tab. The existing optional loader supports eager registration.
+
+Both engines passed native ConPTY keyboard checks. Two consecutive Tab/Escape cycles preserved `dots files list ` exactly, and choosing JSON produced `dots files list --json `. With installed Neovim, insert mode, command mode, prompt redraw and return from `:q` emitted the expected beam or block. Native Termux device and Windows Terminal visual comparison remain separate acceptance checks.
+
+Installed-program queries returned matches for 31 names in each engine. Git, Cargo and Scoop cover root subcommands. The other verified programs were bat, bob, cargo-binstall, choco, codex, delta, docker, dotnet, dua, fd, gh, just, kubectl, mdcat, mise, pastel, pip, ptr, rg, rustup, starship, tree-sitter, uv, uvx, winget, ya, yazi and zoxide. Alias and explicit executable-name probes also passed. Bun, Lazygit, vfox, Tectonic, Scoop Search and Windows Terminal had no identified local PowerShell provider and use ordinary completion.
+
+When the mise provider is installed, the profile registers it at interactive startup. In isolated profiles on Windows PowerShell 5.1 and PowerShell 7, the installed script and mise executable returned `install`, `install-into` and `installs` for `mise ins` through native completion. Four warm-profile samples per condition measured median startup with and without the file within 5% on each engine.
+
+The isolated warm profile benchmark (ten fresh processes per engine, redirected input) measured medians of 339.7 ms before and 344.9 ms after on PowerShell 7, and 1080.5 ms before and 1114.5 ms after on 5.1. These timings exclude first-Tab generator and terminal costs. WSL Bash route/option checks and Zsh FZF-tab selection, file colors, Unicode insertion and cancellation checks passed.
+
+Shell integration and command maintenance own this change. Configuration uses the existing completion styles, file colors and color policy. The existing Tab/Alt+F picker provides the menu. The normal profile entry reaches the new loader from the same checkout, so bootstrap destinations and the introductory README need no changes.
+
 ## Mise shims and PowerShell fuzzy completion, 2026-11-26
 
 Fresh sessions using the installed profiles on this PC resolved both `node.exe` and `ruby.exe` from `%LOCALAPPDATA%\mise\shims` in PowerShell 7.7.0-rc.1 and Windows PowerShell 5.1.26100.9818. Each contained one shim directory. The [shell environment guide](../docs/shell-environment.md#shared-tool-paths) describes the shared PATH behavior. This uses the existing installed profile destinations. The root README needs no change because setup and first commands stay the same.
 
-Both native consoles passed keyboard checks with fzf, including selecting a Dots subcommand, completing a quoted path in the middle of a line, preserving the remaining argument, cancelling with Escape, and falling back to ordinary completion with fzf missing. Windows PowerShell 5.1 uses fzf directly because the installed PSFzf 2.7.12 picker lost the selection on Enter in that engine. PowerShell 7 loads PSFzf on first use.
+At that revision, both native consoles passed keyboard checks with fzf, including selecting a Dots subcommand, completing a quoted path in the middle of a line, preserving the remaining argument, cancelling with Escape, and falling back to ordinary completion with fzf missing. Desktop used fzf directly after PSFzf 2.7.12 lost the selection on Enter. Core still loaded PSFzf on first use at that point.
 
 Isolated PATH checks covered inherited command collisions, duplicate entries, global configuration and reload. Bash and Zsh ran under Ubuntu WSL. Fish, Nushell, Xonsh, native Linux and Termux remain separate native acceptance checks.
 

@@ -1,5 +1,7 @@
 # Testing Work Guide
 
+For PowerShell Tab or Vi-mode changes, run the [native profile and picker checks](../../docs/testing.md#native-powershell-parity) with each installed engine. Exercise actual keystrokes in an isolated console for replacement, cancellation, prompt redraw and return from a full-screen editor.
+
 Help/usage changes use `python3 -B tools/test_help_presentation.py` and `python3 -B tools/test_help_adapters.py` alongside the affected Bash/native CLI, Config and family suites. Keep literal syntax spans, destination-specific stdout/stderr color policy, plain/data bytes, missing-profile bootstrap help and addressed branding covered in owned roots. See [help verification](../../docs/testing.md#bash-command-framework).
 
 For Cleanup, run `python3 -B tools/test_cleanup.py -v` and
@@ -21,6 +23,10 @@ inherited controls and preview rendering. Run `tools/test_font_directories.py`,
 registry, clipboard and tmux effects in owned fixtures. Run file-platform checks
 before affected file/installation suites; follow [font testing](../../docs/testing.md#personal-fonts)
 for remaining command and native acceptance checks.
+
+For all-users fonts, substitute the Windows directory and both font registry
+hives. Test the native ACL adapter in a temporary directory and keep elevated
+installation and second-account visibility as separate acceptance checks.
 
 Read this guide before adding tests, changing test runners, touching mutation code, or claiming platform support or a performance improvement.
 
@@ -331,11 +337,13 @@ Every first-party change must cover Bash on Termux/Linux/WSL and native Windows 
 
 For Androidots `termux-geo` and local Termux completion paths, run `python3 -B androidots/tests/test_termux_geo.py` and `python3 -B tools/test_termux_geo_shells.py`, then affected shell startup regressions. Keep Android/HTTP mocked and completion installs inside owned fixture roots. See the [location test contract](../../docs/testing.md#termux-location-helper-and-completion-paths).
 
-For standalone wttr and the Termux daylight clock, use `tools/test_tmux_widgets.py`, `tools/test_wttr.py`, the parent tmux/Android adapter suites and Androidots geo/status/bar regressions sequentially. Mock HTTP, curl and location, test real Zsh/FZF-tab descriptions when completion metadata changes, isolate every home/cache/state/install destination, and validate attached private tmux clients at 40/80/120 columns. Verify help artwork/gradient controls and short/long alias parity, including case-sensitive PowerShell completion. Keep fixture temperature bands explicit and independent of the editable config. Check variable bands, combined attributes, widget directive validation before cache/provider access and style restoration. Use synthetic published palettes for named weather colors, check literal hex/index overrides and snapshot fallbacks, and assert exact icon/label gaps with icons on/off. Follow [the weather test contract](../../docs/testing.md#wttr-and-daylight-clock); never execute live acquisition or reload a live server for verification.
+For Windows location, run `tools/test_windows_location.py` with isolated device/HTTP fixtures. Exercise the cached and failure paths through both native PowerShell entry points. For standalone wttr and the Termux daylight clock, use `tools/test_tmux_widgets.py`, `tools/test_wttr.py`, the parent tmux/Android adapter suites and Androidots geo/status/bar regressions sequentially. Mock HTTP, curl and location, test real Zsh/FZF-tab descriptions when completion metadata changes, isolate every home/cache/state/install destination, and validate attached private tmux clients at 40/80/120 columns. Verify help artwork/gradient controls and short/long alias parity, including case-sensitive PowerShell completion. Keep fixture temperature bands explicit and independent of the editable config. Check variable bands, combined attributes, widget directive validation before cache/provider access and style restoration. Use synthetic published palettes for named weather colors, check literal hex/index overrides and snapshot fallbacks, and assert exact icon/label gaps with icons on/off. Follow [the weather test contract](../../docs/testing.md#wttr-and-daylight-clock); never execute live acquisition or reload a live server for verification.
 
 For default eza templates/connectors, run `python3 -B tools/test_eza_theme.py -v` and the affected file-color, theme/workflow, native-controller and installation suites sequentially. Keep actual eza ANSI acceptance separate from YAML parsing and simulated Windows destination checks; see [eza verification](../../docs/testing.md#eza-theme).
 
 For Television templates/connectors, run `python3 -B tools/test_television_theme.py -v`, followed by affected theme/workflow and native-controller tests sequentially. Keep synthetic PTY inputs and all home/config/data/state/cache roots isolated; see [Television verification](../../docs/testing.md#television-theme).
+
+For the Rainmeter template, run `python3 -B tools/test_rainmeter_theme.py -v`; see [Rainmeter verification](../../docs/testing.md#rainmeter-theme).
 
 For user-local completion directory discovery or precedence, run `python3 -B tools/test_local_completions.py` with the affected startup/environment suites. Use synthetic colliding providers to verify actual loading, preserving XDG overrides, native fallback paths and noninteractive boundaries. See [local completion checks](../../docs/testing.md#user-local-completion-paths).
 

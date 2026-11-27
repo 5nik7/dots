@@ -10,7 +10,7 @@
 # dots:option=--source||choice:all,nerd,google,local|Font provider
 # dots:option=--installed||flag|Show installed families
 # dots:option=--downloaded||flag|Show downloaded families
-# dots:option=--system||flag|Inspect external system font inventory
+# dots:option=--system||flag|List operating-system fonts, or select installation for all Windows users
 # dots:option=--query||string|Initial search text
 # dots:option=--monospace||flag|Filter known monospaced fonts
 DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}

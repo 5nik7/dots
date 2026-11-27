@@ -12,6 +12,16 @@ Acceptance: isolated generator/navigation/link/CLI/data tests, transaction recov
 
 ## Verification
 
+### Windows Git line endings
+
+The wiki generator now compares UTF-8 content across the worktree, index and published source using LF for line endings. Rebuilding an older Windows export refreshes its inventory. Transaction preflight still checks exact file bytes. The regression fixture covers CRLF checkout, LF Git blobs, stale generator and page refusal, and an edit that changes only line endings after preview. The associated Git fixture checks both remote commits after a combined publication.
+
+The Git and wiki commands share this generator across Bash and native PowerShell. The existing menus and configuration already select the same workflows. No configuration integration change needed. Existing completion, installer assets and Windows destinations apply. No README change needed because setup and first commands are unaffected.
+
+PowerShell 5.1 and 7 each completed a combined `--all` publication to two test-owned bare remotes with a CRLF generator checkout. Both remote branch tips matched the local source and wiki commits. The 13 associated Git tests passed on WSL using LF shell scripts. On Windows, 16 generator tests passed, including the new provenance and byte-guard regression. Two POSIX cases were skipped and two interactive wiki browsing tests also failed on the original revision when run without a terminal. The installed Windows `dots git publish --all --update-packages --dry-run` selected the manifest and planned the wiki with no blockers.
+
+### Earlier acceptance
+
 Termux verification passed: 17 wiki tests and 10 associated-Git tests, including interrupted-build recovery, retained-backup undo, drift refusal, missing checkouts, explicit acquisition, selector cancellation, exact redirected bytes, source-branch restrictions and association changes during sync. Plain PTY views pass at 40/80/120 columns. Both command metadata controllers validate 132 external routes; the new skills pass skill validation.
 
 Existing regressions passed: Git operations (27), native Git controller (24), submodules across both controllers (32), Bash framework (24), native CLI (13 passed, one PowerShell-runtime check skipped), profiles/bootstrap (13), and documentation checker (4). Relative Markdown links and whitespace checks pass. These are local fixtures, not native Windows or hosted CI evidence.

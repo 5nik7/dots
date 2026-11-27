@@ -1,5 +1,7 @@
 # Native PowerShell parity
 
+Native 5.1 and 7 keyboard acceptance for the colored Tab picker, repeated Dots completion and Vi cursor restoration is recorded in the [PowerShell profile plan](powershell-profile.md#native-completion-and-vi-cursor).
+
 Full-width progress bars, Config glyph/style fields, package-manager colors and `dots debug demo` share the Python implementation on native Windows. Demo fixtures require no Bash, real package manager or Git operation. The existing native debug dispatcher handles the new route; no app destination changes are needed. Native Windows PowerShell 5.1/7 resize, animation interruption and launcher handoff remain pending; Termux controller tests are not native Windows evidence.
 
 Git output/progress work uses shared view flags, Config enums and native Python progress. Both controller paths are tested in isolated Termux fixtures; native Windows PowerShell 5.1/7 40/80/120-column rendering, prompt/credential suspension and Ctrl-C/Ctrl-Break remain separate pending checks. No Windows application destination changes are required. See [Git output and progress](git-output-and-progress.md).
@@ -130,7 +132,7 @@ The Androidots `termux-geo` helper and its personal Bash/Zsh/Fish completion-pat
 
 ### wttr acceptance
 
-The standalone native `bin/wttr.ps1` entry and `dots wttr` family share weather options, stock request syntax, formatting, cache logic, progress and completion metadata with Bash. Both explicit `browse` routes use cached previews, session-only controls and the shared reader in the native terminal; missing FZF/terminal support falls back to the ordinary report. Stock requests require native curl.exe and bypass PowerShell aliases. Configuration resolves to APPDATA/wttr with the existing XDG override. Termux device acquisition and tmux daylight styling are explicit platform exceptions; manual/default weather is shared. Native Windows PowerShell 5.1/7 argv/completion/browser/PTY, cache locking and ACL checks remain pending on this Termux implementation host; see [the focused plan](wttr.md).
+The standalone native `bin/wttr.ps1` entry and `dots wttr` family share weather options, stock request syntax, formatting, cache logic, progress and completion metadata with Bash. Both explicit `browse` routes use cached previews, session-only controls and the shared reader in the native terminal; missing FZF/terminal support falls back to the ordinary report. Stock requests require native curl.exe and bypass PowerShell aliases. Configuration resolves to APPDATA/wttr with the existing XDG override. Automatic city acquisition uses the platform provider on both Termux and Windows. The tmux daylight integration is Termux-specific. Native Windows PowerShell 5.1/7 argv/completion/browser/PTY, cache locking and ACL checks remain pending on this Termux implementation host; see [the focused plan](wttr.md).
 
 Television integration uses the shared native renderer, destination resolver and Store connector transaction. The LOCALAPPDATA default and explicit overrides have fixture coverage; native PowerShell 5.1/7 publication, rollback, link-capability refusal and Television visual acceptance remain pending. See the [focused plan](television-theme.md).
 

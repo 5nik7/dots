@@ -468,36 +468,91 @@ function y {
 }
 
 function Invoke-DotsFuzzyCompletion {
-  $fzf = Get-Command fzf -CommandType Application -TotalCount 1 -ErrorAction Ignore
-  if (-not $fzf) {
-    [Microsoft.PowerShell.PSConsoleReadLine]::TabCompleteNext()
-    return
-  }
-  # PSFzf 2.7.12 loses the selected text on Desktop's native output pipeline.
-  if ($PSVersionTable.PSEdition -eq 'Desktop') {
-    $line = ''
-    $cursor = 0
-    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
-    if ([string]::IsNullOrWhiteSpace($line)) { return }
-    $completion = TabExpansion2 -inputScript $line -cursorColumn $cursor
-    $candidates = $completion.CompletionMatches
+  $line = ''
+  $cursor = 0
+  [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
+  if ([string]::IsNullOrWhiteSpace($line)) { return }
+  $previousExit = $global:LASTEXITCODE
+  try {
+    & (Join-Path $PSScriptRoot 'host-completion.ps1') -Line $line -Cursor $cursor
+    $fzf = Get-Command fzf -CommandType Application -TotalCount 1 -ErrorAction Ignore
+    if (-not $fzf) {
+      [Microsoft.PowerShell.PSConsoleReadLine]::TabCompleteNext()
+      return
+    }
+    # PowerShell otherwise invents filesystem matches when an owned grammar ends.
+    $specialRoles = [System.Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal)
+    $global:_DotsTabRequest = @{ Empty = $false; Roles = $specialRoles }
+    try {
+      $completion = TabExpansion2 -inputScript $line -cursorColumn $cursor
+      if ($global:_DotsTabRequest.Empty) { return }
+    } finally { $global:_DotsTabRequest = $null }
+    $seen = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $candidates = @(foreach ($match in $completion.CompletionMatches) {
+      if ($seen.Add($match.CompletionText)) { $match }
+    })
     if (-not $candidates.Count) { return }
     $index = 0
     if ($candidates.Count -gt 1) {
       $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+      $styles = $global:DotsCompletionStyles
+      $mode = if ($env:DOTS_COLOR) { $env:DOTS_COLOR } elseif ($global:dots_options) { $global:dots_options.DOTS_COLOR }
+      $color = $styles -and $styles.enabled -ne '0' -and ($mode -eq 'always' -or
+        ($mode -ne 'never' -and -not $env:NO_COLOR -and $env:TERM -ne 'dumb' -and -not [Console]::IsErrorRedirected))
+      $escape = [char]27
+      if ($color -and $env:LS_COLORS -and $global:_DotsCompletionLsColors -cne $env:LS_COLORS) {
+        $global:_DotsCompletionFileStyles = @{}
+        foreach ($entry in $env:LS_COLORS.Split(':')) {
+          if ($entry -cmatch '^([^=]+)=([0-9;]+)$') {
+            $global:_DotsCompletionFileStyles[$Matches[1]] = $Matches[2]
+          }
+        }
+        $global:_DotsCompletionLsColors = $env:LS_COLORS
+      }
       $rows = for ($i = 0; $i -lt $candidates.Count; $i++) {
-        $label = $candidates[$i].ListItemText -replace '[\r\n\t]', ' '
+        $item = $candidates[$i]
+        $label = $item.ListItemText -replace '[\x00-\x1f\x7f-\x9f]', ' '
+        # Many native generators omit a flag's dashes from ListItemText.
+        if ($item.CompletionText.StartsWith('-') -and $label -ceq $item.CompletionText.TrimStart('-')) {
+          $label = $item.CompletionText
+        }
+        $detail = $item.ToolTip -replace '[\x00-\x1f\x7f-\x9f]', ' '
+        if ($detail -eq $label) { $detail = '' }
+        if ($color) {
+          $role = switch ($item.ResultType) {
+            Command { 'command' }
+            ParameterName { 'option' }
+            ParameterValue { if ($label.StartsWith('-')) { 'option' } else { 'value' } }
+            default { 'candidate' }
+          }
+          $sgr = $styles[$role]
+          if ($specialRoles.ContainsKey($item.CompletionText)) { $sgr = $styles[$specialRoles[$item.CompletionText]] }
+          if ($env:LS_COLORS -and $item.ResultType -in 'ProviderContainer', 'ProviderItem') {
+            $fileStyles = $global:_DotsCompletionFileStyles
+            $fileStyle = $fileStyles['di']
+            if ($item.ResultType -eq 'ProviderItem') {
+              $fileStyle = $fileStyles['fi']
+              # GNU ls extension records are literal suffixes, including multi-part ones.
+              for ($offset = 0; $offset -lt $label.Length; $offset++) {
+                $suffix = '*' + $label.Substring($offset)
+                if ($fileStyles.ContainsKey($suffix)) { $fileStyle = $fileStyles[$suffix]; break }
+              }
+            }
+            if ($fileStyle) { $sgr = $fileStyle }
+          }
+          $label = "${escape}[${sgr}m$label${escape}[0m"
+          if ($detail) { $label += "`t${escape}[$($styles.separator)m-- ${escape}[$($styles.description)m$detail${escape}[0m" }
+        } elseif ($detail) {
+          $label += "`t-- " + $detail
+        }
         "$i`t$label"
       }
-      $previousExit = $global:LASTEXITCODE
-      try {
-        $selected = @($rows | & $fzf --no-multi --delimiter '\t' --with-nth '2..')
-        if ($LASTEXITCODE -ne 0 -or $selected.Count -eq 0) { return }
-      } finally { $global:LASTEXITCODE = $previousExit }
-      # --print-query and --expect can prepend extra records to the selection.
+      $pickerArgs = @('--no-multi', '--delimiter', '\t', '--with-nth', '2..', '--nth', '1', '--layout=reverse', '--no-preview')
+      if ($color) { $pickerArgs += '--ansi', '--color=fg+:-1:regular' } else { $pickerArgs += '--no-color' }
+      $selected = @($rows | & $fzf @pickerArgs)
+      if ($LASTEXITCODE -ne 0 -or $selected.Count -eq 0) { return }
       if ($selected[-1] -notmatch '^(\d+)\t' -or
-          -not [int]::TryParse($Matches[1], [ref]$index) -or
-          $index -ge $candidates.Count) { return }
+          -not [int]::TryParse($Matches[1], [ref]$index) -or $index -ge $candidates.Count) { return }
     }
     $candidate = $candidates[$index]
     $text = $candidate.CompletionText
@@ -508,6 +563,10 @@ function Invoke-DotsFuzzyCompletion {
       if ($end -gt 0 -and $text[$end - 1] -notin '/', '\') {
         $text = $text.Insert($end, [IO.Path]::DirectorySeparatorChar)
       }
+    } elseif ($candidate.ResultType -in 'Command', 'ParameterName', 'ParameterValue', 'ProviderItem' -and
+              $completion.ReplacementIndex + $completion.ReplacementLength -eq $line.Length -and
+              $text -notmatch '[=,:\s]$') {
+      $text += ' '
     }
     [Microsoft.PowerShell.PSConsoleReadLine]::Replace(
       $completion.ReplacementIndex, $completion.ReplacementLength, $text)
@@ -515,17 +574,6 @@ function Invoke-DotsFuzzyCompletion {
       [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition(
         $completion.ReplacementIndex + $text.Length - 1)
     }
-    return
-  }
-  $previousExit = $global:LASTEXITCODE
-  try {
-    try {
-      if (-not (Get-Module PSFzf)) { Import-Module PSFzf -Global -ErrorAction Stop }
-    } catch {
-      [Microsoft.PowerShell.PSConsoleReadLine]::TabCompleteNext()
-      return
-    }
-    Invoke-FzfTabCompletion
   } finally { $global:LASTEXITCODE = $previousExit }
 }
 

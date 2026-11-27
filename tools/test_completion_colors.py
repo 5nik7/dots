@@ -740,7 +740,8 @@ fi
 
     @unittest.skipUnless(shutil.which('zsh') and shutil.which('fzf') and (FZF_TAB/'fzf-tab.plugin.zsh').exists(), 'Zsh/fzf-tab unavailable')
     def test_groups_files_literal_controls_plain_and_disabled(self):
-        terminal=self.terminal()
+        # ZLE quotes non-ASCII bytes individually under the default C locale.
+        terminal=self.terminal(LC_ALL='C.UTF-8')
         try:
             self.command(terminal,r'''_dots() { local -a names=('alpha:alpha description' 'beta:beta description') vals=('one:first value' 'two:second value'); _describe -t commands Command names; _describe -t values Value vals; }; compdef _dots sample''')
             terminal.send('sample \t');terminal.wait(b'\x1b[?1000h');self.drain(terminal)

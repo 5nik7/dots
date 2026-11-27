@@ -101,6 +101,15 @@ native paths are constrained to the current-user Windows Fonts directory and a
 fixed HKCU font key. Mirror receipts use `<Dots state root>/fonts/registrations`.
 Registry preflight, reverse rollback and inverse transactions retain file guards.
 
+For all-users fonts, the same journal field includes `scope: "system"`. Values
+are Dots-generated font basenames under the native Windows Fonts directory, in
+the 64-bit HKLM Fonts key. Machine transactions use the `fonts-system-` action
+prefix and a separate collection at `%SystemRoot%\DotsFontState\dots\collection.json`.
+Install, uninstall and undo results for this scope include `scope`,
+`font_directory`, `registry_key` and `elevated`. Face previews include the
+registry value name, the previous and proposed values, and any current-user
+registration. Windows installed-family rows identify `user` or `system` scope.
+
 ## Shared menu records
 
 Keys/Weather styling reuses the existing `colors.apps.menu.entries["MENU:ENTRY"]` map without changing menu JSON. Keys categories use `keys:categories:APP`; modes distinguish the aggregate `keys:modes:all` from `keys:modes:mode:NAME`. Nonprintable mode names use the disjoint `keys:modes:mode-json:JSON_STRING` identity (ASCII JSON string escaping), retaining their original values for selection and binding data. Weather uses `wttr:main:ACTION`, `wttr:Location:CHOICE` and `wttr:Units:CHOICE`. Shared menu styles are overlaid by icon-role styles for icon spans, then nonnull per-entry fields; explicit false attributes are retained. These inert styling identities do not replace numeric FZF selection tokens or action arguments. See [configuration](configuration.md#keys-and-weather-menu-appearance) for glyphs and supported controls.
@@ -362,7 +371,7 @@ The source IDs `termux` and `windows` replace `androidots` and `windots`. Curren
 
 `.dots/wiki.json` schema 1 declares `checkout`, `clone_url`, `web_url`, `source_url`, `source_branch`, `exclude_docs`, and ordered `pages` with stable `id`, `title`, `section` and either `source` or `generated: commands`. Page IDs are portable ASCII filename stems, case-insensitively unique, with `AGENTS` reserved and `Home` required; CLI selection is exact. `DOTS_WIKI_DIR` overrides the checkout path; it is observed by `dots env` when inherited, not exported during initialization.
 
-The wiki inventory `.dots-wiki.json` schema 1 records relative source `inputs` and managed `outputs` SHA-256 hashes. It has no timestamps or volatile commit labels. Unknown wiki files remain outside generation ownership. Wiki JSON results use schema 1 with action-specific fields; raw page bytes, paths, URLs and completion remain undecorated. Git status adds `kind: wiki` to the companion root; info adds a `companions` list. Existing submodule schemas and pointer semantics remain unchanged.
+The wiki inventory `.dots-wiki.json` schema 1 records relative source `inputs` and managed `outputs` SHA-256 hashes. Source hashes use UTF-8 bytes with CRLF pairs converted to LF. Output hashes cover the generated LF bytes. Builds guard the exact working files and retain their original bytes in backups. It has no timestamps or volatile commit labels. Unknown wiki files remain outside generation ownership. Wiki JSON results use schema 1 with action-specific fields; raw page bytes, paths, URLs and completion remain undecorated. Git status adds `kind: wiki` to the companion root; info adds a `companions` list. Existing submodule schemas and pointer semantics remain unchanged.
 
 ## Keybinding records
 
@@ -655,6 +664,8 @@ Appearance imports use declared source-profile layers, omit shared defaults unle
 ## Tmux widget snapshots
 
 The three clock controls and retention behavior are defined in [tmux widget configuration](tmux.md#retained-widget-readings). They use the existing typed profile configuration and published `preferences.json` projection. Shared automatic location defaults false; the Termux profile enables it. Config discovery, completion and both shell frontends use the same definitions.
+
+The [Windows location command](wttr.md#current-city-on-windows) exposes the city, Unix fix timestamp and stale flag in JSON. A stale fallback retains its original fix timestamp. Explicit and configured weather locations take precedence over this device record.
 
 Private disposable widget records use schema 1 with finite acquisition/write/next-attempt/lease timestamps, a worker token and a validated consumer value. Battery values contain only the bounded battery record; Git values contain independently timestamped validated output/icon fields; solar values contain dated sun times, location fingerprints, timezone identity and acquisition/retry timing. No raw coordinates or provider error text are stored. Cache-only reads never initialize storage. Future write timestamps invalidate the record; expired leases permit recovery. Widget refresh does not change public wttr JSON/scalar schemas or renew old data timestamps.
 

@@ -53,7 +53,7 @@ def help_view(completion=False):
         ui.detail('Queries', 'wttr get FIELD | wttr --fields | wttr completion SHELL')
         ui.detail('Browse', 'wttr browse | dots wttr browse; session location/units and cached previews')
         ui.detail('Dots', 'dots wttr accepts the same commands, options and stock requests.')
-        ui.detail('Location', 'Explicit input, configured default, then termux-geo city. No IP fallback.')
+        ui.detail('Location', 'Explicit input, configured default, then the device city on Windows or Termux. No IP fallback.')
     ui.emit()
     ui.heading('Options')
     options = [*COMPLETION_OPTIONS, next(row for row in OPTIONS if row[0] == '--help')] if completion else OPTIONS

@@ -1,0 +1,12 @@
+{
+  "schema": 2,
+  "apps": {
+    "nvim": {
+      "settings": {
+        "theme": {
+          "terminal_colors": true
+        }
+      }
+    }
+  }
+}

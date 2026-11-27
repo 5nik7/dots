@@ -204,9 +204,9 @@ def main(argv=None):
     words = list(sys.argv[1:] if argv is None else argv)
     native = words[:1] == ['--frontend=native']
     if native: words.pop(0)
-    if words[:1] == ['--complete']:
+    if words[:1] == ['--complete'] or (native and words[:1] == ['--complete-typed']):
         from completion_records import requested
-        return complete(words[1:], display_types=not native and requested())
+        return complete(words[1:], display_types=words[0] == '--complete-typed' or (not native and requested()))
     explicit_help = words[:1] == ['--help-context']
     if explicit_help: words.pop(0)
     boundary = words.index('--') if '--' in words else len(words)

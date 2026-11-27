@@ -34,6 +34,19 @@ def regular(path):
     return data
 
 
+def substitute_template(path, tokens):
+    def substitute(match):
+        key = match[1]
+        if key not in tokens:
+            raise ValueError('unknown template color: ' + key)
+        return tokens[key]
+    text = re.sub(r'\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}', substitute,
+                  regular(path).decode('utf-8'))
+    if '{{' in text or '}}' in text:
+        raise ValueError('unresolved template expression')
+    return text
+
+
 def literal(path, kind):
     # Preserve the existing restricted TOML grammar instead of accepting code,
     # dates, arrays, dotted assignments, escaped strings or arbitrary tables.
@@ -224,13 +237,14 @@ class Themes:
         snapshot = bat_cache.inputs() if bat_inputs is None else bat_inputs
         return hashlib.sha256((self.fingerprint(identity) + '\n' + snapshot.fingerprint()).encode()).hexdigest()
 
-    def render(self, identity, out, build_cache=False, bat_inputs=None):
-        if build_cache and bat_inputs is None:
-            bat_inputs = bat_cache.inputs()
-        palette = self.load(identity)
+    def identity_tokens(self, identity):
+        """Theme id/family/flavor for templates (family/flavor from theme.toml)."""
         directory = self.directory(identity)
-        color = styles()
-        doc = color.resolve(palette, directory)
+        meta = literal(directory / 'theme.toml', 'metadata') if (directory / 'theme.toml').exists() else {}
+        return {'theme_id': identity, 'theme_family': meta.get('family', identity),
+                'theme_flavor': meta.get('flavor', 'default')}
+
+    def template_tokens(self, palette, color, doc):
         tokens = dict(palette['colors'])
         tokens.update({'git_' + key: value for key, value in doc['colors']['git'].items()})
         for key, value in list(tokens.items()):
@@ -250,6 +264,40 @@ class Themes:
         tokens['mode'] = palette['mode']
         tokens['file_styles_vivid'] = json.dumps(color.vivid_theme(doc, color.vivid_runtime()[2]), indent=2)
         tokens['git_colors_starship'] = '\n'.join('git_' + key + ' = ' + json.dumps(value) for key, value in doc['colors']['git'].items())
+        return tokens
+
+    def template_paths(self):
+        paths = {}
+        for base in (config_path('themed'), self.templates):
+            for path in sorted(base.glob('*.tpl')):
+                paths.setdefault(path.stem, path)
+        # Older custom template directories may ship just the Terminal palette.
+        companion = 'windows-terminal-theme.json'
+        if 'windows-terminal.json' in paths and companion not in paths:
+            bundled = self.checkout / 'default/themed' / (companion + '.tpl')
+            if bundled.is_file():
+                paths[companion] = bundled
+        return paths
+
+    def render_template(self, identity, name):
+        palette = self.load(identity)
+        color = styles()
+        tokens = self.template_tokens(palette, color, color.resolve(palette, self.directory(identity)))
+        tokens.update(self.identity_tokens(identity))
+        paths = self.template_paths()
+        if name not in paths:
+            raise ValueError('missing theme template: ' + name)
+        return substitute_template(paths[name], tokens)
+
+    def render(self, identity, out, build_cache=False, bat_inputs=None):
+        if build_cache and bat_inputs is None:
+            bat_inputs = bat_cache.inputs()
+        palette = self.load(identity)
+        directory = self.directory(identity)
+        color = styles()
+        doc = color.resolve(palette, directory)
+        tokens = self.template_tokens(palette, color, doc)
+        tokens.update(self.identity_tokens(identity))
         rendered = set()
         trusted = directory.is_relative_to(self.root)
         overrides = 'kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json claude-code.json dots.clinktheme vivid.yml fsh.ini eza.yml television.toml leaf.toml'.split()
@@ -257,19 +305,11 @@ class Themes:
             if (directory / name).is_file() and not (directory / name).is_symlink():
                 (out / name).write_bytes(regular(directory / name)); rendered.add(name)
         reserved = {'id','selection','fingerprint','palette.json','shell.tsv','colors.json','colors.lua','preferences.json','gitmux.conf','git-styles.tsv','file-styles.tsv','ls_colors','previous','status','connectors','bat-cache','bat-source','delta-cache','commands','yazi'}
-        for base in (config_path('themed'), self.templates):
-            for path in sorted(base.glob('*.tpl')):
-                name = path.stem
-                if name in rendered: continue
-                if not re.fullmatch('[a-zA-Z0-9][a-zA-Z0-9._-]*', name) or name in reserved or name.startswith('init.'): raise ValueError('reserved template output')
-                text = regular(path).decode('utf-8')
-                def substitute(match):
-                    key = match[1]
-                    if key not in tokens: raise ValueError('unknown template color: ' + key)
-                    return tokens[key]
-                text = re.sub(r'\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}', substitute, text)
-                if '{{' in text or '}}' in text: raise ValueError('unresolved template expression')
-                (out / name).write_text(text, encoding='utf-8', newline='\n'); rendered.add(name)
+        for name, path in self.template_paths().items():
+            if name in rendered: continue
+            if not re.fullmatch('[a-zA-Z0-9][a-zA-Z0-9._-]*', name) or name in reserved or name.startswith('init.'): raise ValueError('reserved template output')
+            text = substitute_template(path, tokens)
+            (out / name).write_text(text, encoding='utf-8', newline='\n')
         color.write_snapshot(color.generate(doc, out / 'vivid.yml'), out, palette=palette)
         if build_cache and (out / 'bat.tmTheme').is_file() and bat_cache.build(out, bat_inputs):
             (out / 'delta-cache').mkdir()

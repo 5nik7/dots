@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Inactive native setup preparation; caller owns publication locks and journal."""
 from pathlib import Path
+import json
 import sys
 import uuid
 
@@ -25,8 +26,13 @@ def main(args):
         generation = themes.state / 'themes/generations' / current
         if not generation_complete(themes, generation, bat_inputs) or regular(generation / 'fingerprint').decode().strip() != fingerprint:
             incomplete = 'theme inputs changed'
-    if args == ['inspect']:
+    if args in (['inspect'], ['inspect-wt']):
         values = [identity, fingerprint, current, incomplete]
+        if args == ['inspect-wt']:
+            from themes.wt_settings import SCHEME_ARTIFACT, THEME_ARTIFACT, terminal_inputs
+            scheme, theme = terminal_inputs(themes.render_template(identity, SCHEME_ARTIFACT),
+                                            themes.render_template(identity, THEME_ARTIFACT))
+            values.extend((json.dumps(scheme), json.dumps(theme)))
     elif len(args) == 2 and args[0] == 'prepare':
         if args[1] != fingerprint: raise ValueError('theme inputs changed after preview')
         directory = themes.state / 'themes/generations' / ('g.' + uuid.uuid4().hex)

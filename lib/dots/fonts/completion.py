@@ -58,7 +58,7 @@ def complete(words, *, display_types=False):
     elif (positionals and COMMANDS[action][1]!='fonts') or COMMANDS[action][1] not in ('font','optional-font','fonts'):return
     from fonts.model import Library
     source=values.get('from') if action=='install' else values.get('directory')
-    library=Library(directory=None if source=='personal' else source)
+    library=Library(directory=None if source=='personal' else source, system=bool(action=='uninstall' and values.get('system')))
     workspace=None
     if action in ('install','set') and not source:
         from fonts.workspace import Workspace

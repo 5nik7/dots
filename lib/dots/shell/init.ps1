@@ -255,6 +255,8 @@ if ($dotsInteractive) {
             $global:_DotsPromptWrapper = {
                 $previousSuccess = $?
                 $previousExit = $global:LASTEXITCODE
+                # Full-screen tools can leave the terminal using their exit cursor.
+                if ($global:_DotsViCursor) { & $global:_DotsViCursor }
                 Update-DotsCompletion
                 if ($dots_options.DOTS_THEME_AUTO_UPDATE -eq '1') { Update-DotsTheme }
                 $global:LASTEXITCODE = $previousExit

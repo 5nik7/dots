@@ -10,18 +10,19 @@ Theme preparation, rendering, bat caches, publication, quiet reloads and install
 
 ## Native terminal schemes
 
-Theme generations include `windows-terminal.json` and `wezterm.toml`, rendered
-from the same semantic palette as the other applications. Publication adds the
-named **Dots** scheme; selecting it remains an explicit application action.
-Neither connector rewrites profiles, fonts, keybindings, or `settings.json`.
+Theme generations render Windows Terminal and WezTerm schemes from the same semantic palette as the other applications. The Windows Terminal default template, `default/themed/windows-terminal.json.tpl`, maps the sixteen ANSI colors, foreground, background, cursor and selection colors.
 
-On Windows, an existing
-`%LOCALAPPDATA%/Microsoft/Windows Terminal/Fragments/Dots` directory enables the
-`dots.json` connector. This documented per-user fragment location is shared by
-Stable and Preview and does not require choosing between their settings files.
-Create that directory only as part of an approved activation, preview the theme
-publication, then select Dots in the desired terminal profile. See Microsoft's
-[fragment format and location](https://learn.microsoft.com/en-us/windows/terminal/json-fragment-extensions).
+On native Windows, preview the current palette with `dots theme refresh --dry-run` and publish it with `dots theme refresh`. Choosing a new palette with `dots theme set ID` also updates the scheme. Dots looks for existing `settings.json` files in Stable, Preview and Canary package settings, the unpackaged Terminal directory, and the Scoop persistence directories for Stable and Preview. Set `DOTS_APP_WT_CONFIG` to an additional settings directory for a custom installation. Dots also checks `WT_SETTINGS_DIR` when set.
+
+Publication adds the color scheme to the top-level `schemes` array or updates the matching entry in place. A case-insensitive scheme match preserves the existing name spelling and profile references. Select the color scheme in the desired profile’s **Appearance** settings to use it.
+
+The companion template, `default/themed/windows-terminal-theme.json.tpl`, defines the Terminal application's appearance. Publication adds or updates the `dots` entry in the top-level `themes` array and sets the global `"theme": "dots"` selector. The tab row uses the terminal background, tabs always show their close buttons, and the window uses dark controls with Mica disabled. Other named themes, schemes, profiles, comments and trailing commas are preserved. See Microsoft's [Terminal theme settings](https://learn.microsoft.com/en-us/windows/terminal/customize-settings/themes).
+
+`dots theme set` and `dots theme refresh` record a retained transaction for each settings file they change. Use `dots files history` to find its ID and `dots files undo ID` to restore that file. Invalid documents, symlinked files and paths with symlinked parent directories report individual errors.
+
+`dots setup` includes eligible scheme updates in its setup transaction. Settings files already managed in full by setup, or explicitly selected as whole-file resources, follow their existing mappings. Setup lists settings files that require manual review as skipped.
+
+An existing `%LOCALAPPDATA%/Microsoft/Windows Terminal/Fragments/Dots` directory also enables the shared `dots.json` color scheme fragment. The companion template supplies the application theme directly to each settings file. See Microsoft's [fragment format and location](https://learn.microsoft.com/en-us/windows/terminal/json-fragment-extensions).
 
 WezTerm connects `colors/dots.toml` only when that directory already exists under
 its configured Dots application directory. Windows uses the existing
@@ -582,6 +583,21 @@ If it shows the expected Clink directory link, repeat with `--yes`. Then run
 apply with `--yes`. The original reference themes stay in the checkout.
 For custom colors, override `dots.clinktheme.tpl` in the personal `themed`
 directory and refresh the Dots theme.
+
+### Rainmeter on Windows
+
+Dots renders `default/themed/rainmeter.inc.tpl` into each generation as
+`rainmeter.inc`: a Rainmeter `[Variables]` section with `Dots_<role>` values
+(`background`, `foreground`, `accent`, `muted`, the named colors and
+`color0`–`color15`) as `RRGGBB` without `#`. No connector is needed; skins
+include `%LOCALAPPDATA%\dots\current\theme\rainmeter.inc` directly, which
+always follows the active generation.
+
+The [5ui7e](../profiles/windows/rainmeter/5ui7e) clock uses it when its
+settings window's color source is **Dots**. The skin watches the file and
+refreshes itself after `dots theme set` or `dots theme refresh`, so Dots does
+not start or reload Rainmeter. Override `rainmeter.inc.tpl` in the personal
+`themed` directory for custom variables.
 
 ### Claude Code
 

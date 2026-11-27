@@ -114,7 +114,7 @@ def help_view(directories, words):
     return 0
 
 
-def complete(root, directories, words):
+def complete(root, directories, words, *, display_types=False):
     """Private completion records: candidate, file, directory. No shell evaluation."""
     current = words[-1] if words else ''
     previous = words[:-1]
@@ -129,30 +129,31 @@ def complete(root, directories, words):
         else: break
     if previous[:1] in (['todo'], ['__todo_standalone']):
         from todo_completion import complete as todo_complete
-        todo_complete([*previous[1:], current], standalone=previous[0] == '__todo_standalone')
+        todo_complete([*previous[1:], current], standalone=previous[0] == '__todo_standalone',
+                      display_types=display_types)
         return 0
     if previous[:1] == ['bak']:
         from bak_completion import complete as bak_complete
-        bak_complete([*previous[1:], current])
+        bak_complete([*previous[1:], current], display_types=display_types)
         return 0
     if previous[:1] == ['cleanup']:
         from cleanup_commands import complete as cleanup_complete
-        cleanup_complete([*previous[1:], current])
+        cleanup_complete([*previous[1:], current], display_types=display_types)
         return 0
     if previous[:1] == ['clipboard']:
         from clipboard_commands import complete as clipboard_complete
-        clipboard_complete([*previous[1:], current])
+        clipboard_complete([*previous[1:], current], display_types=display_types)
         return 0
     if previous[:1] == ['fonts']:
         from fonts.completion import complete as fonts_complete
-        fonts_complete([*previous[1:], current])
+        fonts_complete([*previous[1:], current], display_types=display_types)
         return 0
     if previous[:2] == ['git', 'it']:
         from bundled_apps import complete as bundled_complete
-        return bundled_complete(root, ['git-it', *previous[2:], current])
+        return bundled_complete(root, ['git-it', *previous[2:], current], display_types=display_types)
     if previous[:1] in (['blastoff'], ['pkgs']):
         from bundled_apps import complete as bundled_complete
-        return bundled_complete(root, [*previous, current])
+        return bundled_complete(root, [*previous, current], display_types=display_types)
     if previous[:1] == ['anodize']:
         index = 1
         while index < len(previous):
@@ -172,7 +173,8 @@ def complete(root, directories, words):
     if previous[:2] == ['git', 'submodule']:
         stem, path, _ = resolve(directories, previous)
         if stem == 'git-submodule' and path.parent.resolve() == (LIB.parents[1] / 'bin').resolve():
-            return controller('git/submodule.py', ['--frontend=native', '--complete', *previous[2:], current])
+            mode = '--complete-typed' if display_types else '--complete'
+            return controller('git/submodule.py', ['--frontend=native', mode, *previous[2:], current])
     rows = catalog(directories)
     stem, path, consumed = resolve(directories, previous)
     metadata = read(path.with_suffix('.meta') if path.suffix == '.exe' else path) if path else None
@@ -180,6 +182,17 @@ def complete(root, directories, words):
         metadata = read(LIB / 'metadata' / (previous[0] + '.meta'))
         consumed = 1
     suggestions = []
+    command_values = set()
+    def emit():
+        seen = set()
+        for kind, value, description in suggestions:
+            if (kind, value) in seen:
+                continue
+            seen.add((kind, value))
+            row = [kind, value, description]
+            if display_types and kind == 'candidate':
+                row.append('command' if value in command_values else 'option' if value.startswith('-') else 'value')
+            print('\t'.join(row))
     positionals, option_values = [], {}
     def add(value, desc=''):
         if value.startswith(current) and not any(c in value + desc for c in '\t\r\n'):
@@ -280,14 +293,21 @@ def complete(root, directories, words):
         flag = current.split('=')[0]
         for mode in ('auto', 'always', 'never', *(['none'] if flag == '--color' else [])): add(flag + '=' + mode)
     if not previous:
+        command_values.update(BUILTINS)
         for name in BUILTINS: add(name)
-        for name, row in rows.items():
-            if not row['hidden']: add(name.split('-')[0], row['summary'])
         for flag in ('--help', '--dir', '--raw', '--color=', '--icons=', '--command-dir'): add(flag)
-    prefix = '-'.join(previous)
+    prefix = '-'.join(previous) + '-' if previous else ''
+    children = {}
     for name, row in rows.items():
-        if prefix and name.startswith(prefix + '-') and not row['hidden']:
-            add(name[len(prefix) + 1:].split('-')[0], row['summary'])
+        if name.startswith(prefix) and not row['hidden']:
+            child, separator, _ = name[len(prefix):].partition('-')
+            if separator:
+                children.setdefault(child, f'Browse {child} commands')
+            else:
+                children[child] = row['summary']
+    for child, description in children.items():
+        command_values.add(child)
+        add(child, description)
     if previous and previous[0] == 'theme' and stem == 'theme':
         sys.path.insert(0, str(LIB / 'themes'))
         from palette_native import Themes, FORMATS
@@ -321,7 +341,7 @@ def complete(root, directories, words):
                     for value in ('show','set','color','init','--color=auto','--color=always','--color=never','--raw','--array','--all','--flavor','--color','--format','--completion'): add(value)
                 if prior not in ('--flavor', '-f'):
                     for value in themes.load(themes.pick(family_name, flavor))['palette']: add(value)
-            for row in dict.fromkeys(suggestions): print('\t'.join(row))
+            emit()
             return 0
     if metadata and not help_context:
         options = {flag: (kind, desc) for long, short, kind, desc in metadata['option'] for flag in (long, short) if flag}
@@ -354,14 +374,14 @@ def complete(root, directories, words):
             current = value
             values(options[flag][0])
             suggestions = [(kind, flag + '=' + value, desc) for kind, value, desc in suggestions]
-        elif current.startswith('-') and not literal:
+        elif not literal and (current.startswith('-') or
+                              (not current and not children and not metadata['argument'] and options)):
             for flag, (_, desc) in options.items(): add(flag, desc)
             add('--help', 'Show help')
         else:
             for pos, kind, _ in metadata['argument']:
                 if pos in (str(position), '*'): values(kind)
-    for row in dict.fromkeys(suggestions):
-        print('\t'.join(row))
+    emit()
     return 0
 
 
@@ -401,6 +421,8 @@ def main(argv=None):
     for key in ('DOTS_COLOR', 'DOTS_ICONS', 'DOTS_PROGRESS'):
         if args[0] != 'env' and key in preferences and not os.environ.get(key): os.environ[key] = preferences[key]['value']
     if args[0] == '__complete':
+        if args[1:2] == ['--display-types']:
+            return complete(root, directories, args[2:], display_types=True)
         return complete(root, directories, args[1:])
     if args[0] in BUILTINS and args[1:] in (['--help'], ['-h']):
         return help_view(directories, args[:1])
@@ -513,6 +535,7 @@ def main(argv=None):
     if parts[0] == 'link': return controller('link_cli.py', rest)
     if parts[0] == 'fonts': return controller('fonts_cli.py', [*parts[1:], *rest])
     if parts[0] == 'wttr': return controller('wttr/cli.py', [*parts[1:], *rest])
+    if parts == ['location']: return controller('windows_location.py', rest)
     if parts[0] == 'profile': return controller('profiles.py', [*parts, *rest])
     if parts[0] == 'wiki': return controller('wiki.py', [*parts[1:], *rest])
     if parts[:2] == ['git','wiki']: return controller('wiki_git.py', [*parts[2:], *rest])

@@ -70,6 +70,8 @@ dots git wiki status
 
 Build is explicit and never stages or publishes changes. It regenerates pages and the sidebar together, records source/output hashes, and uses the shared transaction engine with retained backups. A second identical build changes nothing. Unknown files are preserved; edited generated pages must be reconciled into the canonical source before rebuilding. Obsolete unchanged generated pages are removed only through the same guarded transaction. The initial clean starter Home page is adopted with a backup. Transaction IDs can be inspected and undone through `dots files history` and `dots files undo ID`.
 
+Wiki checks treat LF and CRLF line endings as equivalent in UTF-8 source files, generator code and generated pages. A Windows checkout can therefore build the same inventory as the Git index and the published source commit. Rebuild once if an older inventory recorded CRLF source hashes. If a generator mismatch persists, the diagnostic names the file whose content differs. Build and publish from the checkout containing the selected generator revision.
+
 `check` verifies source mappings, internal links and anchors, navigation coverage, generated content and freshness. `check --source-only` validates generation without a wiki checkout and is suitable for CI. These checks establish consistency, not automatic proof that every prose statement is correct: maintainers must verify examples and claims against the implementation and its tests.
 
 `init --dry-run` previews acquiring a missing wiki. `init --yes` clones only that repository into a staged directory, retains an acquisition journal and exposes the completed checkout without replacing an occupied destination. Existing checkout remotes and branches remain untouched.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Isolated weather contracts: no Android API, public HTTP or live installations."""
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 import base64
 import copy
@@ -62,9 +62,9 @@ class Weather(unittest.TestCase):
         fixture_scale = ('[temperature_scale]\nunit = "F"\nthresholds = [32, 60, 75, 85, 95]\n'
                          'colors = ["cyan", "blue", "green", "yellow", "orange", "red"]\n\n')
         self.path.write_text(re.sub(r'(?ms)^\[temperature_scale\].*?(?=^\[|\Z)',
-                                    fixture_scale, self.path.read_text()))
+                                    fixture_scale, self.path.read_text(encoding='utf-8')), encoding='utf-8')
         # Presentation expectations also belong to fixtures, not owner overrides.
-        text=self.path.read_text()
+        text=self.path.read_text(encoding='utf-8')
         text=re.sub(r'(?m)^label_gap\s*=.*\n','',text)
         text='label_gap = 3\n'+text
         for table, entries in {
@@ -77,10 +77,20 @@ class Weather(unittest.TestCase):
                 body=re.sub(r'(?m)^'+key+r'\s*=.*\n','',body)
             replacement='['+table+']\n'+''.join(key+' = '+json.dumps(value,ensure_ascii=False)+'\n' for key,value in entries.items())+body
             text=text[:match.start()]+replacement+text[match.end():] if match else text+'\n'+replacement
-        self.path.write_text(text)
+        self.path.write_text(text, encoding='utf-8')
         _, self.cfg = core.config()
         self.cache = core.Cache(self.cfg)
         self.data = sample()
+
+    def use_report_layout(self):
+        # The indent assertions exercise a selected CLI layout in both parent and child processes.
+        checkout = self.root / 'display preferences'
+        defaults = checkout / 'default'
+        defaults.mkdir(parents=True)
+        formatting = dict(indent=4, indent_style='spaces', alignment='left')
+        (defaults / 'config.json').write_text(json.dumps(
+            dict(schema=2, apps=dict(cli=dict(formatting=formatting)))))
+        os.environ['DOTS'] = str(checkout)
 
     def palette(self, colors=None):
         path = Path(os.environ['XDG_STATE_HOME']) / 'dots/current/theme/palette.json'
@@ -97,8 +107,8 @@ class Weather(unittest.TestCase):
         return row
 
     def run_cli(self, *args):
-        return subprocess.run([sys.executable, '-B', str(ROOT / 'lib/dots/wttr/cli.py'), *args],
-                              capture_output=True, text=True, timeout=5)
+        return subprocess.run([sys.executable, '-X', 'utf8', '-B', str(ROOT / 'lib/dots/wttr/cli.py'), *args],
+                              capture_output=True, encoding='utf-8', timeout=5)
 
     def test_defaults_icons_and_config_errors(self):
         self.assertEqual(self.cfg['units'], 'us')
@@ -280,6 +290,7 @@ class Weather(unittest.TestCase):
         self.assertEqual(core.format_widget('{{feel_color}}{feel_color}F',values),'{feel_color}F')
 
     def test_wind_arrows_and_detail_icon_fields(self):
+        self.use_report_layout()
         compass='N NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW NNW'.split()
         for direction,expected in zip(compass,'↓↙↙←←↖↖↑↑↗↗→→↘↘↓'):
             self.assertEqual(core.wind_icon(dict(winddir16Point=direction)),expected)
@@ -313,6 +324,7 @@ class Weather(unittest.TestCase):
                 for glyph in expected.values():self.assertNotIn(glyph,text)
 
     def test_detail_icon_configuration_styles_and_spacing(self):
+        self.use_report_layout()
         row=self.seed()
         self.palette(dict(magenta='#123456',cyan='#abcdef',yellow='#112233',orange='#445566',blue='#778899'))
         cfg=copy.deepcopy(self.cfg)
@@ -474,6 +486,7 @@ class Weather(unittest.TestCase):
                 self.assertNotIn('\x1b', out.getvalue())
 
     def test_aligned_weather_spacing_and_wrapping(self):
+        self.use_report_layout()
         from resources import cells
         row = self.seed()
         row['data']['current_condition'][0].update(temp_F='53', weatherDesc=[{'value':' Clear  '}])
@@ -696,6 +709,7 @@ class Weather(unittest.TestCase):
             self.assertEqual((values['sunrise'],values['sunset'],values['daylight']),('','','unknown'))
 
     def test_trailing_wind_icon_without_compass_text(self):
+        self.use_report_layout()
         row=self.seed()
         row['data']['current_condition'][0].update(winddirDegree='315',winddir16Point='')
         for icons in ('always','never'):
@@ -735,6 +749,7 @@ class Weather(unittest.TestCase):
         self.assertEqual(self.run_cli('--get','stale','--cached','--allow-stale').stdout,'true\n')
         self.assertNotEqual(self.run_cli('--get','temperature','--cached').returncode,0)
 
+    @patch.object(sys, 'platform', 'linux')
     def test_geo_city_precedence_and_no_ip(self):
         geo = json.dumps(dict(version=1, city='Test City', attribution='© OpenStreetMap contributors')).encode()
         with patch.object(core,'geo_helper',return_value='termux-geo'), patch.object(core,'bounded_command',return_value=geo) as run:
@@ -760,6 +775,40 @@ class Weather(unittest.TestCase):
             self.assertEqual(core.resolve_location('Paris',cfg,False,1),('Paris','manual',''))
             self.assertEqual(core.resolve_location(None,cfg,True,1),('Oslo','default',''))
 
+    @patch.object(sys, 'platform', 'win32')
+    def test_windows_device_city_for_weather_and_stock_requests(self):
+        import windows_location
+        fix = dict(city='Lake City', stale=False, attribution='fixture')
+        with patch.object(windows_location, 'resolve_city', return_value=fix) as locate:
+            cfg = dict(self.cfg, default_location='Oslo')
+            self.assertEqual(core.resolve_location('Paris', cfg, False, 20), ('Paris', 'manual', ''))
+            self.assertEqual(core.resolve_location(None, cfg, False, 20), ('Oslo', 'default', ''))
+            locate.assert_not_called()
+            with patch.object(core, 'fetch', return_value=self.data) as fetch:
+                row = self.cache.refresh(force=True)
+            locate.assert_called_once_with(cached=False, max_age=None, timeout=self.cfg['timeout'] / 2)
+            self.assertEqual(fetch.call_args.args[0], 'Lake City')
+            self.assertEqual((row['location'], row['source'], row['attribution']), ('Lake City', 'city', 'fixture'))
+            with patch.object(stock.shutil, 'which', return_value='curl.exe'), patch.object(stock, 'bounded_command', return_value=b'raw') as curl:
+                payload, attribution = stock.fetch(dict(route=None, flags='T', format=None), None, self.cfg)
+                self.assertEqual((payload, attribution), (b'raw', 'fixture'))
+                self.assertEqual(curl.call_args.args[0][-1], 'https://wttr.in/Lake%20City?T')
+
+    @patch.object(sys, 'platform', 'win32')
+    def test_windows_background_city_and_provider_failure(self):
+        import windows_location
+        with patch.object(windows_location, 'resolve_city', return_value=dict(city='Last City', stale=True)) as locate:
+            with redirect_stderr(io.StringIO()) as diagnostics:
+                self.assertEqual(core.resolve_location(None, self.cfg, True, 20), ('Last City', 'cached city', ''))
+            self.assertEqual(diagnostics.getvalue(), '')
+            locate.assert_called_once_with(cached=True, max_age=self.cfg['location_max_age'], timeout=1)
+            with redirect_stderr(io.StringIO()) as diagnostics:
+                self.assertEqual(core.resolve_location(None, self.cfg, False, 20), ('Last City', 'cached city', ''))
+            self.assertIn('Using the last saved city', diagnostics.getvalue())
+        with patch.object(windows_location, 'resolve_city', side_effect=windows_location.LocationUnavailable('Location access denied')):
+            with self.assertRaisesRegex(core.Unavailable, 'Location access denied.*--location'):
+                core.resolve_location(None, self.cfg, False, 20)
+
     def test_city_label_cache_version_and_explicit_recovery(self):
         import hashlib
         old_identity=['auto',False,self.cfg['default_location'],self.cfg['language']]
@@ -776,14 +825,15 @@ class Weather(unittest.TestCase):
         view=self.run_cli('--current','--cached')
         self.assertIn('Weather — Actual City',view.stdout)
         self.assertNotIn(attribution,view.stdout)
-        self.path.write_text(self.path.read_text().replace('show_location_attribution = false','show_location_attribution = true'))
+        self.path.write_text(self.path.read_text(encoding='utf-8').replace('show_location_attribution = false','show_location_attribution = true'), encoding='utf-8')
         self.assertIn(attribution,self.run_cli('--current','--cached').stdout)
         self.assertNotIn('Test Town',view.stdout)
         self.assertEqual(json.loads(self.run_cli('--json','--cached').stdout),self.data)
         self.assertEqual(json.loads(old_path.read_text()),old)
 
     def test_bounded_helpers_timeout_stderr_oversize_and_missing(self):
-        self.assertEqual(core.bounded_command([sys.executable,'-c','import sys; print("1,2"); print("PRIVATE",file=sys.stderr)'],1,32),b'1,2\n')
+        expected = ('1,2' + os.linesep).encode()
+        self.assertEqual(core.bounded_command([sys.executable,'-c','import sys; print("1,2"); print("PRIVATE",file=sys.stderr)'],1,32),expected)
         for command in [[sys.executable,'-c','import time; time.sleep(10)'],
                         [sys.executable,'-c','print("x"*100000)']]:
             start=time.monotonic()
@@ -904,7 +954,8 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
         self.assertTrue(self.cache.usable(row))
         self.assertEqual(row['retry_at'],0)
         self.assertNotIn('error',row)
-        self.assertEqual(self.cache.path.stat().st_mode & 0o777,0o600)
+        if os.name == 'posix':
+            self.assertEqual(self.cache.path.stat().st_mode & 0o777,0o600)
 
     def test_failed_explicit_refresh_reports_failure_and_bad_format_never_polls(self):
         self.seed()
@@ -1114,6 +1165,7 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
 
     @unittest.skipUnless(os.name == 'posix', 'native Unix PTYs')
     def test_native_pty_help_views_and_progress(self):
+        self.use_report_layout()
         self.palette()
         import fcntl, pty, select, struct, termios, re
         def terminal(argv, width):
@@ -1196,6 +1248,12 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
         provider=fixture/'profiles/termux/bin/termux-geo';provider.parent.mkdir(parents=True)
         provider.write_text('#!'+sys.executable+'\nimport sys\nassert sys.argv[1:]==["--json","--max-age","86400","--cached"]\nprint(\'{"version":1,"city":"Test Town"}\')\n')
         provider.chmod(0o700)
+        if os.name == 'nt':
+            (fixture/'lib/dots/windows_location.py').write_text(
+                'class LocationUnavailable(RuntimeError): pass\n'
+                'def resolve_city(*, cached, max_age, timeout):\n'
+                '    assert cached and max_age == 86400 and timeout <= 1\n'
+                '    return dict(city="Test Town", stale=False)\n')
         calls=self.home/'fetch-calls'
         copied=fixture/'lib/dots/wttr/core.py'
         with copied.open('a') as stream:
@@ -1205,7 +1263,7 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
         results=[subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=env) for _ in range(4)]
         for p in results:
             out,err=p.communicate(timeout=5);self.assertEqual(p.returncode,0,err)
-            self.assertIn(out,(b'unknown\n',b'day\n',b'night\n'));self.assertEqual(err,b'')
+            self.assertIn(out.splitlines(),([b'unknown'],[b'day'],[b'night']));self.assertEqual(err,b'')
         deadline=time.monotonic()+5
         while not self.cache.usable(self.cache.read()):
             self.assertLess(time.monotonic(),deadline,'worker never published')
@@ -1214,7 +1272,7 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
         self.assertEqual(self.cache.read()['source'],'cached city')
         before=self.cache.path.read_bytes()
         result=subprocess.run(command+['--cached'],env=env,capture_output=True,timeout=3)
-        self.assertIn(result.stdout,(b'day\n',b'night\n'))
+        self.assertIn(result.stdout.splitlines(),([b'day'],[b'night']))
         self.assertEqual(before,self.cache.path.read_bytes())
 
     @unittest.skipUnless(os.name == 'posix' and shutil.which('zsh'), 'native Zsh PTY unavailable')

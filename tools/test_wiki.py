@@ -131,6 +131,54 @@ class WikiTests(WikiFixture):
         source.write_text('# different generator revision\n')
         self.assertIn('matching Dots checkout',self.cli('check','--source-only',code=1).stderr)
 
+    def test_crlf_checkout_matches_index_and_commit_and_preserves_exact_guards(self):
+        generator = self.root/'lib/dots/wiki.py'
+        generator.parent.mkdir(parents=True)
+        generator.write_bytes(wiki.lf_bytes((wiki.LIB/'wiki.py').read_bytes()).replace(b'\n', b'\r\n'))
+        guide = self.root/'docs/guide.md'
+        lf_guide = wiki.lf_bytes(guide.read_bytes())
+        guide.write_bytes(lf_guide.replace(b'\n', b'\r\n'))
+        self.git(self.root, 'init', '-b', 'main')
+        self.git(self.root, 'config', 'core.autocrlf', 'true')
+        self.git(self.root, 'add', '.')
+        self.git(self.root, 'commit', '-m', 'Normalized source')
+        self.assertEqual(wiki.Reader(self.root, 'HEAD').read('docs/guide.md'), lf_guide)
+
+        # Exercise a CRLF running generator even on hosts with LF checkouts.
+        with patch.object(wiki, 'LIB', generator.parent):
+            _, expected, reader = wiki.generate(self.root)
+            for revision in (':', 'HEAD'):
+                self.assertEqual(wiki.generate(self.root, revision)[1], expected)
+        self.assertEqual(reader.inputs['docs/guide.md'], wiki.sha(guide.read_bytes()))
+        self.assertEqual(json.loads(expected[wiki.INVENTORY])['inputs']['docs/guide.md'], wiki.sha(lf_guide))
+
+        self.build()
+        target = self.target/'Guide.md'
+        target.write_bytes(expected['Guide.md'].replace(b'\n', b'\r\n'))
+        self.git(self.target, 'config', 'core.autocrlf', 'true')
+        self.git(self.target, 'add', '.')
+        for revision in (None, ':'):
+            self.assertEqual(wiki.compare(self.root, self.target, revision, 'HEAD'), [])
+        self.assertEqual(self.build()['status'], 'unchanged')
+        self.assertIn(b'\r\n', target.read_bytes())
+
+        # Older exports hashed physical source bytes. A rebuild should update
+        # their inventory while retaining ordinary ownership and drift checks.
+        inventory = self.target/wiki.INVENTORY
+        legacy = json.loads(inventory.read_bytes())
+        legacy['inputs'] = reader.inputs
+        inventory.write_bytes(wiki.encoded(legacy))
+        operations, guards = wiki.build_plan(self.root, self.target)
+        self.assertEqual([op['path'] for op in operations], [str(inventory)])
+        guide.write_bytes(lf_guide)
+        with self.assertRaisesRegex(ValueError, 'changed after preview'):
+            Store(wiki.state_root()).apply('wiki-build', operations, guards, retain=True)
+        self.build()
+        self.assertEqual(inventory.read_bytes(), expected[wiki.INVENTORY])
+        target.write_bytes(target.read_bytes() + b'edited\r\n')
+        with self.assertRaisesRegex(ValueError, 'unrecognized edits'):
+            wiki.build_plan(self.root, self.target)
+
     def test_read_interfaces_and_overrides(self):
         self.build()
         decorated=dict(self.env,DOTS_COLOR='always',DOTS_ICONS='always')
